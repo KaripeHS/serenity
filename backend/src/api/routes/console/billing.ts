@@ -334,4 +334,176 @@ router.get('/dashboard', async (req: AuthenticatedRequest, res: Response, next: 
   }
 });
 
+/**
+ * GET /api/console/billing/denials
+ * Get denied claims list
+ */
+router.get('/denials', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { status = 'pending' } = req.query;
+
+    // TODO: Query database for denials
+    // const db = DatabaseClient.getInstance();
+    // const result = await db.query(`
+    //   SELECT
+    //     d.*,
+    //     c.first_name || ' ' || c.last_name as patient_name,
+    //     cg.first_name || ' ' || cg.last_name as caregiver_name
+    //   FROM denials d
+    //   JOIN claims cl ON cl.id = d.claim_id
+    //   JOIN evv_records e ON e.id = cl.visit_id
+    //   JOIN clients c ON c.id = e.client_id
+    //   JOIN caregivers cg ON cg.id = e.caregiver_id
+    //   WHERE d.status = $1
+    //   ORDER BY d.denial_date DESC
+    // `, [status]);
+
+    // Mock denials
+    const mockDenials = [
+      {
+        id: 'denial-001',
+        claimId: 'claim-101',
+        visitId: 'evv-001',
+        patientName: 'Margaret Johnson',
+        caregiverName: 'Mary Smith',
+        serviceDate: '2025-10-15',
+        serviceCode: 'T1019',
+        billableUnits: 8,
+        claimAmount: 200.00,
+        denialCode: 'CO-16',
+        denialReason: 'Claim lacks information needed for adjudication',
+        denialDate: '2025-10-25',
+        status: 'pending',
+        daysOld: 9
+      },
+      {
+        id: 'denial-002',
+        claimId: 'claim-102',
+        visitId: 'evv-002',
+        patientName: 'Robert Williams',
+        caregiverName: 'John Doe',
+        serviceDate: '2025-10-16',
+        serviceCode: 'S5125',
+        billableUnits: 6,
+        claimAmount: 168.00,
+        denialCode: 'B7',
+        denialReason: 'Provider not certified/eligible on this date',
+        denialDate: '2025-10-26',
+        status: 'pending',
+        daysOld: 8
+      }
+    ];
+
+    const mockSummary = [
+      {
+        code: 'CO-16',
+        description: 'Claim lacks information',
+        count: 5,
+        totalAmount: 1000.00,
+        recommendedAction: 'Add missing authorization number'
+      },
+      {
+        code: 'B7',
+        description: 'Provider not certified',
+        count: 3,
+        totalAmount: 504.00,
+        recommendedAction: 'Verify caregiver credentials are current'
+      }
+    ];
+
+    res.json({
+      denials: mockDenials,
+      summary: mockSummary
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * PUT /api/console/billing/denials/:id/resubmit
+ * Resubmit corrected claim
+ */
+router.put('/denials/:id/resubmit', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { correctionNotes, visitId } = req.body;
+
+    if (!correctionNotes || !visitId) {
+      throw ApiErrors.badRequest('correctionNotes and visitId are required');
+    }
+
+    // TODO: Update denial record and regenerate claim
+    // const db = DatabaseClient.getInstance();
+    // await db.query(`
+    //   UPDATE denials
+    //   SET status = 'corrected', correction_notes = $1, corrected_at = NOW()
+    //   WHERE id = $2
+    // `, [correctionNotes, id]);
+
+    // Re-validate visit through claims gate
+    const validation = await claimsGateService.validateClaimReadiness(visitId);
+
+    if (!validation.isValid) {
+      return res.status(400).json({
+        success: false,
+        errors: validation.errors,
+        message: 'Claim still has validation errors'
+      });
+    }
+
+    // TODO: Generate new claim file and submit
+    console.log(`[BILLING] Resubmitting corrected claim for denial ${id}`);
+
+    res.json({
+      success: true,
+      message: 'Claim resubmitted successfully',
+      denialId: id,
+      newClaimId: `claim-resubmit-${Date.now()}`
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/console/billing/denials/:id/appeal
+ * Submit appeal for denied claim
+ */
+router.post('/denials/:id/appeal', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { appealLetter, appealDate } = req.body;
+
+    if (!appealLetter) {
+      throw ApiErrors.badRequest('appealLetter is required');
+    }
+
+    // TODO: Save appeal to database
+    // const db = DatabaseClient.getInstance();
+    // const appealId = uuidv4();
+    // await db.query(`
+    //   INSERT INTO appeals (id, denial_id, appeal_letter, appeal_date, status, created_by, created_at)
+    //   VALUES ($1, $2, $3, $4, 'submitted', $5, NOW())
+    // `, [appealId, id, appealLetter, appealDate, req.user?.id]);
+    //
+    // await db.query(`
+    //   UPDATE denials
+    //   SET status = 'appealed', appealed_at = NOW()
+    //   WHERE id = $1
+    // `, [id]);
+
+    console.log(`[BILLING] Appeal submitted for denial ${id}`);
+
+    res.json({
+      success: true,
+      message: 'Appeal submitted successfully',
+      denialId: id,
+      appealId: `appeal-${Date.now()}`
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
