@@ -33,6 +33,19 @@ interface Position {
   requirements: string[];
 }
 
+// Helper function to map backend status to frontend status
+const mapBackendStatus = (backendStatus: string): Application['status'] => {
+  const statusMap: Record<string, Application['status']> = {
+    'new': 'new',
+    'screening': 'reviewing',
+    'interviewing': 'interview_scheduled',
+    'offer': 'approved',
+    'hired': 'hired',
+    'rejected': 'rejected'
+  };
+  return statusMap[backendStatus] || 'new';
+};
+
 export function WorkingHRApplications() {
   const { user: _user } = useAuth();
   const [applications, setApplications] = useState<Application[]>([]);
@@ -47,6 +60,44 @@ export function WorkingHRApplications() {
   }, []);
 
   const loadApplications = async () => {
+    try {
+      // Fetch from backend API
+      const response = await fetch('http://localhost:3000/api/console/hr/applicants', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Map backend data to frontend format
+        const mappedApplications = data.applicants.map((app: any) => ({
+          id: app.id,
+          applicantName: `${app.firstName} ${app.lastName}`,
+          position: app.positionAppliedFor,
+          email: app.email,
+          phone: app.phone,
+          submissionDate: app.applicationDate,
+          status: mapBackendStatus(app.status),
+          priority: 'medium', // TODO: Calculate based on position urgency
+          experience: `${app.yearsExperience} years`,
+          certifications: app.hasLicense ? ['Licensed'] : [],
+          skills: [],
+          location: app.address || 'Ohio',
+          applicationDate: app.applicationDate,
+          source: app.source,
+          expectedSalary: app.desiredPayRate || 'Not specified',
+          availability: app.availability || 'Not specified',
+          notes: app.notes || ''
+        }));
+        setApplications(mappedApplications);
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to load applications from API, using mock data:', error);
+    }
+
+    // Fallback to mock data if API fails
     const productionApplications: Application[] = [
       {
         id: 'app_001',
@@ -166,16 +217,41 @@ export function WorkingHRApplications() {
   const handleStatusChange = async (applicationId: string, newStatus: Application['status']) => {
     setIsProcessing(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Map frontend status back to backend status
+      const statusMap: Record<Application['status'], string> = {
+        'new': 'new',
+        'reviewing': 'screening',
+        'interview_scheduled': 'interviewing',
+        'background_check': 'screening',
+        'approved': 'offer',
+        'rejected': 'rejected',
+        'hired': 'hired'
+      };
+      const backendStatus = statusMap[newStatus] || 'new';
 
-      setApplications(prev => prev.map(app =>
-        app.id === applicationId ? { ...app, status: newStatus } : app
-      ));
+      // Call backend API
+      const response = await fetch(`http://localhost:3000/api/console/hr/applicants/${applicationId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+        },
+        body: JSON.stringify({ status: backendStatus, stage: newStatus })
+      });
 
-      const app = applications.find(a => a.id === applicationId);
-      alert(`✅ Status Updated!\n\nApplicant: ${app?.applicantName}\nNew Status: ${newStatus.replace('_', ' ').toUpperCase()}\n\nNext steps will be automatically triggered.`);
+      if (response.ok) {
+        setApplications(prev => prev.map(app =>
+          app.id === applicationId ? { ...app, status: newStatus } : app
+        ));
+
+        const app = applications.find(a => a.id === applicationId);
+        alert(`✅ Status Updated!\n\nApplicant: ${app?.applicantName}\nNew Status: ${newStatus.replace('_', ' ').toUpperCase()}\n\nNext steps will be automatically triggered.`);
+      } else {
+        throw new Error('API request failed');
+      }
     } catch (error) {
       alert('Failed to update status. Please try again.');
+      console.error('Status update error:', error);
     } finally {
       setIsProcessing(false);
     }

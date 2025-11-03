@@ -15,6 +15,7 @@ import shiftsRouter from './shifts';
 import caregiversRouter from './caregivers';
 import clientsRouter from './clients';
 import operationsRouter from './operations';
+import hrRouter from './hr';
 
 const router = Router();
 
@@ -45,8 +46,10 @@ router.use('/clients', clientsRouter);
 // Sandata integration routes
 router.use('/sandata', sandataRouter);
 
+// HR management routes
+router.use('/hr', hrRouter);
+
 // TODO: Add more Console routes
 // router.use('/spi', spiRouter);
-// router.use('/hr', hrRouter);
 
 export { router as consoleRouter };
