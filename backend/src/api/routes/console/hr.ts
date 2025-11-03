@@ -8,8 +8,12 @@
 import { Router, Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../../middleware/auth';
 import { v4 as uuidv4 } from 'uuid';
+import onboardingRouter from './onboarding';
 
 const router = Router();
+
+// Mount onboarding sub-router
+router.use('/onboarding', onboardingRouter);
 
 // ========================================
 // APPLICANT MANAGEMENT

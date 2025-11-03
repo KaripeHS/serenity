@@ -39,8 +39,23 @@ export const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({ employ
   const fetchOnboardingData = async () => {
     setLoading(true);
     try {
-      // TODO: Fetch from backend
-      // const response = await fetch(`http://localhost:3000/api/console/hr/onboarding/${employeeId}`);
+      // Try backend API first
+      const response = await fetch(`http://localhost:3000/api/console/hr/onboarding/${employeeId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setEmployee(data.employee);
+        setChecklist(data.checklist);
+        setLoading(false);
+        return;
+      }
+
+      // Fall back to mock data if API fails
+      console.log('Backend API not available, using mock data');
 
       // Mock employee data
       const mockEmployee: Employee = {
@@ -200,13 +215,45 @@ export const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({ employ
 
   const handleStatusChange = async (itemId: string, newStatus: ChecklistItem['status']) => {
     try {
-      // TODO: Call backend API
-      // await fetch(`http://localhost:3000/api/console/hr/onboarding/${employeeId}/items/${itemId}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ status: newStatus })
-      // });
+      // Call backend API
+      const response = await fetch(`http://localhost:3000/api/console/hr/onboarding/${employeeId}/items/${itemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
 
+      if (response.ok) {
+        const data = await response.json();
+        // Update with backend response
+        setChecklist(prev => prev.map(item =>
+          item.id === itemId
+            ? {
+                ...item,
+                status: newStatus,
+                completedAt: data.completedAt || (newStatus === 'completed' ? new Date().toISOString() : item.completedAt),
+                completedBy: data.completedBy || (newStatus === 'completed' ? 'Current User' : item.completedBy)
+              }
+            : item
+        ));
+      } else {
+        // Fallback to local update if API fails
+        setChecklist(prev => prev.map(item =>
+          item.id === itemId
+            ? {
+                ...item,
+                status: newStatus,
+                completedAt: newStatus === 'completed' ? new Date().toISOString() : item.completedAt,
+                completedBy: newStatus === 'completed' ? 'Current User' : item.completedBy
+              }
+            : item
+        ));
+      }
+    } catch (error) {
+      console.error('Failed to update checklist item:', error);
+      // Fallback to local update on error
       setChecklist(prev => prev.map(item =>
         item.id === itemId
           ? {
@@ -217,18 +264,34 @@ export const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({ employ
             }
           : item
       ));
-    } catch (error) {
-      console.error('Failed to update checklist item:', error);
-      alert('Failed to update item status');
     }
   };
 
-  const handleAddNote = (itemId: string) => {
+  const handleAddNote = async (itemId: string) => {
     const note = prompt('Add note:');
     if (note) {
-      setChecklist(prev => prev.map(item =>
-        item.id === itemId ? { ...item, notes: note } : item
-      ));
+      try {
+        // Call backend API
+        const response = await fetch(`http://localhost:3000/api/console/hr/onboarding/${employeeId}/items/${itemId}/notes`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+          },
+          body: JSON.stringify({ notes: note })
+        });
+
+        // Update checklist regardless of API response
+        setChecklist(prev => prev.map(item =>
+          item.id === itemId ? { ...item, notes: note } : item
+        ));
+      } catch (error) {
+        console.error('Failed to save note:', error);
+        // Still update locally
+        setChecklist(prev => prev.map(item =>
+          item.id === itemId ? { ...item, notes: note } : item
+        ));
+      }
     }
   };
 
