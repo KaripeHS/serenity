@@ -22,6 +22,7 @@ import credentialsRouter from './credentials';
 import dispatchRouter from './dispatch';
 import billingRouter from './billing';
 import podScorecardRouter from './pod-scorecard';
+import otAnalysisRouter from './ot-analysis';
 
 const router = Router();
 
@@ -60,6 +61,9 @@ router.use('/sandata', sandataRouter);
 
 // HR management routes
 router.use('/hr', hrRouter);
+
+// OT Analysis routes
+router.use('/hr', otAnalysisRouter);
 
 // SPI (Serenity Performance Index) routes
 router.use('/spi', spiRouter);
