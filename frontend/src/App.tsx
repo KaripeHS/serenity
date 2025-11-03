@@ -18,6 +18,7 @@ import { WorkingComplianceDashboard } from './components/dashboards/WorkingCompl
 import { WorkingFamilyPortal } from './components/family/WorkingFamilyPortal';
 import { MorningCheckIn } from './components/operations/MorningCheckIn';
 import { WebEVVClock } from './components/evv/WebEVVClock';
+import { JobRequisitionsManager } from './components/admin/JobRequisitionsManager';
 
 // Layouts
 import DashboardLayout from './components/layouts/DashboardLayout';
@@ -63,6 +64,7 @@ function App() {
                       <Route path="compliance" element={<WorkingComplianceDashboard />} />
                       <Route path="training" element={<div className="p-6"><h1 className="text-2xl font-bold">Training Dashboard</h1><p>Coming soon...</p></div>} />
                       <Route path="morning-check-in" element={<MorningCheckIn />} />
+                      <Route path="jobs" element={<JobRequisitionsManager />} />
 
                       {/* Legacy dashboard routes */}
                       <Route path="legacy/executive" element={<WorkingExecutiveDashboard />} />
