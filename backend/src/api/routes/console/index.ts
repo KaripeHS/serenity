@@ -24,6 +24,7 @@ import billingRouter from './billing';
 import podScorecardRouter from './pod-scorecard';
 import otAnalysisRouter from './ot-analysis';
 import aiAgentsRouter from './ai-agents';
+import accessReviewsRouter from './access-reviews';
 
 const router = Router();
 
@@ -80,5 +81,8 @@ router.use('/billing', billingRouter);
 
 // AI agents routes
 router.use('/ai', aiAgentsRouter);
+
+// Access reviews routes (admin)
+router.use('/admin', accessReviewsRouter);
 
 export { router as consoleRouter };
