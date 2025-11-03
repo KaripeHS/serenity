@@ -9,6 +9,7 @@ import { Router } from 'express';
 import { requireAuth } from '../../middleware/auth';
 import { sandataRouter } from './sandata';
 import dashboardRouter from './dashboard';
+import dashboardsRouter from './dashboards';
 import podsRouter from './pods';
 import morningCheckInRouter from './morning-check-in';
 import shiftsRouter from './shifts';
@@ -26,8 +27,11 @@ const router = Router();
 // All Console routes require authentication
 router.use(requireAuth);
 
-// Dashboard routes
-router.use('/dashboard', dashboardRouter);
+// Dashboard builder routes (old)
+// router.use('/dashboard', dashboardRouter);
+
+// Dashboard data API routes (new - Phase 5.1)
+router.use('/dashboard', dashboardsRouter);
 
 // Pods management routes
 router.use('/pods', podsRouter);
