@@ -10,10 +10,12 @@ import { requireAuth, AuthenticatedRequest } from '../../middleware/auth';
 import { ApiErrors } from '../../middleware/error-handler';
 import { getClaimsGateService } from '../../../modules/billing/claims-gate.service';
 import { getEDI837GeneratorService } from '../../../modules/billing/edi-generator.service';
+import { getPayrollExportService } from '../../../modules/billing/payroll-export.service';
 
 const router = Router();
 const claimsGateService = getClaimsGateService();
 const edi837Generator = getEDI837GeneratorService();
+const payrollExportService = getPayrollExportService();
 
 // All routes require authentication
 router.use(requireAuth);
@@ -501,6 +503,82 @@ router.post('/denials/:id/appeal', async (req: AuthenticatedRequest, res: Respon
       denialId: id,
       appealId: `appeal-${Date.now()}`
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/console/billing/payroll/report
+ * Generate payroll report for date range
+ */
+router.get('/payroll/report', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      throw ApiErrors.badRequest('startDate and endDate are required');
+    }
+
+    const organizationId = req.user?.organizationId || '00000000-0000-0000-0000-000000000001';
+
+    const start = new Date(startDate as string);
+    const end = new Date(endDate as string);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw ApiErrors.badRequest('Invalid date format');
+    }
+
+    const report = await payrollExportService.generatePayrollReport(start, end, organizationId);
+
+    res.json(report);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/console/billing/payroll/export
+ * Export payroll as CSV
+ */
+router.get('/payroll/export', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { startDate, endDate, format = 'csv' } = req.query;
+
+    if (!startDate || !endDate) {
+      throw ApiErrors.badRequest('startDate and endDate are required');
+    }
+
+    const organizationId = req.user?.organizationId || '00000000-0000-0000-0000-000000000001';
+
+    const start = new Date(startDate as string);
+    const end = new Date(endDate as string);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw ApiErrors.badRequest('Invalid date format');
+    }
+
+    // Generate report
+    const report = await payrollExportService.generatePayrollReport(start, end, organizationId);
+
+    // Export in requested format
+    let csvContent: string;
+    let filename: string;
+
+    if (format === 'adp') {
+      csvContent = await payrollExportService.exportAsADP(report);
+      filename = `payroll_adp_${report.payPeriodStart}_${report.payPeriodEnd}.csv`;
+    } else if (format === 'gusto') {
+      csvContent = await payrollExportService.exportAsGusto(report);
+      filename = `payroll_gusto_${report.payPeriodStart}_${report.payPeriodEnd}.csv`;
+    } else {
+      csvContent = await payrollExportService.exportAsCSV(report);
+      filename = `payroll_${report.payPeriodStart}_${report.payPeriodEnd}.csv`;
+    }
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csvContent);
   } catch (error) {
     next(error);
   }
