@@ -17,6 +17,7 @@ import { WorkingBillingDashboard } from './components/dashboards/WorkingBillingD
 import { WorkingComplianceDashboard } from './components/dashboards/WorkingComplianceDashboard';
 import { WorkingFamilyPortal } from './components/family/WorkingFamilyPortal';
 import { MorningCheckIn } from './components/operations/MorningCheckIn';
+import { WebEVVClock } from './components/evv/WebEVVClock';
 
 // Layouts
 import DashboardLayout from './components/layouts/DashboardLayout';
@@ -73,6 +74,7 @@ function App() {
 
               {/* Standalone Routes */}
               <Route path="/family-portal" element={<WorkingFamilyPortal />} />
+              <Route path="/evv-clock" element={<WebEVVClock />} />
 
               {/* Feature Routes */}
               <Route
