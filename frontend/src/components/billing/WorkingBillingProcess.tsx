@@ -1,5 +1,16 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { Card } from '../ui/Card';
+import { Badge } from '../ui/Badge';
+import { Alert } from '../ui/Alert';
+import {
+  ArrowLeftIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  CheckCircleIcon,
+  XCircleIcon
+} from '@heroicons/react/24/outline';
 
 interface ClaimBatch {
   id: string;
@@ -24,19 +35,45 @@ interface ProcessClaim {
   validationMessages: string[];
 }
 
+type TabKey = 'ready' | 'pending' | 'submitted' | 'denied';
+
+function BatchStatusBadge({ status }: { status: ClaimBatch['status'] }) {
+  const variants: Record<ClaimBatch['status'], any> = {
+    draft: 'gray',
+    ready: 'success',
+    submitted: 'info',
+    processing: 'warning',
+    paid: 'success',
+    denied: 'danger'
+  };
+
+  const icons: Record<ClaimBatch['status'], string> = {
+    draft: '⚪',
+    ready: '🟢',
+    submitted: '📤',
+    processing: '⏳',
+    paid: '💰',
+    denied: '❌'
+  };
+
+  return (
+    <Badge variant={variants[status]} size="sm">
+      {icons[status]} {status.charAt(0).toUpperCase() + status.slice(1)}
+    </Badge>
+  );
+}
+
 export function WorkingBillingProcess() {
-  const { user: _user } = useAuth();
+  const { user } = useAuth();
   const [batches, setBatches] = useState<ClaimBatch[]>([]);
-  const [_selectedBatch, setSelectedBatch] = useState<ClaimBatch | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'ready' | 'pending' | 'submitted' | 'denied'>('ready');
+  const [activeTab, setActiveTab] = useState<TabKey>('ready');
 
   useEffect(() => {
     loadClaimBatches();
   }, []);
 
   const loadClaimBatches = async () => {
-    // Simulate loading claim batches
     const productionBatches: ClaimBatch[] = [
       {
         id: 'batch_001',
@@ -98,7 +135,6 @@ export function WorkingBillingProcess() {
   const handleValidateBatch = async (batch: ClaimBatch) => {
     setIsProcessing(true);
     try {
-      // Simulate batch validation
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       const updatedBatch = {
@@ -111,7 +147,7 @@ export function WorkingBillingProcess() {
       };
 
       setBatches(prev => prev.map(b => b.id === batch.id ? updatedBatch : b));
-      alert(`✅ Batch ${batch.batchNumber} validated!\n\nReady Claims: ${updatedBatch.claims.filter(c => c.status === 'ready').length}\nError Claims: ${updatedBatch.claims.filter(c => c.status === 'error').length}`);
+      alert(`✅ Batch ${batch.batchNumber} validated!\n\nReady: ${updatedBatch.claims.filter(c => c.status === 'ready').length}\nError: ${updatedBatch.claims.filter(c => c.status === 'error').length}`);
     } catch (error) {
       alert('Failed to validate batch. Please try again.');
     } finally {
@@ -132,7 +168,6 @@ export function WorkingBillingProcess() {
 
     setIsProcessing(true);
     try {
-      // Simulate 837 file generation and submission
       await new Promise(resolve => setTimeout(resolve, 3000));
 
       const updatedBatch = {
@@ -143,7 +178,7 @@ export function WorkingBillingProcess() {
 
       setBatches(prev => prev.map(b => b.id === batch.id ? updatedBatch : b));
 
-      alert(`✅ Batch Submitted Successfully!\n\nBatch: ${batch.batchNumber}\nClaims: ${batch.totalClaims}\nAmount: $${batch.totalAmount.toFixed(2)}\nPayer: ${batch.payer}\n\n837P file generated and transmitted to clearinghouse.`);
+      alert(`✅ Batch Submitted!\n\nBatch: ${batch.batchNumber}\nClaims: ${batch.totalClaims}\nAmount: $${batch.totalAmount.toFixed(2)}\nPayer: ${batch.payer}\n\n837P file transmitted to clearinghouse.`);
     } catch (error) {
       alert('Failed to submit batch. Please try again.');
     } finally {
@@ -152,33 +187,7 @@ export function WorkingBillingProcess() {
   };
 
   const handleGenerateReport = (type: 'summary' | 'detailed' | 'aging') => {
-    alert(`📊 ${type.charAt(0).toUpperCase() + type.slice(1)} Report Generated!\n\nReport will be available in Downloads folder.\nFormat: PDF + Excel\nTimestamp: ${new Date().toLocaleString()}`);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ready': return '#10B981';
-      case 'submitted': return '#3B82F6';
-      case 'processing': return '#F59E0B';
-      case 'paid': return '#059669';
-      case 'denied': return '#EF4444';
-      case 'warning': return '#F59E0B';
-      case 'error': return '#EF4444';
-      default: return '#6B7280';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'ready': return '🟢';
-      case 'submitted': return '📤';
-      case 'processing': return '⏳';
-      case 'paid': return '💰';
-      case 'denied': return '❌';
-      case 'warning': return '⚠️';
-      case 'error': return '🔴';
-      default: return '⚪';
-    }
+    alert(`📊 ${type.charAt(0).toUpperCase() + type.slice(1)} Report Generated!\n\nFormat: PDF + Excel\nTimestamp: ${new Date().toLocaleString()}`);
   };
 
   const filteredBatches = batches.filter(batch => {
@@ -191,340 +200,170 @@ export function WorkingBillingProcess() {
     }
   });
 
+  const getEvvCompliancePercent = (batch: ClaimBatch) => {
+    if (batch.claims.length === 0) return 'N/A';
+    const compliant = batch.claims.filter(c => c.evvCompliant).length;
+    return `${Math.round((compliant / batch.claims.length) * 100)}%`;
+  };
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f9fafb',
-      padding: '2rem'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto p-4 md:p-8">
         {/* Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '2rem'
-        }}>
-          <div>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: '#1f2937',
-              marginBottom: '0.5rem'
-            }}>
-              💰 Claims Processing Center
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
+          <div className="animate-fade-in">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <CurrencyDollarIcon className="h-8 w-8 text-success-600" />
+              Claims Processing Center
             </h1>
-            <p style={{ color: '#6b7280' }}>
-              Submit claims, track status, and manage denials
+            <p className="text-gray-600">
+              Welcome, {user?.firstName}. Submit claims, track status, and manage denials
             </p>
           </div>
-          <a href="/" style={{
-            color: '#2563eb',
-            textDecoration: 'underline'
-          }}>
-            ← Back to Home
-          </a>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium transition-colors"
+          >
+            <ArrowLeftIcon className="h-4 w-4" />
+            <span>Back to Home</span>
+          </Link>
         </div>
 
         {/* Quick Actions */}
-        <div style={{
-          backgroundColor: 'white',
-          padding: '1.5rem',
-          borderRadius: '0.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb',
-          marginBottom: '2rem'
-        }}>
-          <h3 style={{
-            fontSize: '1.125rem',
-            fontWeight: '600',
-            color: '#1f2937',
-            marginBottom: '1rem'
-          }}>
-            📋 Quick Actions
-          </h3>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '1rem'
-          }}>
+        <Card className="mb-8 animate-fade-in">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 Quick Actions</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <button
               onClick={() => handleGenerateReport('summary')}
-              style={{
-                padding: '0.75rem',
-                backgroundColor: '#3B82F6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.5rem',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}
+              className="px-4 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-all hover:scale-105"
             >
               📊 Summary Report
             </button>
             <button
               onClick={() => handleGenerateReport('detailed')}
-              style={{
-                padding: '0.75rem',
-                backgroundColor: '#10B981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.5rem',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}
+              className="px-4 py-3 bg-success-600 text-white rounded-lg font-medium hover:bg-success-700 transition-all hover:scale-105"
             >
               📋 Detailed Report
             </button>
             <button
               onClick={() => handleGenerateReport('aging')}
-              style={{
-                padding: '0.75rem',
-                backgroundColor: '#F59E0B',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.5rem',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}
+              className="px-4 py-3 bg-warning-600 text-white rounded-lg font-medium hover:bg-warning-700 transition-all hover:scale-105"
             >
               ⏰ Aging Report
             </button>
             <button
-              onClick={() => alert('🔄 ERA Import\n\nSelect 835 files to import payment postings automatically.')}
-              style={{
-                padding: '0.75rem',
-                backgroundColor: '#8B5CF6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.5rem',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}
+              onClick={() => alert('🔄 Select 835 files to import payment postings automatically.')}
+              className="px-4 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-all hover:scale-105"
             >
               🔄 Import ERA
             </button>
           </div>
-        </div>
+        </Card>
 
         {/* Tabs */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '0.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb',
-          marginBottom: '2rem'
-        }}>
-          <div style={{
-            display: 'flex',
-            borderBottom: '1px solid #e5e7eb'
-          }}>
+        <Card className="mb-8 animate-fade-in">
+          <div className="flex border-b border-gray-200">
             {[
-              { key: 'ready', label: 'Ready to Submit', count: batches.filter(b => b.status === 'ready' || b.status === 'draft').length },
-              { key: 'pending', label: 'Processing', count: batches.filter(b => b.status === 'processing').length },
-              { key: 'submitted', label: 'Submitted', count: batches.filter(b => b.status === 'submitted').length },
-              { key: 'denied', label: 'Denied', count: batches.filter(b => b.status === 'denied').length }
+              { key: 'ready' as const, label: 'Ready to Submit', count: batches.filter(b => b.status === 'ready' || b.status === 'draft').length },
+              { key: 'pending' as const, label: 'Processing', count: batches.filter(b => b.status === 'processing').length },
+              { key: 'submitted' as const, label: 'Submitted', count: batches.filter(b => b.status === 'submitted').length },
+              { key: 'denied' as const, label: 'Denied', count: batches.filter(b => b.status === 'denied').length }
             ].map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key as any)}
-                style={{
-                  flex: 1,
-                  padding: '1rem',
-                  backgroundColor: activeTab === tab.key ? '#f3f4f6' : 'white',
-                  color: activeTab === tab.key ? '#1f2937' : '#6b7280',
-                  border: 'none',
-                  borderBottom: activeTab === tab.key ? '2px solid #3B82F6' : '2px solid transparent',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  textAlign: 'center'
-                }}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === tab.key
+                    ? 'border-primary-600 text-primary-600 bg-primary-50'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
               >
                 {tab.label}
                 {tab.count > 0 && (
-                  <span style={{
-                    marginLeft: '0.5rem',
-                    padding: '0.125rem 0.5rem',
-                    backgroundColor: activeTab === tab.key ? '#3B82F6' : '#e5e7eb',
-                    color: activeTab === tab.key ? 'white' : '#6b7280',
-                    borderRadius: '9999px',
-                    fontSize: '0.75rem'
-                  }}>
+                  <Badge variant={activeTab === tab.key ? 'primary' : 'gray'} size="sm" className="ml-2">
                     {tab.count}
-                  </span>
+                  </Badge>
                 )}
               </button>
             ))}
           </div>
 
           {/* Batch List */}
-          <div style={{ padding: '1.5rem' }}>
+          <div className="p-6">
             {filteredBatches.length === 0 ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '2rem',
-                color: '#6b7280'
-              }}>
-                <p>No batches in this category.</p>
+              <div className="text-center py-12">
+                <DocumentTextIcon className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                <p className="text-gray-600">No batches in this category.</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="space-y-4">
                 {filteredBatches.map((batch) => (
-                  <div
-                    key={batch.id}
-                    style={{
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '0.5rem',
-                      padding: '1.5rem',
-                      backgroundColor: 'white'
-                    }}
-                  >
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '1rem'
-                    }}>
+                  <div key={batch.id} className="border border-gray-200 rounded-lg p-6 hover:border-primary-300 hover:bg-primary-50 transition-all">
+                    <div className="flex justify-between items-center mb-4">
                       <div>
-                        <h4 style={{
-                          fontSize: '1.25rem',
-                          fontWeight: '600',
-                          color: '#1f2937',
-                          marginBottom: '0.25rem'
-                        }}>
-                          {batch.batchNumber}
-                        </h4>
-                        <p style={{
-                          fontSize: '0.875rem',
-                          color: '#6b7280'
-                        }}>
+                        <h4 className="text-xl font-semibold text-gray-900">{batch.batchNumber}</h4>
+                        <p className="text-sm text-gray-600">
                           {batch.payer} • Created {batch.createdDate}
                           {batch.submissionDate && ` • Submitted ${batch.submissionDate}`}
                         </p>
                       </div>
-                      <span style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        padding: '0.5rem 1rem',
-                        borderRadius: '9999px',
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        backgroundColor: `${getStatusColor(batch.status)}20`,
-                        color: getStatusColor(batch.status)
-                      }}>
-                        {getStatusIcon(batch.status)} {batch.status.charAt(0).toUpperCase() + batch.status.slice(1)}
-                      </span>
+                      <BatchStatusBadge status={batch.status} />
                     </div>
 
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                      gap: '1rem',
-                      marginBottom: '1rem'
-                    }}>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                       <div>
-                        <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Claims</p>
-                        <p style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1f2937' }}>{batch.totalClaims}</p>
+                        <p className="text-sm font-medium text-gray-600">Claims</p>
+                        <p className="text-2xl font-bold text-gray-900">{batch.totalClaims}</p>
                       </div>
                       <div>
-                        <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Total Amount</p>
-                        <p style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1f2937' }}>${batch.totalAmount.toFixed(2)}</p>
+                        <p className="text-sm font-medium text-gray-600">Total Amount</p>
+                        <p className="text-2xl font-bold text-gray-900">${batch.totalAmount.toFixed(2)}</p>
                       </div>
                       <div>
-                        <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>EVV Compliance</p>
-                        <p style={{ fontSize: '1.25rem', fontWeight: '600', color: batch.claims.every(c => c.evvCompliant) ? '#10B981' : '#EF4444' }}>
-                          {batch.claims.length > 0 ? `${Math.round((batch.claims.filter(c => c.evvCompliant).length / batch.claims.length) * 100)}%` : 'N/A'}
+                        <p className="text-sm font-medium text-gray-600">EVV Compliance</p>
+                        <p className={`text-2xl font-bold ${batch.claims.every(c => c.evvCompliant) ? 'text-success-600' : 'text-danger-600'}`}>
+                          {getEvvCompliancePercent(batch)}
                         </p>
                       </div>
                     </div>
 
                     {batch.status === 'ready' && (
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => handleValidateBatch(batch)}
                           disabled={isProcessing}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            backgroundColor: '#F59E0B',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '0.375rem',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            cursor: isProcessing ? 'not-allowed' : 'pointer',
-                            opacity: isProcessing ? 0.7 : 1
-                          }}
+                          className="px-4 py-2 bg-warning-600 text-white rounded-lg text-sm font-medium hover:bg-warning-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                         >
                           {isProcessing ? '⏳ Validating...' : '🔍 Validate'}
                         </button>
                         <button
                           onClick={() => handleSubmitBatch(batch)}
                           disabled={isProcessing || batch.claims.some(c => c.status === 'error')}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            backgroundColor: batch.claims.some(c => c.status === 'error') ? '#9ca3af' : '#10B981',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '0.375rem',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            cursor: isProcessing || batch.claims.some(c => c.status === 'error') ? 'not-allowed' : 'pointer'
-                          }}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            batch.claims.some(c => c.status === 'error')
+                              ? 'bg-gray-400 text-white cursor-not-allowed'
+                              : 'bg-success-600 text-white hover:bg-success-700'
+                          }`}
                         >
                           {isProcessing ? '⏳ Submitting...' : '📤 Submit Batch'}
                         </button>
-                        <button
-                          onClick={() => setSelectedBatch(batch)}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            backgroundColor: 'white',
-                            color: '#374151',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '0.375rem',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            cursor: 'pointer'
-                          }}
-                        >
+                        <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors">
                           📋 View Details
                         </button>
                       </div>
                     )}
 
                     {batch.status === 'denied' && (
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => alert('🔄 Reprocessing denied claims...')}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            backgroundColor: '#EF4444',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '0.375rem',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            cursor: 'pointer'
-                          }}
+                          className="px-4 py-2 bg-danger-600 text-white rounded-lg text-sm font-medium hover:bg-danger-700 transition-colors"
                         >
                           🔄 Reprocess
                         </button>
                         <button
                           onClick={() => alert('📄 Generating appeal documentation...')}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            backgroundColor: '#8B5CF6',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '0.375rem',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            cursor: 'pointer'
-                          }}
+                          className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
                         >
                           📄 Generate Appeal
                         </button>
@@ -535,30 +374,20 @@ export function WorkingBillingProcess() {
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* Ohio EVV Compliance Notice */}
-        <div style={{
-          backgroundColor: '#fef3c7',
-          border: '1px solid #fde047',
-          borderRadius: '0.5rem',
-          padding: '1rem'
-        }}>
-          <h4 style={{
-            fontSize: '0.875rem',
-            fontWeight: '600',
-            color: '#92400e',
-            marginBottom: '0.5rem'
-          }}>
-            ⚠️ Ohio "No EVV, No Pay" Compliance
-          </h4>
-          <p style={{
-            fontSize: '0.875rem',
-            color: '#78350f'
-          }}>
-            All claims must have compliant EVV records before submission. Claims without proper EVV documentation will be automatically rejected by Ohio Medicaid.
-          </p>
-        </div>
+        <Alert variant="warning" className="animate-fade-in">
+          <div className="flex items-start gap-3">
+            <ExclamationTriangleIcon className="h-5 w-5 text-warning-700 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-warning-900 mb-1">⚠️ Ohio "No EVV, No Pay" Compliance</h4>
+              <p className="text-sm text-warning-800">
+                All claims must have compliant EVV records before submission. Claims without proper EVV documentation will be automatically rejected by Ohio Medicaid.
+              </p>
+            </div>
+          </div>
+        </Alert>
       </div>
     </div>
   );
