@@ -29,6 +29,7 @@ import evvHealthRouter from './evv-health';
 import adminRouter from './admin';
 import systemConfigRouter from './system-config';
 import checkInRouter from './check-in';
+import gapsRouter from './gaps';
 
 const router = Router();
 
@@ -100,5 +101,8 @@ router.use('/config', systemConfigRouter);
 
 // Daily check-in status routes (visit tracking)
 router.use('/check-in', checkInRouter);
+
+// Coverage gap detection routes (real-time no-show alerts)
+router.use('/gaps', gapsRouter);
 
 export { router as consoleRouter };
