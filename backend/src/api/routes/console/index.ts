@@ -18,6 +18,7 @@ import operationsRouter from './operations';
 import hrRouter from './hr';
 import spiRouter from './spi';
 import credentialsRouter from './credentials';
+import dispatchRouter from './dispatch';
 
 const router = Router();
 
@@ -56,5 +57,8 @@ router.use('/spi', spiRouter);
 
 // Credentials management routes
 router.use('/credentials', credentialsRouter);
+
+// On-call dispatch routes
+router.use('/dispatch', dispatchRouter);
 
 export { router as consoleRouter };

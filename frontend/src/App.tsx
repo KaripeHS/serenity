@@ -20,6 +20,7 @@ import { MorningCheckIn } from './components/operations/MorningCheckIn';
 import { WebEVVClock } from './components/evv/WebEVVClock';
 import { JobRequisitionsManager } from './components/admin/JobRequisitionsManager';
 import { PodManager } from './components/pods/PodManager';
+import { OnCallDispatch } from './components/operations/OnCallDispatch';
 
 // Layouts
 import DashboardLayout from './components/layouts/DashboardLayout';
@@ -67,6 +68,7 @@ function App() {
                       <Route path="morning-check-in" element={<MorningCheckIn />} />
                       <Route path="jobs" element={<JobRequisitionsManager />} />
                       <Route path="pods" element={<PodManager />} />
+                      <Route path="dispatch" element={<OnCallDispatch />} />
 
                       {/* Legacy dashboard routes */}
                       <Route path="legacy/executive" element={<WorkingExecutiveDashboard />} />
