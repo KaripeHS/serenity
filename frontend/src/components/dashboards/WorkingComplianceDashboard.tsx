@@ -5,6 +5,8 @@ import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Skeleton } from '../ui/Skeleton';
 import { Alert } from '../ui/Alert';
+import { Chart } from '../ui/Chart';
+import { ProgressRing } from '../ui/ProgressRing';
 import {
   ArrowLeftIcon,
   ShieldCheckIcon,
@@ -86,6 +88,23 @@ export function WorkingComplianceDashboard() {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<ComplianceMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Mock chart data
+  const complianceTrendData = [
+    { label: 'Jan', value: 82.5 },
+    { label: 'Feb', value: 84.2 },
+    { label: 'Mar', value: 85.8 },
+    { label: 'Apr', value: 86.5 },
+    { label: 'May', value: 87.0 },
+    { label: 'Jun', value: 87.5 }
+  ];
+
+  const trainingCompletionData = [
+    { label: 'Week 1', value: 45 },
+    { label: 'Week 2', value: 67 },
+    { label: 'Week 3', value: 82 },
+    { label: 'Week 4', value: 94 }
+  ];
 
   const complianceItems: ComplianceItem[] = [
     { id: 'HIPAA001', type: 'HIPAA', description: 'Annual HIPAA Risk Assessment', status: 'completed', dueDate: '2024-12-31', priority: 'high' },
@@ -174,31 +193,57 @@ export function WorkingComplianceDashboard() {
           </div>
         )}
 
-        {/* HIPAA Compliance Score */}
-        <Card className="mb-8 animate-fade-in">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <ShieldCheckIcon className="h-6 w-6 text-primary-600" />
-              HIPAA Compliance Score
+        {/* HIPAA Compliance Score & Trend */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-fade-in">
+          {/* HIPAA Score Ring */}
+          <Card className="text-center">
+            <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-4">
+              <ShieldCheckIcon className="h-5 w-5 inline mr-2 text-primary-600" />
+              HIPAA Compliance
             </h3>
-            <span className={`text-4xl font-bold ${getComplianceColor()}`}>
-              {metrics.hipaaComplianceScore}%
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                metrics.hipaaComplianceScore >= 85
-                  ? 'bg-success-600'
-                  : metrics.hipaaComplianceScore >= 70
-                  ? 'bg-warning-600'
-                  : 'bg-danger-600'
-              }`}
-              style={{ width: `${metrics.hipaaComplianceScore}%` }}
+            <ProgressRing
+              percentage={metrics.hipaaComplianceScore}
+              size={160}
+              strokeWidth={12}
+              color={metrics.hipaaComplianceScore >= 85 ? '#10b981' : metrics.hipaaComplianceScore >= 70 ? '#f59e0b' : '#ef4444'}
+              label="Target: 85%"
             />
-          </div>
-          <p className="text-sm text-gray-600">Target: 85% minimum for full compliance</p>
-        </Card>
+            <p className={`text-sm font-medium mt-3 ${getComplianceColor()}`}>
+              {metrics.hipaaComplianceScore >= 85 ? 'Fully Compliant ✓' : 'Below Target'}
+            </p>
+          </Card>
+
+          {/* Compliance Trend */}
+          <Card className="lg:col-span-2">
+            <Chart
+              type="area"
+              data={complianceTrendData}
+              title="HIPAA Compliance Trend (6 Months)"
+              height={220}
+              width={600}
+              showGrid={true}
+              showAxes={true}
+              color="#10b981"
+              gradientFrom="#10b981"
+              gradientTo="#34d399"
+            />
+          </Card>
+        </div>
+
+        {/* Training Completion Chart */}
+        <div className="mb-8 animate-fade-in">
+          <Chart
+            type="bar"
+            data={trainingCompletionData}
+            title="Training Completion Rate (This Month)"
+            height={240}
+            width={1200}
+            showGrid={true}
+            showAxes={true}
+            showValues={true}
+            color="#3b82f6"
+          />
+        </div>
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 animate-fade-in">
