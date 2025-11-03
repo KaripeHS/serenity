@@ -26,6 +26,8 @@ import otAnalysisRouter from './ot-analysis';
 import aiAgentsRouter from './ai-agents';
 import accessReviewsRouter from './access-reviews';
 import evvHealthRouter from './evv-health';
+import adminRouter from './admin';
+import systemConfigRouter from './system-config';
 
 const router = Router();
 
@@ -88,5 +90,11 @@ router.use('/ai', aiAgentsRouter);
 
 // Access reviews routes (admin)
 router.use('/admin', accessReviewsRouter);
+
+// Admin management routes (users, pods, security)
+router.use('/admin', adminRouter);
+
+// System configuration routes
+router.use('/config', systemConfigRouter);
 
 export { router as consoleRouter };
