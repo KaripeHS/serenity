@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { loggerService } from '../../shared/services/logger.service';
+import { Card } from '../ui/Card';
+import { Badge } from '../ui/Badge';
+import { Alert } from '../ui/Alert';
+import {
+  ArrowLeftIcon,
+  ClockIcon,
+  MapPinIcon,
+  UserIcon
+} from '@heroicons/react/24/outline';
 
 interface EVVShift {
   id: string;
@@ -19,8 +29,19 @@ interface LocationData {
   address?: string;
 }
 
+function ShiftStatusBadge({ status }: { status: EVVShift['status'] }) {
+  const variants: Record<EVVShift['status'], { variant: any; label: string }> = {
+    scheduled: { variant: 'gray', label: '⭕ Scheduled' },
+    in_progress: { variant: 'warning', label: '🟡 In Progress' },
+    completed: { variant: 'success', label: '✅ Completed' }
+  };
+
+  const config = variants[status];
+  return <Badge variant={config.variant} size="sm">{config.label}</Badge>;
+}
+
 export function WorkingEVVClock() {
-  const { user: _user } = useAuth();
+  const { user } = useAuth();
   const [currentShift, setCurrentShift] = useState<EVVShift | null>(null);
   const [location, setLocation] = useState<LocationData | null>(null);
   const [isClockingIn, setIsClockingIn] = useState(false);
@@ -35,7 +56,6 @@ export function WorkingEVVClock() {
   }, []);
 
   const loadTodaysShifts = async () => {
-    // Simulate loading today's shifts
     const productionShifts: EVVShift[] = [
       {
         id: 'shift_001',
@@ -90,7 +110,6 @@ export function WorkingEVVClock() {
 
     setIsClockingIn(true);
     try {
-      // Simulate clock-in API call
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       const updatedShift = { ...shift, status: 'in_progress' as const };
@@ -110,7 +129,6 @@ export function WorkingEVVClock() {
 
     setIsClockingIn(true);
     try {
-      // Simulate clock-out API call
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       const updatedShift = { ...currentShift, status: 'completed' as const };
@@ -127,7 +145,6 @@ export function WorkingEVVClock() {
 
   const calculateDuration = () => {
     if (!currentShift) return '0 hours';
-    // production duration calculation
     return '2 hours 15 minutes';
   };
 
@@ -135,346 +152,189 @@ export function WorkingEVVClock() {
     const now = new Date();
     const currentHour = now.getHours();
     const scheduledHour = parseInt(shift.scheduledStart.split(':')[0]);
-
-    // Allow clock-in 15 minutes early, 30 minutes late
     return Math.abs(currentHour - scheduledHour) <= 1;
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f9fafb',
-      padding: '2rem'
-    }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto p-4 md:p-8">
         {/* Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '2rem'
-        }}>
-          <div>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: '#1f2937',
-              marginBottom: '0.5rem'
-            }}>
-              ⏰ EVV Clock System
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
+          <div className="animate-fade-in">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <ClockIcon className="h-8 w-8 text-primary-600" />
+              EVV Clock System
             </h1>
-            <p style={{ color: '#6b7280' }}>
-              Electronic Visit Verification - Ohio Medicaid Compliant
+            <p className="text-gray-600">
+              Welcome, {user?.firstName}. Electronic Visit Verification - Ohio Medicaid Compliant
             </p>
           </div>
-          <a href="/" style={{
-            color: '#2563eb',
-            textDecoration: 'underline'
-          }}>
-            ← Back to Home
-          </a>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium transition-colors"
+          >
+            <ArrowLeftIcon className="h-4 w-4" />
+            <span>Back to Home</span>
+          </Link>
         </div>
 
-        {/* Current Time & Location */}
-        <div style={{
-          backgroundColor: 'white',
-          padding: '1.5rem',
-          borderRadius: '0.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb',
-          marginBottom: '2rem'
-        }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '1rem'
-          }}>
+        {/* Current Time & Status */}
+        <Card className="mb-8 animate-fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Current Time */}
             <div>
-              <h3 style={{
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                color: '#6b7280',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                marginBottom: '0.5rem'
-              }}>
+              <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">
                 Current Time
               </h3>
-              <p style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: '#1f2937'
-              }}>
+              <p className="text-3xl font-bold text-gray-900 mb-1">
                 {currentTime.toLocaleTimeString()}
               </p>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+              <p className="text-sm text-gray-600">
                 {currentTime.toLocaleDateString('en-US', {
                   weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
+                  month: 'short',
                   day: 'numeric'
                 })}
               </p>
             </div>
 
+            {/* GPS Status */}
             <div>
-              <h3 style={{
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                color: '#6b7280',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                marginBottom: '0.5rem'
-              }}>
+              <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2 flex items-center gap-2">
+                <MapPinIcon className="h-4 w-4" />
                 GPS Status
               </h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{
-                  height: '0.75rem',
-                  width: '0.75rem',
-                  backgroundColor: location ? '#10B981' : '#EF4444',
-                  borderRadius: '50%'
-                }}></div>
-                <span style={{
-                  fontSize: '0.875rem',
-                  color: location ? '#166534' : '#DC2626',
-                  fontWeight: '500'
-                }}>
+              <div className="flex items-center gap-2 mb-1">
+                <div className={`h-3 w-3 rounded-full ${location ? 'bg-success-600' : 'bg-danger-600'} animate-pulse`}></div>
+                <span className={`text-sm font-medium ${location ? 'text-success-700' : 'text-danger-700'}`}>
                   {location ? 'Location Verified' : 'Location Required'}
                 </span>
               </div>
               {location && (
-                <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                <p className="text-xs text-gray-600">
                   Accuracy: ±{Math.round(location.accuracy)}m
                 </p>
               )}
             </div>
 
+            {/* Current Status */}
             <div>
-              <h3 style={{
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                color: '#6b7280',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                marginBottom: '0.5rem'
-              }}>
+              <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2 flex items-center gap-2">
+                <UserIcon className="h-4 w-4" />
                 Current Status
               </h3>
-              <span style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                padding: '0.25rem 0.75rem',
-                borderRadius: '9999px',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                backgroundColor: currentShift ? '#dcfce7' : '#f3f4f6',
-                color: currentShift ? '#166534' : '#374151'
-              }}>
-                {currentShift ? '🟢 On Shift' : '⚪ Available'}
-              </span>
+              <Badge variant={currentShift ? 'success' : 'gray'} size="lg" dot>
+                {currentShift ? 'On Shift' : 'Available'}
+              </Badge>
               {currentShift && (
-                <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                <p className="text-xs text-gray-600 mt-1">
                   {currentShift.clientName}
                 </p>
               )}
             </div>
           </div>
-        </div>
+        </Card>
 
-        {/* Current Shift */}
+        {/* Active Shift */}
         {currentShift && (
-          <div style={{
-            backgroundColor: '#dcfce7',
-            border: '2px solid #bbf7d0',
-            padding: '1.5rem',
-            borderRadius: '0.5rem',
-            marginBottom: '2rem'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '1rem'
-            }}>
-              <h3 style={{
-                fontSize: '1.25rem',
-                fontWeight: 'bold',
-                color: '#166534'
-              }}>
-                🟢 Active Shift
-              </h3>
-              <span style={{
-                fontSize: '0.875rem',
-                color: '#166534',
-                fontWeight: '500'
-              }}>
-                Duration: {calculateDuration()}
-              </span>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '1rem',
-              marginBottom: '1rem'
-            }}>
-              <div>
-                <p style={{ fontSize: '0.875rem', color: '#065f46', fontWeight: '500' }}>Client</p>
-                <p style={{ fontSize: '1rem', color: '#166534' }}>{currentShift.clientName}</p>
+          <div className="mb-8 animate-fade-in">
+            <Alert variant="success" title="🟢 Active Shift">
+              <div className="mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <p className="font-medium text-success-900">Client</p>
+                    <p className="text-success-700">{currentShift.clientName}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-success-900">Service</p>
+                    <p className="text-success-700">{currentShift.serviceType}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-success-900">Scheduled</p>
+                    <p className="text-success-700">
+                      {currentShift.scheduledStart} - {currentShift.scheduledEnd}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <p className="font-medium text-success-900 text-sm">Duration: {calculateDuration()}</p>
+                </div>
               </div>
-              <div>
-                <p style={{ fontSize: '0.875rem', color: '#065f46', fontWeight: '500' }}>Service</p>
-                <p style={{ fontSize: '1rem', color: '#166534' }}>{currentShift.serviceType}</p>
-              </div>
-              <div>
-                <p style={{ fontSize: '0.875rem', color: '#065f46', fontWeight: '500' }}>Scheduled</p>
-                <p style={{ fontSize: '1rem', color: '#166534' }}>
-                  {currentShift.scheduledStart} - {currentShift.scheduledEnd}
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={handleClockOut}
-              disabled={isClockingIn}
-              style={{
-                width: '100%',
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#DC2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.5rem',
-                fontSize: '1rem',
-                fontWeight: '500',
-                cursor: isClockingIn ? 'not-allowed' : 'pointer',
-                opacity: isClockingIn ? 0.7 : 1
-              }}
-            >
-              {isClockingIn ? '⏳ Processing...' : '🔴 Clock Out'}
-            </button>
+              <button
+                onClick={handleClockOut}
+                disabled={isClockingIn}
+                className="w-full px-4 py-3 bg-danger-600 text-white rounded-lg font-medium hover:bg-danger-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isClockingIn ? '⏳ Processing...' : '🔴 Clock Out'}
+              </button>
+            </Alert>
           </div>
         )}
 
-        {/* Today's Shifts */}
-        <div style={{
-          backgroundColor: 'white',
-          padding: '1.5rem',
-          borderRadius: '0.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb'
-        }}>
-          <h3 style={{
-            fontSize: '1.25rem',
-            fontWeight: 'bold',
-            color: '#1f2937',
-            marginBottom: '1rem'
-          }}>
-            📅 Today's Schedule
+        {/* Today's Schedule */}
+        <Card className="animate-fade-in">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <ClockIcon className="h-6 w-6 text-primary-600" />
+            Today's Schedule
           </h3>
 
           {shifts.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '2rem',
-              color: '#6b7280'
-            }}>
+            <div className="text-center py-12 text-gray-500">
+              <ClockIcon className="h-12 w-12 mx-auto mb-3 text-gray-400" />
               <p>No shifts scheduled for today.</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="space-y-4">
               {shifts.map((shift) => (
                 <div
                   key={shift.id}
-                  style={{
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '0.5rem',
-                    padding: '1rem',
-                    backgroundColor: shift.status === 'completed' ? '#f9fafb' : 'white'
-                  }}
+                  className={`p-4 border rounded-lg transition-all ${
+                    shift.status === 'completed'
+                      ? 'border-gray-200 bg-gray-50'
+                      : 'border-gray-300 bg-white hover:border-primary-300 hover:bg-primary-50'
+                  }`}
                 >
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '0.75rem'
-                  }}>
-                    <h4 style={{
-                      fontSize: '1.125rem',
-                      fontWeight: '600',
-                      color: '#1f2937'
-                    }}>
-                      {shift.clientName}
-                    </h4>
-                    <span style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '9999px',
-                      fontSize: '0.75rem',
-                      fontWeight: '500',
-                      backgroundColor:
-                        shift.status === 'completed' ? '#dcfce7' :
-                        shift.status === 'in_progress' ? '#fef3c7' : '#f3f4f6',
-                      color:
-                        shift.status === 'completed' ? '#166534' :
-                        shift.status === 'in_progress' ? '#92400e' : '#374151'
-                    }}>
-                      {shift.status === 'completed' ? '✅ Completed' :
-                       shift.status === 'in_progress' ? '🟡 In Progress' : '⭕ Scheduled'}
-                    </span>
-                  </div>
-
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '1rem',
-                    marginBottom: '1rem'
-                  }}>
-                    <div>
-                      <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Time</p>
-                      <p style={{ fontSize: '0.875rem', color: '#1f2937' }}>
-                        {shift.scheduledStart} - {shift.scheduledEnd}
-                      </p>
-                    </div>
-                    <div>
-                      <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Service</p>
-                      <p style={{ fontSize: '0.875rem', color: '#1f2937' }}>{shift.serviceType}</p>
-                    </div>
-                    <div>
-                      <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Address</p>
-                      <p style={{ fontSize: '0.875rem', color: '#1f2937' }}>{shift.clientAddress}</p>
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h4 className="text-lg font-semibold text-gray-900">
+                          {shift.clientName}
+                        </h4>
+                        <ShiftStatusBadge status={shift.status} />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-gray-600">
+                        <div>
+                          <p className="font-medium">Time</p>
+                          <p>{shift.scheduledStart} - {shift.scheduledEnd}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium">Service</p>
+                          <p>{shift.serviceType}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium">Address</p>
+                          <p>{shift.clientAddress}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   {shift.status === 'scheduled' && !currentShift && (
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div className="flex flex-col md:flex-row gap-2">
                       <button
                         onClick={() => handleClockIn(shift)}
                         disabled={!location || isClockingIn || !isWithinScheduledTime(shift)}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          backgroundColor:
-                            !location || !isWithinScheduledTime(shift) ? '#9ca3af' : '#10B981',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '0.375rem',
-                          fontSize: '0.875rem',
-                          fontWeight: '500',
-                          cursor:
-                            !location || !isWithinScheduledTime(shift) || isClockingIn ?
-                            'not-allowed' : 'pointer'
-                        }}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          !location || !isWithinScheduledTime(shift)
+                            ? 'bg-gray-400 text-white cursor-not-allowed'
+                            : 'bg-success-600 text-white hover:bg-success-700'
+                        } ${isClockingIn ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         {isClockingIn ? '⏳ Processing...' : '🟢 Clock In'}
                       </button>
 
                       {!isWithinScheduledTime(shift) && (
-                        <span style={{
-                          padding: '0.5rem',
-                          fontSize: '0.75rem',
-                          color: '#f59e0b'
-                        }}>
+                        <span className="flex items-center text-xs text-warning-700 px-2">
                           ⚠️ Outside scheduled time window
                         </span>
                       )}
@@ -484,47 +344,41 @@ export function WorkingEVVClock() {
               ))}
             </div>
           )}
-        </div>
+        </Card>
 
         {/* EVV Compliance Info */}
-        <div style={{
-          backgroundColor: '#f0f9ff',
-          border: '1px solid #bae6fd',
-          borderRadius: '0.5rem',
-          padding: '1rem',
-          marginTop: '2rem'
-        }}>
-          <h4 style={{
-            fontSize: '0.875rem',
-            fontWeight: '600',
-            color: '#0284c7',
-            marginBottom: '0.5rem'
-          }}>
+        <Card className="mt-8 bg-info-50 border-info-200 animate-fade-in">
+          <h4 className="text-sm font-semibold text-info-900 mb-3 flex items-center gap-2">
             📋 EVV Compliance Requirements
           </h4>
-          <div style={{
-            fontSize: '0.75rem',
-            color: '#0c4a6e',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '0.5rem'
-          }}>
-            <div>✅ Service type verification</div>
-            <div>✅ Client identification</div>
-            <div>✅ Service date recording</div>
-            <div>✅ GPS location tracking</div>
-            <div>✅ Caregiver authentication</div>
-            <div>✅ Time-of-service documentation</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-xs text-info-800">
+            <div className="flex items-center gap-2">
+              <span className="text-success-600">✅</span>
+              Service type verification
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-success-600">✅</span>
+              Client identification
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-success-600">✅</span>
+              Service date recording
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-success-600">✅</span>
+              GPS location tracking
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-success-600">✅</span>
+              Caregiver authentication
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-success-600">✅</span>
+              Time-of-service documentation
+            </div>
           </div>
-        </div>
+        </Card>
       </div>
-
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-      `}</style>
     </div>
   );
 }
