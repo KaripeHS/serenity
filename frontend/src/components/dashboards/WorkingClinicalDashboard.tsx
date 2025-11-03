@@ -1,5 +1,19 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { Card } from '../ui/Card';
+import { Badge } from '../ui/Badge';
+import { Skeleton } from '../ui/Skeleton';
+import { Alert } from '../ui/Alert';
+import {
+  ArrowLeftIcon,
+  UserGroupIcon,
+  HeartIcon,
+  BeakerIcon,
+  DocumentCheckIcon,
+  UserPlusIcon,
+  ExclamationTriangleIcon
+} from '@heroicons/react/24/outline';
 
 interface ClinicalMetrics {
   activePatients: number;
@@ -10,9 +24,38 @@ interface ClinicalMetrics {
   admissionsToday: number;
 }
 
+interface MetricCardProps {
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: React.ComponentType<any>;
+  iconColor: string;
+  valueColor?: string;
+}
+
+function MetricCard({ title, value, subtitle, icon: Icon, iconColor, valueColor = 'text-gray-900' }: MetricCardProps) {
+  return (
+    <Card hoverable className="transition-all hover:scale-105">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">{title}</h3>
+      </div>
+      <div className="flex items-center gap-4">
+        <div className={`p-3 ${iconColor} rounded-lg`}>
+          <Icon className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <p className={`text-3xl font-bold ${valueColor}`}>{value}</p>
+          <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 export function WorkingClinicalDashboard() {
-  const { user: _user } = useAuth();
+  const { user } = useAuth();
   const [metrics, setMetrics] = useState<ClinicalMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -24,569 +67,216 @@ export function WorkingClinicalDashboard() {
         careplanReviews: 18,
         admissionsToday: 7
       });
+      setLoading(false);
     }, 1100);
 
     return () => clearTimeout(timer);
   }, []);
 
-  if (!metrics) {
+  if (loading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        backgroundColor: '#f9fafb',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid #e5e7eb',
-            borderTop: '4px solid #2563eb',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 1rem'
-          }}></div>
-          <p style={{ color: '#6b7280' }}>Loading Clinical Dashboard...</p>
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <Skeleton className="h-10 w-96 mb-3" />
+            <Skeleton className="h-6 w-64" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i}>
+                <Skeleton className="h-6 w-32 mb-4" />
+                <Skeleton className="h-10 w-24" />
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
+  if (!metrics) return null;
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f9fafb',
-      padding: '2rem'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto p-4 md:p-8">
         {/* Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '2rem'
-        }}>
-          <div>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: '#1f2937',
-              marginBottom: '0.5rem'
-            }}>
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
+          <div className="animate-fade-in">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
               Clinical Dashboard
             </h1>
-            <p style={{ color: '#6b7280' }}>
-              Patient care monitoring, clinical alerts, and care plan management
+            <p className="text-gray-600">
+              Welcome back, {user?.firstName}. Patient care monitoring, clinical alerts, and care plan management
             </p>
           </div>
-          <a href="/" style={{
-            color: '#2563eb',
-            textDecoration: 'underline'
-          }}>
-            ← Back to Home
-          </a>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium transition-colors"
+          >
+            <ArrowLeftIcon className="h-4 w-4" />
+            <span>Back to Home</span>
+          </Link>
         </div>
 
         {/* Critical Alerts Banner */}
         {metrics.criticalAlerts > 0 && (
-          <div style={{
-            backgroundColor: '#fef2f2',
-            border: '2px solid #fecaca',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            marginBottom: '2rem'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '1.5rem' }}>🚨</span>
-                <div>
-                  <p style={{
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    color: '#dc2626',
-                    margin: 0
-                  }}>
-                    {metrics.criticalAlerts} Critical Clinical Alerts
-                  </p>
-                  <p style={{ fontSize: '0.875rem', color: '#7f1d1d', margin: 0 }}>
-                    Immediate attention required
-                  </p>
-                </div>
-              </div>
-              <button style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.25rem',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}>
+          <div className="mb-8 animate-fade-in">
+            <Alert
+              variant="danger"
+              title={`🚨 ${metrics.criticalAlerts} Critical Clinical Alerts`}
+            >
+              <p className="mb-3">Immediate attention required</p>
+              <button className="px-4 py-2 bg-danger-600 text-white rounded-lg text-sm font-medium hover:bg-danger-700 transition-colors">
                 View Alerts
               </button>
-            </div>
+            </Alert>
           </div>
         )}
 
         {/* Key Metrics */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '1.5rem',
-          marginBottom: '2rem'
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '0.5rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e5e7eb'
-          }}>
-            <h3 style={{
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              color: '#6b7280',
-              marginBottom: '0.5rem'
-            }}>
-              Active Patients
-            </h3>
-            <p style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: '#1f2937'
-            }}>
-              {metrics.activePatients}
-            </p>
-            <p style={{ fontSize: '0.875rem', color: '#059669' }}>
-              ❤️ All monitored
-            </p>
-          </div>
-
-          <div style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '0.5rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e5e7eb'
-          }}>
-            <h3 style={{
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              color: '#6b7280',
-              marginBottom: '0.5rem'
-            }}>
-              Medication Compliance
-            </h3>
-            <p style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: '#059669'
-            }}>
-              {metrics.medicationCompliance}%
-            </p>
-            <p style={{ fontSize: '0.875rem', color: '#059669' }}>
-              Above target (95%)
-            </p>
-          </div>
-
-          <div style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '0.5rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e5e7eb'
-          }}>
-            <h3 style={{
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              color: '#6b7280',
-              marginBottom: '0.5rem'
-            }}>
-            Vital Signs Updated
-            </h3>
-            <p style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: '#2563eb'
-            }}>
-              {metrics.vitalSignsUpdated}
-            </p>
-            <p style={{ fontSize: '0.875rem', color: '#2563eb' }}>
-              Today's recordings
-            </p>
-          </div>
-
-          <div style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '0.5rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e5e7eb'
-          }}>
-            <h3 style={{
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              color: '#6b7280',
-              marginBottom: '0.5rem'
-            }}>
-              Care Plan Reviews
-            </h3>
-            <p style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: '#7c3aed'
-            }}>
-              {metrics.careplanReviews}
-            </p>
-            <p style={{ fontSize: '0.875rem', color: '#7c3aed' }}>
-              Pending this week
-            </p>
-          </div>
-
-          <div style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '0.5rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e5e7eb'
-          }}>
-            <h3 style={{
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              color: '#6b7280',
-              marginBottom: '0.5rem'
-            }}>
-              New Admissions
-            </h3>
-            <p style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: '#059669'
-            }}>
-              {metrics.admissionsToday}
-            </p>
-            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-              Today
-            </p>
-          </div>
-
-          <div style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '0.5rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e5e7eb'
-          }}>
-            <h3 style={{
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              color: '#6b7280',
-              marginBottom: '0.5rem'
-            }}>
-              Critical Alerts
-            </h3>
-            <p style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: metrics.criticalAlerts > 3 ? '#dc2626' : '#f59e0b'
-            }}>
-              {metrics.criticalAlerts}
-            </p>
-            <p style={{ fontSize: '0.875rem', color: '#dc2626' }}>
-              Require attention
-            </p>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 animate-fade-in">
+          <MetricCard
+            title="Active Patients"
+            value={metrics.activePatients}
+            subtitle="❤️ All monitored"
+            icon={UserGroupIcon}
+            iconColor="bg-patient-600"
+          />
+          <MetricCard
+            title="Medication Compliance"
+            value={`${metrics.medicationCompliance}%`}
+            subtitle="Above target (95%)"
+            icon={BeakerIcon}
+            iconColor="bg-success-600"
+            valueColor="text-success-600"
+          />
+          <MetricCard
+            title="Vital Signs Updated"
+            value={metrics.vitalSignsUpdated}
+            subtitle="Today's recordings"
+            icon={HeartIcon}
+            iconColor="bg-primary-600"
+            valueColor="text-primary-600"
+          />
+          <MetricCard
+            title="Care Plan Reviews"
+            value={metrics.careplanReviews}
+            subtitle="Pending this week"
+            icon={DocumentCheckIcon}
+            iconColor="bg-purple-600"
+            valueColor="text-purple-600"
+          />
+          <MetricCard
+            title="New Admissions"
+            value={metrics.admissionsToday}
+            subtitle="Today"
+            icon={UserPlusIcon}
+            iconColor="bg-success-600"
+          />
+          <MetricCard
+            title="Critical Alerts"
+            value={metrics.criticalAlerts}
+            subtitle="Require attention"
+            icon={ExclamationTriangleIcon}
+            iconColor={metrics.criticalAlerts > 3 ? 'bg-danger-600' : 'bg-warning-600'}
+            valueColor={metrics.criticalAlerts > 3 ? 'text-danger-600' : 'text-warning-600'}
+          />
         </div>
 
-        {/* Patient Management Section */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-          gap: '1.5rem',
-          marginBottom: '2rem'
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '0.5rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e5e7eb'
-          }}>
-            <h3 style={{
-              fontSize: '1.125rem',
-              fontWeight: '600',
-              color: '#1f2937',
-              marginBottom: '1rem'
-            }}>
-              High Priority Patients
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{
-                padding: '0.75rem',
-                backgroundColor: '#fef2f2',
-                border: '1px solid #fecaca',
-                borderRadius: '0.25rem'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+        {/* Patient Management */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 animate-fade-in">
+          <Card>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">High Priority Patients</h3>
+            <div className="space-y-3">
+              <div className="p-4 bg-danger-50 border border-danger-200 rounded-lg">
+                <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#1f2937' }}>
-                      Eleanor Johnson (89)
-                    </p>
-                    <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                      Post-surgical wound care • Columbus
-                    </p>
+                    <p className="font-medium text-gray-900">Eleanor Johnson (89)</p>
+                    <p className="text-sm text-gray-600">Post-surgical wound care • Columbus</p>
                   </div>
-                  <span style={{
-                    backgroundColor: '#dc2626',
-                    color: 'white',
-                    padding: '0.25rem 0.5rem',
-                    borderRadius: '9999px',
-                    fontSize: '0.75rem'
-                  }}>
-                    Critical
-                  </span>
+                  <Badge variant="danger" size="sm">Critical</Badge>
                 </div>
-                <p style={{ fontSize: '0.75rem', color: '#dc2626', marginTop: '0.5rem' }}>
+                <p className="text-sm text-danger-700 mt-2">
                   ⚠️ Infection risk - Daily monitoring required
                 </p>
               </div>
-              <div style={{
-                padding: '0.75rem',
-                backgroundColor: '#fffbeb',
-                border: '1px solid #fed7aa',
-                borderRadius: '0.25rem'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+
+              <div className="p-4 bg-warning-50 border border-warning-200 rounded-lg">
+                <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#1f2937' }}>
-                      Robert Smith (76)
-                    </p>
-                    <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                      Diabetes management • Dublin
-                    </p>
+                    <p className="font-medium text-gray-900">Robert Smith (76)</p>
+                    <p className="text-sm text-gray-600">Diabetes management • Dublin</p>
                   </div>
-                  <span style={{
-                    backgroundColor: '#f59e0b',
-                    color: 'white',
-                    padding: '0.25rem 0.5rem',
-                    borderRadius: '9999px',
-                    fontSize: '0.75rem'
-                  }}>
-                    Monitor
-                  </span>
+                  <Badge variant="warning" size="sm">Monitor</Badge>
                 </div>
-                <p style={{ fontSize: '0.75rem', color: '#d97706', marginTop: '0.5rem' }}>
+                <p className="text-sm text-warning-700 mt-2">
                   📊 Blood sugar trending high
                 </p>
               </div>
-              <div style={{
-                padding: '0.75rem',
-                backgroundColor: '#f0f9ff',
-                border: '1px solid #bae6fd',
-                borderRadius: '0.25rem'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+
+              <div className="p-4 bg-info-50 border border-info-200 rounded-lg">
+                <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#1f2937' }}>
-                      Mary Williams (82)
-                    </p>
-                    <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                      Medication management • Westerville
-                    </p>
+                    <p className="font-medium text-gray-900">Mary Williams (82)</p>
+                    <p className="text-sm text-gray-600">Medication management • Westerville</p>
                   </div>
-                  <span style={{
-                    backgroundColor: '#2563eb',
-                    color: 'white',
-                    padding: '0.25rem 0.5rem',
-                    borderRadius: '9999px',
-                    fontSize: '0.75rem'
-                  }}>
-                    Review
-                  </span>
+                  <Badge variant="info" size="sm">Review</Badge>
                 </div>
-                <p style={{ fontSize: '0.75rem', color: '#0284c7', marginTop: '0.5rem' }}>
+                <p className="text-sm text-info-700 mt-2">
                   📅 Care plan review due tomorrow
                 </p>
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '0.5rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e5e7eb'
-          }}>
-            <h3 style={{
-              fontSize: '1.125rem',
-              fontWeight: '600',
-              color: '#1f2937',
-              marginBottom: '1rem'
-            }}>
-              Clinical Tasks Today
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '0.75rem',
-                backgroundColor: '#f9fafb',
-                borderRadius: '0.25rem'
-              }}>
+          <Card>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Clinical Tasks Today</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#1f2937' }}>
-                    🩺 Wound Assessments
-                  </p>
-                  <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                    23 patients scheduled
-                  </p>
+                  <p className="font-medium text-gray-900">🩺 Wound Assessments</p>
+                  <p className="text-sm text-gray-600">23 patients scheduled</p>
                 </div>
-                <span style={{
-                  backgroundColor: '#dbeafe',
-                  color: '#1e40af',
-                  padding: '0.25rem 0.5rem',
-                  borderRadius: '9999px',
-                  fontSize: '0.75rem'
-                }}>
-                  18/23
-                </span>
+                <Badge variant="info" size="sm">18/23</Badge>
               </div>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '0.75rem',
-                backgroundColor: '#f9fafb',
-                borderRadius: '0.25rem'
-              }}>
+
+              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#1f2937' }}>
-                    💊 Medication Reviews
-                  </p>
-                  <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                    15 patients scheduled
-                  </p>
+                  <p className="font-medium text-gray-900">💊 Medication Reviews</p>
+                  <p className="text-sm text-gray-600">15 patients scheduled</p>
                 </div>
-                <span style={{
-                  backgroundColor: '#dcfce7',
-                  color: '#166534',
-                  padding: '0.25rem 0.5rem',
-                  borderRadius: '9999px',
-                  fontSize: '0.75rem'
-                }}>
-                  15/15
-                </span>
+                <Badge variant="success" size="sm">15/15</Badge>
               </div>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '0.75rem',
-                backgroundColor: '#f9fafb',
-                borderRadius: '0.25rem'
-              }}>
+
+              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#1f2937' }}>
-                    📋 Care Plan Updates
-                  </p>
-                  <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                    8 patients scheduled
-                  </p>
+                  <p className="font-medium text-gray-900">📋 Care Plan Updates</p>
+                  <p className="text-sm text-gray-600">8 patients scheduled</p>
                 </div>
-                <span style={{
-                  backgroundColor: '#fef3c7',
-                  color: '#92400e',
-                  padding: '0.25rem 0.5rem',
-                  borderRadius: '9999px',
-                  fontSize: '0.75rem'
-                }}>
-                  3/8
-                </span>
+                <Badge variant="warning" size="sm">3/8</Badge>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Quick Actions */}
-        <div style={{
-          backgroundColor: 'white',
-          padding: '1.5rem',
-          borderRadius: '0.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb'
-        }}>
-          <h3 style={{
-            fontSize: '1.125rem',
-            fontWeight: '600',
-            color: '#1f2937',
-            marginBottom: '1rem'
-          }}>
-            Clinical Quick Actions
-          </h3>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '1rem'
-          }}>
-            <button style={{
-              padding: '0.75rem 1rem',
-              backgroundColor: '#dc2626',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.25rem',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              cursor: 'pointer'
-            }}>
+        <Card className="animate-fade-in">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Clinical Quick Actions</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button className="px-4 py-3 bg-danger-600 text-white rounded-lg font-medium hover:bg-danger-700 transition-all hover:scale-105">
               🚨 View Critical Alerts
             </button>
-            <button style={{
-              padding: '0.75rem 1rem',
-              backgroundColor: '#2563eb',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.25rem',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              cursor: 'pointer'
-            }}>
+            <button className="px-4 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-all hover:scale-105">
               📊 Vital Signs Report
             </button>
-            <button style={{
-              padding: '0.75rem 1rem',
-              backgroundColor: '#059669',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.25rem',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              cursor: 'pointer'
-            }}>
+            <button className="px-4 py-3 bg-success-600 text-white rounded-lg font-medium hover:bg-success-700 transition-all hover:scale-105">
               💊 Medication Adherence
             </button>
-            <button style={{
-              padding: '0.75rem 1rem',
-              backgroundColor: '#7c3aed',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.25rem',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              cursor: 'pointer'
-            }}>
+            <button className="px-4 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-all hover:scale-105">
               📋 Care Plan Builder
             </button>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
