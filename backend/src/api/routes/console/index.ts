@@ -30,6 +30,7 @@ import adminRouter from './admin';
 import systemConfigRouter from './system-config';
 import checkInRouter from './check-in';
 import gapsRouter from './gaps';
+import clearinghouseRouter from './clearinghouse';
 
 const router = Router();
 
@@ -104,5 +105,8 @@ router.use('/check-in', checkInRouter);
 
 // Coverage gap detection routes (real-time no-show alerts)
 router.use('/gaps', gapsRouter);
+
+// Clearinghouse routes (electronic claims submission)
+router.use('/clearinghouse', clearinghouseRouter);
 
 export { router as consoleRouter };
