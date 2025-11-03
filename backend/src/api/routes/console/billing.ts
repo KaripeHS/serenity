@@ -9,9 +9,11 @@ import { Router, Response, NextFunction } from 'express';
 import { requireAuth, AuthenticatedRequest } from '../../middleware/auth';
 import { ApiErrors } from '../../middleware/error-handler';
 import { getClaimsGateService } from '../../../modules/billing/claims-gate.service';
+import { getEDI837GeneratorService } from '../../../modules/billing/edi-generator.service';
 
 const router = Router();
 const claimsGateService = getClaimsGateService();
+const edi837Generator = getEDI837GeneratorService();
 
 // All routes require authentication
 router.use(requireAuth);
@@ -104,19 +106,68 @@ router.post('/claims/generate', async (req: AuthenticatedRequest, res: Response,
       console.log(`[CLAIMS] Force submit by ${req.user.email} for ${visitIds.length} visits`);
     }
 
-    // TODO: Generate claims file
-    // const claimsGenerator = get837GeneratorService();
-    // const claimsFile = await claimsGenerator.generate(visitIds, format);
-    //
-    // Save to database
-    // await db.query(`
-    //   INSERT INTO claims_files (id, organization_id, format, visit_count, status, created_by, created_at)
-    //   VALUES ($1, $2, $3, $4, 'pending', $5, NOW())
-    // `, [claimsFileId, organizationId, format, visitIds.length, req.user?.id]);
-
-    // Mock claims generation
+    // Generate claims file
     const claimsFileId = `claims-${Date.now()}`;
     const fileName = `claims_${new Date().toISOString().split('T')[0]}.${format}`;
+
+    // Mock visit data (TODO: fetch from database)
+    const mockVisits = visitIds.map((id, index) => ({
+      id,
+      visitDate: new Date(),
+      serviceCode: index % 2 === 0 ? 'T1019' : 'S5125',
+      billableUnits: 8,
+      diagnosisCode: 'Z7409',
+      authorizationNumber: `AUTH-${index + 1}`,
+      client: {
+        id: `client-${index + 1}`,
+        firstName: 'Margaret',
+        lastName: 'Johnson',
+        dateOfBirth: new Date('1940-05-15'),
+        medicaidNumber: `OH${(1234567890 + index).toString()}`,
+        addressLine1: '123 Main St',
+        city: 'Dayton',
+        state: 'OH',
+        zipCode: '45402'
+      },
+      caregiver: {
+        id: `cg-${index + 1}`,
+        firstName: 'Mary',
+        lastName: 'Smith',
+        npi: '1234567890'
+      },
+      placeOfService: '12' // Home
+    }));
+
+    const organizationInfo = {
+      name: 'SERENITY CARE PARTNERS',
+      npi: '1234567890',
+      taxId: '123456789',
+      addressLine1: '456 Care Lane',
+      city: 'Dayton',
+      state: 'OH',
+      zipCode: '45402',
+      contactName: 'Gloria CEO',
+      contactPhone: '9375551234'
+    };
+
+    const clearinghouse = {
+      name: 'OHIO MEDICAID',
+      id: 'OHMEDICAID',
+      submissionId: 'OH837SUBMIT'
+    };
+
+    // Generate 837P file
+    const claimsFileContent = await edi837Generator.generate837P(
+      mockVisits,
+      organizationInfo,
+      clearinghouse
+    );
+
+    // TODO: Save to database and file storage
+    // await db.query(`
+    //   INSERT INTO claims_files (id, organization_id, format, visit_count, file_content, status, created_by, created_at)
+    //   VALUES ($1, $2, $3, $4, $5, 'pending', $6, NOW())
+    // `, [claimsFileId, organizationId, format, visitIds.length, claimsFileContent, req.user?.id]);
 
     console.log(`[CLAIMS] Generated ${format} claims file: ${claimsFileId} with ${visitIds.length} visits`);
 
