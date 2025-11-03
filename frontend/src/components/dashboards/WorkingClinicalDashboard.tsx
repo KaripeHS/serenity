@@ -5,6 +5,8 @@ import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Skeleton } from '../ui/Skeleton';
 import { Alert } from '../ui/Alert';
+import { Chart } from '../ui/Chart';
+import { ProgressRing } from '../ui/ProgressRing';
 import {
   ArrowLeftIcon,
   UserGroupIcon,
@@ -56,6 +58,24 @@ export function WorkingClinicalDashboard() {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<ClinicalMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Mock chart data
+  const vitalSignsData = [
+    { label: 'Mon', value: 487 },
+    { label: 'Tue', value: 512 },
+    { label: 'Wed', value: 498 },
+    { label: 'Thu', value: 523 },
+    { label: 'Fri', value: 541 },
+    { label: 'Sat', value: 315 },
+    { label: 'Sun', value: 289 }
+  ];
+
+  const admissionsData = [
+    { label: 'Week 1', value: 12 },
+    { label: 'Week 2', value: 15 },
+    { label: 'Week 3', value: 11 },
+    { label: 'Week 4', value: 18 }
+  ];
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -257,6 +277,55 @@ export function WorkingClinicalDashboard() {
               </div>
             </div>
           </Card>
+        </div>
+
+        {/* Clinical Analytics */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-fade-in">
+          {/* Medication Compliance Ring */}
+          <Card className="text-center">
+            <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-4">
+              Medication Compliance
+            </h3>
+            <ProgressRing
+              percentage={metrics.medicationCompliance}
+              size={150}
+              strokeWidth={10}
+              color="#10b981"
+              label="Target: 95%"
+            />
+            <p className="text-sm text-success-600 font-medium mt-3">
+              Above target 🎯
+            </p>
+          </Card>
+
+          {/* Vital Signs Trend */}
+          <Card className="lg:col-span-2">
+            <Chart
+              type="line"
+              data={vitalSignsData}
+              title="Vital Signs Recorded (This Week)"
+              height={220}
+              width={600}
+              showGrid={true}
+              showAxes={true}
+              color="#3b82f6"
+            />
+          </Card>
+        </div>
+
+        {/* Admissions Chart */}
+        <div className="mb-8 animate-fade-in">
+          <Chart
+            type="bar"
+            data={admissionsData}
+            title="Monthly Admissions Trend"
+            height={240}
+            width={1200}
+            showGrid={true}
+            showAxes={true}
+            showValues={true}
+            color="#8b5cf6"
+          />
         </div>
 
         {/* Quick Actions */}
