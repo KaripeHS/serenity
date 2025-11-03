@@ -17,6 +17,7 @@ import clientsRouter from './clients';
 import operationsRouter from './operations';
 import hrRouter from './hr';
 import spiRouter from './spi';
+import credentialsRouter from './credentials';
 
 const router = Router();
 
@@ -52,5 +53,8 @@ router.use('/hr', hrRouter);
 
 // SPI (Serenity Performance Index) routes
 router.use('/spi', spiRouter);
+
+// Credentials management routes
+router.use('/credentials', credentialsRouter);
 
 export { router as consoleRouter };
