@@ -19,6 +19,10 @@ import {
   BuildingOffice2Icon,
   CogIcon
 } from '@heroicons/react/24/outline';
+import { Card } from './ui/Card';
+import { Badge } from './ui/Badge';
+import { Skeleton } from './ui/Skeleton';
+import { Button } from './ui/Button';
 
 interface SystemMetrics {
   activePatients: number;
@@ -255,40 +259,34 @@ export default function WorkingHomePage() {
 
   if (isLoading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        backgroundColor: '#f9fafb',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <HeartIcon style={{ height: '3rem', width: '3rem', color: '#3B82F6', margin: '0 auto 1rem auto', animation: 'pulse 2s infinite' }} />
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#111827', marginBottom: '0.5rem' }}>Loading Serenity ERP</h2>
-          <p style={{ color: '#6b7280' }}>Initializing your dashboard...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <HeartIcon className="h-12 w-12 text-primary-600 mx-auto mb-4 animate-pulse" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Loading Serenity ERP</h2>
+          <p className="text-gray-600">Initializing your dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e7eb' }}>
-        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0 1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '4rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <HeartIcon style={{ height: '2rem', width: '2rem', color: '#3B82F6' }} />
-                <div style={{ marginLeft: '0.75rem' }}>
-                  <h1 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#111827', margin: 0 }}>Serenity ERP</h1>
-                  <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>Home Health Management System</p>
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-40 backdrop-blur-sm bg-white/95">
+        <div className="max-w-screen-xl mx-auto px-4">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <div className="flex items-center group">
+                <HeartIcon className="h-8 w-8 text-primary-600 transition-transform group-hover:scale-110" />
+                <div className="ml-3">
+                  <h1 className="text-xl font-bold text-gray-900 m-0">Serenity ERP</h1>
+                  <p className="text-sm text-gray-600 m-0">Home Health Management System</p>
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '0.875rem', fontWeight: '500', color: '#111827' }}>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <div className="text-sm font-medium text-gray-900">
                   {currentTime.toLocaleDateString('en-US', {
                     weekday: 'long',
                     year: 'numeric',
@@ -296,7 +294,7 @@ export default function WorkingHomePage() {
                     day: 'numeric'
                   })}
                 </div>
-                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                <div className="text-sm text-gray-600">
                   {currentTime.toLocaleTimeString('en-US', {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -305,142 +303,126 @@ export default function WorkingHomePage() {
                 </div>
               </div>
               {user && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.875rem', fontWeight: '500', color: '#111827' }}>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-gray-900">
                       {user.firstName} {user.lastName}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#6b7280', textTransform: 'capitalize' }}>
+                    <div className="text-xs text-gray-600 capitalize">
                       {user.role}
                     </div>
                   </div>
-                  <div style={{
-                    height: '2rem',
-                    width: '2rem',
-                    backgroundColor: '#3B82F6',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <span style={{ fontSize: '0.875rem', fontWeight: '500', color: 'white' }}>
+                  <div className="h-8 w-8 bg-primary-600 rounded-full flex items-center justify-center ring-2 ring-offset-2 ring-primary-100">
+                    <span className="text-sm font-medium text-white">
                       {user.firstName.charAt(0)}{user.lastName.charAt(0)}
                     </span>
                   </div>
                 </div>
               )}
               {metrics && (
-                <span style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  padding: '0.25rem 0.625rem',
-                  borderRadius: '9999px',
-                  fontSize: '0.75rem',
-                  fontWeight: '500',
-                  backgroundColor: '#dcfce7',
-                  color: '#166534'
-                }}>
+                <Badge variant="success" size="sm" dot>
                   System {metrics.systemHealth}
-                </span>
+                </Badge>
               )}
             </div>
           </div>
         </div>
       </header>
 
-      <main style={{ maxWidth: '80rem', margin: '0 auto', padding: '2rem 1rem' }}>
+      <main className="max-w-screen-xl mx-auto px-4 py-8">
         {/* System Overview */}
         {metricsLoading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} style={{ backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e5e7eb', padding: '1.5rem' }}>
-                <div style={{ height: '1rem', backgroundColor: '#f3f4f6', borderRadius: '0.25rem', marginBottom: '0.5rem', animation: 'pulse 2s infinite' }}></div>
-                <div style={{ height: '2rem', backgroundColor: '#f3f4f6', borderRadius: '0.25rem', marginBottom: '0.5rem', animation: 'pulse 2s infinite' }}></div>
-                <div style={{ height: '0.75rem', backgroundColor: '#f3f4f6', borderRadius: '0.25rem', animation: 'pulse 2s infinite' }}></div>
-              </div>
+              <Card key={i}>
+                <Skeleton className="h-4 w-32 mb-4" />
+                <Skeleton className="h-8 w-20 mb-2" />
+                <Skeleton className="h-3 w-full" />
+              </Card>
             ))}
           </div>
         ) : metrics && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-            <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e5e7eb', padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <h3 style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280', margin: 0 }}>Active Patients</h3>
-                <UserGroupIcon style={{ height: '1rem', width: '1rem', color: '#3B82F6' }} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fade-in">
+            <Card hoverable className="transition-all hover:scale-105">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-600 m-0">Active Patients</h3>
+                <div className="p-2 bg-primary-50 rounded-lg">
+                  <UserGroupIcon className="h-5 w-5 text-primary-600" />
+                </div>
               </div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#111827' }}>{metrics.activePatients}</div>
-              <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: 0 }}>Across Ohio counties</p>
-            </div>
+              <div className="text-3xl font-bold text-gray-900">{metrics.activePatients}</div>
+              <p className="text-xs text-gray-500 mt-1 m-0">Across Ohio counties</p>
+            </Card>
 
-            <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e5e7eb', padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <h3 style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280', margin: 0 }}>Active Staff</h3>
-                <UsersIcon style={{ height: '1rem', width: '1rem', color: '#10B981' }} />
+            <Card hoverable className="transition-all hover:scale-105">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-600 m-0">Active Staff</h3>
+                <div className="p-2 bg-success-50 rounded-lg">
+                  <UsersIcon className="h-5 w-5 text-success-600" />
+                </div>
               </div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#111827' }}>{metrics.activeStaff}</div>
-              <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: 0 }}>Caregivers & clinical staff</p>
-            </div>
+              <div className="text-3xl font-bold text-gray-900">{metrics.activeStaff}</div>
+              <p className="text-xs text-gray-500 mt-1 m-0">Caregivers & clinical staff</p>
+            </Card>
 
-            <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e5e7eb', padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <h3 style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280', margin: 0 }}>Today's Visits</h3>
-                <CalendarIcon style={{ height: '1rem', width: '1rem', color: '#8B5CF6' }} />
+            <Card hoverable className="transition-all hover:scale-105">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-600 m-0">Today's Visits</h3>
+                <div className="p-2 bg-caregiver-50 rounded-lg">
+                  <CalendarIcon className="h-5 w-5 text-caregiver-600" />
+                </div>
               </div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#111827' }}>
+              <div className="text-3xl font-bold text-gray-900">
                 {metrics.completedVisitsToday}/{metrics.scheduledVisitsToday}
               </div>
-              <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: 0 }}>
+              <p className="text-xs text-gray-500 mt-1 m-0">
                 {Math.round((metrics.completedVisitsToday / metrics.scheduledVisitsToday) * 100)}% completion rate
               </p>
-            </div>
+            </Card>
 
-            <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e5e7eb', padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <h3 style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280', margin: 0 }}>Monthly Revenue</h3>
-                <CurrencyDollarIcon style={{ height: '1rem', width: '1rem', color: '#059669' }} />
+            <Card hoverable className="transition-all hover:scale-105">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-600 m-0">Monthly Revenue</h3>
+                <div className="p-2 bg-success-50 rounded-lg">
+                  <CurrencyDollarIcon className="h-5 w-5 text-success-600" />
+                </div>
               </div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#111827' }}>{formatCurrency(metrics.monthlyRevenue)}</div>
-              <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: 0 }}>
+              <div className="text-3xl font-bold text-gray-900">{formatCurrency(metrics.monthlyRevenue)}</div>
+              <p className="text-xs text-gray-500 mt-1 m-0">
                 EVV Compliance: {(metrics.evvComplianceRate * 100).toFixed(1)}%
               </p>
-            </div>
+            </Card>
           </div>
         )}
 
         {/* Quick Actions */}
-        <div style={{ marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#111827', marginBottom: '1rem' }}>Quick Actions</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {quickActions.map((action, index) => {
               const Icon = action.icon;
+              const colorClass = {
+                '#3B82F6': 'bg-primary-600 hover:bg-primary-700',
+                '#10B981': 'bg-success-600 hover:bg-success-700',
+                '#8B5CF6': 'bg-caregiver-600 hover:bg-caregiver-700',
+                '#059669': 'bg-success-700 hover:bg-success-800',
+                '#EA580C': 'bg-warning-600 hover:bg-warning-700',
+                '#6366F1': 'bg-info-600 hover:bg-info-700'
+              }[action.color] || 'bg-primary-600 hover:bg-primary-700';
+
               return (
                 <Link
                   key={index}
                   to={action.href}
-                  style={{
-                    backgroundColor: action.color,
-                    color: 'white',
-                    padding: '1rem',
-                    borderRadius: '0.5rem',
-                    textDecoration: 'none',
-                    display: 'block',
-                    textAlign: 'center',
-                    transition: 'all 0.2s'
-                  }}
+                  className={`${colorClass} text-white p-4 rounded-lg text-decoration-none block text-center transition-all hover:scale-105 hover:shadow-lg group`}
                 >
-                  <Icon style={{ height: '1.5rem', width: '1.5rem', margin: '0 auto 0.5rem auto', display: 'block' }} />
-                  <div style={{ fontWeight: '500', fontSize: '0.875rem', marginBottom: '0.25rem' }}>{action.title}</div>
-                  <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>{action.description}</div>
+                  <Icon className="h-6 w-6 mx-auto mb-2 transition-transform group-hover:scale-110" />
+                  <div className="font-medium text-sm mb-1">{action.title}</div>
+                  <div className="text-xs opacity-90">{action.description}</div>
                   {action.badge && (
-                    <div style={{
-                      display: 'inline-block',
-                      marginTop: '0.25rem',
-                      padding: '0.125rem 0.5rem',
-                      backgroundColor: 'rgba(255,255,255,0.2)',
-                      borderRadius: '9999px',
-                      fontSize: '0.75rem'
-                    }}>
+                    <Badge variant="default" size="sm" className="mt-2 bg-white/20">
                       {action.badge}
-                    </div>
+                    </Badge>
                   )}
                 </Link>
               );
