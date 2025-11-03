@@ -25,6 +25,7 @@ import podScorecardRouter from './pod-scorecard';
 import otAnalysisRouter from './ot-analysis';
 import aiAgentsRouter from './ai-agents';
 import accessReviewsRouter from './access-reviews';
+import evvHealthRouter from './evv-health';
 
 const router = Router();
 
@@ -48,6 +49,9 @@ router.use('/morning-check-in', morningCheckInRouter);
 
 // Operations dashboard routes
 router.use('/operations', operationsRouter);
+
+// EVV Health routes
+router.use('/operations', evvHealthRouter);
 
 // Shifts management routes
 router.use('/shifts', shiftsRouter);
