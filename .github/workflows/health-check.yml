@@ -1,0 +1,179 @@
+name: Scheduled Health Checks
+
+on:
+  schedule:
+    # Run health checks every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  ###############################################################################
+  # Production Health Check
+  ###############################################################################
+  health-check-production:
+    name: Production Health Check
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Create .env file for production
+        run: |
+          cat > .env.production << EOF
+          DEPLOY_USER=${{ secrets.PRODUCTION_DEPLOY_USER }}
+          DEPLOY_HOST=${{ secrets.PRODUCTION_HOST }}
+          DEPLOY_PATH=${{ secrets.PRODUCTION_DEPLOY_PATH }}
+          DATABASE_URL=${{ secrets.PRODUCTION_DATABASE_URL }}
+          API_URL=${{ secrets.PRODUCTION_API_URL }}
+          FRONTEND_URL=${{ secrets.PRODUCTION_URL }}
+          SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}
+          EOF
+
+      - name: Run health check
+        id: health_check
+        run: |
+          chmod +x scripts/health-check.sh
+          ./scripts/health-check.sh --environment production --alert --integrations --json > health_result.json
+          echo "result=$(cat health_result.json | jq -c .)" >> $GITHUB_OUTPUT
+
+      - name: Upload health check results
+        uses: actions/upload-artifact@v3
+        with:
+          name: health-check-production
+          path: health_result.json
+          retention-days: 7
+
+      - name: Create GitHub Issue on failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Production Health Check Failed',
+              body: `Production health check failed at ${new Date().toISOString()}\n\nPlease investigate immediately.\n\n**Environment:** Production\n**Workflow:** ${context.workflow}\n**Run:** ${context.runNumber}`,
+              labels: ['health-check', 'production', 'critical']
+            });
+            console.log(`Created issue #${issue.data.number}`);
+
+  ###############################################################################
+  # Staging Health Check
+  ###############################################################################
+  health-check-staging:
+    name: Staging Health Check
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.STAGING_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Create .env file for staging
+        run: |
+          cat > .env.staging << EOF
+          DEPLOY_USER=${{ secrets.STAGING_DEPLOY_USER }}
+          DEPLOY_HOST=${{ secrets.STAGING_HOST }}
+          DEPLOY_PATH=${{ secrets.STAGING_DEPLOY_PATH }}
+          DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}
+          API_URL=${{ secrets.STAGING_API_URL }}
+          FRONTEND_URL=${{ secrets.STAGING_URL }}
+          EOF
+
+      - name: Run health check
+        run: |
+          chmod +x scripts/health-check.sh
+          ./scripts/health-check.sh --environment staging --json
+
+      - name: Upload health check results
+        uses: actions/upload-artifact@v3
+        with:
+          name: health-check-staging
+          path: health_result.json
+          retention-days: 7
+
+  ###############################################################################
+  # Weekly Backup Verification
+  ###############################################################################
+  backup-verification:
+    name: Weekly Backup Verification
+    runs-on: ubuntu-latest
+    # Run every Sunday at 2 AM UTC
+    if: github.event.schedule == '0 2 * * 0'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Create .env file for production
+        run: |
+          cat > .env.production << EOF
+          DEPLOY_USER=${{ secrets.PRODUCTION_DEPLOY_USER }}
+          DEPLOY_HOST=${{ secrets.PRODUCTION_HOST }}
+          DEPLOY_PATH=${{ secrets.PRODUCTION_DEPLOY_PATH }}
+          DATABASE_URL=${{ secrets.PRODUCTION_DATABASE_URL }}
+          API_URL=${{ secrets.PRODUCTION_API_URL }}
+          FRONTEND_URL=${{ secrets.PRODUCTION_URL }}
+          BACKUP_S3_BUCKET=${{ secrets.BACKUP_S3_BUCKET }}
+          EOF
+
+      - name: Create and verify backup
+        run: |
+          chmod +x scripts/backup.sh
+          ./scripts/backup.sh --environment production --verify --remote
+
+      - name: Notify backup success
+        if: success()
+        run: echo "✅ Weekly backup verification successful"
+
+      - name: Create GitHub Issue on failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Weekly Backup Verification Failed',
+              body: `Weekly backup verification failed at ${new Date().toISOString()}\n\nPlease check backup system immediately.\n\n**Environment:** Production\n**Workflow:** ${context.workflow}\n**Run:** ${context.runNumber}`,
+              labels: ['backup', 'production', 'high-priority']
+            });
+            console.log(`Created issue #${issue.data.number}`);
