@@ -1,5 +1,17 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { Card } from '../ui/Card';
+import { Badge } from '../ui/Badge';
+import { Skeleton } from '../ui/Skeleton';
+import { Alert } from '../ui/Alert';
+import {
+  ArrowLeftIcon,
+  ShieldCheckIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+  AcademicCapIcon
+} from '@heroicons/react/24/outline';
 
 interface ComplianceMetrics {
   hipaaComplianceScore: number;
@@ -10,17 +22,78 @@ interface ComplianceMetrics {
   dataBreaches: number;
 }
 
+interface ComplianceItem {
+  id: string;
+  type: string;
+  description: string;
+  status: 'completed' | 'in_progress' | 'pending' | 'overdue' | 'expired';
+  dueDate: string;
+  priority: 'critical' | 'high' | 'medium' | 'low';
+}
+
+interface MetricCardProps {
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: React.ComponentType<any>;
+  iconColor: string;
+  valueColor?: string;
+}
+
+function MetricCard({ title, value, subtitle, icon: Icon, iconColor, valueColor = 'text-gray-900' }: MetricCardProps) {
+  return (
+    <Card hoverable className="transition-all hover:scale-105">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">{title}</h3>
+      </div>
+      <div className="flex items-center gap-4">
+        <div className={`p-3 ${iconColor} rounded-lg`}>
+          <Icon className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <p className={`text-3xl font-bold ${valueColor}`}>{value}</p>
+          <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function StatusBadge({ status }: { status: ComplianceItem['status'] }) {
+  const variants: Record<ComplianceItem['status'], any> = {
+    completed: 'success',
+    in_progress: 'info',
+    pending: 'warning',
+    overdue: 'danger',
+    expired: 'danger'
+  };
+
+  return <Badge variant={variants[status]} size="sm">{status.replace('_', ' ')}</Badge>;
+}
+
+function PriorityBadge({ priority }: { priority: ComplianceItem['priority'] }) {
+  const variants: Record<ComplianceItem['priority'], any> = {
+    critical: 'danger',
+    high: 'warning',
+    medium: 'info',
+    low: 'gray'
+  };
+
+  return <Badge variant={variants[priority]} size="sm">{priority}</Badge>;
+}
+
 export function WorkingComplianceDashboard() {
-  const { user: _user } = useAuth();
+  const { user } = useAuth();
   const [metrics, setMetrics] = useState<ComplianceMetrics | null>(null);
-  const [activeView, setActiveView] = useState<'dashboard' | 'hipaa' | 'audits' | 'training' | 'incidents' | 'reports'>('dashboard');
-  const [complianceItems, setComplianceItems] = useState([
+  const [loading, setLoading] = useState(true);
+
+  const complianceItems: ComplianceItem[] = [
     { id: 'HIPAA001', type: 'HIPAA', description: 'Annual HIPAA Risk Assessment', status: 'completed', dueDate: '2024-12-31', priority: 'high' },
     { id: 'CERT002', type: 'Certification', description: 'CPR Certification - Maria Rodriguez', status: 'expired', dueDate: '2024-01-15', priority: 'critical' },
     { id: 'TRAIN003', type: 'Training', description: 'HIPAA Privacy Training - New Hires', status: 'pending', dueDate: '2024-01-20', priority: 'medium' },
     { id: 'AUDIT004', type: 'Audit', description: 'Q1 Internal Compliance Audit', status: 'in_progress', dueDate: '2024-03-31', priority: 'high' },
     { id: 'SEC005', type: 'Security', description: 'Password Policy Compliance Check', status: 'overdue', dueDate: '2024-01-10', priority: 'critical' }
-  ]);
+  ];
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -32,549 +105,197 @@ export function WorkingComplianceDashboard() {
         securityIncidents: 0,
         dataBreaches: 0
       });
-    }, 1200);
+      setLoading(false);
+    }, 950);
 
     return () => clearTimeout(timer);
   }, []);
 
-  const handleComplianceAction = (itemId: string, action: string) => {
-    setComplianceItems(prev => prev.map(item => {
-      if (item.id === itemId) {
-        switch (action) {
-          case 'complete':
-            return { ...item, status: 'completed' };
-          case 'schedule':
-            return { ...item, status: 'scheduled' };
-          case 'extend':
-            return { ...item, dueDate: '2024-02-15' };
-          default:
-            return item;
-        }
-      }
-      return item;
-    }));
-    alert(`Compliance item ${itemId} ${action} completed`);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return { bg: '#dcfce7', text: '#166534' };
-      case 'in_progress': return { bg: '#dbeafe', text: '#1e40af' };
-      case 'pending': return { bg: '#fef3c7', text: '#92400e' };
-      case 'overdue': return { bg: '#fecaca', text: '#dc2626' };
-      case 'expired': return { bg: '#fecaca', text: '#dc2626' };
-      case 'scheduled': return { bg: '#e0e7ff', text: '#3730a3' };
-      default: return { bg: '#f3f4f6', text: '#6b7280' };
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'critical': return { bg: '#dc2626', text: 'white' };
-      case 'high': return { bg: '#f59e0b', text: 'white' };
-      case 'medium': return { bg: '#3b82f6', text: 'white' };
-      case 'low': return { bg: '#6b7280', text: 'white' };
-      default: return { bg: '#6b7280', text: 'white' };
-    }
-  };
-
-  if (!metrics) {
+  if (loading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        backgroundColor: '#f9fafb',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid #e5e7eb',
-            borderTop: '4px solid #2563eb',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 1rem'
-          }}></div>
-          <p style={{ color: '#6b7280' }}>Loading Compliance Dashboard...</p>
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <Skeleton className="h-10 w-96 mb-3" />
+            <Skeleton className="h-6 w-64" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i}>
+                <Skeleton className="h-6 w-32 mb-4" />
+                <Skeleton className="h-10 w-24" />
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
+  if (!metrics) return null;
+
+  const getComplianceColor = () => {
+    if (metrics.hipaaComplianceScore >= 85) return 'text-success-600';
+    if (metrics.hipaaComplianceScore >= 70) return 'text-warning-600';
+    return 'text-danger-600';
+  };
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f9fafb',
-      padding: '2rem'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto p-4 md:p-8">
         {/* Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '2rem'
-        }}>
-          <div>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: '#1f2937',
-              marginBottom: '0.5rem'
-            }}>
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
+          <div className="animate-fade-in">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
               Compliance & Security Management
             </h1>
-            <p style={{ color: '#6b7280' }}>
-              HIPAA compliance, audit management, and regulatory oversight
+            <p className="text-gray-600">
+              Welcome back, {user?.firstName}. HIPAA compliance, audit management, and regulatory oversight
             </p>
           </div>
-          <a href="/" style={{
-            color: '#2563eb',
-            textDecoration: 'underline'
-          }}>
-            ← Back to Home
-          </a>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium transition-colors"
+          >
+            <ArrowLeftIcon className="h-4 w-4" />
+            <span>Back to Home</span>
+          </Link>
         </div>
 
         {/* Critical Alerts */}
         {(metrics.expiredCertifications > 0 || metrics.securityIncidents > 0) && (
-          <div style={{
-            backgroundColor: '#fef2f2',
-            border: '2px solid #fecaca',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            marginBottom: '2rem'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '1.5rem' }}>🚨</span>
-                <div>
-                  <p style={{
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    color: '#dc2626',
-                    margin: 0
-                  }}>
-                    Critical Compliance Issues Detected
-                  </p>
-                  <p style={{ fontSize: '0.875rem', color: '#7f1d1d', margin: 0 }}>
-                    {metrics.expiredCertifications} expired certifications, {metrics.securityIncidents} security incidents
-                  </p>
-                </div>
-              </div>
-              <button style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.25rem',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}>
-                Review Immediately
-              </button>
-            </div>
+          <div className="mb-8 animate-fade-in">
+            <Alert
+              variant="danger"
+              title="🚨 Critical Compliance Issues Detected"
+            >
+              {metrics.expiredCertifications} expired certifications, {metrics.securityIncidents} security incidents
+            </Alert>
           </div>
         )}
 
         {/* HIPAA Compliance Score */}
-        <div style={{
-          backgroundColor: 'white',
-          padding: '1.5rem',
-          borderRadius: '0.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb',
-          marginBottom: '2rem'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '1rem'
-          }}>
-            <h3 style={{
-              fontSize: '1.125rem',
-              fontWeight: '600',
-              color: '#1f2937'
-            }}>
-              🛡️ HIPAA Compliance Score
+        <Card className="mb-8 animate-fade-in">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <ShieldCheckIcon className="h-6 w-6 text-primary-600" />
+              HIPAA Compliance Score
             </h3>
-            <span style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: metrics.hipaaComplianceScore >= 85 ? '#059669' : metrics.hipaaComplianceScore >= 70 ? '#f59e0b' : '#dc2626'
-            }}>
+            <span className={`text-4xl font-bold ${getComplianceColor()}`}>
               {metrics.hipaaComplianceScore}%
             </span>
           </div>
-          <div style={{
-            width: '100%',
-            backgroundColor: '#e5e7eb',
-            borderRadius: '9999px',
-            height: '8px',
-            marginBottom: '0.5rem'
-          }}>
-            <div style={{
-              width: `${metrics.hipaaComplianceScore}%`,
-              backgroundColor: metrics.hipaaComplianceScore >= 85 ? '#059669' : metrics.hipaaComplianceScore >= 70 ? '#f59e0b' : '#dc2626',
-              height: '100%',
-              borderRadius: '9999px'
-            }}></div>
+          <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                metrics.hipaaComplianceScore >= 85
+                  ? 'bg-success-600'
+                  : metrics.hipaaComplianceScore >= 70
+                  ? 'bg-warning-600'
+                  : 'bg-danger-600'
+              }`}
+              style={{ width: `${metrics.hipaaComplianceScore}%` }}
+            />
           </div>
-          <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-            Target: 85% minimum for full compliance
-          </p>
+          <p className="text-sm text-gray-600">Target: 85% minimum for full compliance</p>
+        </Card>
+
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 animate-fade-in">
+          <MetricCard
+            title="Active Audits"
+            value={metrics.activeAudits}
+            subtitle="In progress"
+            icon={DocumentTextIcon}
+            iconColor="bg-primary-600"
+            valueColor="text-primary-600"
+          />
+          <MetricCard
+            title="Expired Certifications"
+            value={metrics.expiredCertifications}
+            subtitle="Need renewal"
+            icon={ExclamationTriangleIcon}
+            iconColor="bg-danger-600"
+            valueColor="text-danger-600"
+          />
+          <MetricCard
+            title="Pending Trainings"
+            value={metrics.pendingTrainings}
+            subtitle="Staff members"
+            icon={AcademicCapIcon}
+            iconColor="bg-warning-600"
+            valueColor="text-warning-600"
+          />
+          <MetricCard
+            title="Security Incidents"
+            value={metrics.securityIncidents}
+            subtitle="This month"
+            icon={ExclamationTriangleIcon}
+            iconColor={metrics.securityIncidents === 0 ? 'bg-success-600' : 'bg-danger-600'}
+            valueColor={metrics.securityIncidents === 0 ? 'text-success-600' : 'text-danger-600'}
+          />
+          <MetricCard
+            title="Data Breaches"
+            value={metrics.dataBreaches}
+            subtitle={metrics.dataBreaches === 0 ? 'Secure' : 'Critical'}
+            icon={ShieldCheckIcon}
+            iconColor={metrics.dataBreaches === 0 ? 'bg-success-600' : 'bg-danger-600'}
+            valueColor={metrics.dataBreaches === 0 ? 'text-success-600' : 'text-danger-600'}
+          />
         </div>
 
-        {/* Navigation Tabs */}
-        <div style={{
-          backgroundColor: 'white',
-          padding: '1rem',
-          borderRadius: '0.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb',
-          marginBottom: '2rem'
-        }}>
-          <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto' }}>
-            {[
-              { key: 'dashboard', label: '📊 Dashboard', count: null },
-              { key: 'hipaa', label: '🛡️ HIPAA', count: null },
-              { key: 'audits', label: '📋 Audits', count: metrics.activeAudits },
-              { key: 'training', label: '🎓 Training', count: metrics.pendingTrainings },
-              { key: 'incidents', label: '⚠️ Incidents', count: metrics.securityIncidents },
-              { key: 'reports', label: '📈 Reports', count: null }
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveView(tab.key as any)}
-                style={{
-                  padding: '0.75rem 1rem',
-                  backgroundColor: activeView === tab.key ? '#2563eb' : 'transparent',
-                  color: activeView === tab.key ? 'white' : '#6b7280',
-                  border: 'none',
-                  borderRadius: '0.25rem',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  whiteSpace: 'nowrap'
-                }}
+        {/* Compliance Items */}
+        <Card className="animate-fade-in">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Compliance Items Requiring Attention
+          </h3>
+          <div className="space-y-4">
+            {complianceItems.filter(item => item.status !== 'completed').map((item) => (
+              <div
+                key={item.id}
+                className={`p-4 border rounded-lg transition-all hover:border-primary-300 hover:bg-primary-50 ${
+                  item.status === 'overdue' || item.status === 'expired'
+                    ? 'border-danger-300 bg-danger-50'
+                    : 'border-gray-200 bg-gray-50'
+                }`}
               >
-                {tab.label}
-                {tab.count !== null && tab.count > 0 && (
-                  <span style={{
-                    backgroundColor: activeView === tab.key ? 'rgba(255,255,255,0.2)' : '#dc2626',
-                    color: 'white',
-                    padding: '0.125rem 0.375rem',
-                    borderRadius: '9999px',
-                    fontSize: '0.75rem',
-                    fontWeight: 'bold'
-                  }}>
-                    {tab.count}
-                  </span>
-                )}
-              </button>
+                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="text-base font-semibold text-gray-900">{item.description}</h4>
+                      <PriorityBadge priority={item.priority} />
+                    </div>
+                    <p className="text-sm text-gray-600 mb-1">
+                      {item.type} • Due: {item.dueDate}
+                    </p>
+                    <p className="text-xs text-gray-500">ID: {item.id}</p>
+                  </div>
+                  <StatusBadge status={item.status} />
+                </div>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {(item.status === 'pending' || item.status === 'overdue') && (
+                    <button className="px-3 py-1.5 bg-success-600 text-white rounded-lg text-sm font-medium hover:bg-success-700 transition-colors">
+                      ✓ Mark Complete
+                    </button>
+                  )}
+                  {item.status === 'expired' && (
+                    <>
+                      <button className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
+                        📅 Schedule Renewal
+                      </button>
+                      <button className="px-3 py-1.5 bg-warning-600 text-white rounded-lg text-sm font-medium hover:bg-warning-700 transition-colors">
+                        ⏰ Request Extension
+                      </button>
+                    </>
+                  )}
+                  <button className="px-3 py-1.5 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors">
+                    👁️ View Details
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
-        </div>
-
-        {/* Dashboard View */}
-        {activeView === 'dashboard' && (
-          <>
-            {/* Key Metrics */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '1.5rem',
-              marginBottom: '2rem'
-            }}>
-              <div style={{
-                backgroundColor: 'white',
-                padding: '1.5rem',
-                borderRadius: '0.5rem',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                border: '1px solid #e5e7eb'
-              }}>
-                <h3 style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#6b7280',
-                  marginBottom: '0.5rem'
-                }}>
-                  Active Audits
-                </h3>
-                <p style={{
-                  fontSize: '2rem',
-                  fontWeight: 'bold',
-                  color: '#2563eb'
-                }}>
-                  {metrics.activeAudits}
-                </p>
-                <p style={{ fontSize: '0.875rem', color: '#2563eb' }}>
-                  In progress
-                </p>
-              </div>
-
-              <div style={{
-                backgroundColor: 'white',
-                padding: '1.5rem',
-                borderRadius: '0.5rem',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                border: '1px solid #e5e7eb'
-              }}>
-                <h3 style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#6b7280',
-                  marginBottom: '0.5rem'
-                }}>
-                  Expired Certifications
-                </h3>
-                <p style={{
-                  fontSize: '2rem',
-                  fontWeight: 'bold',
-                  color: '#dc2626'
-                }}>
-                  {metrics.expiredCertifications}
-                </p>
-                <p style={{ fontSize: '0.875rem', color: '#dc2626' }}>
-                  Need renewal
-                </p>
-              </div>
-
-              <div style={{
-                backgroundColor: 'white',
-                padding: '1.5rem',
-                borderRadius: '0.5rem',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                border: '1px solid #e5e7eb'
-              }}>
-                <h3 style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#6b7280',
-                  marginBottom: '0.5rem'
-                }}>
-                  Pending Trainings
-                </h3>
-                <p style={{
-                  fontSize: '2rem',
-                  fontWeight: 'bold',
-                  color: '#f59e0b'
-                }}>
-                  {metrics.pendingTrainings}
-                </p>
-                <p style={{ fontSize: '0.875rem', color: '#f59e0b' }}>
-                  Staff members
-                </p>
-              </div>
-
-              <div style={{
-                backgroundColor: 'white',
-                padding: '1.5rem',
-                borderRadius: '0.5rem',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                border: '1px solid #e5e7eb'
-              }}>
-                <h3 style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#6b7280',
-                  marginBottom: '0.5rem'
-                }}>
-                  Security Incidents
-                </h3>
-                <p style={{
-                  fontSize: '2rem',
-                  fontWeight: 'bold',
-                  color: metrics.securityIncidents === 0 ? '#059669' : '#dc2626'
-                }}>
-                  {metrics.securityIncidents}
-                </p>
-                <p style={{ fontSize: '0.875rem', color: metrics.securityIncidents === 0 ? '#059669' : '#dc2626' }}>
-                  This month
-                </p>
-              </div>
-
-              <div style={{
-                backgroundColor: 'white',
-                padding: '1.5rem',
-                borderRadius: '0.5rem',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                border: '1px solid #e5e7eb'
-              }}>
-                <h3 style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#6b7280',
-                  marginBottom: '0.5rem'
-                }}>
-                  Data Breaches
-                </h3>
-                <p style={{
-                  fontSize: '2rem',
-                  fontWeight: 'bold',
-                  color: metrics.dataBreaches === 0 ? '#059669' : '#dc2626'
-                }}>
-                  {metrics.dataBreaches}
-                </p>
-                <p style={{ fontSize: '0.875rem', color: metrics.dataBreaches === 0 ? '#059669' : '#dc2626' }}>
-                  {metrics.dataBreaches === 0 ? 'Secure' : 'Critical'}
-                </p>
-              </div>
-            </div>
-
-            {/* Compliance Items */}
-            <div style={{
-              backgroundColor: 'white',
-              padding: '1.5rem',
-              borderRadius: '0.5rem',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-              border: '1px solid #e5e7eb'
-            }}>
-              <h3 style={{
-                fontSize: '1.125rem',
-                fontWeight: '600',
-                color: '#1f2937',
-                marginBottom: '1rem'
-              }}>
-                Compliance Items Requiring Attention
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {complianceItems.filter(item => item.status !== 'completed').map((item) => {
-                  const statusColors = getStatusColor(item.status);
-                  const priorityColors = getPriorityColor(item.priority);
-                  return (
-                    <div key={item.id} style={{
-                      padding: '1rem',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '0.5rem',
-                      backgroundColor: item.status === 'overdue' || item.status === 'expired' ? '#fef2f2' : '#f9fafb'
-                    }}>
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'start',
-                        marginBottom: '0.75rem'
-                      }}>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                            <h4 style={{
-                              fontSize: '1rem',
-                              fontWeight: '600',
-                              color: '#1f2937'
-                            }}>
-                              {item.description}
-                            </h4>
-                            <span style={{
-                              backgroundColor: priorityColors.bg,
-                              color: priorityColors.text,
-                              padding: '0.125rem 0.375rem',
-                              borderRadius: '9999px',
-                              fontSize: '0.625rem',
-                              fontWeight: '500'
-                            }}>
-                              {item.priority}
-                            </span>
-                          </div>
-                          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
-                            {item.type} • Due: {item.dueDate}
-                          </p>
-                          <p style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-                            ID: {item.id}
-                          </p>
-                        </div>
-                        <span style={{
-                          backgroundColor: statusColors.bg,
-                          color: statusColors.text,
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.75rem',
-                          fontWeight: '500'
-                        }}>
-                          {item.status.replace('_', ' ')}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        {(item.status === 'pending' || item.status === 'overdue') && (
-                          <button
-                            onClick={() => handleComplianceAction(item.id, 'complete')}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#059669',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.25rem',
-                              fontSize: '0.75rem',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            ✓ Mark Complete
-                          </button>
-                        )}
-                        {item.status === 'expired' && (
-                          <>
-                            <button
-                              onClick={() => handleComplianceAction(item.id, 'schedule')}
-                              style={{
-                                padding: '0.5rem 1rem',
-                                backgroundColor: '#2563eb',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '0.25rem',
-                                fontSize: '0.75rem',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              📅 Schedule Renewal
-                            </button>
-                            <button
-                              onClick={() => handleComplianceAction(item.id, 'extend')}
-                              style={{
-                                padding: '0.5rem 1rem',
-                                backgroundColor: '#f59e0b',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '0.25rem',
-                                fontSize: '0.75rem',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              ⏰ Request Extension
-                            </button>
-                          </>
-                        )}
-                        <button
-                          onClick={() => alert(`Viewing details for ${item.id}`)}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            backgroundColor: '#6b7280',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '0.25rem',
-                            fontSize: '0.75rem',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          👁️ View Details
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </>
-        )}
+        </Card>
       </div>
     </div>
   );
