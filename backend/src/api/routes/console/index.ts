@@ -31,6 +31,7 @@ import systemConfigRouter from './system-config';
 import checkInRouter from './check-in';
 import gapsRouter from './gaps';
 import clearinghouseRouter from './clearinghouse';
+import payrollRouter from './payroll';
 
 const router = Router();
 
@@ -108,5 +109,8 @@ router.use('/gaps', gapsRouter);
 
 // Clearinghouse routes (electronic claims submission)
 router.use('/clearinghouse', clearinghouseRouter);
+
+// Payroll routes (Gusto, ADP, etc.)
+router.use('/payroll', payrollRouter);
 
 export { router as consoleRouter };
