@@ -22,6 +22,7 @@ import { JobRequisitionsManager } from './components/admin/JobRequisitionsManage
 import { PodManager } from './components/pods/PodManager';
 import { OnCallDispatch } from './components/operations/OnCallDispatch';
 import { DenialWorkflow } from './components/billing/DenialWorkflow';
+import { SystemConfiguration } from './components/admin/SystemConfiguration';
 
 // Layouts
 import DashboardLayout from './components/layouts/DashboardLayout';
@@ -71,6 +72,7 @@ function App() {
                       <Route path="pods" element={<PodManager />} />
                       <Route path="dispatch" element={<OnCallDispatch />} />
                       <Route path="denials" element={<DenialWorkflow />} />
+                      <Route path="settings" element={<SystemConfiguration />} />
 
                       {/* Legacy dashboard routes */}
                       <Route path="legacy/executive" element={<WorkingExecutiveDashboard />} />
