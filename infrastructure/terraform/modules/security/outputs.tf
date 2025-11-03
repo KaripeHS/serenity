@@ -1,0 +1,46 @@
+# Security Groups Module Outputs
+
+output "alb_security_group_id" {
+  description = "ID of the ALB security group"
+  value       = aws_security_group.alb.id
+}
+
+output "ecs_security_group_id" {
+  description = "ID of the ECS security group"
+  value       = aws_security_group.ecs.id
+}
+
+output "rds_security_group_id" {
+  description = "ID of the RDS security group"
+  value       = aws_security_group.rds.id
+}
+
+output "bastion_security_group_id" {
+  description = "ID of the bastion security group"
+  value       = aws_security_group.bastion.id
+}
+
+output "redis_security_group_id" {
+  description = "ID of the Redis security group"
+  value       = aws_security_group.redis.id
+}
+
+output "vpc_endpoints_security_group_id" {
+  description = "ID of the VPC endpoints security group"
+  value       = aws_security_group.vpc_endpoints.id
+}
+
+output "lambda_security_group_id" {
+  description = "ID of the Lambda security group"
+  value       = aws_security_group.lambda.id
+}
+
+output "nat_security_group_id" {
+  description = "ID of the NAT security group"
+  value       = aws_security_group.nat.id
+}
+
+output "monitoring_security_group_id" {
+  description = "ID of the monitoring security group"
+  value       = aws_security_group.monitoring.id
+}

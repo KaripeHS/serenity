@@ -1,0 +1,1259 @@
+openapi: 3.0.3
+info:
+  title: Serenity ERP API
+  description: |
+    HIPAA-compliant API for Serenity Care Partners ERP system.
+    
+    ## Security
+    - All endpoints require authentication via Bearer token
+    - Role-based access control (RBAC) with attribute-based scoping (ABAC)
+    - Row-level security enforced at database level
+    - PHI endpoints require additional HIPAA compliance headers
+    
+    ## Rate Limiting
+    - 1000 requests per minute per user
+    - 10000 requests per minute per organization
+    
+    ## Data Classification
+    Responses include `X-Data-Classification` header:
+    - `public`: No sensitive information
+    - `internal`: Internal business data
+    - `confidential`: Sensitive business data
+    - `phi`: Protected Health Information
+    
+  version: 1.0.0
+  contact:
+    name: Serenity Care Partners IT
+    email: it@serenitycarepartners.com
+  license:
+    name: Proprietary
+    
+servers:
+  - url: https://api.serenityerp.com/v1
+    description: Production server
+  - url: https://api-staging.serenityerp.com/v1
+    description: Staging server
+  - url: http://localhost:3000/api/v1
+    description: Development server
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      
+  schemas:
+    # Common schemas
+    UUID:
+      type: string
+      format: uuid
+      example: "123e4567-e89b-12d3-a456-426614174000"
+      
+    Timestamp:
+      type: string
+      format: date-time
+      example: "2024-01-15T10:30:00Z"
+      
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
+      required: [error, message]
+      
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+        pages:
+          type: integer
+      required: [page, limit, total, pages]
+      
+    # User and Authentication
+    User:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        organizationId:
+          $ref: '#/components/schemas/UUID'
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        role:
+          type: string
+          enum: [founder, security_officer, compliance_officer, finance_director, billing_manager, rcm_analyst, scheduler, field_supervisor, hr_manager, credentialing_specialist, it_admin, support_agent, caregiver, client, family, payer_auditor, ai_service]
+        phone:
+          type: string
+          maxLength: 20
+        isActive:
+          type: boolean
+        lastLogin:
+          $ref: '#/components/schemas/Timestamp'
+        mfaEnabled:
+          type: boolean
+        hourlyRate:
+          type: number
+          format: decimal
+          multipleOf: 0.01
+        preferences:
+          type: object
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+      required: [id, organizationId, email, firstName, lastName, role, isActive, mfaEnabled, createdAt, updatedAt]
+      
+    CreateUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        role:
+          type: string
+          enum: [caregiver, scheduler, billing_manager, hr_manager, field_supervisor]
+        phone:
+          type: string
+          maxLength: 20
+        hourlyRate:
+          type: number
+          format: decimal
+          multipleOf: 0.01
+        hireDate:
+          type: string
+          format: date
+      required: [email, firstName, lastName, role]
+      
+    # Client schemas (PHI)
+    Client:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        organizationId:
+          $ref: '#/components/schemas/UUID'
+        podId:
+          $ref: '#/components/schemas/UUID'
+        clientNumber:
+          type: string
+          maxLength: 50
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        dateOfBirth:
+          type: string
+          format: date
+        medicaidNumber:
+          type: string
+          maxLength: 50
+        address:
+          type: object
+          properties:
+            street:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+              maxLength: 2
+            zipCode:
+              type: string
+              maxLength: 10
+        phone:
+          type: string
+          maxLength: 20
+        emergencyContact:
+          type: object
+        primaryDiagnosis:
+          type: object
+        mobilityLevel:
+          type: integer
+          minimum: 1
+          maximum: 5
+        cognitiveLevel:
+          type: integer
+          minimum: 1
+          maximum: 5
+        isActive:
+          type: boolean
+        admittedDate:
+          type: string
+          format: date
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+      required: [id, organizationId, clientNumber, firstName, lastName, dateOfBirth, address, isActive, createdAt]
+      
+    # Scheduling schemas
+    Shift:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        organizationId:
+          $ref: '#/components/schemas/UUID'
+        podId:
+          $ref: '#/components/schemas/UUID'
+        clientId:
+          $ref: '#/components/schemas/UUID'
+        caregiverId:
+          $ref: '#/components/schemas/UUID'
+        serviceId:
+          $ref: '#/components/schemas/UUID'
+        scheduledStart:
+          $ref: '#/components/schemas/Timestamp'
+        scheduledEnd:
+          $ref: '#/components/schemas/Timestamp'
+        actualStart:
+          $ref: '#/components/schemas/Timestamp'
+        actualEnd:
+          $ref: '#/components/schemas/Timestamp'
+        status:
+          type: string
+          enum: [scheduled, confirmed, in_progress, completed, cancelled, no_show]
+        notes:
+          type: string
+        tasks:
+          type: object
+        weatherConditions:
+          type: string
+          maxLength: 100
+        travelTimeMinutes:
+          type: integer
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+        client:
+          $ref: '#/components/schemas/Client'
+        caregiver:
+          $ref: '#/components/schemas/User'
+      required: [id, organizationId, podId, clientId, serviceId, scheduledStart, scheduledEnd, status, createdAt, updatedAt]
+      
+    CreateShiftRequest:
+      type: object
+      properties:
+        clientId:
+          $ref: '#/components/schemas/UUID'
+        caregiverId:
+          $ref: '#/components/schemas/UUID'
+        serviceId:
+          $ref: '#/components/schemas/UUID'
+        scheduledStart:
+          $ref: '#/components/schemas/Timestamp'
+        scheduledEnd:
+          $ref: '#/components/schemas/Timestamp'
+        notes:
+          type: string
+        tasks:
+          type: object
+      required: [clientId, serviceId, scheduledStart, scheduledEnd]
+      
+    # EVV schemas
+    EVVRecord:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        shiftId:
+          $ref: '#/components/schemas/UUID'
+        organizationId:
+          $ref: '#/components/schemas/UUID'
+        caregiverId:
+          $ref: '#/components/schemas/UUID'
+        clientId:
+          $ref: '#/components/schemas/UUID'
+        servicePerformed:
+          type: string
+          maxLength: 255
+        clockInTime:
+          $ref: '#/components/schemas/Timestamp'
+        clockOutTime:
+          $ref: '#/components/schemas/Timestamp'
+        locationIn:
+          type: object
+          properties:
+            latitude:
+              type: number
+              format: double
+            longitude:
+              type: number
+              format: double
+            accuracy:
+              type: number
+        locationOut:
+          type: object
+          properties:
+            latitude:
+              type: number
+              format: double
+            longitude:
+              type: number
+              format: double
+            accuracy:
+              type: number
+        verificationMethod:
+          type: string
+          enum: [gps, telephony, fixed_device]
+        submittedToSandata:
+          type: boolean
+        sandataTransactionId:
+          type: string
+          maxLength: 100
+        isValid:
+          type: boolean
+        validationErrors:
+          type: object
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+      required: [id, shiftId, caregiverId, clientId, servicePerformed, clockInTime, locationIn, verificationMethod, isValid, createdAt]
+      
+    ClockInRequest:
+      type: object
+      properties:
+        shiftId:
+          $ref: '#/components/schemas/UUID'
+        servicePerformed:
+          type: string
+          maxLength: 255
+        location:
+          type: object
+          properties:
+            latitude:
+              type: number
+              format: double
+            longitude:
+              type: number
+              format: double
+            accuracy:
+              type: number
+          required: [latitude, longitude]
+        verificationMethod:
+          type: string
+          enum: [gps, telephony, fixed_device]
+        deviceInfo:
+          type: object
+      required: [shiftId, servicePerformed, location, verificationMethod]
+      
+    # Billing schemas
+    Claim:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        organizationId:
+          $ref: '#/components/schemas/UUID'
+        clientId:
+          $ref: '#/components/schemas/UUID'
+        caregiverId:
+          $ref: '#/components/schemas/UUID'
+        shiftId:
+          $ref: '#/components/schemas/UUID'
+        evvRecordId:
+          $ref: '#/components/schemas/UUID'
+        claimNumber:
+          type: string
+          maxLength: 50
+        payerName:
+          type: string
+          maxLength: 255
+        serviceCode:
+          type: string
+          maxLength: 20
+        serviceDate:
+          type: string
+          format: date
+        unitsProvided:
+          type: number
+          format: decimal
+          multipleOf: 0.01
+        unitRate:
+          type: number
+          format: decimal
+          multipleOf: 0.01
+        totalAmount:
+          type: number
+          format: decimal
+          multipleOf: 0.01
+        status:
+          type: string
+          enum: [draft, staged, submitted, paid, denied, appealed]
+        submissionDate:
+          type: string
+          format: date
+        paymentDate:
+          type: string
+          format: date
+        paidAmount:
+          type: number
+          format: decimal
+          multipleOf: 0.01
+        denialReason:
+          type: string
+        evvCompliant:
+          type: boolean
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+      required: [id, organizationId, clientId, caregiverId, payerName, serviceCode, serviceDate, unitsProvided, unitRate, totalAmount, status, evvCompliant, createdAt, updatedAt]
+      
+    # Credentials schemas
+    Credential:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        userId:
+          $ref: '#/components/schemas/UUID'
+        organizationId:
+          $ref: '#/components/schemas/UUID'
+        credentialType:
+          type: string
+          maxLength: 100
+        credentialNumber:
+          type: string
+          maxLength: 100
+        issuedBy:
+          type: string
+          maxLength: 255
+        issueDate:
+          type: string
+          format: date
+        expirationDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [active, expired, suspended, revoked, pending]
+        documentUrl:
+          type: string
+          format: uri
+        verificationStatus:
+          type: string
+          enum: [pending, verified, failed]
+        verifiedBy:
+          $ref: '#/components/schemas/UUID'
+        verifiedAt:
+          $ref: '#/components/schemas/Timestamp'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+      required: [id, userId, organizationId, credentialType, issueDate, expirationDate, status, createdAt]
+      
+paths:
+  # Authentication endpoints
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: User login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                mfaCode:
+                  type: string
+                  maxLength: 6
+              required: [email, password]
+      responses:
+        '200':
+          description: Login successful
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: internal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+                  expiresAt:
+                    $ref: '#/components/schemas/Timestamp'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '423':
+          description: Account locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+                
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: User logout
+      responses:
+        '200':
+          description: Logout successful
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+          
+  /auth/profile:
+    get:
+      tags: [Authentication]
+      summary: Get current user profile
+      responses:
+        '200':
+          description: User profile
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: internal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+          
+  # User management endpoints
+  /users:
+    get:
+      tags: [Users]
+      summary: List users
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: role
+          in: query
+          schema:
+            type: string
+        - name: isActive
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of users
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: internal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+          
+    post:
+      tags: [Users]
+      summary: Create new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: internal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+                
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: User details
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: internal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+          
+  # Client management endpoints (PHI)
+  /clients:
+    get:
+      tags: [Clients]
+      summary: List clients (PHI)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: isActive
+          in: query
+          schema:
+            type: boolean
+        - name: podId
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: List of clients
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: phi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Client'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+          
+  /clients/{id}:
+    get:
+      tags: [Clients]
+      summary: Get client by ID (PHI)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Client details
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: phi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+          
+  # Scheduling endpoints
+  /shifts:
+    get:
+      tags: [Scheduling]
+      summary: List shifts
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: caregiverId
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: clientId
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [scheduled, confirmed, in_progress, completed, cancelled, no_show]
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of shifts
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: phi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Shift'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+          
+    post:
+      tags: [Scheduling]
+      summary: Create new shift
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateShiftRequest'
+      responses:
+        '201':
+          description: Shift created successfully
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: phi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+          
+  # EVV endpoints
+  /evv/clock-in:
+    post:
+      tags: [EVV]
+      summary: Clock in for shift
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClockInRequest'
+      responses:
+        '201':
+          description: Clock in successful
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: phi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EVVRecord'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Already clocked in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+                
+  /evv/clock-out:
+    post:
+      tags: [EVV]
+      summary: Clock out from shift
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                evvRecordId:
+                  $ref: '#/components/schemas/UUID'
+                location:
+                  type: object
+                  properties:
+                    latitude:
+                      type: number
+                      format: double
+                    longitude:
+                      type: number
+                      format: double
+                    accuracy:
+                      type: number
+                  required: [latitude, longitude]
+              required: [evvRecordId, location]
+      responses:
+        '200':
+          description: Clock out successful
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: phi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EVVRecord'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+          
+  # Claims endpoints
+  /claims:
+    get:
+      tags: [Billing]
+      summary: List claims
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, staged, submitted, paid, denied, appealed]
+        - name: payerName
+          in: query
+          schema:
+            type: string
+        - name: serviceDateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: serviceDateTo
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of claims
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: phi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Claim'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+          
+  /claims/generate:
+    post:
+      tags: [Billing]
+      summary: Generate claims from EVV records
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                evvRecordIds:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/UUID'
+                  minItems: 1
+                  maxItems: 100
+              required: [evvRecordIds]
+      responses:
+        '201':
+          description: Claims generated successfully
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: phi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  claims:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Claim'
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        evvRecordId:
+                          $ref: '#/components/schemas/UUID'
+                        error:
+                          type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+          
+  # Credentials endpoints
+  /credentials:
+    get:
+      tags: [HR]
+      summary: List credentials
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: userId
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, expired, suspended, revoked, pending]
+        - name: expiringBefore
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of credentials
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: internal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Credential'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+          
+  # AI Agent endpoints
+  /ai/chat:
+    post:
+      tags: [AI]
+      summary: Chat with AI Companion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  maxLength: 2000
+                sessionId:
+                  type: string
+                  maxLength: 255
+                context:
+                  type: object
+              required: [message]
+      responses:
+        '200':
+          description: AI response
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: internal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+                  sessionId:
+                    type: string
+                  confidenceScore:
+                    type: number
+                    format: decimal
+                  sources:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+                
+  # Dashboard endpoints
+  /dashboard/executive:
+    get:
+      tags: [Dashboards]
+      summary: Executive dashboard data
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [today, week, month, quarter, year]
+            default: month
+      responses:
+        '200':
+          description: Executive dashboard metrics
+          headers:
+            X-Data-Classification:
+              schema:
+                type: string
+              example: internal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  evvComplianceRate:
+                    type: number
+                    format: decimal
+                  utilizationRate:
+                    type: number
+                    format: decimal
+                  denialRate:
+                    type: number
+                    format: decimal
+                  averageDSO:
+                    type: number
+                    format: decimal
+                  overtimeHours:
+                    type: number
+                    format: decimal
+                  npsScore:
+                    type: number
+                    format: decimal
+                  anomalies:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                        description:
+                          type: string
+                        severity:
+                          type: string
+                        recommendedAction:
+                          type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  components:
+    responses:
+      BadRequest:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+      Unauthorized:
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+      Forbidden:
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+      NotFound:
+        description: Not found
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+              
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Users
+    description: User management and profiles
+  - name: Clients
+    description: Client management (contains PHI)
+  - name: Scheduling
+    description: Shift scheduling and management
+  - name: EVV
+    description: Electronic Visit Verification
+  - name: Billing
+    description: Claims and billing management
+  - name: HR
+    description: Human resources and credentialing
+  - name: AI
+    description: AI agent interactions
+  - name: Dashboards
+    description: Role-based dashboard data

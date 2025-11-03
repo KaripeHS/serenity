@@ -1,0 +1,121 @@
+# Serenity ERP Terraform Variables Example
+# Copy this file to terraform.tfvars and customize the values for your deployment
+
+# General Configuration
+project_name = "serenity-erp"
+environment  = "dev"  # dev, staging, production
+aws_region   = "us-east-1"
+
+# Network Configuration
+vpc_cidr = "10.0.0.0/16"
+
+private_subnet_cidrs = [
+  "10.0.1.0/24",   # us-east-1a
+  "10.0.2.0/24",   # us-east-1b
+  "10.0.3.0/24"    # us-east-1c
+]
+
+public_subnet_cidrs = [
+  "10.0.101.0/24", # us-east-1a
+  "10.0.102.0/24", # us-east-1b
+  "10.0.103.0/24"  # us-east-1c
+]
+
+db_subnet_cidrs = [
+  "10.0.201.0/24", # us-east-1a
+  "10.0.202.0/24", # us-east-1b
+  "10.0.203.0/24"  # us-east-1c
+]
+
+# Allowed CIDR blocks for administrative access
+# Update these to match your office/VPN IP ranges
+allowed_cidr_blocks = [
+  "10.0.0.0/8",      # Private networks
+  "172.16.0.0/12",   # Private networks
+  "192.168.0.0/16",  # Private networks
+  # "203.0.113.0/24" # Example: Your office IP range
+]
+
+# Database Configuration
+db_instance_class     = "db.t3.medium"  # For dev: db.t3.micro, for prod: db.r5.large or higher
+db_allocated_storage  = 100
+db_max_allocated_storage = 1000
+
+# ECS Configuration
+app_image      = "serenity-erp:latest"  # Update with your actual Docker image
+fargate_cpu    = 1024                   # 1 vCPU
+fargate_memory = 2048                   # 2 GB
+app_count      = 2                      # Number of tasks to run
+
+# Auto Scaling Configuration
+min_capacity = 2
+max_capacity = 10
+
+# Domain Configuration (optional - leave empty to use ALB DNS)
+domain_name      = ""  # e.g., "app.serenitycare.com"
+route53_zone_id  = ""  # Required if domain_name is set
+
+# HIPAA Compliance Settings
+enable_encryption_in_transit = true
+enable_encryption_at_rest    = true
+enable_audit_logging        = true
+backup_retention_days       = 30
+enable_multi_az            = true   # Set to false for dev to reduce costs
+
+# Monitoring Configuration
+enable_detailed_monitoring = true
+alert_email_addresses = [
+  "admin@serenitycare.com",
+  "ops@serenitycare.com"
+]
+
+# Security Configuration
+enable_waf             = true
+enable_shield_advanced = false  # Set to true for production (additional cost)
+enable_guardduty      = true
+enable_config         = true
+enable_cloudtrail     = true
+enable_vpc_flow_logs  = true
+
+# Cost Optimization (mainly for dev environments)
+enable_spot_instances = false  # Set to true for dev to reduce costs
+enable_auto_shutdown  = false  # Set to true for dev environments
+
+# Environment-specific Overrides
+# These settings will override the above based on environment
+environment_config = {
+  dev = {
+    db_instance_class = "db.t3.micro"
+    app_count        = 1
+    min_capacity     = 1
+    max_capacity     = 3
+    enable_multi_az  = false
+    backup_retention_days = 7
+  }
+  staging = {
+    db_instance_class = "db.t3.small"
+    app_count        = 2
+    min_capacity     = 2
+    max_capacity     = 5
+    enable_multi_az  = true
+    backup_retention_days = 14
+  }
+  production = {
+    db_instance_class = "db.r5.large"
+    app_count        = 3
+    min_capacity     = 3
+    max_capacity     = 20
+    enable_multi_az  = true
+    backup_retention_days = 30
+    enable_shield_advanced = true
+  }
+}
+
+# Additional tags to apply to all resources
+additional_tags = {
+  "Owner"       = "SerenityCareTech"
+  "CostCenter"  = "IT"
+  "Compliance"  = "HIPAA"
+  "Backup"      = "Required"
+  "Monitoring"  = "Enabled"
+}

@@ -1,0 +1,314 @@
+{
+  "agents": {
+    "scheduler_agent": {
+      "system_prompt": "You are the Serenity ERP Scheduler Agent. Your role is to optimize caregiver-client matching for home health shifts while ensuring compliance with Ohio Medicaid requirements.\n\nCORE RESPONSIBILITIES:\n- Match caregivers to clients based on skills, certifications, geography, and preferences\n- Optimize schedules to minimize overtime costs while ensuring coverage\n- Enforce ODM EVV requirements for all shifts\n- Respect caregiver availability and client care plan requirements\n\nCONSTRAINTS:\n- Never schedule a caregiver without active, required credentials\n- Ensure all shifts meet minimum/maximum duration requirements per payer guidelines\n- Maintain caregiver-to-client ratios as specified in care plans\n- Consider travel time between consecutive shifts\n- Flag potential overtime situations for human approval\n\nOUTPUT FORMAT:\nAlways return structured JSON with schedule recommendations, rationale, and any warnings or approvals needed.\n\nCITE SOURCES:\nReference specific policies, care plan requirements, or regulations that influence scheduling decisions.",
+      "input_validation": {
+        "required_fields": ["request_type", "date_range", "available_caregivers", "client_needs"],
+        "request_types": ["auto_schedule", "manual_review", "optimization"],
+        "max_date_range_days": 7
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "recommendations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "shift_id": {"type": "string", "format": "uuid"},
+                "client_id": {"type": "string", "format": "uuid"},
+                "caregiver_id": {"type": "string", "format": "uuid"},
+                "scheduled_start": {"type": "string", "format": "date-time"},
+                "scheduled_end": {"type": "string", "format": "date-time"},
+                "confidence_score": {"type": "number", "minimum": 0, "maximum": 1},
+                "rationale": {"type": "string"},
+                "warnings": {"type": "array", "items": {"type": "string"}},
+                "approvals_required": {"type": "array", "items": {"type": "string"}}
+              }
+            }
+          },
+          "conflicts": {"type": "array"},
+          "optimization_metrics": {"type": "object"},
+          "citations": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "evv_watchdog_agent": {
+      "system_prompt": "You are the Serenity ERP EVV Watchdog Agent. Your critical role is ensuring 100% EVV compliance for all home health visits per Ohio Medicaid requirements.\n\nCORE RESPONSIBILITIES:\n- Validate the 6 required EVV elements for every visit\n- Detect anomalies in EVV data (location, timing, duration)\n- Generate Fix-Visit tasks for non-compliant records\n- Monitor Sandata/ODM submission status\n- Flag potential fraudulent patterns\n\nEVV REQUIREMENTS (ODM):\n1. Type of service performed\n2. Individual receiving the service\n3. Date of service\n4. Location of service\n5. Individual providing the service\n6. Time service begins and ends\n\nVALIDATION RULES:\n- GPS location must be within 200 meters of client address\n- Clock-in/out times must align with scheduled shift times (±15 min tolerance)\n- Service duration must meet minimum requirements per service code\n- No overlapping shifts for same caregiver\n- All EVV records require submission to Sandata within 24 hours\n\nOUTPUT: Always flag violations with specific remediation steps and policy citations.",
+      "validation_rules": {
+        "location_tolerance_meters": 200,
+        "time_tolerance_minutes": 15,
+        "submission_deadline_hours": 24,
+        "required_elements": [
+          "service_type",
+          "client_identity", 
+          "service_date",
+          "service_location",
+          "caregiver_identity",
+          "start_end_time"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "validation_result": {
+            "type": "object",
+            "properties": {
+              "is_compliant": {"type": "boolean"},
+              "compliance_score": {"type": "number", "minimum": 0, "maximum": 1},
+              "violations": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "element": {"type": "string"},
+                    "violation_type": {"type": "string"},
+                    "description": {"type": "string"},
+                    "remediation_steps": {"type": "array", "items": {"type": "string"}},
+                    "policy_citation": {"type": "string"}
+                  }
+                }
+              },
+              "fix_visit_tasks": {"type": "array"}
+            }
+          }
+        }
+      }
+    },
+    "billing_compliance_agent": {
+      "system_prompt": "You are the Serenity ERP Billing Compliance Agent. Your role is to prevent claim denials by ensuring 100% compliance before submission.\n\nCORE RESPONSIBILITIES:\n- Validate claim accuracy against EVV records, care plans, and authorizations\n- Ensure all required documentation is present and current\n- Check caregiver credentials are active for service dates\n- Verify client eligibility and authorization limits\n- Apply payer-specific billing rules and requirements\n\nNO EVV, NO PAY RULE:\nNever approve a claim for submission without valid, compliant EVV records. This is non-negotiable per Ohio Medicaid requirements.\n\nVALIDATION CHECKLIST:\n□ EVV record exists and is compliant\n□ Service matches care plan authorization\n□ Caregiver credentials active on service date\n□ Client eligibility verified for service date\n□ Units provided align with EVV duration\n□ Payer-specific requirements met\n□ All supporting documentation attached\n\nOUTPUT: JSON with approval status, validation results, and specific fix requirements for rejected claims.",
+      "validation_checklist": {
+        "evv_compliance": {"required": true, "blocking": true},
+        "care_plan_match": {"required": true, "blocking": true},
+        "credential_validity": {"required": true, "blocking": true},
+        "client_eligibility": {"required": true, "blocking": true},
+        "unit_duration_alignment": {"required": true, "blocking": false},
+        "payer_requirements": {"required": true, "blocking": true},
+        "documentation_complete": {"required": true, "blocking": false}
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "approval_status": {"type": "string", "enum": ["approved", "rejected", "pending_review"]},
+          "validation_results": {
+            "type": "object",
+            "properties": {
+              "passed_checks": {"type": "array", "items": {"type": "string"}},
+              "failed_checks": {"type": "array", "items": {"type": "string"}},
+              "warnings": {"type": "array", "items": {"type": "string"}}
+            }
+          },
+          "required_fixes": {"type": "array", "items": {"type": "string"}},
+          "estimated_approval_probability": {"type": "number", "minimum": 0, "maximum": 1},
+          "payer_specific_notes": {"type": "string"}
+        }
+      }
+    },
+    "policy_brain_agent": {
+      "system_prompt": "You are the Serenity ERP Policy Brain Agent. You are the authoritative source for all organizational policies, procedures, and regulatory requirements.\n\nKNOWLEDGE BASE:\n- Serenity Care Partners Standard Operating Procedures\n- Ohio Department of Medicaid (ODM) regulations and bulletins\n- CMS guidelines and policy updates\n- Payer-specific policies and procedures\n- HIPAA compliance requirements\n- Industry best practices and standards\n\nRESPONSE REQUIREMENTS:\n- Always cite specific policy numbers, regulation codes, or document references\n- Indicate effective dates and version numbers for all cited sources\n- Flag when policies conflict or when updates may be needed\n- Provide direct quotes from source documents when possible\n- Distinguish between mandatory requirements vs. recommendations\n\nACCURACY MANDATE:\nYour responses directly impact compliance and operations. Accuracy is paramount. When uncertain, clearly state limitations and recommend human review.\n\nOUTPUT FORMAT:\nStructured responses with clear policy citations, effective dates, and confidence indicators.",
+      "knowledge_categories": [
+        "sop",
+        "odm_regulations", 
+        "cms_guidelines",
+        "payer_policies",
+        "hipaa_requirements",
+        "industry_standards"
+      ],
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "answer": {"type": "string"},
+          "confidence_level": {"type": "string", "enum": ["high", "medium", "low"]},
+          "citations": {
+            "type": "array",
+            "items": {
+              "type": "object", 
+              "properties": {
+                "source": {"type": "string"},
+                "document_id": {"type": "string"},
+                "section": {"type": "string"},
+                "effective_date": {"type": "string", "format": "date"},
+                "version": {"type": "string"},
+                "quote": {"type": "string"},
+                "requirement_type": {"type": "string", "enum": ["mandatory", "recommended", "optional"]}
+              }
+            }
+          },
+          "conflicts": {"type": "array", "items": {"type": "string"}},
+          "updates_needed": {"type": "array", "items": {"type": "string"}},
+          "human_review_recommended": {"type": "boolean"}
+        }
+      }
+    },
+    "hipaa_guardian_agent": {
+      "system_prompt": "You are the Serenity ERP HIPAA Guardian Agent. Your mission is to detect, prevent, and remediate PHI violations across all system interactions.\n\nCORE RESPONSIBILITIES:\n- Real-time PHI detection in logs, communications, and data exports\n- Automatic redaction of PHI in non-secure contexts\n- Monitoring access patterns for potential violations\n- Generating security incident reports\n- Ensuring minimum necessary access principles\n\nPHI DETECTION PATTERNS:\n- Social Security Numbers (SSN)\n- Medical Record Numbers (MRN)\n- Dates of birth combined with names\n- Addresses combined with health information\n- Diagnosis codes and medical conditions\n- Insurance information and member IDs\n\nRESPONSE LEVELS:\n- BLOCK: Immediately prevent PHI exposure\n- REDACT: Mask PHI while preserving functionality\n- ALERT: Notify security team of potential violation\n- LOG: Record all PHI access with full audit trail\n\nINCIDENT CREATION:\nAutomatically create security incidents for:\n- PHI in logs or error messages\n- Unauthorized access attempts\n- Bulk data exports containing PHI\n- System-to-system PHI transmissions without encryption",
+      "phi_patterns": {
+        "ssn": "\\b\\d{3}-\\d{2}-\\d{4}\\b",
+        "phone": "\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b",
+        "dob": "\\b\\d{1,2}/\\d{1,2}/\\d{4}\\b|\\b\\d{4}-\\d{2}-\\d{2}\\b",
+        "medical_record": "\\bMRN[:\\s]*\\d+\\b",
+        "diagnosis_code": "\\b[A-Z]\\d{2}\\.?\\d*\\b",
+        "insurance_id": "\\b[A-Z]{2,3}\\d{8,}\\b"
+      },
+      "response_actions": {
+        "block": ["phi_in_logs", "unauthorized_export"],
+        "redact": ["display_contexts", "reports"],
+        "alert": ["bulk_access", "suspicious_patterns"],
+        "log": ["all_phi_access"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "phi_detected": {"type": "boolean"},
+          "detection_results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "phi_type": {"type": "string"},
+                "location": {"type": "string"},
+                "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                "action_taken": {"type": "string", "enum": ["blocked", "redacted", "alerted", "logged"]},
+                "redacted_content": {"type": "string"}
+              }
+            }
+          },
+          "incidents_created": {"type": "array"},
+          "risk_assessment": {
+            "type": "object",
+            "properties": {
+              "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+              "breach_potential": {"type": "boolean"},
+              "notification_required": {"type": "boolean"}
+            }
+          }
+        }
+      }
+    },
+    "executive_copilot_agent": {
+      "system_prompt": "You are the Serenity ERP Executive Copilot Agent. Your role is to provide concise, actionable intelligence to executive leadership.\n\nDAILY BRIEF STRUCTURE:\n1. TOP 3 ANOMALIES: Unexpected patterns requiring attention\n2. KEY METRICS: Performance indicators with trend analysis\n3. RECOMMENDED ACTIONS: Specific steps to address issues\n4. COMPLIANCE STATUS: HIPAA, ODM, and payer compliance summary\n5. STRATEGIC INSIGHTS: Data-driven observations for strategic planning\n\nANOMALY DETECTION:\n- EVV compliance drops below 98%\n- Claim denial rates exceed baseline by >10%\n- Overtime costs increase >15% week-over-week\n- Caregiver turnover spikes\n- Client satisfaction scores decline\n- Security incidents or access violations\n\nCOMMUNICATION STYLE:\n- Executive-level language (concise, strategic)\n- Data-driven insights with specific numbers\n- Clear recommendations with business impact\n- Risk assessment for each issue identified\n- Timeline expectations for resolution\n\nOUTPUT: Daily brief in structured format with executive dashboard metrics and actionable intelligence.",
+      "anomaly_thresholds": {
+        "evv_compliance_rate": {"threshold": 0.98, "direction": "below"},
+        "claim_denial_rate": {"threshold": 0.10, "direction": "above", "baseline_comparison": true},
+        "overtime_cost_increase": {"threshold": 0.15, "direction": "above", "period": "week_over_week"},
+        "caregiver_turnover": {"threshold": 0.05, "direction": "above", "period": "monthly"},
+        "client_satisfaction": {"threshold": 4.0, "direction": "below", "scale": 5},
+        "security_incidents": {"threshold": 0, "direction": "above"}
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "executive_summary": {"type": "string", "maxLength": 500},
+          "top_anomalies": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {"type": "string"},
+                "description": {"type": "string"},
+                "impact": {"type": "string"},
+                "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+                "trend": {"type": "string"},
+                "recommended_action": {"type": "string"},
+                "timeline": {"type": "string"}
+              }
+            }
+          },
+          "key_metrics": {
+            "type": "object",
+            "properties": {
+              "evv_compliance_rate": {"type": "number"},
+              "utilization_rate": {"type": "number"},
+              "claim_denial_rate": {"type": "number"},
+              "average_dso": {"type": "number"},
+              "overtime_hours": {"type": "number"},
+              "nps_score": {"type": "number"}
+            }
+          },
+          "compliance_status": {
+            "type": "object",
+            "properties": {
+              "hipaa_compliant": {"type": "boolean"},
+              "odm_compliant": {"type": "boolean"},
+              "open_incidents": {"type": "integer"},
+              "last_audit_score": {"type": "number"}
+            }
+          },
+          "strategic_insights": {"type": "array", "items": {"type": "string"}},
+          "recommended_actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "priority": {"type": "string", "enum": ["high", "medium", "low"]},
+                "action": {"type": "string"},
+                "owner": {"type": "string"},
+                "deadline": {"type": "string", "format": "date"},
+                "business_impact": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "ai_companion": {
+      "system_prompt": "You are the Serenity ERP AI Companion. You provide helpful, accurate answers to user questions about their work, schedules, policies, and system functionality.\n\nCORE CAPABILITIES:\n- Answer questions about schedules, shifts, and assignments\n- Explain policies, procedures, and compliance requirements\n- Provide system help and navigation guidance\n- Assist with common tasks and workflows\n- Escalate complex issues to appropriate human staff\n\nUSER CONTEXT AWARENESS:\n- Respect user's role-based access permissions\n- Personalize responses based on user's responsibilities\n- Reference user's specific data (schedules, clients, etc.)\n- Maintain conversation context across interactions\n\nPHI PROTECTION:\n- Never include PHI in responses unless user is authorized\n- Redact sensitive information appropriately\n- Escalate PHI-related questions to secure channels\n- Log all interactions for audit purposes\n\nCOMMUNICATION STYLE:\n- Friendly but professional tone\n- Clear, concise explanations\n- Actionable guidance when possible\n- Empathetic to user frustrations or concerns",
+      "conversation_contexts": [
+        "scheduling_questions",
+        "policy_clarification", 
+        "system_navigation",
+        "task_assistance",
+        "compliance_guidance",
+        "general_support"
+      ],
+      "escalation_triggers": [
+        "phi_discussion_required",
+        "complex_policy_interpretation",
+        "system_error_reported",
+        "urgent_compliance_issue",
+        "payroll_discrepancy",
+        "safety_concern"
+      ],
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "response": {"type": "string"},
+          "response_type": {"type": "string", "enum": ["direct_answer", "guidance", "escalation", "clarification_needed"]},
+          "confidence_level": {"type": "string", "enum": ["high", "medium", "low"]},
+          "sources_cited": {"type": "array", "items": {"type": "string"}},
+          "follow_up_suggestions": {"type": "array", "items": {"type": "string"}},
+          "escalation_required": {"type": "boolean"},
+          "escalation_reason": {"type": "string"},
+          "phi_detected": {"type": "boolean"},
+          "session_context": {"type": "object"}
+        }
+      }
+    }
+  },
+  "global_settings": {
+    "max_response_length": 4000,
+    "response_timeout_seconds": 30,
+    "rate_limits": {
+      "requests_per_minute": 60,
+      "tokens_per_hour": 100000
+    },
+    "audit_logging": {
+      "log_all_interactions": true,
+      "log_input_data": true,
+      "log_output_data": true,
+      "retention_days": 2555
+    },
+    "phi_protection": {
+      "enabled": true,
+      "auto_redaction": true,
+      "audit_phi_access": true,
+      "route_phi_to_hipaa_llm": true
+    },
+    "quality_controls": {
+      "human_review_sample_rate": 0.05,
+      "confidence_threshold_for_auto_action": 0.85,
+      "escalation_on_low_confidence": true
+    }
+  }
+}

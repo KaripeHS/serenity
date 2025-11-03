@@ -1,0 +1,3930 @@
+{
+  "auditSummary": {
+    "totalIterations": 50,
+    "finalCompliance": 78,
+    "targetCompliance": 100,
+    "status": "NON_COMPLIANT"
+  },
+  "auditHistory": [
+    {
+      "timestamp": "2025-09-20T13:54:54.735Z",
+      "overallScore": 45,
+      "maxScore": 115,
+      "compliancePercent": 39,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 0,
+          "maxScore": 20,
+          "violations": [
+            "./scripts/console-statement-purge.ts:            severity: match[3].includes('console.error') ? 'CRITICAL' : 'HIGH'",
+            "./scripts/console-statement-purge.ts:    // Replace console.log",
+            "./scripts/console-statement-purge.ts:    // Replace console.warn",
+            "./scripts/console-statement-purge.ts:    // Replace console.error",
+            "./scripts/console-statement-purge.ts:    // Replace console.info",
+            "./scripts/console-statement-purge.ts:    // Replace console.debug",
+            "./scripts/console-statement-purge.ts:    // Replace console.trace",
+            "./scripts/fix-production-issues.ts:    console.log('🔧 Starting production issue fixing...');",
+            "./scripts/fix-production-issues.ts:      console.error(`Error processing ${filePath}:`, error);",
+            "./scripts/fix-production-issues.ts:    console.log('\\n📊 PRODUCTION ISSUE FIXING SUMMARY');",
+            "./scripts/fix-production-issues.ts:    console.log('=====================================');",
+            "./scripts/fix-production-issues.ts:    console.log(`Files processed: ${this.totalFiles}`);",
+            "./scripts/fix-production-issues.ts:    console.log(`Total issues fixed: ${this.totalIssues}`);",
+            "./scripts/fix-production-issues.ts:    console.log();",
+            "./scripts/fix-production-issues.ts:      console.log('Files with issues fixed:');",
+            "./scripts/fix-production-issues.ts:        console.log(`  ${result.file}:`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Console statements: ${result.consoleStatements}`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Placeholders: ${result.placeholders}`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Mock implementations: ${result.mocks}`);",
+            "./scripts/fix-production-issues.ts:    console.log('\\n✅ Production issue fixing completed!');",
+            "./scripts/fix-production-issues.ts:  fixer.fixAllIssues().catch(console.error);"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Secret: ./backend/src/config/environment.ts:      openaiServiceKey: this.getRequiredEnv('OPENAI_API_KEY'),",
+            "Secret: ./backend/src/config/environment.ts:      anthropicServiceKey: this.getRequiredEnv('ANTHROPIC_API_KEY'),",
+            "Secret: ./backend/src/config/environment.ts:      indeedServiceKey: this.getRequiredEnv('INDEED_API_KEY'),",
+            "Secret: ./backend/src/config/security.ts:    API_KEY_LENGTH: 64,",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'SELECT password_hash FROM users WHERE id = $1',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'SELECT password_hash FROM users WHERE id = $1',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:      const passwordHash = await bcrypt.hash(newPassword, this.saltRounds);",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE password_reset_tokens SET used = true WHERE user_id = $1',",
+            "Secret: ./scripts/compliance-verification.ts:      const result = execSync('grep -r \"api_key\\\\|apikey\\\\|API_KEY\\\\|password.*=\" . --include=\"*.ts\" --include=\"*.js\" --exclude-dir=node_modules',"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "Dev Pattern: ./backend/src/ai/enhanced-agent.service.ts:- Training and development needs",
+            "Dev Pattern: ./backend/src/automation/document-templates.ts:    // This is a production for development/testing",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:  developmentAreas: string[];",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:        developmentAreas: [],",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:      developmentAreas: ['Time management', 'Technology skills'],",
+            "Dev Pattern: ./backend/src/config/environment.ts:      nodeEnv: process.env.NODE_ENV || 'development',",
+            "Dev Pattern: ./backend/src/config/environment.ts:    return this.config.nodeEnv === 'development';",
+            "Dev Pattern: ./backend/src/database/seeds/001_sample_data_generator.ts:      { action: 'Career development planning', category: 'development', priority: 'medium' },",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  // Goals and development",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  developmentPlan: DevelopmentPlan;",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  category: 'performance' | 'skill_development' | 'career' | 'compliance';",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  category: 'compensation' | 'development' | 'recognition' | 'workload' | 'culture';",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:    4. Career development progress",
+            "Dev Pattern: ./backend/src/utils/logger.ts:      enableConsole: process.env.NODE_ENV === 'development',",
+            "Dev Pattern: ./backend/src/utils/logger.ts:    // Only in development - production uses structured logging",
+            "Dev Pattern: ./backend/src/utils/logger.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./frontend/src/App-simple.tsx:        <p style={{ color: '#6b7280' }}>This dashboard is under development.</p>",
+            "Dev Pattern: ./frontend/src/components/layouts/DashboardLayout.tsx:    description: 'Staff training and development'",
+            "Dev Pattern: ./frontend/src/services/hrDashboard.service.ts:        'Expand professional development programs'",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    // Override global console in development to catch violations",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:      // Still log in development for debugging",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    // Output to console in development only",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./mobile/src/services/LoggerService.ts:    // In development, also output to console for debugging",
+            "Dev Pattern: ./scripts/compliance-verification.ts:      const result = execSync('grep -r \"TODO\\\\|FIXME\\\\|hint\\\\|development\" . --include=\"*.ts\" --include=\"*.tsx\" --exclude-dir=node_modules',",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts: * Removes all TODO, FIXME, hint, development, and template content",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:    this.logCritical('Target: Remove all TODO, FIXME, placeholder, mock, stub content');",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        { regex: /\\/\\/\\s*TODO[^\\n]*/gi, replacement: '// Production implementation complete' },",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        { regex: /\\/\\/\\s*FIXME[^\\n]*/gi, replacement: '// Production implementation complete' },",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        /\\/\\/\\s*TODO: Send email with reset link/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        /\\/\\/\\s*This is a mock for development\\/testing/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:      /TODO/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:      /FIXME/gi,",
+            "Dev Pattern: ./scripts/fix-production-issues.ts: * Production Issue Fixer - Automated cleanup of development patterns"
+          ],
+          "status": "WARNING"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:55:18.568Z",
+      "overallScore": 45,
+      "maxScore": 115,
+      "compliancePercent": 39,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 0,
+          "maxScore": 20,
+          "violations": [
+            "./scripts/console-statement-purge.ts:            severity: match[3].includes('console.error') ? 'CRITICAL' : 'HIGH'",
+            "./scripts/console-statement-purge.ts:    // Replace console.log",
+            "./scripts/console-statement-purge.ts:    // Replace console.warn",
+            "./scripts/console-statement-purge.ts:    // Replace console.error",
+            "./scripts/console-statement-purge.ts:    // Replace console.info",
+            "./scripts/console-statement-purge.ts:    // Replace console.debug",
+            "./scripts/console-statement-purge.ts:    // Replace console.trace",
+            "./scripts/fix-production-issues.ts:    console.log('🔧 Starting production issue fixing...');",
+            "./scripts/fix-production-issues.ts:      console.error(`Error processing ${filePath}:`, error);",
+            "./scripts/fix-production-issues.ts:    console.log('\\n📊 PRODUCTION ISSUE FIXING SUMMARY');",
+            "./scripts/fix-production-issues.ts:    console.log('=====================================');",
+            "./scripts/fix-production-issues.ts:    console.log(`Files processed: ${this.totalFiles}`);",
+            "./scripts/fix-production-issues.ts:    console.log(`Total issues fixed: ${this.totalIssues}`);",
+            "./scripts/fix-production-issues.ts:    console.log();",
+            "./scripts/fix-production-issues.ts:      console.log('Files with issues fixed:');",
+            "./scripts/fix-production-issues.ts:        console.log(`  ${result.file}:`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Console statements: ${result.consoleStatements}`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Placeholders: ${result.placeholders}`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Mock implementations: ${result.mocks}`);",
+            "./scripts/fix-production-issues.ts:    console.log('\\n✅ Production issue fixing completed!');",
+            "./scripts/fix-production-issues.ts:  fixer.fixAllIssues().catch(console.error);"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Secret: ./backend/src/config/environment.ts:      openaiServiceKey: this.getRequiredEnv('OPENAI_API_KEY'),",
+            "Secret: ./backend/src/config/environment.ts:      anthropicServiceKey: this.getRequiredEnv('ANTHROPIC_API_KEY'),",
+            "Secret: ./backend/src/config/environment.ts:      indeedServiceKey: this.getRequiredEnv('INDEED_API_KEY'),",
+            "Secret: ./backend/src/config/security.ts:    API_KEY_LENGTH: 64,",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'SELECT password_hash FROM users WHERE id = $1',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'SELECT password_hash FROM users WHERE id = $1',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:      const passwordHash = await bcrypt.hash(newPassword, this.saltRounds);",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE password_reset_tokens SET used = true WHERE user_id = $1',",
+            "Secret: ./scripts/compliance-verification.ts:      const result = execSync('grep -r \"api_key\\\\|apikey\\\\|API_KEY\\\\|password.*=\" . --include=\"*.ts\" --include=\"*.js\" --exclude-dir=node_modules',"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "Dev Pattern: ./backend/src/ai/enhanced-agent.service.ts:- Training and development needs",
+            "Dev Pattern: ./backend/src/automation/document-templates.ts:    // This is a production for development/testing",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:  developmentAreas: string[];",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:        developmentAreas: [],",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:      developmentAreas: ['Time management', 'Technology skills'],",
+            "Dev Pattern: ./backend/src/config/environment.ts:      nodeEnv: process.env.NODE_ENV || 'development',",
+            "Dev Pattern: ./backend/src/config/environment.ts:    return this.config.nodeEnv === 'development';",
+            "Dev Pattern: ./backend/src/database/seeds/001_sample_data_generator.ts:      { action: 'Career development planning', category: 'development', priority: 'medium' },",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  // Goals and development",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  developmentPlan: DevelopmentPlan;",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  category: 'performance' | 'skill_development' | 'career' | 'compliance';",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  category: 'compensation' | 'development' | 'recognition' | 'workload' | 'culture';",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:    4. Career development progress",
+            "Dev Pattern: ./backend/src/utils/logger.ts:      enableConsole: process.env.NODE_ENV === 'development',",
+            "Dev Pattern: ./backend/src/utils/logger.ts:    // Only in development - production uses structured logging",
+            "Dev Pattern: ./backend/src/utils/logger.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./frontend/src/App-simple.tsx:        <p style={{ color: '#6b7280' }}>This dashboard is under development.</p>",
+            "Dev Pattern: ./frontend/src/components/layouts/DashboardLayout.tsx:    description: 'Staff training and development'",
+            "Dev Pattern: ./frontend/src/services/hrDashboard.service.ts:        'Expand professional development programs'",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    // Override global console in development to catch violations",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:      // Still log in development for debugging",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    // Output to console in development only",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./mobile/src/services/LoggerService.ts:    // In development, also output to console for debugging",
+            "Dev Pattern: ./scripts/compliance-verification.ts:      const result = execSync('grep -r \"TODO\\\\|FIXME\\\\|hint\\\\|development\" . --include=\"*.ts\" --include=\"*.tsx\" --exclude-dir=node_modules',",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts: * Removes all TODO, FIXME, hint, development, and template content",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:    this.logCritical('Target: Remove all TODO, FIXME, placeholder, mock, stub content');",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        { regex: /\\/\\/\\s*TODO[^\\n]*/gi, replacement: '// Production implementation complete' },",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        { regex: /\\/\\/\\s*FIXME[^\\n]*/gi, replacement: '// Production implementation complete' },",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        /\\/\\/\\s*TODO: Send email with reset link/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        /\\/\\/\\s*This is a mock for development\\/testing/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:      /TODO/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:      /FIXME/gi,",
+            "Dev Pattern: ./scripts/fix-production-issues.ts: * Production Issue Fixer - Automated cleanup of development patterns"
+          ],
+          "status": "WARNING"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:55:40.942Z",
+      "overallScore": 45,
+      "maxScore": 115,
+      "compliancePercent": 39,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 0,
+          "maxScore": 20,
+          "violations": [
+            "./scripts/console-statement-purge.ts:            severity: match[3].includes('console.error') ? 'CRITICAL' : 'HIGH'",
+            "./scripts/console-statement-purge.ts:    // Replace console.log",
+            "./scripts/console-statement-purge.ts:    // Replace console.warn",
+            "./scripts/console-statement-purge.ts:    // Replace console.error",
+            "./scripts/console-statement-purge.ts:    // Replace console.info",
+            "./scripts/console-statement-purge.ts:    // Replace console.debug",
+            "./scripts/console-statement-purge.ts:    // Replace console.trace",
+            "./scripts/fix-production-issues.ts:    console.log('🔧 Starting production issue fixing...');",
+            "./scripts/fix-production-issues.ts:      console.error(`Error processing ${filePath}:`, error);",
+            "./scripts/fix-production-issues.ts:    console.log('\\n📊 PRODUCTION ISSUE FIXING SUMMARY');",
+            "./scripts/fix-production-issues.ts:    console.log('=====================================');",
+            "./scripts/fix-production-issues.ts:    console.log(`Files processed: ${this.totalFiles}`);",
+            "./scripts/fix-production-issues.ts:    console.log(`Total issues fixed: ${this.totalIssues}`);",
+            "./scripts/fix-production-issues.ts:    console.log();",
+            "./scripts/fix-production-issues.ts:      console.log('Files with issues fixed:');",
+            "./scripts/fix-production-issues.ts:        console.log(`  ${result.file}:`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Console statements: ${result.consoleStatements}`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Placeholders: ${result.placeholders}`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Mock implementations: ${result.mocks}`);",
+            "./scripts/fix-production-issues.ts:    console.log('\\n✅ Production issue fixing completed!');",
+            "./scripts/fix-production-issues.ts:  fixer.fixAllIssues().catch(console.error);"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Secret: ./backend/src/config/environment.ts:      openaiServiceKey: this.getRequiredEnv('OPENAI_API_KEY'),",
+            "Secret: ./backend/src/config/environment.ts:      anthropicServiceKey: this.getRequiredEnv('ANTHROPIC_API_KEY'),",
+            "Secret: ./backend/src/config/environment.ts:      indeedServiceKey: this.getRequiredEnv('INDEED_API_KEY'),",
+            "Secret: ./backend/src/config/security.ts:    API_KEY_LENGTH: 64,",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'SELECT password_hash FROM users WHERE id = $1',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'SELECT password_hash FROM users WHERE id = $1',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:      const passwordHash = await bcrypt.hash(newPassword, this.saltRounds);",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE password_reset_tokens SET used = true WHERE user_id = $1',",
+            "Secret: ./scripts/compliance-verification.ts:      const result = execSync('grep -r \"api_key\\\\|apikey\\\\|API_KEY\\\\|password.*=\" . --include=\"*.ts\" --include=\"*.js\" --exclude-dir=node_modules',"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "Dev Pattern: ./backend/src/ai/enhanced-agent.service.ts:- Training and development needs",
+            "Dev Pattern: ./backend/src/automation/document-templates.ts:    // This is a production for development/testing",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:  developmentAreas: string[];",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:        developmentAreas: [],",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:      developmentAreas: ['Time management', 'Technology skills'],",
+            "Dev Pattern: ./backend/src/config/environment.ts:      nodeEnv: process.env.NODE_ENV || 'development',",
+            "Dev Pattern: ./backend/src/config/environment.ts:    return this.config.nodeEnv === 'development';",
+            "Dev Pattern: ./backend/src/database/seeds/001_sample_data_generator.ts:      { action: 'Career development planning', category: 'development', priority: 'medium' },",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  // Goals and development",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  developmentPlan: DevelopmentPlan;",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  category: 'performance' | 'skill_development' | 'career' | 'compliance';",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  category: 'compensation' | 'development' | 'recognition' | 'workload' | 'culture';",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:    4. Career development progress",
+            "Dev Pattern: ./backend/src/utils/logger.ts:      enableConsole: process.env.NODE_ENV === 'development',",
+            "Dev Pattern: ./backend/src/utils/logger.ts:    // Only in development - production uses structured logging",
+            "Dev Pattern: ./backend/src/utils/logger.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./frontend/src/App-simple.tsx:        <p style={{ color: '#6b7280' }}>This dashboard is under development.</p>",
+            "Dev Pattern: ./frontend/src/components/layouts/DashboardLayout.tsx:    description: 'Staff training and development'",
+            "Dev Pattern: ./frontend/src/services/hrDashboard.service.ts:        'Expand professional development programs'",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    // Override global console in development to catch violations",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:      // Still log in development for debugging",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    // Output to console in development only",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./mobile/src/services/LoggerService.ts:    // In development, also output to console for debugging",
+            "Dev Pattern: ./scripts/compliance-verification.ts:      const result = execSync('grep -r \"TODO\\\\|FIXME\\\\|hint\\\\|development\" . --include=\"*.ts\" --include=\"*.tsx\" --exclude-dir=node_modules',",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts: * Removes all TODO, FIXME, hint, development, and template content",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:    this.logCritical('Target: Remove all TODO, FIXME, placeholder, mock, stub content');",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        { regex: /\\/\\/\\s*TODO[^\\n]*/gi, replacement: '// Production implementation complete' },",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        { regex: /\\/\\/\\s*FIXME[^\\n]*/gi, replacement: '// Production implementation complete' },",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        /\\/\\/\\s*TODO: Send email with reset link/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        /\\/\\/\\s*This is a mock for development\\/testing/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:      /TODO/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:      /FIXME/gi,",
+            "Dev Pattern: ./scripts/fix-production-issues.ts: * Production Issue Fixer - Automated cleanup of development patterns"
+          ],
+          "status": "WARNING"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:01.621Z",
+      "overallScore": 45,
+      "maxScore": 115,
+      "compliancePercent": 39,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 0,
+          "maxScore": 20,
+          "violations": [
+            "./scripts/console-statement-purge.ts:            severity: match[3].includes('console.error') ? 'CRITICAL' : 'HIGH'",
+            "./scripts/console-statement-purge.ts:    // Replace console.log",
+            "./scripts/console-statement-purge.ts:    // Replace console.warn",
+            "./scripts/console-statement-purge.ts:    // Replace console.error",
+            "./scripts/console-statement-purge.ts:    // Replace console.info",
+            "./scripts/console-statement-purge.ts:    // Replace console.debug",
+            "./scripts/console-statement-purge.ts:    // Replace console.trace",
+            "./scripts/fix-production-issues.ts:    console.log('🔧 Starting production issue fixing...');",
+            "./scripts/fix-production-issues.ts:      console.error(`Error processing ${filePath}:`, error);",
+            "./scripts/fix-production-issues.ts:    console.log('\\n📊 PRODUCTION ISSUE FIXING SUMMARY');",
+            "./scripts/fix-production-issues.ts:    console.log('=====================================');",
+            "./scripts/fix-production-issues.ts:    console.log(`Files processed: ${this.totalFiles}`);",
+            "./scripts/fix-production-issues.ts:    console.log(`Total issues fixed: ${this.totalIssues}`);",
+            "./scripts/fix-production-issues.ts:    console.log();",
+            "./scripts/fix-production-issues.ts:      console.log('Files with issues fixed:');",
+            "./scripts/fix-production-issues.ts:        console.log(`  ${result.file}:`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Console statements: ${result.consoleStatements}`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Placeholders: ${result.placeholders}`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Mock implementations: ${result.mocks}`);",
+            "./scripts/fix-production-issues.ts:    console.log('\\n✅ Production issue fixing completed!');",
+            "./scripts/fix-production-issues.ts:  fixer.fixAllIssues().catch(console.error);"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Secret: ./backend/src/config/environment.ts:      openaiServiceKey: this.getRequiredEnv('OPENAI_API_KEY'),",
+            "Secret: ./backend/src/config/environment.ts:      anthropicServiceKey: this.getRequiredEnv('ANTHROPIC_API_KEY'),",
+            "Secret: ./backend/src/config/environment.ts:      indeedServiceKey: this.getRequiredEnv('INDEED_API_KEY'),",
+            "Secret: ./backend/src/config/security.ts:    API_KEY_LENGTH: 64,",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'SELECT password_hash FROM users WHERE id = $1',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'SELECT password_hash FROM users WHERE id = $1',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:      const passwordHash = await bcrypt.hash(newPassword, this.saltRounds);",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE password_reset_tokens SET used = true WHERE user_id = $1',",
+            "Secret: ./scripts/compliance-verification.ts:      const result = execSync('grep -r \"api_key\\\\|apikey\\\\|API_KEY\\\\|password.*=\" . --include=\"*.ts\" --include=\"*.js\" --exclude-dir=node_modules',"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "Dev Pattern: ./backend/src/ai/enhanced-agent.service.ts:- Training and development needs",
+            "Dev Pattern: ./backend/src/automation/document-templates.ts:    // This is a production for development/testing",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:  developmentAreas: string[];",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:        developmentAreas: [],",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:      developmentAreas: ['Time management', 'Technology skills'],",
+            "Dev Pattern: ./backend/src/config/environment.ts:      nodeEnv: process.env.NODE_ENV || 'development',",
+            "Dev Pattern: ./backend/src/config/environment.ts:    return this.config.nodeEnv === 'development';",
+            "Dev Pattern: ./backend/src/database/seeds/001_sample_data_generator.ts:      { action: 'Career development planning', category: 'development', priority: 'medium' },",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  // Goals and development",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  developmentPlan: DevelopmentPlan;",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  category: 'performance' | 'skill_development' | 'career' | 'compliance';",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  category: 'compensation' | 'development' | 'recognition' | 'workload' | 'culture';",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:    4. Career development progress",
+            "Dev Pattern: ./backend/src/utils/logger.ts:      enableConsole: process.env.NODE_ENV === 'development',",
+            "Dev Pattern: ./backend/src/utils/logger.ts:    // Only in development - production uses structured logging",
+            "Dev Pattern: ./backend/src/utils/logger.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./frontend/src/App-simple.tsx:        <p style={{ color: '#6b7280' }}>This dashboard is under development.</p>",
+            "Dev Pattern: ./frontend/src/components/layouts/DashboardLayout.tsx:    description: 'Staff training and development'",
+            "Dev Pattern: ./frontend/src/services/hrDashboard.service.ts:        'Expand professional development programs'",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    // Override global console in development to catch violations",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:      // Still log in development for debugging",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    // Output to console in development only",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./mobile/src/services/LoggerService.ts:    // In development, also output to console for debugging",
+            "Dev Pattern: ./scripts/compliance-verification.ts:      const result = execSync('grep -r \"TODO\\\\|FIXME\\\\|hint\\\\|development\" . --include=\"*.ts\" --include=\"*.tsx\" --exclude-dir=node_modules',",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts: * Removes all TODO, FIXME, hint, development, and template content",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:    this.logCritical('Target: Remove all TODO, FIXME, placeholder, mock, stub content');",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        { regex: /\\/\\/\\s*TODO[^\\n]*/gi, replacement: '// Production implementation complete' },",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        { regex: /\\/\\/\\s*FIXME[^\\n]*/gi, replacement: '// Production implementation complete' },",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        /\\/\\/\\s*TODO: Send email with reset link/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        /\\/\\/\\s*This is a mock for development\\/testing/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:      /TODO/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:      /FIXME/gi,",
+            "Dev Pattern: ./scripts/fix-production-issues.ts: * Production Issue Fixer - Automated cleanup of development patterns"
+          ],
+          "status": "WARNING"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:23.260Z",
+      "overallScore": 45,
+      "maxScore": 115,
+      "compliancePercent": 39,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 0,
+          "maxScore": 20,
+          "violations": [
+            "./scripts/console-statement-purge.ts:            severity: match[3].includes('console.error') ? 'CRITICAL' : 'HIGH'",
+            "./scripts/console-statement-purge.ts:    // Replace console.log",
+            "./scripts/console-statement-purge.ts:    // Replace console.warn",
+            "./scripts/console-statement-purge.ts:    // Replace console.error",
+            "./scripts/console-statement-purge.ts:    // Replace console.info",
+            "./scripts/console-statement-purge.ts:    // Replace console.debug",
+            "./scripts/console-statement-purge.ts:    // Replace console.trace",
+            "./scripts/fix-production-issues.ts:    console.log('🔧 Starting production issue fixing...');",
+            "./scripts/fix-production-issues.ts:      console.error(`Error processing ${filePath}:`, error);",
+            "./scripts/fix-production-issues.ts:    console.log('\\n📊 PRODUCTION ISSUE FIXING SUMMARY');",
+            "./scripts/fix-production-issues.ts:    console.log('=====================================');",
+            "./scripts/fix-production-issues.ts:    console.log(`Files processed: ${this.totalFiles}`);",
+            "./scripts/fix-production-issues.ts:    console.log(`Total issues fixed: ${this.totalIssues}`);",
+            "./scripts/fix-production-issues.ts:    console.log();",
+            "./scripts/fix-production-issues.ts:      console.log('Files with issues fixed:');",
+            "./scripts/fix-production-issues.ts:        console.log(`  ${result.file}:`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Console statements: ${result.consoleStatements}`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Placeholders: ${result.placeholders}`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Mock implementations: ${result.mocks}`);",
+            "./scripts/fix-production-issues.ts:    console.log('\\n✅ Production issue fixing completed!');",
+            "./scripts/fix-production-issues.ts:  fixer.fixAllIssues().catch(console.error);"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Secret: ./backend/src/config/environment.ts:      openaiServiceKey: this.getRequiredEnv('OPENAI_API_KEY'),",
+            "Secret: ./backend/src/config/environment.ts:      anthropicServiceKey: this.getRequiredEnv('ANTHROPIC_API_KEY'),",
+            "Secret: ./backend/src/config/environment.ts:      indeedServiceKey: this.getRequiredEnv('INDEED_API_KEY'),",
+            "Secret: ./backend/src/config/security.ts:    API_KEY_LENGTH: 64,",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'SELECT password_hash FROM users WHERE id = $1',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'SELECT password_hash FROM users WHERE id = $1',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:      const passwordHash = await bcrypt.hash(newPassword, this.saltRounds);",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE password_reset_tokens SET used = true WHERE user_id = $1',",
+            "Secret: ./scripts/compliance-verification.ts:      const result = execSync('grep -r \"api_key\\\\|apikey\\\\|API_KEY\\\\|password.*=\" . --include=\"*.ts\" --include=\"*.js\" --exclude-dir=node_modules',"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "Dev Pattern: ./backend/src/ai/enhanced-agent.service.ts:- Training and development needs",
+            "Dev Pattern: ./backend/src/automation/document-templates.ts:    // This is a production for development/testing",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:  developmentAreas: string[];",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:        developmentAreas: [],",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:      developmentAreas: ['Time management', 'Technology skills'],",
+            "Dev Pattern: ./backend/src/config/environment.ts:      nodeEnv: process.env.NODE_ENV || 'development',",
+            "Dev Pattern: ./backend/src/config/environment.ts:    return this.config.nodeEnv === 'development';",
+            "Dev Pattern: ./backend/src/database/seeds/001_sample_data_generator.ts:      { action: 'Career development planning', category: 'development', priority: 'medium' },",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  // Goals and development",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  developmentPlan: DevelopmentPlan;",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  category: 'performance' | 'skill_development' | 'career' | 'compliance';",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  category: 'compensation' | 'development' | 'recognition' | 'workload' | 'culture';",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:    4. Career development progress",
+            "Dev Pattern: ./backend/src/utils/logger.ts:      enableConsole: process.env.NODE_ENV === 'development',",
+            "Dev Pattern: ./backend/src/utils/logger.ts:    // Only in development - production uses structured logging",
+            "Dev Pattern: ./backend/src/utils/logger.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./frontend/src/App-simple.tsx:        <p style={{ color: '#6b7280' }}>This dashboard is under development.</p>",
+            "Dev Pattern: ./frontend/src/components/layouts/DashboardLayout.tsx:    description: 'Staff training and development'",
+            "Dev Pattern: ./frontend/src/services/hrDashboard.service.ts:        'Expand professional development programs'",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    // Override global console in development to catch violations",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:      // Still log in development for debugging",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    // Output to console in development only",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./mobile/src/services/LoggerService.ts:    // In development, also output to console for debugging",
+            "Dev Pattern: ./scripts/compliance-verification.ts:      const result = execSync('grep -r \"TODO\\\\|FIXME\\\\|hint\\\\|development\" . --include=\"*.ts\" --include=\"*.tsx\" --exclude-dir=node_modules',",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts: * Removes all TODO, FIXME, hint, development, and template content",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:    this.logCritical('Target: Remove all TODO, FIXME, placeholder, mock, stub content');",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        { regex: /\\/\\/\\s*TODO[^\\n]*/gi, replacement: '// Production implementation complete' },",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        { regex: /\\/\\/\\s*FIXME[^\\n]*/gi, replacement: '// Production implementation complete' },",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        /\\/\\/\\s*TODO: Send email with reset link/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        /\\/\\/\\s*This is a mock for development\\/testing/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:      /TODO/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:      /FIXME/gi,",
+            "Dev Pattern: ./scripts/fix-production-issues.ts: * Production Issue Fixer - Automated cleanup of development patterns"
+          ],
+          "status": "WARNING"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:44.388Z",
+      "overallScore": 45,
+      "maxScore": 115,
+      "compliancePercent": 39,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 0,
+          "maxScore": 20,
+          "violations": [
+            "./scripts/console-statement-purge.ts:            severity: match[3].includes('console.error') ? 'CRITICAL' : 'HIGH'",
+            "./scripts/console-statement-purge.ts:    // Replace console.log",
+            "./scripts/console-statement-purge.ts:    // Replace console.warn",
+            "./scripts/console-statement-purge.ts:    // Replace console.error",
+            "./scripts/console-statement-purge.ts:    // Replace console.info",
+            "./scripts/console-statement-purge.ts:    // Replace console.debug",
+            "./scripts/console-statement-purge.ts:    // Replace console.trace",
+            "./scripts/fix-production-issues.ts:    console.log('🔧 Starting production issue fixing...');",
+            "./scripts/fix-production-issues.ts:      console.error(`Error processing ${filePath}:`, error);",
+            "./scripts/fix-production-issues.ts:    console.log('\\n📊 PRODUCTION ISSUE FIXING SUMMARY');",
+            "./scripts/fix-production-issues.ts:    console.log('=====================================');",
+            "./scripts/fix-production-issues.ts:    console.log(`Files processed: ${this.totalFiles}`);",
+            "./scripts/fix-production-issues.ts:    console.log(`Total issues fixed: ${this.totalIssues}`);",
+            "./scripts/fix-production-issues.ts:    console.log();",
+            "./scripts/fix-production-issues.ts:      console.log('Files with issues fixed:');",
+            "./scripts/fix-production-issues.ts:        console.log(`  ${result.file}:`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Console statements: ${result.consoleStatements}`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Placeholders: ${result.placeholders}`);",
+            "./scripts/fix-production-issues.ts:          console.log(`    - Mock implementations: ${result.mocks}`);",
+            "./scripts/fix-production-issues.ts:    console.log('\\n✅ Production issue fixing completed!');",
+            "./scripts/fix-production-issues.ts:  fixer.fixAllIssues().catch(console.error);"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Secret: ./backend/src/config/environment.ts:      openaiServiceKey: this.getRequiredEnv('OPENAI_API_KEY'),",
+            "Secret: ./backend/src/config/environment.ts:      anthropicServiceKey: this.getRequiredEnv('ANTHROPIC_API_KEY'),",
+            "Secret: ./backend/src/config/environment.ts:      indeedServiceKey: this.getRequiredEnv('INDEED_API_KEY'),",
+            "Secret: ./backend/src/config/security.ts:    API_KEY_LENGTH: 64,",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'SELECT password_hash FROM users WHERE id = $1',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'SELECT password_hash FROM users WHERE id = $1',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:      const passwordHash = await bcrypt.hash(newPassword, this.saltRounds);",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',",
+            "Secret: ./backend/src/modules/identity/auth.service.ts:        'UPDATE password_reset_tokens SET used = true WHERE user_id = $1',",
+            "Secret: ./scripts/compliance-verification.ts:      const result = execSync('grep -r \"api_key\\\\|apikey\\\\|API_KEY\\\\|password.*=\" . --include=\"*.ts\" --include=\"*.js\" --exclude-dir=node_modules',"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "Dev Pattern: ./backend/src/ai/enhanced-agent.service.ts:- Training and development needs",
+            "Dev Pattern: ./backend/src/automation/document-templates.ts:    // This is a production for development/testing",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:  developmentAreas: string[];",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:        developmentAreas: [],",
+            "Dev Pattern: ./backend/src/automation/talent-pipeline.ts:      developmentAreas: ['Time management', 'Technology skills'],",
+            "Dev Pattern: ./backend/src/config/environment.ts:      nodeEnv: process.env.NODE_ENV || 'development',",
+            "Dev Pattern: ./backend/src/config/environment.ts:    return this.config.nodeEnv === 'development';",
+            "Dev Pattern: ./backend/src/database/seeds/001_sample_data_generator.ts:      { action: 'Career development planning', category: 'development', priority: 'medium' },",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  // Goals and development",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  developmentPlan: DevelopmentPlan;",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  category: 'performance' | 'skill_development' | 'career' | 'compliance';",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:  category: 'compensation' | 'development' | 'recognition' | 'workload' | 'culture';",
+            "Dev Pattern: ./backend/src/modules/recruiting/recruiting.service.ts:    4. Career development progress",
+            "Dev Pattern: ./backend/src/utils/logger.ts:      enableConsole: process.env.NODE_ENV === 'development',",
+            "Dev Pattern: ./backend/src/utils/logger.ts:    // Only in development - production uses structured logging",
+            "Dev Pattern: ./backend/src/utils/logger.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./frontend/src/App-simple.tsx:        <p style={{ color: '#6b7280' }}>This dashboard is under development.</p>",
+            "Dev Pattern: ./frontend/src/components/layouts/DashboardLayout.tsx:    description: 'Staff training and development'",
+            "Dev Pattern: ./frontend/src/services/hrDashboard.service.ts:        'Expand professional development programs'",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    // Override global console in development to catch violations",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:      // Still log in development for debugging",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    // Output to console in development only",
+            "Dev Pattern: ./frontend/src/shared/services/logger.service.ts:    if (process.env.NODE_ENV === 'development') {",
+            "Dev Pattern: ./mobile/src/services/LoggerService.ts:    // In development, also output to console for debugging",
+            "Dev Pattern: ./scripts/compliance-verification.ts:      const result = execSync('grep -r \"TODO\\\\|FIXME\\\\|hint\\\\|development\" . --include=\"*.ts\" --include=\"*.tsx\" --exclude-dir=node_modules',",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts: * Removes all TODO, FIXME, hint, development, and template content",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:    this.logCritical('Target: Remove all TODO, FIXME, placeholder, mock, stub content');",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        { regex: /\\/\\/\\s*TODO[^\\n]*/gi, replacement: '// Production implementation complete' },",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        { regex: /\\/\\/\\s*FIXME[^\\n]*/gi, replacement: '// Production implementation complete' },",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        /\\/\\/\\s*TODO: Send email with reset link/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:        /\\/\\/\\s*This is a mock for development\\/testing/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:      /TODO/gi,",
+            "Dev Pattern: ./scripts/development-pattern-cleaner.ts:      /FIXME/gi,",
+            "Dev Pattern: ./scripts/fix-production-issues.ts: * Production Issue Fixer - Automated cleanup of development patterns"
+          ],
+          "status": "WARNING"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:57.258Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:57.348Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:57.429Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:57.523Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:57.614Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:57.694Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:57.770Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:57.851Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:57.938Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:58.028Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:58.119Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:58.216Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:58.341Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:58.428Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:58.520Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:58.616Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:58.706Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:58.789Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:58.880Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:58.974Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:59.067Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:59.156Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:59.250Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:59.329Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:59.416Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:59.508Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:59.620Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:59.719Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:59.814Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:59.903Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:56:59.991Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:57:00.099Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:57:00.206Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:57:00.304Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:57:00.396Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:57:00.485Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:57:00.584Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:57:00.671Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:57:00.754Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:57:00.843Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:57:00.918Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:57:00.996Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:57:01.076Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    },
+    {
+      "timestamp": "2025-09-20T13:57:01.163Z",
+      "overallScore": 90,
+      "maxScore": 115,
+      "compliancePercent": 78,
+      "results": [
+        {
+          "category": "Console Statement Audit",
+          "score": 20,
+          "maxScore": 20,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "PHI Leak Detection",
+          "score": 25,
+          "maxScore": 25,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Secret Detection",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "Development Pattern Detection",
+          "score": 10,
+          "maxScore": 10,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "TypeScript Compilation",
+          "score": 0,
+          "maxScore": 15,
+          "violations": [
+            "Frontend TypeScript compilation errors",
+            "Backend TypeScript compilation errors"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "ESLint Compliance",
+          "score": 0,
+          "maxScore": 10,
+          "violations": [
+            "ESLint violations detected"
+          ],
+          "status": "FAIL"
+        },
+        {
+          "category": "Security Headers",
+          "score": 5,
+          "maxScore": 5,
+          "violations": [],
+          "status": "PASS"
+        },
+        {
+          "category": "HIPAA Logger Implementation",
+          "score": 15,
+          "maxScore": 15,
+          "violations": [],
+          "status": "PASS"
+        }
+      ],
+      "status": "NON_COMPLIANT"
+    }
+  ]
+}
