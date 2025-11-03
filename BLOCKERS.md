@@ -1,452 +1,565 @@
-# Serenity Care Partners - Implementation Blockers
+# Serenity Care Partners - Business Blockers & Action Items
 
-**Purpose:** This document lists items that are blocking progress and require business decisions or external actions.
-
-**Last Updated:** November 3, 2025
+**Date:** November 3, 2025  
+**For:** Gloria & Bignon  
+**Purpose:** Clear action items to unblock development and move to production
 
 ---
 
-## CRITICAL BLOCKERS (Preventing Revenue Operations)
+## Overview
 
-### 🔴 BLOCKER #1: Sandata Sandbox Credentials
+**Good News:** The code is 85-90% complete! 🎉
 
-**What's Blocked:**
-- Testing the Sandata integration
-- Sandata certification process
-- Ohio Medicaid billing capability
-- Full EVV compliance validation
+**The Challenge:** Most remaining "blockers" are **business processes** (accounts, registrations, credentials), not technical development.
 
-**What's the Problem:**
-The Sandata integration code is 100% complete and production-ready (4,664 lines of code). However, to test it and get certified for Ohio Medicaid, we need credentials from Sandata that we don't have yet.
+**This document** tells you exactly what to do, who to contact, how much it costs, and why it matters.
+
+---
+
+## 🔴 CRITICAL - BLOCKING MEDICAID REVENUE
+
+### 1. Sandata Sandbox Credentials
+
+**What You Need:** API credentials for Ohio Sandata Aggregator (Alt-EVV system)
 
 **Why This Matters:**
-Without Sandata certification, you cannot:
-- Bill Ohio Medicaid for patient visits
-- Prove EVV (Electronic Visit Verification) compliance
-- Receive payment from Medicaid for services
-- Legally operate as Alt-EVV vendor in Ohio
+- You CANNOT test the Sandata integration without these credentials
+- You CANNOT get certified for Ohio Medicaid without testing
+- You CANNOT bill Medicaid patients until certified
+- **This is your #1 revenue blocker**
 
-**What You Need to Do:**
-Contact Ohio Sandata and request:
-1. Registration as an Alt-EVV vendor
-2. Sandbox environment credentials (for testing)
-3. API specification v4.3
-4. Certification test plan document
-5. Timeline for certification review
+**Current Status:**
+- You said: "I started the Sandata registration"
+- We need to know: What's the exact status? Have you heard back?
 
-**Who to Contact:**
-- **Organization:** Ohio Department of Medicaid / Sandata Technologies
-- **What to Say:** "We're a home care agency starting operations in Ohio and need to register as an Alt-EVV vendor using Sandata as our aggregator. We need sandbox credentials to begin testing."
-- **Website:** https://www.sandata.com/solutions/electronic-visit-verification/
+**What To Do RIGHT NOW:**
+
+1. **Find your Sandata contact:**
+   - Check your email for any Sandata correspondence
+   - Note the account manager or registration contact name
+
+2. **Call/Email to escalate:**
+   - Say: "We've registered as an Alt-EVV vendor and need sandbox credentials urgently. Our first patient is scheduled for [your date]. What's the status?"
+   - Ask for:
+     - Sandbox API keys (test environment)
+     - Ohio Sandata API v4.3 specification document
+     - Certification Test Plan
+     - Timeline to receive production credentials
+
+3. **If you don't have a contact:**
+   - Call Ohio Department of Medicaid: (614) 644-0140
+   - Ask for: "Sandata Alt-EVV registration department"
+   - Reference: Ohio Medicaid EVV requirements
+
+4. **Follow up:**
+   - Email every 2-3 days until you get credentials
+   - CC me (Claude) on responses so I can help interpret technical requirements
 
 **Timeline:**
-- Registration to credentials: 2-4 weeks (typical)
-- Once received: 3-5 days to test and certify (technical work)
+- Normal process: 2-4 weeks
+- With escalation: Potentially 1-2 weeks
+- **Start this TODAY**
 
-**Impact if Not Resolved:**
-Cannot bill Medicaid = No revenue from Medicaid clients
+**Cost:** Unknown (ask Sandata - likely included in Ohio Medicaid participation)
 
-**Status:** NOT STARTED - Needs Gloria/Bignon action
+**What Happens After You Get Credentials:**
+- I can test the integration in 3-5 days
+- We submit certification evidence to Sandata
+- They review (1-2 weeks)
+- You receive production credentials
+- **You can start billing Medicaid!**
 
----
-
-### 🔴 BLOCKER #2: Mobile EVV App Decision
-
-**What's Blocked:**
-- Field caregivers using phones to clock in/out
-- GPS location capture for EVV compliance
-- Professional mobile experience for staff
-
-**What's the Problem:**
-Currently, there's a web-based clock that works on computers/tablets but doesn't provide the full mobile experience caregivers need in the field. To be fully operational, caregivers need to clock in from their phones while at client homes, with automatic GPS capture to prove they're at the correct location.
-
-**Decision Needed:**
-Which approach should we take for mobile EVV?
-
-**Option 1: Progressive Web App (PWA) - FASTER**
-- **What it is:** Enhanced website that works like an app
-- **Timeline:** 2-3 weeks to build
-- **Pros:** 
-  - Faster to market
-  - Works on all phones (iPhone and Android)
-  - No app store approval needed
-  - Can start using immediately
-- **Cons:**
-  - GPS less precise than native app
-  - Requires internet connection for most features
-  - Can't send push notifications on iPhones
-- **Cost:** Just development time (already budgeted)
-- **Best for:** Getting operational quickly, testing workflows
-
-**Option 2: React Native App - BETTER LONG-TERM**
-- **What it is:** Real mobile app from app stores
-- **Timeline:** 6-8 weeks to build
-- **Pros:**
-  - Better GPS accuracy
-  - Works fully offline
-  - Professional appearance
-  - Push notifications work on all phones
-- **Cons:**
-  - Takes longer to build
-  - Needs Apple and Google approval (1-2 weeks)
-  - Annual app store fees ($100/year)
-- **Cost:** Development time + $100/year
-- **Best for:** Long-term professional solution
-
-**Option 3: Hybrid (RECOMMENDED)**
-- **What it is:** Start with PWA now, build native app later
-- **Timeline:** 2-3 weeks for PWA, then 6-8 weeks for native (when ready)
-- **Strategy:**
-  1. Build PWA in 2-3 weeks to get operational
-  2. Launch with tablet/phone browser access
-  3. Gather feedback from real caregivers
-  4. Build React Native app with improvements
-- **Best for:** Fast launch + professional long-term solution
-
-**What I Need from You:**
-1. How urgent is mobile app? (Launch timeline?)
-2. Can caregivers use tablets initially with web clock?
-3. Budget for mobile app development? (0-8 weeks of dev time)
-4. Preference: Speed (PWA) vs. Polish (Native) vs. Both (Hybrid)?
-
-**Recommendation:** 
-Start with Hybrid approach (PWA now, native later). This gets you operational in 2-3 weeks and lets you validate workflows before investing in full native app.
-
-**Impact if Not Resolved:**
-- Caregivers can't clock in from field easily
-- GPS verification less reliable
-- Manual workarounds needed
-
-**Status:** Needs decision from Gloria/Bignon
+**Workaround Until This Completes:**
+- You can launch operations with non-Medicaid patients
+- You can capture all EVV data (ready to submit when certified)
+- You can train staff and build processes
+- You just can't bill Medicaid yet
 
 ---
 
-## HIGH PRIORITY BLOCKERS
+## 🟡 HIGH PRIORITY - NEEDED THIS WEEK
 
-### 🟡 BLOCKER #3: Clearinghouse Selection
+### 2. Twilio Account (SMS Dispatch)
 
-**What's Blocked:**
-- Automated claims submission to insurance
-- Payment posting from insurance companies
-- Full billing automation
+**What You Need:** SMS service for two-way caregiver dispatch
 
-**What's the Problem:**
-To submit claims to insurance companies (Medicare, Medicaid, private payers), you need a "clearinghouse" - a middleman that translates and routes your claims. The code to generate claims is 100% ready, but we can't send them anywhere without selecting and setting up a clearinghouse account.
+**Why This Matters:**
+- Pod Leads need to text on-call caregivers when there's a coverage gap
+- Caregivers reply "YES" or "NO" to accept dispatch
+- System tracks response times automatically
+- **Without this, Pod Leads make manual phone calls (slow, no tracking)**
 
-**What is a Clearinghouse:**
-Think of it like a mail service for medical claims. You give them your claims, they translate them into each insurance company's format, send them, and bring back the payments/rejections.
+**What To Do:**
 
-**Options to Choose From:**
+1. **Sign up (15 minutes):**
+   - Go to: https://www.twilio.com/try-twilio
+   - Click "Sign Up"
+   - Use Serenity company email
+   - Verify phone number
 
-**Option 1: Change Healthcare (RECOMMENDED)**
-- **What it is:** Largest clearinghouse, used by most providers
-- **Pros:** Most reliable, excellent support, handles all payers
-- **Cons:** Slightly more expensive
-- **Cost:** ~$500 setup + $0.35-0.50 per claim
-- **Website:** https://www.changehealthcare.com
+2. **Purchase phone number (5 minutes):**
+   - After signup, go to "Phone Numbers" → "Buy a Number"
+   - Choose Ohio area code (937 for Dayton, 614 for Columbus)
+   - Make sure it has "SMS" capability
+   - Cost: ~$1-15/month depending on features
 
-**Option 2: Availity**
-- **What it is:** Second largest, popular with smaller agencies
-- **Pros:** Good pricing, user-friendly
-- **Cons:** Fewer payer connections than Change
-- **Cost:** ~$300 setup + $0.30-0.40 per claim
-- **Website:** https://www.availity.com
+3. **Get credentials:**
+   - Go to "Account" → "API Keys & Tokens"
+   - Copy these three things:
+     - Account SID (starts with "AC...")
+     - Auth Token (long string)
+     - Your Twilio Phone Number (format: +19375550100)
 
-**Option 3: Office Ally**
-- **What it is:** Budget option for small practices
-- **Pros:** Cheapest option
-- **Cons:** Limited features, basic support
-- **Cost:** $0 setup + $0.25-0.35 per claim
-- **Website:** https://www.officeally.com
+4. **Send to me:**
+   - Create a file called `.env.twilio` with:
+     ```
+     TWILIO_ACCOUNT_SID=AC...
+     TWILIO_AUTH_TOKEN=...
+     TWILIO_PHONE_NUMBER=+19375550100
+     ```
+   - I'll add these to the production server
 
-**What I Need from You:**
-1. Any existing clearinghouse relationship?
-2. Budget preference? (Cost difference is small at low volume)
-3. Timeline preference? (Change Healthcare = 1 week, others faster)
+**Timeline:** 30 minutes total
 
-**Recommendation:**
-Choose **Change Healthcare** - industry standard, most reliable, worth the small extra cost.
+**Cost:**
+- Phone number: ~$1-15/month (one-time $1 is fine to start)
+- Per-SMS: $0.0075 per message
+- Example monthly cost with 50 caregivers, 10 dispatches/week: ~$6-7/month
 
-**Next Steps (After Selection):**
-1. Sign up for clearinghouse account (business task)
-2. Provide API credentials (they'll give you)
-3. I'll connect the integration (2-3 days coding)
+**What Happens Next:**
+- SMS dispatch starts working immediately
+- Caregivers receive texts with shift details
+- They reply YES/NO
+- System updates gap status automatically
+- Pod Leads see all responses in Morning Check-In dashboard
 
-**Impact if Not Resolved:**
-- Manual claims submission (export files, upload by hand)
-- Slower payment posting
-- More administrative work
-
-**Workaround:**
-Can manually upload 837 files until API integration complete.
-
-**Status:** Needs clearinghouse selection + account setup
-
----
-
-### 🟡 BLOCKER #4: Payroll System API Access
-
-**What's Blocked:**
-- Automated hour syncing from EVV to payroll
-- Separation of regular, OT, and Earned OT hours
-- Reduced manual payroll data entry
-
-**What's the Problem:**
-Caregivers' hours are tracked in the EVV system, but they need to get to the payroll system (ADP or Gusto) for them to get paid. Currently this would be manual data entry. With API access, it can be automatic.
-
-**Decision Needed:**
-Which payroll system and do you have API access?
-
-**Option 1: Already Using ADP**
-- **If yes:** Request API/developer access from your ADP rep
-- **Timeline:** 1-2 weeks for ADP to grant access
-- **Cost:** Usually included in ADP plan
-- **Integration time:** 2-3 days (more complex API)
-
-**Option 2: Already Using Gusto**
-- **If yes:** Enable API access in Gusto settings
-- **Timeline:** Immediate (self-service)
-- **Cost:** Included in Gusto plan
-- **Integration time:** 2 days (simpler API)
-
-**Option 3: Not Using Either**
-- **Recommendation:** Choose Gusto (easier for startups)
-- **Cost:** ~$40/month + $6/employee
-- **Timeline:** 1 week to set up
-- **Integration time:** 2 days
-
-**What I Need from You:**
-1. Which payroll system are you using?
-2. Can you request API/developer access?
-3. If neither, willing to switch to Gusto for easier integration?
-
-**Next Steps:**
-1. Get API credentials from payroll provider
-2. Provide credentials to development team
-3. I'll build integration (2-3 days)
-
-**Impact if Not Resolved:**
-- Export CSV files manually each pay period
-- Manual upload to payroll system
-- More chance for errors
-
-**Workaround:**
-CSV export is already working - can manually upload until API ready.
-
-**Status:** Needs payroll system confirmation + API access
+**Testing:**
+- We can test with your phone number first
+- Send you a test dispatch, you reply YES
+- See it update in the dashboard
 
 ---
 
-## MEDIUM PRIORITY BLOCKERS
+### 3. SendGrid Account (Email Notifications)
 
-### 🟢 BLOCKER #5: Production Database Hosting
+**What You Need:** Email service for system notifications
 
-**What's Blocked:**
-- Switching from test/mock data to real data
-- Multi-user production use
-- Data backup and security
+**Why This Matters:**
+- Caregivers get alerts when their license is expiring
+- Job applicants get confirmation emails
+- HR gets daily credential expiration digests
+- Users get password reset emails
+- **Without this, you manually email everyone (not scalable)**
 
-**What's the Problem:**
-Right now the system uses mock/test data that resets. To go live, we need a real production database where data is permanently stored and backed up.
+**What To Do:**
 
-**Options:**
+1. **Sign up (10 minutes):**
+   - Go to: https://sendgrid.com
+   - Click "Start for Free"
+   - Use Serenity company email
+   - Choose "Free" plan (40,000 emails/month - more than enough!)
 
-**Option 1: Supabase (RECOMMENDED for MVP)**
-- **What it is:** PostgreSQL database with built-in admin tools
-- **Pros:** Easy setup, generous free tier, automatic backups
-- **Cons:** Newer company (less established than AWS)
-- **Cost:** FREE for MVP (up to 500MB), then $25/month
-- **Setup time:** 1 day
+2. **Verify sender (10 minutes):**
+   - SendGrid will ask you to verify your sending email
+   - Option 1 (Easier): Single Sender Verification
+     - Use: hr@serenitycarepartners.com or notifications@serenitycarepartners.com
+     - They'll send verification email to this address
+     - Click link to verify
+   - Option 2 (Better for production): Domain Authentication
+     - Requires adding DNS records to your domain
+     - SendGrid provides exact records
+     - Takes 30 minutes
 
-**Option 2: AWS RDS**
-- **What it is:** Amazon's database service
-- **Pros:** Industry standard, ultimate reliability
-- **Cons:** More complex setup, no free tier
-- **Cost:** ~$30-50/month minimum
-- **Setup time:** 2-3 days
+3. **Create API Key (5 minutes):**
+   - Go to Settings → API Keys
+   - Click "Create API Key"
+   - Name it "Serenity Production"
+   - Choose "Full Access" (or just "Mail Send" if you prefer minimal permissions)
+   - Copy the API key (starts with "SG...")
+   - **Save it somewhere safe - you can only see it once!**
 
-**Option 3: Heroku Postgres**
-- **What it is:** Easy database hosting
-- **Pros:** Very simple setup
-- **Cons:** Expensive for growth
-- **Cost:** FREE for dev, $50/month for production
-- **Setup time:** 1 day
+4. **Send to me:**
+   - Create a file called `.env.sendgrid` with:
+     ```
+     SENDGRID_API_KEY=SG....
+     EMAIL_FROM=notifications@serenitycarepartners.com
+     HR_EMAIL=hr@serenitycarepartners.com
+     ```
 
-**What I Need from You:**
-1. Budget for database hosting? ($0-50/month)
-2. Preference for setup speed vs. enterprise-grade?
+**Timeline:** 30 minutes total
 
-**Recommendation:**
-Start with **Supabase FREE tier** for MVP, migrate to AWS RDS when scaling.
+**Cost:** FREE (40,000 emails/month)
 
-**Next Steps:**
-1. Create Supabase account (free, 5 minutes)
-2. Run database setup scripts (automated, 30 minutes)
-3. Update backend config (10 minutes)
-
-**Impact if Not Resolved:**
-Can't go live with real users, data not persistent.
-
-**Workaround:**
-Can continue development with mock data (current state).
-
-**Status:** Can be resolved quickly once approved
-
----
-
-### 🟢 BLOCKER #6: Email Sending Service
-
-**What's Blocked:**
+**What Happens Next:**
+- System sends professional emails automatically
+- Credential expiration alerts (30 days before, 15 days, 7 days, expired)
 - Application confirmations
-- Hire welcome emails
-- Credential expiration alerts
-- Shift reminders
+- Password resets
+- Daily HR digest
 
-**What's the Problem:**
-The email service code is already written and ready, but we need to activate a sending service (SendGrid or similar) to actually send emails.
-
-**Solution: SendGrid (Already Configured)**
-- **Cost:** FREE (up to 40,000 emails/month)
-- **Setup:** Already done in code
-- **What's needed:** 
-  1. Create SendGrid account (free, 10 minutes)
-  2. Verify sending domain (serenitycarepartners.com)
-  3. Provide API key (they give you)
-  4. I'll update config (5 minutes)
-
-**What I Need from You:**
-1. Approval to create SendGrid account
-2. Access to DNS settings for domain verification
-3. Who should emails "from" address be? (noreply@serenitycarepartners.com?)
-
-**Next Steps:**
-1. Sign up at sendgrid.com (free)
-2. Add DNS records for verification (I'll provide exact records)
-3. Get API key and provide to development
-4. Test send
-
-**Timeline:** 1 hour total
-
-**Impact if Not Resolved:**
-No automated emails, manual communication only.
-
-**Workaround:**
-Manual emails from Gloria/Bignon until service active.
-
-**Status:** Easy to resolve, needs 1 hour of time
+**Testing:**
+- We'll send you a test email first
+- Then test credential alert for a mock caregiver
+- Check that HR digest works
 
 ---
 
-### 🟢 BLOCKER #7: SMS Service for Dispatch
+### 4. Apple Developer Account (iPhone App)
 
-**What's Blocked:**
-- Texting on-call caregivers for coverage gaps
-- SMS shift reminders
-- Two-way communication (accept/decline via text)
+**What You Need:** Account to deploy mobile app to iPhones
 
-**What's the Problem:**
-When a caregiver doesn't show up, Pod Leads need to quickly text on-call staff. The code is ready, but needs Twilio service activation.
+**Why This Matters:**
+- Caregivers need the mobile app on their iPhones
+- Without it, they can't clock in from the field with GPS
+- **Code is 100% ready - just needs deployment**
 
-**Solution: Twilio**
-- **Cost:** 
-  - $15/month base fee
-  - $0.0075 per text message (~$1 per 133 texts)
-  - Estimated $30-50/month for typical usage
-- **Setup:** Code already written
-- **What's needed:**
-  1. Create Twilio account
-  2. Get phone number for sending (~$1/month)
-  3. Provide API credentials
-  4. I'll wire it up (1 day)
+**What To Do:**
 
-**What I Need from You:**
-1. Approval for ~$30-50/month SMS budget
-2. Should texts come from Serenity phone number or Twilio number?
+1. **Sign up (15 minutes):**
+   - Go to: https://developer.apple.com/programs/
+   - Click "Enroll"
+   - Choose "Organization" (not individual)
+   - You'll need:
+     - Serenity Care Partners legal business name
+     - DUNS number (if you don't have one, Apple helps you get it free)
+     - Business email
+     - Business phone
+     - Legal entity documentation
 
-**Next Steps:**
-1. Sign up at twilio.com
-2. Purchase phone number
-3. Get API credentials
-4. I'll integrate (1 day coding)
+2. **Pay annual fee:**
+   - Cost: $99/year
+   - Credit card or purchase order
 
-**Timeline:** 1 day
+3. **Wait for approval:**
+   - Usually 1-2 business days
+   - Apple may call to verify business
 
-**Impact if Not Resolved:**
-Manual phone calls instead of automated SMS dispatch.
+4. **Once approved:**
+   - Note your "Team ID" (looks like: A1B2C3D4E5)
+   - Send to me so I can configure the mobile app build
 
-**Workaround:**
-Pod Leads call/text from personal phones until automated.
+**Timeline:**
+- Sign up: 15 minutes
+- Approval: 1-2 business days
+- First build: 20 minutes after approval
 
-**Status:** Easy to resolve, needs budget approval
+**Cost:** $99/year
 
----
+**What Happens Next:**
+- I build the iOS app with Expo Application Services
+- Submit to TestFlight (Apple's beta testing platform)
+- You invite 2-3 caregivers to test
+- After testing looks good (~1 week), submit to App Store
+- App goes live for all caregivers
 
-## INFORMATION NEEDED FOR PLANNING
-
-### Business Timeline Questions
-
-**Question 1: First Patient Target Date**
-- **Why I need to know:** Determines which features are critical vs. nice-to-have
-- **Options:**
-  - Within 2 weeks = Focus on Fast Track MVP only
-  - Within 1-2 months = Can build mobile app properly
-  - 3+ months = Can build everything without rushing
-
-**Question 2: Caregiver Count**
-- **Why I need to know:** Determines mobile app urgency
-- **If 1-5 caregivers:** Can use web clock on tablets
-- **If 5-20 caregivers:** Need PWA soon
-- **If 20+ caregivers:** Need React Native app
-
-**Question 3: Medicaid vs. Private Pay Mix**
-- **Why I need to know:** Determines Sandata urgency
-- **If 80%+ Medicaid:** Sandata is critical blocker
-- **If mixed/mostly private:** Can launch without Sandata initially
-
-**Question 4: Budget Constraints**
-- **Why I need to know:** Determines build vs. buy decisions
-- **If limited budget:** Use free tiers, manual workarounds
-- **If budget available:** Can pay for better services, faster development
+**Testing Plan:**
+- Week 1: Internal testing (you + 1 caregiver)
+- Week 2: Beta with 2-3 caregivers
+- Week 3: Production release
 
 ---
 
-## Summary of Actions Needed
+### 5. Google Play Developer Account (Android App)
 
-### CRITICAL (Do First)
-1. **Sandata Registration** - Gloria/Bignon to contact Ohio Medicaid/Sandata
-2. **Mobile App Decision** - Choose PWA, Native, or Hybrid approach
-3. **Timeline Clarity** - When do you need to be operational?
+**What You Need:** Account to deploy mobile app to Android phones
 
-### HIGH PRIORITY (Do Soon)
-4. **Clearinghouse Selection** - Choose Change Healthcare, Availity, or Office Ally
-5. **Payroll API Access** - Confirm system and request API access
-6. **Database Hosting** - Approve Supabase (free) or AWS RDS
+**Why This Matters:**
+- Caregivers with Android phones need the app too
+- **About 40-50% of people have Android**
 
-### MEDIUM PRIORITY (Can Wait)
-7. **SendGrid Setup** - 1 hour to activate email service
-8. **Twilio Setup** - 1 day to activate SMS service
+**What To Do:**
+
+1. **Sign up (10 minutes):**
+   - Go to: https://play.google.com/console/signup
+   - Sign in with Google account (create one with Serenity email if needed)
+   - Click "Create account" → "Organization"
+   - Provide:
+     - Developer name: Serenity Care Partners
+     - Contact email
+     - Phone number
+
+2. **Pay one-time fee:**
+   - Cost: $25 (one-time, not annual)
+   - Credit card
+
+3. **Complete account:**
+   - Add developer details
+   - Accept agreements
+   - **Approval is instant!**
+
+**Timeline:** 15 minutes total (instant approval)
+
+**Cost:** $25 (one-time)
+
+**What Happens Next:**
+- I build the Android app with Expo Application Services
+- Submit to Play Store Internal Testing track
+- You invite caregivers to test
+- After testing, move to production
+- App goes live for all caregivers
+
+**Testing Plan:**
+- Same as iOS: Internal → Beta → Production
 
 ---
 
-## How to Unblock
+## 🟢 MEDIUM PRIORITY - NEEDED MONTH 2-3
 
-### For Business/External Blockers
-These need Gloria or Bignon to handle:
-1. Sandata - contact Ohio Medicaid
-2. Clearinghouse - select and sign up
-3. Payroll - request API access
-4. Budget approvals - approve service costs
+### 6. Production Server Hosting
 
-### For Technical Blockers
-These I can handle once you provide decisions/credentials:
-1. Mobile app - build once approach decided
-2. Database - set up once hosting approved
-3. Integrations - connect once credentials provided
+**What You Need:** Server to run the backend + database
+
+**Why This Matters:**
+- Currently everything runs locally on my machine
+- Need reliable hosting for production
+- Need automatic backups
+- Need 99.9% uptime
+
+**Recommended Option: DigitalOcean App Platform**
+
+**Why DigitalOcean:**
+- Easy to set up (1-2 hours)
+- Automatic SSL certificates
+- Automatic backups
+- 99.95% uptime guarantee
+- Great support
+- Fair pricing
+
+**What To Do:**
+
+1. **Sign up:**
+   - Go to: https://www.digitalocean.com
+   - Click "Sign Up"
+   - Use Serenity company email
+   - $200 free credit for first 60 days!
+
+2. **Create App:**
+   - Click "Create" → "Apps"
+   - Connect GitHub repository
+   - Choose "Node.js" for backend
+   - DigitalOcean auto-detects everything
+
+3. **Add Database:**
+   - Click "Create" → "Databases"
+   - Choose "PostgreSQL"
+   - Choose "Basic" plan ($15/month)
+   - Choose "New York" or "San Francisco" region (closest to Ohio)
+
+4. **Configure Environment:**
+   - I'll provide all environment variables
+   - Add to App Platform settings
+   - Includes Twilio, SendGrid, Sandata credentials
+
+**Timeline:** 2-3 hours setup
+
+**Cost:**
+- App hosting: ~$12/month
+- PostgreSQL database: ~$15/month
+- **Total: ~$27/month**
+
+**Alternative Options:**
+- **AWS:** More powerful, more complex, ~$30-50/month
+- **Heroku:** Easiest, but more expensive, ~$25-40/month
+
+**What Happens Next:**
+- Backend goes live at https://console.serenitycarepartners.com
+- Database migrations run automatically
+- Automatic deployments when code updates
+- Monitoring and alerts set up
 
 ---
 
-## Questions?
+### 7. Change Healthcare Clearinghouse Account
 
-If anything in this document is unclear or you need more details, please ask. I can explain any of these items in more detail or provide alternative options.
+**What You Need:** Electronic claims submission service
 
-**Ready to proceed as soon as blockers are resolved.**
+**Why This Matters:**
+- Automate 837 claims file submission
+- Auto-retrieve 835 remittance (payment) files
+- Track claim status electronically
+- **Without this, you manually upload claims files** (works, just slower)
+
+**What To Do:**
+
+1. **Research options:**
+   - **Change Healthcare** (recommended): Industry standard, good API
+   - **Availity**: Popular, slightly cheaper
+   - **Waystar**: Good for small agencies
+
+2. **Apply:**
+   - Go to clearinghouse website
+   - Click "Get Started" or "Contact Sales"
+   - Provide:
+     - Serenity Care Partners NPI
+     - Tax ID (EIN)
+     - Business license
+     - Contact information
+
+3. **Wait for approval:**
+   - Usually 1-2 weeks
+   - They verify you're a legit healthcare provider
+   - May ask for additional documentation
+
+4. **Receive credentials:**
+   - Submitter ID
+   - Receiver ID
+   - API Key
+   - Endpoint URLs
+
+**Timeline:** 1-2 weeks for approval
+
+**Cost:**
+- Setup fee: ~$500 (one-time)
+- Per-claim fee: ~$0.30-0.50 per claim
+- Example: 100 claims/month = ~$30-50/month
+
+**When To Do This:**
+- Not urgent for Phase 0 (no billing yet)
+- Do in Month 2 when you're ready to bill
+- **Workaround:** Manual upload via clearinghouse web portal
+
+**What Happens Next:**
+- System auto-submits 837 files nightly
+- Polls for acknowledgments (997/999)
+- Downloads remittance files (835)
+- Auto-posts payments
+- **Fully automated billing!**
+
+---
+
+### 8. Gusto API Access
+
+**What You Need:** API access to your Gusto payroll account
+
+**Why This Matters:**
+- EVV hours flow automatically to payroll
+- No manual timesheet entry
+- Overtime calculated automatically
+- Bonus tracking integrated
+- **Without this, you export CSV from Console → manual import to Gusto** (works, just manual)
+
+**What To Do:**
+
+1. **Log into Gusto:**
+   - Go to: https://app.gusto.com
+   - Use your existing Gusto account
+
+2. **Enable API access:**
+   - Go to: https://app.gusto.com/apps/api
+   - Click "Request API Access"
+   - Provide use case: "Integrate with our home care ERP system for automated timesheets"
+
+3. **Wait for approval:**
+   - Usually approved within 1 week
+   - Gusto support may contact you
+
+4. **Get credentials:**
+   - After approval, generate API token
+   - Note your Company ID (in Gusto under Company Settings)
+
+**Timeline:** 1 week for approval
+
+**Cost:** Included in your regular Gusto subscription (no extra fee)
+
+**When To Do This:**
+- Do in Month 2 before first payroll
+- **Workaround:** CSV export works fine initially
+
+**What Happens Next:**
+- Hours from EVV sync to Gusto automatically
+- Regular vs. overtime separated
+- Bonus amounts calculated
+- One-click payroll submission
+
+---
+
+## Summary: What To Do When
+
+### TODAY (30 minutes):
+- [ ] **Call/email Sandata to escalate registration** 🔴
+- [ ] Sign up for Twilio (~15 min)
+- [ ] Sign up for SendGrid (~15 min)
+
+### THIS WEEK (2 hours):
+- [ ] Apply for Apple Developer account ($99)
+- [ ] Apply for Google Play account ($25)
+- [ ] Choose hosting provider (DigitalOcean recommended)
+- [ ] Follow up with Sandata (if no response)
+
+### WEEK 2 (3 hours):
+- [ ] Set up production server
+- [ ] Deploy backend + database
+- [ ] Test mobile apps (internal)
+- [ ] Continue Sandata escalation
+
+### MONTH 2 (as needed):
+- [ ] Apply for clearinghouse account (when ready to bill)
+- [ ] Enable Gusto API access (before first payroll)
+- [ ] Deploy public website (when ready to recruit)
+
+---
+
+## Cost Summary
+
+**Immediate (Week 1):**
+- Apple Developer: $99/year
+- Google Play: $25 one-time
+- Twilio: ~$15/month
+- SendGrid: FREE
+- **Total: ~$140 upfront + $15/month**
+
+**Month 1-2:**
+- Server hosting: ~$27/month
+- **Total: ~$42/month**
+
+**Month 2-3 (when billing starts):**
+- Clearinghouse: ~$500 setup + $0.30-0.50/claim
+- Gusto API: FREE (included in subscription)
+- **Total: ~$500 one-time + variable per claim**
+
+**Annual costs:**
+- Apple Developer renewal: $99/year
+- Everything else: Monthly subscriptions
+- **Total first year: ~$700-800 + server costs + claim fees**
+
+**This is minimal investment for a healthcare operation!**
+
+---
+
+## Questions? Blockers?
+
+**If you're stuck on any of these:**
+1. Take a screenshot of where you're stuck
+2. Write down the error message or question
+3. Send to me and I'll walk you through it
+
+**Common questions:**
+
+**Q: "I don't have a DUNS number for Apple Developer"**
+A: Apple provides a free D-U-N-S number request form. Takes 1-2 weeks but they'll help you.
+
+**Q: "Do I need a separate Google account for Play Store?"**
+A: You can use your personal Gmail or create serenity@gmail.com - either works.
+
+**Q: "What if Sandata takes months?"**
+A: You can still launch with non-Medicaid patients! Private insurance or cash-pay. You'll be ready when Sandata approves.
+
+**Q: "Can we do Heroku instead of DigitalOcean?"**
+A: Yes! Heroku is easier but slightly more expensive (~$30-40/month vs $27). Your choice.
+
+**Q: "Do we really need both iPhone and Android?"**
+A: Check your caregivers' phones first. If 90%+ have iPhone, start with iOS only. But usually you need both (about 50/50 split).
+
+---
+
+## THE BOTTOM LINE
+
+**Code Status:** 85-90% complete ✅
+**Blocking Development:** Nothing! Code is ready.
+**Blocking Deployment:** The items in this document.
+
+**Most of these take < 1 hour each. The only long wait is Sandata (weeks).**
+
+**Start with the quick wins (Twilio, SendGrid) so we can test those features immediately!**
+
+**You're so close. Let's get these done and launch!** 🚀
