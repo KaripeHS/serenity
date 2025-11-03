@@ -19,6 +19,7 @@ import hrRouter from './hr';
 import spiRouter from './spi';
 import credentialsRouter from './credentials';
 import dispatchRouter from './dispatch';
+import billingRouter from './billing';
 
 const router = Router();
 
@@ -60,5 +61,8 @@ router.use('/credentials', credentialsRouter);
 
 // On-call dispatch routes
 router.use('/dispatch', dispatchRouter);
+
+// Billing and claims routes
+router.use('/billing', billingRouter);
 
 export { router as consoleRouter };
