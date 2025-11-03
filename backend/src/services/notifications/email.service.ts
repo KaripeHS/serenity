@@ -26,6 +26,34 @@ interface NewApplicationAlertData {
   availability: string;
 }
 
+interface CredentialExpirationAlertData {
+  to: string;
+  name: string;
+  credentialType: string;
+  expirationDate: Date;
+  daysLeft: number;
+  alertLevel: 'info' | 'warning' | 'urgent' | 'critical';
+}
+
+interface CredentialDigestData {
+  to: string;
+  expiringSoon: Record<number, Array<{
+    caregiverName: string;
+    caregiverEmail: string;
+    type: string;
+    expirationDate: Date;
+    daysLeft: number;
+  }>>;
+  expired: Array<{
+    caregiverName: string;
+    caregiverEmail: string;
+    type: string;
+    expirationDate: Date;
+    daysLeft: number;
+  }>;
+  date: string;
+}
+
 export class EmailService {
   private isConfigured: boolean = false;
   private fromEmail: string;
@@ -81,6 +109,50 @@ export class EmailService {
     });
 
     console.log(`[EmailService] New application alert sent to ${this.hrEmail}`);
+  }
+
+  /**
+   * Send credential expiration alert to caregiver
+   */
+  async sendCredentialExpirationAlert(data: CredentialExpirationAlertData): Promise<void> {
+    const emoji = data.alertLevel === 'critical' ? '🔴' :
+                  data.alertLevel === 'urgent' ? '⚠️' :
+                  data.alertLevel === 'warning' ? '⏰' : '📋';
+
+    const subject = `${emoji} ${data.credentialType} ${data.daysLeft <= 0 ? 'Expired' : `Expires in ${data.daysLeft} Days`}`;
+    const html = this.getCredentialExpirationAlertHTML(data);
+    const text = this.getCredentialExpirationAlertText(data);
+
+    await this.sendEmail({
+      to: data.to,
+      subject,
+      html,
+      text
+    });
+
+    console.log(`[EmailService] Credential expiration alert sent to ${data.to}`);
+  }
+
+  /**
+   * Send daily credential digest to HR
+   */
+  async sendCredentialDigest(data: CredentialDigestData): Promise<void> {
+    const expiredCount = data.expired.length;
+    const expiringSoonCount = Object.values(data.expiringSoon).flat().length;
+    const totalCount = expiredCount + expiringSoonCount;
+
+    const subject = `📊 Credential Digest - ${totalCount} Requiring Attention`;
+    const html = this.getCredentialDigestHTML(data);
+    const text = this.getCredentialDigestText(data);
+
+    await this.sendEmail({
+      to: data.to,
+      subject,
+      html,
+      text
+    });
+
+    console.log(`[EmailService] Credential digest sent to ${data.to}`);
   }
 
   /**
@@ -450,6 +522,376 @@ Application ID: ${data.applicationId}
 This is an automated notification from Serenity ERP
 © ${new Date().getFullYear()} Serenity Care Partners. All rights reserved.
     `.trim();
+  }
+
+  // ========================================
+  // CREDENTIAL EXPIRATION EMAIL TEMPLATES
+  // ========================================
+
+  private getCredentialExpirationAlertHTML(data: CredentialExpirationAlertData): string {
+    const { name, credentialType, expirationDate, daysLeft, alertLevel } = data;
+
+    const isExpired = daysLeft <= 0;
+    const urgency = isExpired ? 'EXPIRED' : `EXPIRES IN ${daysLeft} DAYS`;
+    const statusColor = alertLevel === 'critical' ? '#dc2626' :
+                        alertLevel === 'urgent' ? '#ea580c' :
+                        alertLevel === 'warning' ? '#d97706' : '#2563eb';
+    const actionText = isExpired ?
+      'Your credential has expired and you cannot be scheduled for shifts until it is renewed.' :
+      `Please renew your ${credentialType} as soon as possible to avoid scheduling issues.`;
+
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Credential Expiration Alert</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 0;">
+        <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); padding: 40px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
+                Serenity Care Partners
+              </h1>
+              <p style="margin: 10px 0 0 0; color: #e0e7ff; font-size: 14px;">
+                Credential Management System
+              </p>
+            </td>
+          </tr>
+
+          <!-- Alert Banner -->
+          <tr>
+            <td style="background-color: ${statusColor}; padding: 20px; text-align: center;">
+              <h2 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: bold;">
+                ${urgency}
+              </h2>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="margin: 0 0 15px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                Dear ${name},
+              </p>
+
+              <p style="margin: 0 0 15px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                ${actionText}
+              </p>
+
+              <!-- Credential Details Box -->
+              <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 25px 0; background-color: #fef2f2; border: 2px solid ${statusColor}; border-radius: 8px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0 0 10px 0; color: #1f2937; font-size: 16px;">
+                      <strong>Credential:</strong> ${credentialType}
+                    </p>
+                    <p style="margin: 0 0 10px 0; color: #1f2937; font-size: 16px;">
+                      <strong>Expiration Date:</strong> ${expirationDate.toLocaleDateString('en-US', { dateStyle: 'long' })}
+                    </p>
+                    <p style="margin: 0; color: #1f2937; font-size: 16px;">
+                      <strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${isExpired ? 'EXPIRED' : `${daysLeft} days remaining`}</span>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <h3 style="margin: 30px 0 15px 0; color: #1f2937; font-size: 18px;">
+                What You Need To Do
+              </h3>
+
+              <ol style="margin: 0 0 25px 0; padding-left: 20px; color: #4b5563; font-size: 16px; line-height: 1.8;">
+                <li style="margin-bottom: 10px;">
+                  Contact the appropriate authority to renew your ${credentialType}
+                </li>
+                <li style="margin-bottom: 10px;">
+                  Upload the renewed credential to your Serenity profile
+                </li>
+                <li style="margin-bottom: 10px;">
+                  Notify your Pod Lead once renewed
+                </li>
+                ${isExpired ? `<li style="color: ${statusColor}; font-weight: bold;">You cannot be scheduled until this credential is renewed</li>` : ''}
+              </ol>
+
+              <p style="margin: 0 0 15px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                If you have already renewed this credential, please upload the updated document to your profile or
+                contact HR at <a href="mailto:hr@serenitycarepartners.com" style="color: #2563eb;">hr@serenitycarepartners.com</a>.
+              </p>
+
+              <p style="margin: 25px 0 0 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                Thank you for your attention to this matter,<br>
+                <strong>Serenity Care Partners HR Team</strong>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px;">
+                📞 (937) 555-0100 | 📧 hr@serenitycarepartners.com
+              </p>
+              <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                © ${new Date().getFullYear()} Serenity Care Partners. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `.trim();
+  }
+
+  private getCredentialExpirationAlertText(data: CredentialExpirationAlertData): string {
+    const { name, credentialType, expirationDate, daysLeft } = data;
+    const isExpired = daysLeft <= 0;
+    const urgency = isExpired ? 'EXPIRED' : `EXPIRES IN ${daysLeft} DAYS`;
+
+    return `
+CREDENTIAL ${urgency}
+
+Dear ${name},
+
+Your ${credentialType} ${isExpired ? 'has expired' : `will expire in ${daysLeft} days`}.
+
+CREDENTIAL DETAILS
+------------------
+Credential: ${credentialType}
+Expiration Date: ${expirationDate.toLocaleDateString('en-US', { dateStyle: 'long' })}
+Status: ${isExpired ? 'EXPIRED' : `${daysLeft} days remaining`}
+
+WHAT YOU NEED TO DO
+-------------------
+1. Contact the appropriate authority to renew your ${credentialType}
+2. Upload the renewed credential to your Serenity profile
+3. Notify your Pod Lead once renewed
+${isExpired ? '4. You cannot be scheduled until this credential is renewed' : ''}
+
+If you have already renewed this credential, please upload the updated document to your profile or
+contact HR at hr@serenitycarepartners.com.
+
+Thank you for your attention to this matter,
+Serenity Care Partners HR Team
+
+Contact: (937) 555-0100 | hr@serenitycarepartners.com
+
+---
+This is an automated notification from Serenity ERP
+© ${new Date().getFullYear()} Serenity Care Partners. All rights reserved.
+    `.trim();
+  }
+
+  private getCredentialDigestHTML(data: CredentialDigestData): string {
+    const { expiringSoon, expired, date } = data;
+    const expiredCount = expired.length;
+    const expiringSoonCount = Object.values(expiringSoon).flat().length;
+    const totalCount = expiredCount + expiringSoonCount;
+
+    // Sort days ascending
+    const sortedDays = Object.keys(expiringSoon).map(d => parseInt(d)).sort((a, b) => a - b);
+
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Credential Digest</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 0;">
+        <table role="presentation" style="width: 700px; border-collapse: collapse; background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); padding: 40px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
+                Daily Credential Digest
+              </h1>
+              <p style="margin: 10px 0 0 0; color: #e0e7ff; font-size: 14px;">
+                ${date}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Summary Stats -->
+          <tr>
+            <td style="padding: 30px;">
+              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="width: 33%; padding: 20px; text-align: center; background-color: #fef2f2; border-radius: 8px;">
+                    <div style="font-size: 36px; font-weight: bold; color: #dc2626;">${expiredCount}</div>
+                    <div style="font-size: 14px; color: #991b1b; margin-top: 5px;">Expired</div>
+                  </td>
+                  <td style="width: 10%;"></td>
+                  <td style="width: 33%; padding: 20px; text-align: center; background-color: #fef3c7; border-radius: 8px;">
+                    <div style="font-size: 36px; font-weight: bold; color: #d97706;">${expiringSoonCount}</div>
+                    <div style="font-size: 14px; color: #92400e; margin-top: 5px;">Expiring Soon</div>
+                  </td>
+                  <td style="width: 10%;"></td>
+                  <td style="width: 33%; padding: 20px; text-align: center; background-color: #dbeafe; border-radius: 8px;">
+                    <div style="font-size: 36px; font-weight: bold; color: #2563eb;">${totalCount}</div>
+                    <div style="font-size: 14px; color: #1e3a8a; margin-top: 5px;">Total Alerts</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Expired Credentials -->
+          ${expiredCount > 0 ? `
+          <tr>
+            <td style="padding: 30px; padding-top: 0;">
+              <h2 style="margin: 0 0 20px 0; color: #dc2626; font-size: 20px; border-bottom: 2px solid #dc2626; padding-bottom: 10px;">
+                🔴 Expired Credentials (${expiredCount})
+              </h2>
+              <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;">
+                <thead>
+                  <tr style="background-color: #fee2e2;">
+                    <th style="padding: 12px; text-align: left; font-size: 14px; color: #991b1b; border-bottom: 1px solid #fecaca;">Caregiver</th>
+                    <th style="padding: 12px; text-align: left; font-size: 14px; color: #991b1b; border-bottom: 1px solid #fecaca;">Credential</th>
+                    <th style="padding: 12px; text-align: left; font-size: 14px; color: #991b1b; border-bottom: 1px solid #fecaca;">Expired</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${expired.map(cred => `
+                  <tr>
+                    <td style="padding: 12px; font-size: 14px; color: #1f2937; border-bottom: 1px solid #fecaca;">${cred.caregiverName}</td>
+                    <td style="padding: 12px; font-size: 14px; color: #1f2937; border-bottom: 1px solid #fecaca;">${cred.type}</td>
+                    <td style="padding: 12px; font-size: 14px; color: #dc2626; font-weight: bold; border-bottom: 1px solid #fecaca;">${Math.abs(cred.daysLeft)} days ago</td>
+                  </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          ` : ''}
+
+          <!-- Expiring Soon -->
+          ${sortedDays.map(days => {
+            const creds = expiringSoon[days];
+            const color = days <= 7 ? '#ea580c' : days <= 15 ? '#d97706' : '#2563eb';
+            const bgColor = days <= 7 ? '#fff7ed' : days <= 15 ? '#fef3c7' : '#dbeafe';
+            const borderColor = days <= 7 ? '#fed7aa' : days <= 15 ? '#fde68a' : '#bfdbfe';
+
+            return `
+          <tr>
+            <td style="padding: 30px; padding-top: 0;">
+              <h2 style="margin: 0 0 20px 0; color: ${color}; font-size: 20px; border-bottom: 2px solid ${color}; padding-bottom: 10px;">
+                ${days <= 7 ? '⚠️' : days <= 15 ? '⏰' : '📋'} Expiring in ${days} Days (${creds.length})
+              </h2>
+              <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 8px;">
+                <thead>
+                  <tr style="background-color: ${bgColor};">
+                    <th style="padding: 12px; text-align: left; font-size: 14px; color: #1f2937; border-bottom: 1px solid ${borderColor};">Caregiver</th>
+                    <th style="padding: 12px; text-align: left; font-size: 14px; color: #1f2937; border-bottom: 1px solid ${borderColor};">Credential</th>
+                    <th style="padding: 12px; text-align: left; font-size: 14px; color: #1f2937; border-bottom: 1px solid ${borderColor};">Expires</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${creds.map(cred => `
+                  <tr>
+                    <td style="padding: 12px; font-size: 14px; color: #1f2937; border-bottom: 1px solid ${borderColor};">${cred.caregiverName}</td>
+                    <td style="padding: 12px; font-size: 14px; color: #1f2937; border-bottom: 1px solid ${borderColor};">${cred.type}</td>
+                    <td style="padding: 12px; font-size: 14px; color: #1f2937; border-bottom: 1px solid ${borderColor};">${cred.expirationDate.toLocaleDateString('en-US')}</td>
+                  </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </td>
+          </tr>
+            `;
+          }).join('')}
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                This is your daily automated digest of credential expirations.
+              </p>
+              <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px;">
+                📞 (937) 555-0100 | 📧 hr@serenitycarepartners.com
+              </p>
+              <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                © ${new Date().getFullYear()} Serenity Care Partners. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `.trim();
+  }
+
+  private getCredentialDigestText(data: CredentialDigestData): string {
+    const { expiringSoon, expired, date } = data;
+    const expiredCount = expired.length;
+    const expiringSoonCount = Object.values(expiringSoon).flat().length;
+    const totalCount = expiredCount + expiringSoonCount;
+
+    const sortedDays = Object.keys(expiringSoon).map(d => parseInt(d)).sort((a, b) => a - b);
+
+    let text = `
+DAILY CREDENTIAL DIGEST
+${date}
+
+SUMMARY
+-------
+Expired: ${expiredCount}
+Expiring Soon: ${expiringSoonCount}
+Total Requiring Attention: ${totalCount}
+
+`;
+
+    if (expiredCount > 0) {
+      text += `
+🔴 EXPIRED CREDENTIALS (${expiredCount})
+${'='.repeat(60)}
+`;
+      expired.forEach(cred => {
+        text += `${cred.caregiverName} - ${cred.type} - Expired ${Math.abs(cred.daysLeft)} days ago\n`;
+      });
+    }
+
+    sortedDays.forEach(days => {
+      const creds = expiringSoon[days];
+      const emoji = days <= 7 ? '⚠️' : days <= 15 ? '⏰' : '📋';
+
+      text += `
+${emoji} EXPIRING IN ${days} DAYS (${creds.length})
+${'='.repeat(60)}
+`;
+      creds.forEach(cred => {
+        text += `${cred.caregiverName} - ${cred.type} - Expires ${cred.expirationDate.toLocaleDateString('en-US')}\n`;
+      });
+    });
+
+    text += `
+---
+This is your daily automated digest of credential expirations.
+Contact: (937) 555-0100 | hr@serenitycarepartners.com
+
+© ${new Date().getFullYear()} Serenity Care Partners. All rights reserved.
+    `.trim();
+
+    return text;
   }
 }
 

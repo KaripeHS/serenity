@@ -20,7 +20,7 @@
  */
 
 // import { DatabaseClient } from '../database/client';
-// import { emailService } from '../services/notifications/email.service';
+import { getEmailService } from '../services/notifications/email.service';
 
 interface ExpiringCredential {
   id: string;
@@ -83,15 +83,16 @@ async function blockScheduling(caregiverId: string, credentialType: string): Pro
 async function sendCaregiverAlert(credential: ExpiringCredential): Promise<void> {
   const alertLevel = getAlertLevel(credential.daysLeft);
 
-  // TODO: Send email using email service
-  // await emailService.sendCredentialExpirationAlert({
-  //   to: credential.caregiverEmail,
-  //   name: credential.caregiverName,
-  //   credentialType: credential.type,
-  //   expirationDate: credential.expirationDate,
-  //   daysLeft: credential.daysLeft,
-  //   alertLevel
-  // });
+  // Send email using email service
+  const emailService = getEmailService();
+  await emailService.sendCredentialExpirationAlert({
+    to: credential.caregiverEmail,
+    name: credential.caregiverName,
+    credentialType: credential.type,
+    expirationDate: credential.expirationDate,
+    daysLeft: credential.daysLeft,
+    alertLevel
+  });
 
   console.log(`  📧 Sent ${alertLevel} alert to ${credential.caregiverName} about ${credential.type} expiring in ${credential.daysLeft} days`);
 }
@@ -116,13 +117,14 @@ async function sendHRDigest(
     return acc;
   }, {} as Record<number, ExpiringCredential[]>);
 
-  // TODO: Send email digest to HR
-  // await emailService.sendCredentialDigest({
-  //   to: 'hr@serenitycarepartners.com',
-  //   expiringSoon: groupedByDays,
-  //   expired,
-  //   date: new Date().toISOString().split('T')[0]
-  // });
+  // Send email digest to HR
+  const emailService = getEmailService();
+  await emailService.sendCredentialDigest({
+    to: 'hr@serenitycarepartners.com',
+    expiringSoon: groupedByDays,
+    expired,
+    date: new Date().toISOString().split('T')[0]
+  });
 
   console.log('');
   console.log('📊 HR Digest Summary:');
