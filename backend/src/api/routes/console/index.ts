@@ -21,6 +21,7 @@ import spiRouter from './spi';
 import credentialsRouter from './credentials';
 import dispatchRouter from './dispatch';
 import billingRouter from './billing';
+import podScorecardRouter from './pod-scorecard';
 
 const router = Router();
 
@@ -35,6 +36,9 @@ router.use('/dashboard', dashboardsRouter);
 
 // Pods management routes
 router.use('/pods', podsRouter);
+
+// Pod scorecard routes
+router.use('/pods', podScorecardRouter);
 
 // Morning check-in routes
 router.use('/morning-check-in', morningCheckInRouter);
