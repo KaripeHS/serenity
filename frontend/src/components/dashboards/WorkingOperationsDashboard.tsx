@@ -6,6 +6,9 @@ import { Badge } from '../ui/Badge';
 import { Skeleton } from '../ui/Skeleton';
 import { Alert } from '../ui/Alert';
 import { VisitStatusBadge } from '../ui/Badge';
+import { Chart } from '../ui/Chart';
+import { KPIWidget, KPIGrid } from '../ui/KPIWidget';
+import { ProgressRing } from '../ui/ProgressRing';
 import {
   ArrowLeftIcon,
   CalendarIcon,
@@ -41,6 +44,25 @@ export function WorkingOperationsDashboard() {
   const [metrics, setMetrics] = useState<OperationsMetrics | null>(null);
   const [upcomingVisits, setUpcomingVisits] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Mock chart data
+  const weeklyVisitsData = [
+    { label: 'Mon', value: 132 },
+    { label: 'Tue', value: 128 },
+    { label: 'Wed', value: 135 },
+    { label: 'Thu', value: 127 },
+    { label: 'Fri', value: 142 },
+    { label: 'Sat', value: 89 },
+    { label: 'Sun', value: 71 }
+  ];
+
+  const travelTimeData = [
+    { label: '9 AM', value: 15 },
+    { label: '11 AM', value: 18 },
+    { label: '1 PM', value: 22 },
+    { label: '3 PM', value: 19 },
+    { label: '5 PM', value: 16 }
+  ];
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -232,42 +254,62 @@ export function WorkingOperationsDashboard() {
           </Card>
 
           {/* Caregiver Utilization */}
-          <Card className="animate-fade-in">
-            <div className="flex items-center gap-2 mb-4">
+          <Card className="animate-fade-in text-center">
+            <div className="flex items-center justify-center gap-2 mb-4">
               <UserGroupIcon className="h-6 w-6 text-caregiver-600" />
               <h3 className="text-lg font-semibold text-gray-900">Caregiver Utilization</h3>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Overall Utilization</span>
-                  <span className="text-sm font-bold text-gray-900">{metrics.caregiverUtilization}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                  <div
-                    className="bg-gradient-to-r from-caregiver-500 to-caregiver-600 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${metrics.caregiverUtilization}%` }}
-                  ></div>
-                </div>
-              </div>
+            <ProgressRing
+              percentage={metrics.caregiverUtilization}
+              size={160}
+              strokeWidth={12}
+              color="#f97316"
+              label="Overall Capacity"
+              className="mb-6"
+            />
 
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-success-600">92</div>
-                  <div className="text-xs text-gray-500 mt-1">Active</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-warning-600">12</div>
-                  <div className="text-xs text-gray-500 mt-1">Available</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-600">8</div>
-                  <div className="text-xs text-gray-500 mt-1">Off Duty</div>
-                </div>
+            <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-success-600">92</div>
+                <div className="text-xs text-gray-500 mt-1">Active</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-warning-600">12</div>
+                <div className="text-xs text-gray-500 mt-1">Available</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-600">8</div>
+                <div className="text-xs text-gray-500 mt-1">Off Duty</div>
               </div>
             </div>
           </Card>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 animate-fade-in">
+          <Chart
+            type="bar"
+            data={weeklyVisitsData}
+            title="Weekly Visit Volume"
+            height={280}
+            width={600}
+            showGrid={true}
+            showAxes={true}
+            showValues={true}
+            color="#3b82f6"
+          />
+
+          <Chart
+            type="line"
+            data={travelTimeData}
+            title="Average Travel Time Today"
+            height={280}
+            width={600}
+            showGrid={true}
+            showAxes={true}
+            color="#10b981"
+          />
         </div>
 
         {/* Map Placeholder */}
