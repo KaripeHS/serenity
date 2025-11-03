@@ -14,6 +14,7 @@ import morningCheckInRouter from './morning-check-in';
 import shiftsRouter from './shifts';
 import caregiversRouter from './caregivers';
 import clientsRouter from './clients';
+import operationsRouter from './operations';
 
 const router = Router();
 
@@ -28,6 +29,9 @@ router.use('/pods', podsRouter);
 
 // Morning check-in routes
 router.use('/morning-check-in', morningCheckInRouter);
+
+// Operations dashboard routes
+router.use('/operations', operationsRouter);
 
 // Shifts management routes
 router.use('/shifts', shiftsRouter);

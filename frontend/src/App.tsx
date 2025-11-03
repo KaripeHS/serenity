@@ -16,6 +16,7 @@ import { WorkingSchedulingDashboard } from './components/dashboards/WorkingSched
 import { WorkingBillingDashboard } from './components/dashboards/WorkingBillingDashboard';
 import { WorkingComplianceDashboard } from './components/dashboards/WorkingComplianceDashboard';
 import { WorkingFamilyPortal } from './components/family/WorkingFamilyPortal';
+import { MorningCheckIn } from './components/operations/MorningCheckIn';
 
 // Layouts
 import DashboardLayout from './components/layouts/DashboardLayout';
@@ -60,6 +61,7 @@ function App() {
                       <Route path="billing" element={<WorkingBillingDashboard />} />
                       <Route path="compliance" element={<WorkingComplianceDashboard />} />
                       <Route path="training" element={<div className="p-6"><h1 className="text-2xl font-bold">Training Dashboard</h1><p>Coming soon...</p></div>} />
+                      <Route path="morning-check-in" element={<MorningCheckIn />} />
 
                       {/* Legacy dashboard routes */}
                       <Route path="legacy/executive" element={<WorkingExecutiveDashboard />} />
