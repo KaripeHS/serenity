@@ -10,9 +10,17 @@ import { AuthenticatedRequest } from '../../middleware/auth';
 import { ApiErrors } from '../../middleware/error-handler';
 import { getSandataRepository } from '../../../services/sandata/repositories/sandata.repository';
 import { getDbClient } from '../../../database/client';
+import { SchedulingService } from '../../../modules/scheduling/scheduling.service';
+import { DatabaseClient } from '../../../database/client';
+import { AuditLogger } from '../../../audit/logger';
 
 const router = Router();
 const repository = getSandataRepository(getDbClient());
+
+// Initialize scheduling service
+const db = getDbClient();
+const auditLogger = new AuditLogger(db);
+const schedulingService = new SchedulingService(db as DatabaseClient, auditLogger);
 
 /**
  * GET /api/console/shifts/:organizationId
@@ -461,6 +469,292 @@ router.post(
         actualEndTime: endTime.toISOString(),
         message: 'Shift completed',
         timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/console/shifts/:organizationId/suggest-caregivers
+ * Get caregiver suggestions for a new shift
+ */
+router.post(
+  '/:organizationId/suggest-caregivers',
+  async (req: AuthenticatedRequest, res: Response, next) => {
+    try {
+      const { organizationId } = req.params;
+      const { clientId, serviceId, scheduledStartTime, scheduledEndTime, limit = 5 } = req.body;
+
+      if (!clientId || !scheduledStartTime || !scheduledEndTime) {
+        throw ApiErrors.badRequest('clientId, scheduledStartTime, and scheduledEndTime are required');
+      }
+
+      const start = new Date(scheduledStartTime);
+      const end = new Date(scheduledEndTime);
+
+      if (end <= start) {
+        throw ApiErrors.badRequest('Scheduled end time must be after start time');
+      }
+
+      // Use scheduling service to find caregiver matches
+      const userContext = {
+        userId: req.user?.id || '',
+        organizationId,
+        role: req.user?.role || 'admin'
+      };
+
+      const matches = await schedulingService.findCaregiverMatches(
+        clientId,
+        serviceId || 'default-service-id',
+        { start, end }
+      );
+
+      // Return top N matches
+      const topMatches = matches.slice(0, limit).map(match => ({
+        caregiverId: match.caregiverId,
+        score: Math.round(match.score * 100), // Convert to percentage
+        reasons: match.reasons,
+        warnings: match.warnings,
+        travelDistance: Math.round(match.travelDistance * 10) / 10, // Round to 1 decimal
+        availability: match.availability
+      }));
+
+      res.json({
+        clientId,
+        scheduledStartTime: start.toISOString(),
+        scheduledEndTime: end.toISOString(),
+        suggestions: topMatches,
+        count: topMatches.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /api/console/shifts/caregiver/:caregiverId/schedule
+ * Get a caregiver's schedule
+ */
+router.get(
+  '/caregiver/:caregiverId/schedule',
+  async (req: AuthenticatedRequest, res: Response, next) => {
+    try {
+      const { caregiverId } = req.params;
+      const { startDate, endDate, organizationId } = req.query;
+
+      if (!startDate || !endDate) {
+        throw ApiErrors.badRequest('startDate and endDate are required');
+      }
+
+      if (!organizationId) {
+        throw ApiErrors.badRequest('organizationId is required');
+      }
+
+      const start = new Date(startDate as string);
+      const end = new Date(endDate as string);
+
+      const userContext = {
+        userId: req.user?.id || '',
+        organizationId: organizationId as string,
+        role: req.user?.role || 'admin'
+      };
+
+      // Use scheduling service to get caregiver schedule
+      const shifts = await schedulingService.getCaregiverSchedule(
+        caregiverId,
+        start,
+        end,
+        userContext
+      );
+
+      res.json({
+        caregiverId,
+        startDate: start.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0],
+        shifts: shifts.map(shift => ({
+          id: shift.id,
+          clientId: shift.clientId,
+          scheduledStart: shift.scheduledStart,
+          scheduledEnd: shift.scheduledEnd,
+          actualStart: shift.actualStart,
+          actualEnd: shift.actualEnd,
+          status: shift.status,
+          notes: shift.notes
+        })),
+        count: shifts.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/console/shifts/:organizationId/validate
+ * Validate a shift before creating it
+ */
+router.post(
+  '/:organizationId/validate',
+  async (req: AuthenticatedRequest, res: Response, next) => {
+    try {
+      const { organizationId } = req.params;
+      const { caregiverId, clientId, scheduledStartTime, scheduledEndTime, serviceCode } = req.body;
+
+      if (!clientId || !scheduledStartTime || !scheduledEndTime) {
+        throw ApiErrors.badRequest('clientId, scheduledStartTime, and scheduledEndTime are required');
+      }
+
+      const start = new Date(scheduledStartTime);
+      const end = new Date(scheduledEndTime);
+
+      const validationResults = {
+        valid: true,
+        errors: [] as string[],
+        warnings: [] as string[]
+      };
+
+      // Validate time range
+      if (end <= start) {
+        validationResults.valid = false;
+        validationResults.errors.push('Scheduled end time must be after start time');
+      }
+
+      // Validate shift duration (e.g., not too long or too short)
+      const durationHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+      if (durationHours > 12) {
+        validationResults.warnings.push('Shift duration exceeds 12 hours');
+      }
+      if (durationHours < 0.5) {
+        validationResults.valid = false;
+        validationResults.errors.push('Shift duration must be at least 30 minutes');
+      }
+
+      // Validate client exists
+      try {
+        const client = await repository.getClient(clientId);
+        if (!client || client.organization_id !== organizationId) {
+          validationResults.valid = false;
+          validationResults.errors.push('Invalid client for this organization');
+        }
+      } catch {
+        validationResults.valid = false;
+        validationResults.errors.push('Client not found');
+      }
+
+      // Validate caregiver if provided
+      if (caregiverId) {
+        try {
+          const caregiver = await repository.getUser(caregiverId);
+          if (!caregiver || caregiver.organization_id !== organizationId) {
+            validationResults.valid = false;
+            validationResults.errors.push('Invalid caregiver for this organization');
+          } else {
+            // Check for scheduling conflicts
+            const conflicts = await repository.getShiftsWithFilters({
+              organizationId,
+              caregiverId,
+              startDate: start.toISOString(),
+              endDate: end.toISOString(),
+              limit: 100
+            });
+
+            const hasConflict = conflicts.some((shift: any) => {
+              const shiftStart = new Date(shift.scheduled_start_time);
+              const shiftEnd = new Date(shift.scheduled_end_time);
+
+              // Check if time ranges overlap
+              return (
+                (start < shiftEnd && end > shiftStart) &&
+                shift.status !== 'cancelled'
+              );
+            });
+
+            if (hasConflict) {
+              validationResults.valid = false;
+              validationResults.errors.push('Caregiver has conflicting shifts during this time');
+            }
+          }
+        } catch {
+          validationResults.valid = false;
+          validationResults.errors.push('Caregiver not found');
+        }
+      }
+
+      // Validate shift timing (warn if outside normal hours)
+      const startHour = start.getHours();
+      if (startHour < 6 || startHour > 22) {
+        validationResults.warnings.push('Shift starts outside normal business hours (6 AM - 10 PM)');
+      }
+
+      res.json({
+        valid: validationResults.valid,
+        errors: validationResults.errors,
+        warnings: validationResults.warnings,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /api/console/shifts/client/:clientId/schedule
+ * Get a client's schedule
+ */
+router.get(
+  '/client/:clientId/schedule',
+  async (req: AuthenticatedRequest, res: Response, next) => {
+    try {
+      const { clientId } = req.params;
+      const { startDate, endDate, organizationId } = req.query;
+
+      if (!startDate || !endDate) {
+        throw ApiErrors.badRequest('startDate and endDate are required');
+      }
+
+      if (!organizationId) {
+        throw ApiErrors.badRequest('organizationId is required');
+      }
+
+      const start = new Date(startDate as string);
+      const end = new Date(endDate as string);
+
+      const userContext = {
+        userId: req.user?.id || '',
+        organizationId: organizationId as string,
+        role: req.user?.role || 'admin'
+      };
+
+      // Use scheduling service to get client schedule
+      const shifts = await schedulingService.getClientSchedule(
+        clientId,
+        start,
+        end,
+        userContext
+      );
+
+      res.json({
+        clientId,
+        startDate: start.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0],
+        shifts: shifts.map(shift => ({
+          id: shift.id,
+          caregiverId: shift.caregiverId,
+          scheduledStart: shift.scheduledStart,
+          scheduledEnd: shift.scheduledEnd,
+          actualStart: shift.actualStart,
+          actualEnd: shift.actualEnd,
+          status: shift.status,
+          notes: shift.notes
+        })),
+        count: shifts.length,
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
       next(error);
