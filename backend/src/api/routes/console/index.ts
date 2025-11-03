@@ -28,6 +28,7 @@ import accessReviewsRouter from './access-reviews';
 import evvHealthRouter from './evv-health';
 import adminRouter from './admin';
 import systemConfigRouter from './system-config';
+import checkInRouter from './check-in';
 
 const router = Router();
 
@@ -96,5 +97,8 @@ router.use('/admin', adminRouter);
 
 // System configuration routes
 router.use('/config', systemConfigRouter);
+
+// Daily check-in status routes (visit tracking)
+router.use('/check-in', checkInRouter);
 
 export { router as consoleRouter };
