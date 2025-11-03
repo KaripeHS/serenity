@@ -5,6 +5,8 @@ import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Skeleton } from '../ui/Skeleton';
 import { Alert } from '../ui/Alert';
+import { Chart } from '../ui/Chart';
+import { ProgressRing } from '../ui/ProgressRing';
 import {
   ArrowLeftIcon,
   UserGroupIcon,
@@ -104,6 +106,23 @@ export function WorkingHRDashboard() {
     { id: 3, name: 'Jennifer Miller', position: 'Registered Nurse', department: 'Clinical', hireDate: '2019-11-10', certifications: ['RN', 'BLS'], trainingDue: ['HIPAA Update'] },
     { id: 4, name: 'Robert Thompson', position: 'Home Health Aide', department: 'Care', hireDate: '2022-01-05', certifications: ['HHA'], trainingDue: ['CPR Renewal', 'First Aid'] }
   ]);
+
+  // Mock chart data
+  const hiringTrendData = [
+    { label: 'Jan', value: 8 },
+    { label: 'Feb', value: 12 },
+    { label: 'Mar', value: 15 },
+    { label: 'Apr', value: 11 },
+    { label: 'May', value: 14 },
+    { label: 'Jun', value: 18 }
+  ];
+
+  const departmentStaffData = [
+    { label: 'Clinical', value: 67 },
+    { label: 'Therapy', value: 34 },
+    { label: 'Care', value: 42 },
+    { label: 'Admin', value: 13 }
+  ];
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -259,6 +278,57 @@ export function WorkingHRDashboard() {
               <Alert variant="info" title="Performance Reviews">
                 12 quarterly reviews scheduled this week
               </Alert>
+            </div>
+
+            {/* HR Analytics */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-fade-in">
+              {/* Training Compliance Ring */}
+              <Card className="text-center">
+                <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-4">
+                  Training Compliance
+                </h3>
+                <ProgressRing
+                  percentage={metrics.trainingCompliance}
+                  size={150}
+                  strokeWidth={10}
+                  color="#10b981"
+                  label="Target: 90%"
+                />
+                <p className="text-sm text-success-600 font-medium mt-3">
+                  Above target ✓
+                </p>
+              </Card>
+
+              {/* Hiring Trend Chart */}
+              <Card className="lg:col-span-2">
+                <Chart
+                  type="area"
+                  data={hiringTrendData}
+                  title="Monthly Hiring Trend (6 Months)"
+                  height={220}
+                  width={600}
+                  showGrid={true}
+                  showAxes={true}
+                  color="#3b82f6"
+                  gradientFrom="#3b82f6"
+                  gradientTo="#60a5fa"
+                />
+              </Card>
+            </div>
+
+            {/* Department Staffing Chart */}
+            <div className="mb-8 animate-fade-in">
+              <Chart
+                type="bar"
+                data={departmentStaffData}
+                title="Staff Distribution by Department"
+                height={240}
+                width={1200}
+                showGrid={true}
+                showAxes={true}
+                showValues={true}
+                color="#f97316"
+              />
             </div>
 
             {/* Recent Activity */}
