@@ -5,13 +5,19 @@ import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Skeleton } from '../ui/Skeleton';
 import { Alert } from '../ui/Alert';
+import { Chart } from '../ui/Chart';
+import { KPIWidget, KPIGrid } from '../ui/KPIWidget';
+import { ProgressRing } from '../ui/ProgressRing';
+import { StatCard } from '../ui/StatCard';
 import {
   ArrowLeftIcon,
   ArrowTrendingUpIcon,
   UserGroupIcon,
   UsersIcon,
   CurrencyDollarIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  ChartBarIcon,
+  CalendarIcon
 } from '@heroicons/react/24/outline';
 
 interface SystemMetrics {
@@ -22,42 +28,32 @@ interface SystemMetrics {
   complianceScore: number;
 }
 
-interface MetricCardProps {
-  title: string;
-  value: string | number;
-  change: string;
-  changeType: 'positive' | 'neutral';
-  icon: React.ComponentType<any>;
-  iconColor: string;
-}
-
-function MetricCard({ title, value, change, changeType, icon: Icon, iconColor }: MetricCardProps) {
-  return (
-    <Card hoverable className="transition-all hover:scale-105">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">
-          {title}
-        </h3>
-        <Badge variant={changeType === 'positive' ? 'success' : 'default'} size="sm">
-          {change}
-        </Badge>
-      </div>
-      <div className="flex items-center gap-4">
-        <div className={`p-3 ${iconColor} rounded-lg`}>
-          <Icon className="h-6 w-6 text-white" />
-        </div>
-        <p className="text-3xl font-bold text-gray-900">
-          {value}
-        </p>
-      </div>
-    </Card>
-  );
-}
-
 export function WorkingExecutiveDashboard() {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Mock data for charts
+  const revenueData = [
+    { label: 'Jan', value: 752 },
+    { label: 'Feb', value: 798 },
+    { label: 'Mar', value: 823 },
+    { label: 'Apr', value: 801 },
+    { label: 'May', value: 856 },
+    { label: 'Jun', value: 892 }
+  ];
+
+  const visitData = [
+    { label: 'Mon', value: 127 },
+    { label: 'Tue', value: 134 },
+    { label: 'Wed', value: 142 },
+    { label: 'Thu', value: 138 },
+    { label: 'Fri', value: 151 },
+    { label: 'Sat', value: 89 },
+    { label: 'Sun', value: 67 }
+  ];
+
+  const trendData = [752, 798, 823, 801, 856, 892];
 
   useEffect(() => {
     // Simulate loading metrics
@@ -124,74 +120,137 @@ export function WorkingExecutiveDashboard() {
           </Link>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fade-in">
-          <MetricCard
+        {/* Key Metrics with Trends */}
+        <KPIGrid columns={4} className="mb-8 animate-fade-in">
+          <KPIWidget
             title="Active Patients"
             value={metrics.activePatients.toLocaleString()}
-            change="+12%"
-            changeType="positive"
+            subtitle="Across Ohio"
+            change={12}
+            changeLabel="vs last month"
+            trendData={[782, 805, 819, 831, 847]}
             icon={UserGroupIcon}
             iconColor="bg-patient-600"
+            status="success"
           />
-          <MetricCard
+          <KPIWidget
             title="Active Staff"
             value={metrics.activeStaff}
-            change="+5%"
-            changeType="positive"
+            subtitle="Caregivers & Nurses"
+            change={5}
+            changeLabel="vs last month"
+            trendData={[148, 150, 152, 154, 156]}
             icon={UsersIcon}
             iconColor="bg-caregiver-600"
+            status="success"
           />
-          <MetricCard
+          <KPIWidget
             title="Monthly Revenue"
             value={formatRevenue(metrics.monthlyRevenue)}
-            change="+8%"
-            changeType="positive"
+            subtitle="June 2024"
+            change={8}
+            changeLabel="vs last month"
+            trendData={trendData}
             icon={CurrencyDollarIcon}
             iconColor="bg-success-600"
+            status="success"
           />
-          <MetricCard
+          <KPIWidget
             title="Completion Rate"
             value={`${metrics.completionRate}%`}
-            change="✓"
-            changeType="positive"
+            subtitle="Visit Success Rate"
+            change={2.3}
+            changeLabel="vs last month"
+            trendData={[92.1, 92.8, 93.5, 94.1, 94.8]}
             icon={CheckCircleIcon}
             iconColor="bg-primary-600"
+            status="success"
           />
-        </div>
+        </KPIGrid>
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 animate-fade-in">
-          <Card>
-            <div className="flex items-center gap-2 mb-4">
-              <ArrowTrendingUpIcon className="h-6 w-6 text-primary-600" />
-              <h3 className="text-lg font-semibold text-gray-900">
-                Revenue Trend
-              </h3>
+          {/* Revenue Trend Chart */}
+          <div>
+            <Chart
+              type="area"
+              data={revenueData}
+              title="Revenue Trend (Last 6 Months)"
+              height={280}
+              width={600}
+              showGrid={true}
+              showAxes={true}
+              color="#10b981"
+              gradientFrom="#10b981"
+              gradientTo="#34d399"
+            />
+            <div className="mt-2 px-4">
+              <p className="text-sm text-success-600 font-medium">
+                ↑ +8% growth this month • ${(revenueData[5].value - revenueData[4].value)}K increase
+              </p>
             </div>
-            <div className="h-64 flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 rounded-lg border-2 border-dashed border-primary-200">
-              <div className="text-center">
-                <ArrowTrendingUpIcon className="h-12 w-12 text-primary-600 mx-auto mb-3" />
-                <p className="text-primary-700 font-medium">Revenue trending up +8% this month</p>
-                <p className="text-sm text-primary-600 mt-1">Chart visualization coming soon</p>
-              </div>
+          </div>
+
+          {/* Weekly Visits Chart */}
+          <div>
+            <Chart
+              type="bar"
+              data={visitData}
+              title="Daily Visits (This Week)"
+              height={280}
+              width={600}
+              showGrid={true}
+              showAxes={true}
+              showValues={true}
+              color="#3b82f6"
+            />
+            <div className="mt-2 px-4">
+              <p className="text-sm text-primary-600 font-medium">
+                Average: {Math.round(visitData.reduce((sum, d) => sum + d.value, 0) / visitData.length)} visits/day
+              </p>
             </div>
+          </div>
+        </div>
+
+        {/* Compliance & Performance Rings */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade-in">
+          <Card className="text-center">
+            <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-4">
+              Compliance Score
+            </h3>
+            <ProgressRing
+              percentage={metrics.complianceScore}
+              size={150}
+              strokeWidth={10}
+              color="#10b981"
+              label="HIPAA & Medicaid"
+            />
           </Card>
 
-          <Card>
-            <div className="flex items-center gap-2 mb-4">
-              <UserGroupIcon className="h-6 w-6 text-patient-600" />
-              <h3 className="text-lg font-semibold text-gray-900">
-                Patient Demographics
-              </h3>
-            </div>
-            <div className="h-64 flex items-center justify-center bg-gradient-to-br from-patient-50 to-patient-100 rounded-lg border-2 border-dashed border-patient-200">
-              <div className="text-center">
-                <UserGroupIcon className="h-12 w-12 text-patient-600 mx-auto mb-3" />
-                <p className="text-patient-700 font-medium">847 active patients across Ohio</p>
-                <p className="text-sm text-patient-600 mt-1">Demographics chart coming soon</p>
-              </div>
-            </div>
+          <Card className="text-center">
+            <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-4">
+              Visit Completion
+            </h3>
+            <ProgressRing
+              percentage={metrics.completionRate}
+              size={150}
+              strokeWidth={10}
+              color="#3b82f6"
+              label="Success Rate"
+            />
+          </Card>
+
+          <Card className="text-center">
+            <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-4">
+              Staff Utilization
+            </h3>
+            <ProgressRing
+              percentage={82.5}
+              size={150}
+              strokeWidth={10}
+              color="#f59e0b"
+              label="Average Capacity"
+            />
           </Card>
         </div>
 
