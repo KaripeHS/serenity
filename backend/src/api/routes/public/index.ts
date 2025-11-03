@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { publicRateLimiter } from '../../middleware/rate-limiter';
 import { getDbClient } from '../../database/client';
 import { createLogger } from '../../utils/logger';
+import { getEmailService } from '../../services/notifications/email.service';
 
 const router = Router();
 const logger = createLogger('public-api');
@@ -139,7 +140,49 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
       organizationId: DEFAULT_ORG_ID
     });
 
-    // TODO: Send confirmation email (Phase 1.3)
+    // Send confirmation emails (non-blocking)
+    // Don't wait for emails to send - return success immediately
+    setImmediate(async () => {
+      try {
+        // Fetch job title for email
+        const jobResult = await db.query(
+          'SELECT title FROM job_requisitions WHERE id = $1',
+          [jobId]
+        );
+
+        const jobTitle = jobResult.rows[0]?.title || 'Home Health Position';
+        const emailService = getEmailService();
+
+        // Send confirmation email to applicant
+        await emailService.sendApplicationConfirmation({
+          applicantName: `${firstName} ${lastName}`,
+          applicantEmail: email,
+          jobTitle,
+          applicationId,
+          submittedAt: new Date().toISOString()
+        });
+
+        // Send alert email to HR
+        await emailService.sendNewApplicationAlert({
+          applicantName: `${firstName} ${lastName}`,
+          applicantEmail: email,
+          applicantPhone: phone,
+          jobTitle,
+          applicationId,
+          submittedAt: new Date().toISOString(),
+          experience: hasLicense ? 'Licensed caregiver' : 'Not specified',
+          availability: availability || 'full-time'
+        });
+
+        logger.info('Application confirmation emails sent', { applicationId });
+      } catch (emailError) {
+        // Log email errors but don't fail the application submission
+        logger.error('Failed to send application emails', {
+          applicationId,
+          error: emailError
+        });
+      }
+    });
 
     res.status(201).json({
       success: true,
