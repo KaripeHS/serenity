@@ -16,6 +16,7 @@ import caregiversRouter from './caregivers';
 import clientsRouter from './clients';
 import operationsRouter from './operations';
 import hrRouter from './hr';
+import spiRouter from './spi';
 
 const router = Router();
 
@@ -49,7 +50,7 @@ router.use('/sandata', sandataRouter);
 // HR management routes
 router.use('/hr', hrRouter);
 
-// TODO: Add more Console routes
-// router.use('/spi', spiRouter);
+// SPI (Serenity Performance Index) routes
+router.use('/spi', spiRouter);
 
 export { router as consoleRouter };
