@@ -20,6 +20,7 @@ import { publicRouter } from './routes/public';
 import { consoleRouter } from './routes/console';
 import { adminRouter } from './routes/admin';
 import { mobileRouter } from './routes/mobile';
+import webhooksRouter from './routes/webhooks';
 import { errorHandler } from './middleware/error-handler';
 import { requestLogger } from './middleware/request-logger';
 import { rateLimiter } from './middleware/rate-limiter';
@@ -61,7 +62,10 @@ export function createApp(config: ApiConfig): Application {
     });
   });
 
-  // Rate limiting (applied to all routes)
+  // Webhooks (no rate limiting or auth - external services)
+  app.use('/api/webhooks', webhooksRouter);
+
+  // Rate limiting (applied to all routes except webhooks)
   app.use(rateLimiter);
 
   // Domain-separated routes
@@ -83,7 +87,7 @@ export function createApp(config: ApiConfig): Application {
   app.use(errorHandler);
 
   logger.info('Express application configured', {
-    domains: ['auth', 'public', 'console', 'admin', 'mobile'],
+    domains: ['auth', 'public', 'console', 'admin', 'mobile', 'webhooks'],
     environment: config.nodeEnv,
   });
 

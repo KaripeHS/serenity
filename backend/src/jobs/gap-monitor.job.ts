@@ -24,6 +24,7 @@
 
 import { getGapDetectionService } from '../services/operations/gap-detection.service';
 import { getEmailService } from '../services/notifications/email.service';
+import { getSMSService } from '../services/notifications/sms.service';
 
 /**
  * Send gap alert to Pod Lead
@@ -60,13 +61,24 @@ async function sendGapAlert(gap: any): Promise<void> {
   const gapService = getGapDetectionService();
   await gapService.markAsNotified(gap.id);
 
-  // TODO: Send SMS for medium+ severity
+  // Send SMS for medium+ severity
   if (gap.severity !== 'low') {
-    // await sendSMS({
-    //   to: gap.podLeadPhone,
-    //   message: `[${urgencyText}] Coverage gap detected: ${gap.caregiverName} is ${gap.minutesLate} min late for ${gap.patientName} at ${gap.patientAddress}. Check dashboard to dispatch.`
-    // });
-    console.log(`      📱 SMS sent to ${gap.podLeadPhone}`);
+    const smsService = getSMSService();
+    try {
+      await smsService.sendGapAlert({
+        podLeadName: gap.podLeadName,
+        podLeadPhone: gap.podLeadPhone,
+        patientName: gap.patientName,
+        patientAddress: gap.patientAddress,
+        caregiverName: gap.caregiverName,
+        minutesLate: gap.minutesLate,
+        severity: gap.severity,
+        gapId: gap.id,
+      });
+      console.log(`      📱 SMS sent to ${gap.podLeadPhone}`);
+    } catch (error: any) {
+      console.error(`      ⚠️  SMS send failed: ${error.message}`);
+    }
   }
 }
 

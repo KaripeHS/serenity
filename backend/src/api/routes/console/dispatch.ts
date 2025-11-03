@@ -9,6 +9,7 @@ import { Router, Response, NextFunction } from 'express';
 import { requireAuth, AuthenticatedRequest } from '../../middleware/auth';
 import { ApiErrors } from '../../middleware/error-handler';
 import { detectCoverageGaps, getOnCallCaregivers } from '../../jobs/coverage-monitor.job';
+import { getSMSService } from '../../../services/notifications/sms.service';
 
 const router = Router();
 
@@ -187,14 +188,23 @@ router.post('/gaps/:gapId/dispatch', async (req: AuthenticatedRequest, res: Resp
       email: 'sarah@example.com'
     };
 
-    // TODO: Send dispatch notification
-    // if (method === 'sms' || method === 'both') {
-    //   await smsService.send({
-    //     to: caregiver.phone,
-    //     message: `Coverage needed: ${gap.clientName}, ${gap.clientAddress}, ${formatTime(gap.scheduledStart)}-${formatTime(gap.scheduledEnd)}. Reply YES to accept.`
-    //   });
-    // }
-    //
+    // Send dispatch notification
+    const smsService = getSMSService();
+
+    if (method === 'sms' || method === 'both') {
+      await smsService.sendDispatchRequest({
+        caregiverName: `${caregiver.firstName} ${caregiver.lastName}`,
+        caregiverPhone: caregiver.phone,
+        patientName: gap.clientName,
+        patientAddress: gap.clientAddress,
+        scheduledStart: new Date(gap.scheduledStart),
+        gapId: gapId,
+      });
+
+      console.log(`[DISPATCH] SMS sent to ${caregiver.firstName} ${caregiver.lastName} at ${caregiver.phone}`);
+    }
+
+    // TODO: Implement voice call dispatch
     // if (method === 'call' || method === 'both') {
     //   await callService.initiateCall({
     //     to: caregiver.phone,
