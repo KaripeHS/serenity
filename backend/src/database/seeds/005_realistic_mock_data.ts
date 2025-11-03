@@ -81,6 +81,9 @@ export async function seedRealisticMockData() {
     const pods = [];
     for (let i = 0; i < 3; i++) {
       const city = OHIO_CITIES[i];
+      if (!city) {
+        throw new Error(`Missing city data at index ${i}`);
+      }
       const podId = uuidv4();
       await db.insert('pods', {
         id: podId,
@@ -121,8 +124,8 @@ export async function seedRealisticMockData() {
         else spi = Math.floor(Math.random() * 20) + 40; // 40-59
 
         const caregiverId = uuidv4();
-        const firstName = FIRST_NAMES[caregiverIndex % FIRST_NAMES.length];
-        const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+        const firstName = FIRST_NAMES[caregiverIndex % FIRST_NAMES.length] || 'John';
+        const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)] || 'Doe';
 
         await db.insert('caregivers', {
           id: caregiverId,
@@ -153,17 +156,20 @@ export async function seedRealisticMockData() {
 
         caregiverIndex++;
       }
-      console.log(`  ✓ Created 10 caregivers for ${pod.name} (${pod.city.name})`);
+      console.log(`  ✓ Created 10 caregivers for ${pod.name} (${pod.city?.name || 'Unknown'})`);
     }
 
     // Assign first caregiver of each pod as Pod Lead
     for (let i = 0; i < pods.length; i++) {
-      const podLeadId = caregivers[i * 10].id;
-      await db.query(
-        'UPDATE pods SET team_lead_id = $1 WHERE id = $2',
-        [podLeadId, pods[i].id]
-      );
-      console.log(`  ✓ Assigned ${caregivers[i * 10].name} as ${pods[i].name} Lead`);
+      const podLead = caregivers[i * 10];
+      const podData = pods[i];
+      if (podLead && podData) {
+        await db.query(
+          'UPDATE pods SET team_lead_id = $1 WHERE id = $2',
+          [podLead.id, podData.id]
+        );
+        console.log(`  ✓ Assigned ${podLead.name} as ${podData.name} Lead`);
+      }
     }
 
     // 3. Create 100 Patients (30-35 per pod)
@@ -183,11 +189,12 @@ export async function seedRealisticMockData() {
         else payer = 'Private';
 
         // Assign primary caregiver from same pod
-        const primaryCaregiverId = caregivers[Math.floor(patientIndex / 3.3) % 10 + (pods.indexOf(pod) * 10)].id;
+        const caregiver = caregivers[Math.floor(patientIndex / 3.3) % 10 + (pods.indexOf(pod) * 10)];
+        const primaryCaregiverId = caregiver ? caregiver.id : caregivers[0]?.id;
 
         const patientId = uuidv4();
-        const firstName = FIRST_NAMES[patientIndex % FIRST_NAMES.length];
-        const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+        const firstName = FIRST_NAMES[patientIndex % FIRST_NAMES.length] || 'Jane';
+        const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)] || 'Smith';
 
         await db.insert('clients', {
           id: patientId,
@@ -196,7 +203,7 @@ export async function seedRealisticMockData() {
           first_name: firstName,
           last_name: lastName,
           date_of_birth: new Date(1940 + Math.floor(Math.random() * 40), Math.floor(Math.random() * 12), 1),
-          address: generateAddress(pod.city),
+          address: generateAddress(pod.city!),
           phone: generatePhone(),
           payer: payer,
           medicaid_id: payer === 'Medicaid' ? generateMedicaidId() : null,
@@ -212,8 +219,8 @@ export async function seedRealisticMockData() {
           podId: pod.id,
           name: `${firstName} ${lastName}`,
           caregiverId: primaryCaregiverId,
-          address: generateAddress(pod.city),
-          gps: generateGPS(pod.city)
+          address: generateAddress(pod.city!),
+          gps: generateGPS(pod.city!)
         });
 
         patientIndex++;
@@ -346,25 +353,27 @@ export async function seedRealisticMockData() {
               responseCode = isValid ? 'E105' : 'E201'; // E105: Duplicate, E201: Missing required field
             }
 
-            await db.insert('sandata_transactions', {
-              id: transactionId,
-              organization_id: DEFAULT_ORG_ID,
-              transaction_type: 'visit',
-              entity_id: visitId,
-              request_payload: JSON.stringify({ visitId, patientId: patient.id, caregiverId: patient.caregiverId }),
-              request_timestamp: new Date(actualClockOut),
-              response_status: status,
-              response_code: responseCode,
-              response_payload: status === 'ack' ? JSON.stringify({ status: 'accepted', transactionId }) : null,
-              response_timestamp: status !== 'pending' ? new Date(actualClockOut.getTime() + 60000) : null, // 1 min later
-              retry_count: 0,
-              max_retries: 3,
-              resolved: status === 'ack',
-              created_at: new Date(actualClockOut),
-              updated_at: new Date()
-            });
-
-            sandataTransactions.push({ id: transactionId, status });
+            // Only create Sandata transaction if we have a clock-out time
+            if (actualClockOut) {
+              await db.insert('sandata_transactions', {
+                id: transactionId,
+                organization_id: DEFAULT_ORG_ID,
+                transaction_type: 'visit',
+                entity_id: visitId,
+                request_payload: JSON.stringify({ visitId, patientId: patient.id, caregiverId: patient.caregiverId }),
+                request_timestamp: new Date(actualClockOut),
+                response_status: status,
+                response_code: responseCode,
+                response_payload: status === 'ack' ? JSON.stringify({ status: 'accepted', transactionId }) : null,
+                response_timestamp: status !== 'pending' ? new Date(actualClockOut.getTime() + 60000) : null, // 1 min later
+                retry_count: 0,
+                max_retries: 3,
+                resolved: status === 'ack',
+                created_at: new Date(actualClockOut),
+                updated_at: new Date()
+              });
+              sandataTransactions.push({ id: transactionId, status });
+            }
           }
 
           evvRecords.push({ id: visitId, isValid, hasClockOut });
@@ -435,8 +444,9 @@ export async function seedRealisticMockData() {
     let applicantIndex = 0;
     for (const stageGroup of stages) {
       for (let i = 0; i < stageGroup.count; i++) {
-        const firstName = FIRST_NAMES[applicantIndex % FIRST_NAMES.length];
-        const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+        const firstName = FIRST_NAMES[applicantIndex % FIRST_NAMES.length] || 'Alex';
+        const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)] || 'Johnson';
+        const randomCity = OHIO_CITIES[Math.floor(Math.random() * 3)];
 
         await db.insert('applicants', {
           id: uuidv4(),
@@ -445,7 +455,7 @@ export async function seedRealisticMockData() {
           last_name: lastName,
           email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${applicantIndex}@email.com`,
           phone: generatePhone(),
-          address: generateAddress(OHIO_CITIES[Math.floor(Math.random() * 3)]),
+          address: randomCity ? generateAddress(randomCity) : '123 Main St, Columbus, OH 43215',
           position_applied_for: ['HHA', 'LPN', 'RN'][Math.floor(Math.random() * 3)],
           application_date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000), // Last 30 days
           source: ['website', 'referral', 'indeed', 'facebook'][Math.floor(Math.random() * 4)],

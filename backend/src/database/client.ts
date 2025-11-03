@@ -3,7 +3,7 @@
  * HIPAA-compliant PostgreSQL client with connection pooling and audit logging
  */
 
-import { Pool, PoolClient, QueryResult } from 'pg';
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 import { createLogger } from '../utils/logger';
 import { environmentService } from '../config/environment';
 
@@ -54,7 +54,7 @@ export class DatabaseClient {
     });
   }
 
-  async query<T = any>(
+  async query<T extends QueryResultRow = any>(
     text: string,
     params?: any[],
     context?: QueryContext
@@ -178,7 +178,7 @@ export class DatabaseClient {
     return this.isConnected;
   }
 
-  async insert<T = any>(
+  async insert<T extends QueryResultRow = any>(
     tableName: string,
     data: Record<string, any>,
     context?: QueryContext
@@ -196,7 +196,7 @@ export class DatabaseClient {
     return this.query<T>(query, values, context);
   }
 
-  async update<T = any>(
+  async update<T extends QueryResultRow = any>(
     tableName: string,
     data: Record<string, any>,
     whereClause: string,
@@ -218,7 +218,7 @@ export class DatabaseClient {
     return this.query<T>(query, allParams, context);
   }
 
-  async delete<T = any>(
+  async delete<T extends QueryResultRow = any>(
     tableName: string,
     whereClause: string,
     whereParams: any[],
@@ -233,7 +233,7 @@ export class DatabaseClient {
     return this.query<T>(query, whereParams, context);
   }
 
-  async select<T = any>(
+  async select<T extends QueryResultRow = any>(
     tableName: string,
     columns: string[] = ['*'],
     whereClause?: string,
@@ -258,7 +258,7 @@ export class DatabaseClient {
     };
 
   }
-  async findOne<T = any>(
+  async findOne<T extends QueryResultRow = any>(
     tableName: string,
     whereConditions: Record<string, any>,
     context?: QueryContext
@@ -270,7 +270,7 @@ export class DatabaseClient {
     const query = `SELECT * FROM ${tableName} WHERE ${whereClause} LIMIT 1`;
     const result = await this.query<T>(query, whereValues, context);
 
-    return result.rows.length > 0 ? result.rows[0] : null;
+    return result.rows.length > 0 ? (result.rows[0] || null) : null;
   }
 }
 
