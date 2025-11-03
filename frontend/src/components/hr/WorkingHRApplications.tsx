@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { Card } from '../ui/Card';
+import { Badge } from '../ui/Badge';
+import { Alert } from '../ui/Alert';
 
 interface Application {
   id: string;
@@ -33,6 +37,41 @@ interface Position {
   requirements: string[];
 }
 
+// Badge Components
+function StatusBadge({ status }: { status: Application['status'] }) {
+  const variants: Record<Application['status'], { variant: any; label: string; icon: string }> = {
+    new: { variant: 'info', label: 'New', icon: '🆕' },
+    reviewing: { variant: 'warning', label: 'Reviewing', icon: '👁️' },
+    interview_scheduled: { variant: 'primary', label: 'Interview Scheduled', icon: '📅' },
+    background_check: { variant: 'info', label: 'Background Check', icon: '🔍' },
+    approved: { variant: 'success', label: 'Approved', icon: '✅' },
+    rejected: { variant: 'danger', label: 'Rejected', icon: '❌' },
+    hired: { variant: 'success', label: 'Hired', icon: '🎉' }
+  };
+  const config = variants[status];
+  return <Badge variant={config.variant}>{config.icon} {config.label}</Badge>;
+}
+
+function PriorityBadge({ priority }: { priority: Application['priority'] }) {
+  const variants: Record<Application['priority'], any> = {
+    urgent: 'danger',
+    high: 'warning',
+    medium: 'info',
+    low: 'gray'
+  };
+  return <Badge variant={variants[priority]} size="sm">{priority.toUpperCase()}</Badge>;
+}
+
+function UrgencyBadge({ urgency }: { urgency: Position['urgency'] }) {
+  const variants: Record<Position['urgency'], any> = {
+    critical: 'danger',
+    high: 'warning',
+    medium: 'info',
+    low: 'gray'
+  };
+  return <Badge variant={variants[urgency]} size="sm">{urgency.toUpperCase()}</Badge>;
+}
+
 // Helper function to map backend status to frontend status
 const mapBackendStatus = (backendStatus: string): Application['status'] => {
   const statusMap: Record<string, Application['status']> = {
@@ -61,7 +100,6 @@ export function WorkingHRApplications() {
 
   const loadApplications = async () => {
     try {
-      // Fetch from backend API
       const response = await fetch('http://localhost:3000/api/console/hr/applicants', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
@@ -70,7 +108,6 @@ export function WorkingHRApplications() {
 
       if (response.ok) {
         const data = await response.json();
-        // Map backend data to frontend format
         const mappedApplications = data.applicants.map((app: any) => ({
           id: app.id,
           applicantName: `${app.firstName} ${app.lastName}`,
@@ -79,7 +116,7 @@ export function WorkingHRApplications() {
           phone: app.phone,
           submissionDate: app.applicationDate,
           status: mapBackendStatus(app.status),
-          priority: 'medium', // TODO: Calculate based on position urgency
+          priority: 'medium',
           experience: `${app.yearsExperience} years`,
           certifications: app.hasLicense ? ['Licensed'] : [],
           skills: [],
@@ -97,7 +134,7 @@ export function WorkingHRApplications() {
       console.error('Failed to load applications from API, using mock data:', error);
     }
 
-    // Fallback to mock data if API fails
+    // Fallback mock data
     const productionApplications: Application[] = [
       {
         id: 'app_001',
@@ -217,7 +254,6 @@ export function WorkingHRApplications() {
   const handleStatusChange = async (applicationId: string, newStatus: Application['status']) => {
     setIsProcessing(true);
     try {
-      // Map frontend status back to backend status
       const statusMap: Record<Application['status'], string> = {
         'new': 'new',
         'reviewing': 'screening',
@@ -229,7 +265,6 @@ export function WorkingHRApplications() {
       };
       const backendStatus = statusMap[newStatus] || 'new';
 
-      // Call backend API
       const response = await fetch(`http://localhost:3000/api/console/hr/applicants/${applicationId}/status`, {
         method: 'PUT',
         headers: {
@@ -299,39 +334,6 @@ export function WorkingHRApplications() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'new': return '#3B82F6';
-      case 'reviewing': return '#F59E0B';
-      case 'interview_scheduled': return '#8B5CF6';
-      case 'background_check': return '#06B6D4';
-      case 'approved': return '#10B981';
-      case 'rejected': return '#EF4444';
-      case 'hired': return '#059669';
-      default: return '#6B7280';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return '#DC2626';
-      case 'high': return '#EA580C';
-      case 'medium': return '#D97706';
-      case 'low': return '#65A30D';
-      default: return '#6B7280';
-    }
-  };
-
-  const getUrgencyColor = (urgency: string) => {
-    switch (urgency) {
-      case 'critical': return '#DC2626';
-      case 'high': return '#EA580C';
-      case 'medium': return '#D97706';
-      case 'low': return '#65A30D';
-      default: return '#6B7280';
-    }
-  };
-
   const filteredApplications = applications.filter(app => {
     switch (activeTab) {
       case 'new': return app.status === 'new';
@@ -344,333 +346,185 @@ export function WorkingHRApplications() {
   });
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f9fafb',
-      padding: '2rem'
-    }}>
-      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto p-4 md:p-8">
         {/* Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '2rem'
-        }}>
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4 animate-fade-in">
           <div>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: '#1f2937',
-              marginBottom: '0.5rem'
-            }}>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
               👥 HR Application Management
             </h1>
-            <p style={{ color: '#6b7280' }}>
+            <p className="text-gray-600">
               Manage job applications and recruiting pipeline
             </p>
           </div>
-          <a href="/" style={{
-            color: '#2563eb',
-            textDecoration: 'underline'
-          }}>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium transition-colors"
+          >
             ← Back to Home
-          </a>
+          </Link>
         </div>
 
         {/* Open Positions Overview */}
-        <div style={{
-          backgroundColor: 'white',
-          padding: '1.5rem',
-          borderRadius: '0.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb',
-          marginBottom: '2rem'
-        }}>
-          <h3 style={{
-            fontSize: '1.25rem',
-            fontWeight: '600',
-            color: '#1f2937',
-            marginBottom: '1rem'
-          }}>
+        <Card className="mb-8 animate-fade-in">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
             🎯 Open Positions
           </h3>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '1rem'
-          }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {positions.map((position) => (
               <div
                 key={position.id}
-                style={{
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '0.5rem',
-                  padding: '1rem',
-                  backgroundColor: '#f9fafb'
-                }}
+                className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
               >
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '0.5rem'
-                }}>
-                  <h4 style={{
-                    fontSize: '1.125rem',
-                    fontWeight: '600',
-                    color: '#1f2937'
-                  }}>
+                <div className="flex justify-between items-start mb-3">
+                  <h4 className="text-lg font-semibold text-gray-900">
                     {position.title}
                   </h4>
-                  <span style={{
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '9999px',
-                    fontSize: '0.75rem',
-                    fontWeight: '500',
-                    backgroundColor: `${getUrgencyColor(position.urgency)}20`,
-                    color: getUrgencyColor(position.urgency)
-                  }}>
-                    {position.urgency.toUpperCase()}
-                  </span>
+                  <UrgencyBadge urgency={position.urgency} />
                 </div>
-                <p style={{
-                  fontSize: '0.875rem',
-                  color: '#6b7280',
-                  marginBottom: '0.5rem'
-                }}>
-                  {position.department} • {position.openings} openings
+                <p className="text-sm text-gray-600 mb-2">
+                  {position.department} • {position.openings} opening{position.openings > 1 ? 's' : ''}
                 </p>
-                <div style={{
-                  fontSize: '0.75rem',
-                  color: '#9ca3af'
-                }}>
+                <p className="text-xs text-gray-500">
                   {position.requirements.slice(0, 2).join(', ')}
                   {position.requirements.length > 2 && '...'}
-                </div>
+                </p>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
 
         {/* Application Tabs */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '0.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb'
-        }}>
-          <div style={{
-            display: 'flex',
-            borderBottom: '1px solid #e5e7eb'
-          }}>
-            {[
-              { key: 'new', label: 'New Applications', count: applications.filter(a => a.status === 'new').length },
-              { key: 'reviewing', label: 'Under Review', count: applications.filter(a => a.status === 'reviewing').length },
-              { key: 'scheduled', label: 'Interview Scheduled', count: applications.filter(a => a.status === 'interview_scheduled').length },
-              { key: 'approved', label: 'Approved/Hired', count: applications.filter(a => a.status === 'approved' || a.status === 'hired').length },
-              { key: 'rejected', label: 'Rejected', count: applications.filter(a => a.status === 'rejected').length }
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key as any)}
-                style={{
-                  flex: 1,
-                  padding: '1rem',
-                  backgroundColor: activeTab === tab.key ? '#f3f4f6' : 'white',
-                  color: activeTab === tab.key ? '#1f2937' : '#6b7280',
-                  border: 'none',
-                  borderBottom: activeTab === tab.key ? '2px solid #3B82F6' : '2px solid transparent',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  textAlign: 'center'
-                }}
-              >
-                {tab.label}
-                {tab.count > 0 && (
-                  <span style={{
-                    marginLeft: '0.5rem',
-                    padding: '0.125rem 0.5rem',
-                    backgroundColor: activeTab === tab.key ? '#3B82F6' : '#e5e7eb',
-                    color: activeTab === tab.key ? 'white' : '#6b7280',
-                    borderRadius: '9999px',
-                    fontSize: '0.75rem'
-                  }}>
-                    {tab.count}
+        <Card className="animate-fade-in">
+          <div className="border-b border-gray-200">
+            <div className="flex flex-wrap gap-2 md:gap-0">
+              {[
+                { key: 'new', label: 'New', count: applications.filter(a => a.status === 'new').length },
+                { key: 'reviewing', label: 'Under Review', count: applications.filter(a => a.status === 'reviewing').length },
+                { key: 'scheduled', label: 'Interviews', count: applications.filter(a => a.status === 'interview_scheduled').length },
+                { key: 'approved', label: 'Approved/Hired', count: applications.filter(a => a.status === 'approved' || a.status === 'hired').length },
+                { key: 'rejected', label: 'Rejected', count: applications.filter(a => a.status === 'rejected').length }
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as any)}
+                  className={`flex-1 min-w-fit px-4 py-3 text-sm font-medium border-b-2 transition-all ${
+                    activeTab === tab.key
+                      ? 'border-primary-600 text-primary-600 bg-primary-50'
+                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                  }`}
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    {tab.label}
+                    {tab.count > 0 && (
+                      <Badge variant={activeTab === tab.key ? 'primary' : 'gray'} size="sm">
+                        {tab.count}
+                      </Badge>
+                    )}
                   </span>
-                )}
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Applications List */}
-          <div style={{ padding: '1.5rem' }}>
+          <div className="p-6">
             {filteredApplications.length === 0 ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '2rem',
-                color: '#6b7280'
-              }}>
-                <p>No applications in this category.</p>
+              <div className="text-center py-12 text-gray-500">
+                <p className="text-lg">No applications in this category.</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="space-y-4">
                 {filteredApplications.map((application) => (
                   <div
                     key={application.id}
-                    style={{
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '0.5rem',
-                      padding: '1.5rem',
-                      backgroundColor: 'white'
-                    }}
+                    className="border border-gray-200 rounded-lg p-6 bg-white hover:border-primary-300 hover:shadow-md transition-all"
                   >
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '1rem'
-                    }}>
-                      <div>
-                        <h4 style={{
-                          fontSize: '1.25rem',
-                          fontWeight: '600',
-                          color: '#1f2937',
-                          marginBottom: '0.25rem'
-                        }}>
+                    {/* Application Header */}
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
+                      <div className="flex-1">
+                        <h4 className="text-xl font-semibold text-gray-900 mb-1">
                           {application.applicantName}
                         </h4>
-                        <p style={{
-                          fontSize: '0.875rem',
-                          color: '#6b7280'
-                        }}>
+                        <p className="text-sm text-gray-600">
                           {application.position} • Applied {application.submissionDate}
                         </p>
                       </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <span style={{
-                          padding: '0.25rem 0.75rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.75rem',
-                          fontWeight: '500',
-                          backgroundColor: `${getPriorityColor(application.priority)}20`,
-                          color: getPriorityColor(application.priority)
-                        }}>
-                          {application.priority.toUpperCase()}
-                        </span>
-                        <span style={{
-                          padding: '0.5rem 1rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.875rem',
-                          fontWeight: '500',
-                          backgroundColor: `${getStatusColor(application.status)}20`,
-                          color: getStatusColor(application.status)
-                        }}>
-                          {application.status.replace('_', ' ').toUpperCase()}
-                        </span>
+                      <div className="flex gap-2 flex-wrap">
+                        <PriorityBadge priority={application.priority} />
+                        <StatusBadge status={application.status} />
                       </div>
                     </div>
 
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                      gap: '1rem',
-                      marginBottom: '1rem'
-                    }}>
+                    {/* Application Details Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                       <div>
-                        <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Contact</p>
-                        <p style={{ fontSize: '0.875rem', color: '#1f2937' }}>{application.email}</p>
-                        <p style={{ fontSize: '0.875rem', color: '#1f2937' }}>{application.phone}</p>
+                        <p className="text-sm font-medium text-gray-500">Contact</p>
+                        <p className="text-sm text-gray-900">{application.email}</p>
+                        <p className="text-sm text-gray-900">{application.phone}</p>
                       </div>
                       <div>
-                        <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Experience</p>
-                        <p style={{ fontSize: '0.875rem', color: '#1f2937' }}>{application.experience}</p>
+                        <p className="text-sm font-medium text-gray-500">Experience</p>
+                        <p className="text-sm text-gray-900">{application.experience}</p>
                       </div>
                       <div>
-                        <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Certifications</p>
-                        <p style={{ fontSize: '0.875rem', color: '#1f2937' }}>
-                          {application.certifications.join(', ')}
-                        </p>
+                        <p className="text-sm font-medium text-gray-500">Certifications</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {application.certifications.map((cert, i) => (
+                            <Badge key={i} variant="success" size="sm">{cert}</Badge>
+                          ))}
+                        </div>
                       </div>
                       {application.interviewDate && (
                         <div>
-                          <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Interview</p>
-                          <p style={{ fontSize: '0.875rem', color: '#1f2937' }}>{application.interviewDate}</p>
+                          <p className="text-sm font-medium text-gray-500">Interview</p>
+                          <p className="text-sm text-gray-900">📅 {application.interviewDate}</p>
                         </div>
                       )}
                       {application.backgroundCheckStatus && (
                         <div>
-                          <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Background Check</p>
-                          <p style={{
-                            fontSize: '0.875rem',
-                            color: application.backgroundCheckStatus === 'cleared' ? '#10B981' :
-                                   application.backgroundCheckStatus === 'flagged' ? '#EF4444' : '#F59E0B'
-                          }}>
+                          <p className="text-sm font-medium text-gray-500">Background Check</p>
+                          <Badge
+                            variant={
+                              application.backgroundCheckStatus === 'cleared' ? 'success' :
+                              application.backgroundCheckStatus === 'flagged' ? 'danger' : 'warning'
+                            }
+                            size="sm"
+                          >
                             {application.backgroundCheckStatus.toUpperCase()}
-                          </p>
+                          </Badge>
                         </div>
                       )}
                     </div>
 
+                    {/* Notes */}
                     {application.notes && (
-                      <div style={{
-                        backgroundColor: '#f9fafb',
-                        padding: '0.75rem',
-                        borderRadius: '0.375rem',
-                        marginBottom: '1rem'
-                      }}>
-                        <p style={{ fontSize: '0.875rem', color: '#374151' }}>{application.notes}</p>
+                      <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                        <p className="text-sm text-gray-700">{application.notes}</p>
                       </div>
                     )}
 
                     {/* Action Buttons */}
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <div className="flex flex-wrap gap-2">
                       {application.status === 'new' && (
                         <>
                           <button
                             onClick={() => handleStatusChange(application.id, 'reviewing')}
                             disabled={isProcessing}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#F59E0B',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: isProcessing ? 'not-allowed' : 'pointer'
-                            }}
+                            className="px-4 py-2 bg-warning-600 text-white rounded-lg text-sm font-medium hover:bg-warning-700 transition-colors disabled:opacity-50"
                           >
                             👁️ Start Review
                           </button>
                           <button
                             onClick={() => handleScheduleInterview(application)}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#8B5CF6',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
+                            className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
                           >
                             📅 Schedule Interview
                           </button>
                           <button
                             onClick={() => handleRejectApplication(application)}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#EF4444',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
+                            className="px-4 py-2 bg-danger-600 text-white rounded-lg text-sm font-medium hover:bg-danger-700 transition-colors"
                           >
                             ❌ Reject
                           </button>
@@ -681,46 +535,19 @@ export function WorkingHRApplications() {
                         <>
                           <button
                             onClick={() => handleScheduleInterview(application)}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#8B5CF6',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
+                            className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
                           >
                             📅 Schedule Interview
                           </button>
                           <button
                             onClick={() => handleBackgroundCheck(application)}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#06B6D4',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
+                            className="px-4 py-2 bg-info-600 text-white rounded-lg text-sm font-medium hover:bg-info-700 transition-colors"
                           >
                             🔍 Background Check
                           </button>
                           <button
                             onClick={() => handleRejectApplication(application)}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#EF4444',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
+                            className="px-4 py-2 bg-danger-600 text-white rounded-lg text-sm font-medium hover:bg-danger-700 transition-colors"
                           >
                             ❌ Reject
                           </button>
@@ -731,46 +558,19 @@ export function WorkingHRApplications() {
                         <>
                           <button
                             onClick={() => alert('📹 Starting video interview...')}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#8B5CF6',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
+                            className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
                           >
                             📹 Join Interview
                           </button>
                           <button
                             onClick={() => handleBackgroundCheck(application)}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#06B6D4',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
+                            className="px-4 py-2 bg-info-600 text-white rounded-lg text-sm font-medium hover:bg-info-700 transition-colors"
                           >
                             🔍 Background Check
                           </button>
                           <button
                             onClick={() => handleSendOffer(application)}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#10B981',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
+                            className="px-4 py-2 bg-success-600 text-white rounded-lg text-sm font-medium hover:bg-success-700 transition-colors"
                           >
                             💼 Send Offer
                           </button>
@@ -781,32 +581,18 @@ export function WorkingHRApplications() {
                         <>
                           <button
                             onClick={() => alert('🔍 Background check details:\n\nProvider: Sterling Talent Solutions\nStatus: Pending\nExpected completion: 2-3 days')}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#06B6D4',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
+                            className="px-4 py-2 bg-info-600 text-white rounded-lg text-sm font-medium hover:bg-info-700 transition-colors"
                           >
                             🔍 Check Status
                           </button>
                           <button
                             onClick={() => handleSendOffer(application)}
                             disabled={application.backgroundCheckStatus !== 'cleared'}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: application.backgroundCheckStatus === 'cleared' ? '#10B981' : '#9ca3af',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: application.backgroundCheckStatus === 'cleared' ? 'pointer' : 'not-allowed'
-                            }}
+                            className={`px-4 py-2 text-white rounded-lg text-sm font-medium transition-colors ${
+                              application.backgroundCheckStatus === 'cleared'
+                                ? 'bg-success-600 hover:bg-success-700'
+                                : 'bg-gray-400 cursor-not-allowed'
+                            }`}
                           >
                             💼 Send Offer
                           </button>
@@ -821,16 +607,7 @@ export function WorkingHRApplications() {
                             ));
                             alert(`🎉 Welcome to the team!\n\nEmployee: ${application.applicantName}\nPosition: ${application.position}\n\nOnboarding checklist initiated.`);
                           }}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            backgroundColor: '#059669',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '0.375rem',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            cursor: 'pointer'
-                          }}
+                          className="px-4 py-2 bg-success-700 text-white rounded-lg text-sm font-medium hover:bg-success-800 transition-colors"
                         >
                           🎉 Mark as Hired
                         </button>
@@ -838,16 +615,7 @@ export function WorkingHRApplications() {
 
                       <button
                         onClick={() => setSelectedApplication(application)}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          backgroundColor: 'white',
-                          color: '#374151',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '0.375rem',
-                          fontSize: '0.875rem',
-                          fontWeight: '500',
-                          cursor: 'pointer'
-                        }}
+                        className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
                       >
                         📄 View Full Application
                       </button>
@@ -857,99 +625,35 @@ export function WorkingHRApplications() {
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* Compliance Notice */}
-        <div style={{
-          backgroundColor: '#f0f9ff',
-          border: '1px solid #bae6fd',
-          borderRadius: '0.5rem',
-          padding: '1rem',
-          marginTop: '2rem'
-        }}>
-          <h4 style={{
-            fontSize: '0.875rem',
-            fontWeight: '600',
-            color: '#0284c7',
-            marginBottom: '0.5rem'
-          }}>
-            🛡️ HIPAA & Employment Compliance
-          </h4>
-          <p style={{
-            fontSize: '0.875rem',
-            color: '#0c4a6e'
-          }}>
-            All background checks include HIPAA training verification. Credentials and certifications are validated through primary sources before hire.
-          </p>
-        </div>
+        <Alert variant="info" title="🛡️ HIPAA & Employment Compliance" className="mt-8 animate-fade-in">
+          All background checks include HIPAA training verification. Credentials and certifications are validated through primary sources before hire.
+        </Alert>
 
         {/* Application Details Modal */}
         {selectedApplication && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}>
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '0.5rem',
-              padding: '2rem',
-              maxWidth: '700px',
-              width: '90%',
-              maxHeight: '80vh',
-              overflowY: 'auto',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '1.5rem',
-                borderBottom: '1px solid #e5e7eb',
-                paddingBottom: '1rem'
-              }}>
-                <h2 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  color: '#1f2937'
-                }}>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="bg-white rounded-lg p-6 md:p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+              {/* Modal Header */}
+              <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-900">
                   Application Details - {selectedApplication.applicantName}
                 </h2>
                 <button
                   onClick={() => setSelectedApplication(null)}
-                  style={{
-                    backgroundColor: '#f3f4f6',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '2rem',
-                    height: '2rem',
-                    cursor: 'pointer',
-                    fontSize: '1rem'
-                  }}
+                  className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
                 >
                   ✕
                 </button>
               </div>
 
-              <div style={{ display: 'grid', gap: '1.5rem' }}>
+              <div className="space-y-6">
                 {/* Personal Information */}
-                <div style={{
-                  backgroundColor: '#f9fafb',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #e5e7eb'
-                }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.75rem' }}>
-                    Personal Information
-                  </h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.875rem' }}>
+                <Card>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div><strong>Full Name:</strong> {selectedApplication.applicantName}</div>
                     <div><strong>Email:</strong> {selectedApplication.email}</div>
                     <div><strong>Phone:</strong> {selectedApplication.phone}</div>
@@ -957,19 +661,12 @@ export function WorkingHRApplications() {
                     <div><strong>Date of Birth:</strong> March 15, 1985</div>
                     <div><strong>SSN:</strong> ***-**-{Math.floor(Math.random() * 9000) + 1000}</div>
                   </div>
-                </div>
+                </Card>
 
                 {/* Position & Experience */}
-                <div style={{
-                  backgroundColor: '#f0f9ff',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #bae6fd'
-                }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.75rem' }}>
-                    Position & Experience
-                  </h3>
-                  <div style={{ display: 'grid', gap: '0.75rem', fontSize: '0.875rem' }}>
+                <Card className="bg-info-50 border-info-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Position & Experience</h3>
+                  <div className="space-y-2 text-sm">
                     <div><strong>Applied Position:</strong> {selectedApplication.position}</div>
                     <div><strong>Department:</strong> {positions.find(p => p.title === selectedApplication.position)?.department}</div>
                     <div><strong>Years of Experience:</strong> {selectedApplication.experience}</div>
@@ -978,76 +675,38 @@ export function WorkingHRApplications() {
                     <div><strong>Salary Expectation:</strong> {selectedApplication.expectedSalary}</div>
                     <div><strong>Availability:</strong> {selectedApplication.availability}</div>
                   </div>
-                </div>
+                </Card>
 
                 {/* Certifications & Skills */}
-                <div style={{
-                  backgroundColor: '#f0fdf4',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #bbf7d0'
-                }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.75rem' }}>
-                    Certifications & Skills
-                  </h3>
-                  <div style={{ marginBottom: '1rem' }}>
-                    <p style={{ fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>Current Certifications:</p>
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {selectedApplication.certifications.map((cert, index) => (
-                        <span key={index} style={{
-                          backgroundColor: '#dcfce7',
-                          color: '#166534',
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.75rem',
-                          fontWeight: '500'
-                        }}>
-                          {cert}
-                        </span>
-                      ))}
+                <Card className="bg-success-50 border-success-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Certifications & Skills</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-2">Current Certifications:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedApplication.certifications.map((cert, i) => (
+                          <Badge key={i} variant="success">{cert}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-2">Core Skills:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedApplication.skills.map((skill, i) => (
+                          <Badge key={i} variant="info">{skill}</Badge>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <p style={{ fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>Core Skills:</p>
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {selectedApplication.skills.map((skill, index) => (
-                        <span key={index} style={{
-                          backgroundColor: '#e0f2fe',
-                          color: '#0c4a6e',
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.75rem',
-                          fontWeight: '500'
-                        }}>
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                </Card>
 
-                {/* Application Status & History */}
-                <div style={{
-                  backgroundColor: '#fefce8',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #fef08a'
-                }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.75rem' }}>
-                    Application Status & Timeline
-                  </h3>
-                  <div style={{ display: 'grid', gap: '0.5rem', fontSize: '0.875rem' }}>
-                    <div><strong>Current Status:</strong>
-                      <span style={{
-                        backgroundColor: `${getStatusColor(selectedApplication.status)}20`,
-                        color: getStatusColor(selectedApplication.status),
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '9999px',
-                        fontSize: '0.75rem',
-                        marginLeft: '0.5rem'
-                      }}>
-                        {selectedApplication.status.replace('_', ' ').toUpperCase()}
-                      </span>
+                {/* Application Status */}
+                <Card className="bg-warning-50 border-warning-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Application Status & Timeline</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <strong>Current Status:</strong>
+                      <StatusBadge status={selectedApplication.status} />
                     </div>
                     <div><strong>Application Date:</strong> {selectedApplication.applicationDate}</div>
                     <div><strong>Source:</strong> {selectedApplication.source}</div>
@@ -1058,64 +717,38 @@ export function WorkingHRApplications() {
                       <div><strong>Background Check:</strong> {selectedApplication.backgroundCheckStatus} (Started: {selectedApplication.backgroundCheckDate})</div>
                     )}
                   </div>
-                </div>
+                </Card>
 
                 {/* References */}
-                <div style={{
-                  backgroundColor: '#f3f4f6',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #d1d5db'
-                }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.75rem' }}>
-                    Professional References
-                  </h3>
-                  <div style={{ display: 'grid', gap: '0.75rem' }}>
-                    <div style={{ padding: '0.5rem', backgroundColor: 'white', borderRadius: '0.25rem' }}>
-                      <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#1f2937' }}>Dr. Sarah Mitchell, RN Supervisor</p>
-                      <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>Columbus Regional Medical Center • (614) 555-0901</p>
-                      <p style={{ fontSize: '0.75rem', color: '#059669' }}>✓ Reference verified - Excellent work ethic and patient care</p>
+                <Card>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Professional References</h3>
+                  <div className="space-y-3">
+                    <div className="p-3 bg-success-50 rounded-lg">
+                      <p className="text-sm font-medium text-gray-900">Dr. Sarah Mitchell, RN Supervisor</p>
+                      <p className="text-xs text-gray-600">Columbus Regional Medical Center • (614) 555-0901</p>
+                      <p className="text-xs text-success-600 mt-1">✓ Reference verified - Excellent work ethic and patient care</p>
                     </div>
-                    <div style={{ padding: '0.5rem', backgroundColor: 'white', borderRadius: '0.25rem' }}>
-                      <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#1f2937' }}>James Rodriguez, Department Manager</p>
-                      <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>Home Care Solutions • (614) 555-0902</p>
-                      <p style={{ fontSize: '0.75rem', color: '#059669' }}>✓ Reference verified - Highly recommended for home health role</p>
+                    <div className="p-3 bg-success-50 rounded-lg">
+                      <p className="text-sm font-medium text-gray-900">James Rodriguez, Department Manager</p>
+                      <p className="text-xs text-gray-600">Home Care Solutions • (614) 555-0902</p>
+                      <p className="text-xs text-success-600 mt-1">✓ Reference verified - Highly recommended for home health role</p>
                     </div>
                   </div>
-                </div>
+                </Card>
 
-                {/* Notes & Comments */}
-                <div style={{
-                  backgroundColor: '#fff7ed',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #fed7aa'
-                }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.75rem' }}>
-                    Interview Notes & Comments
-                  </h3>
-                  <div style={{ fontSize: '0.875rem', color: '#9a3412' }}>
-                    <p style={{ marginBottom: '0.5rem' }}>
-                      <strong>HR Notes:</strong> Strong candidate with excellent references. Patient care experience in both hospital and home settings. Shows genuine interest in home health mission.
-                    </p>
-                    <p style={{ marginBottom: '0.5rem' }}>
-                      <strong>Interview Feedback:</strong> Articulate communicator, demonstrates empathy and professionalism. Asked thoughtful questions about patient population and care protocols.
-                    </p>
-                    <p>
-                      <strong>Next Steps:</strong> Recommend for background check and reference verification. Strong candidate for immediate hire upon clearance.
-                    </p>
+                {/* Notes */}
+                <Card className="bg-orange-50 border-orange-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Interview Notes & Comments</h3>
+                  <div className="text-sm text-gray-700 space-y-2">
+                    <p><strong>HR Notes:</strong> Strong candidate with excellent references. Patient care experience in both hospital and home settings. Shows genuine interest in home health mission.</p>
+                    <p><strong>Interview Feedback:</strong> Articulate communicator, demonstrates empathy and professionalism. Asked thoughtful questions about patient population and care protocols.</p>
+                    <p><strong>Next Steps:</strong> Recommend for background check and reference verification. Strong candidate for immediate hire upon clearance.</p>
                   </div>
-                </div>
+                </Card>
               </div>
 
-              <div style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '0.5rem',
-                marginTop: '1.5rem',
-                paddingTop: '1rem',
-                borderTop: '1px solid #e5e7eb'
-              }}>
+              {/* Modal Actions */}
+              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                 {selectedApplication.status === 'new' && (
                   <>
                     <button
@@ -1123,16 +756,7 @@ export function WorkingHRApplications() {
                         setSelectedApplication(null);
                         handleStatusChange(selectedApplication.id, 'reviewing');
                       }}
-                      style={{
-                        padding: '0.75rem 1rem',
-                        backgroundColor: '#2563eb',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '0.25rem',
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        cursor: 'pointer'
-                      }}
+                      className="px-6 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors"
                     >
                       ✓ Move to Review
                     </button>
@@ -1141,16 +765,7 @@ export function WorkingHRApplications() {
                         setSelectedApplication(null);
                         handleRejectApplication(selectedApplication);
                       }}
-                      style={{
-                        padding: '0.75rem 1rem',
-                        backgroundColor: '#dc2626',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '0.25rem',
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        cursor: 'pointer'
-                      }}
+                      className="px-6 py-2 bg-danger-600 text-white rounded-lg font-medium hover:bg-danger-700 transition-colors"
                     >
                       ✗ Reject
                     </button>
@@ -1162,32 +777,14 @@ export function WorkingHRApplications() {
                       setSelectedApplication(null);
                       handleScheduleInterview(selectedApplication);
                     }}
-                    style={{
-                      padding: '0.75rem 1rem',
-                      backgroundColor: '#059669',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '0.25rem',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      cursor: 'pointer'
-                    }}
+                    className="px-6 py-2 bg-success-600 text-white rounded-lg font-medium hover:bg-success-700 transition-colors"
                   >
                     📅 Schedule Interview
                   </button>
                 )}
                 <button
                   onClick={() => setSelectedApplication(null)}
-                  style={{
-                    padding: '0.75rem 1rem',
-                    backgroundColor: '#6b7280',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '0.25rem',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    cursor: 'pointer'
-                  }}
+                  className="px-6 py-2 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
                 >
                   Close
                 </button>
