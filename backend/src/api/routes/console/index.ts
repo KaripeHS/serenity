@@ -23,6 +23,7 @@ import dispatchRouter from './dispatch';
 import billingRouter from './billing';
 import podScorecardRouter from './pod-scorecard';
 import otAnalysisRouter from './ot-analysis';
+import aiAgentsRouter from './ai-agents';
 
 const router = Router();
 
@@ -76,5 +77,8 @@ router.use('/dispatch', dispatchRouter);
 
 // Billing and claims routes
 router.use('/billing', billingRouter);
+
+// AI agents routes
+router.use('/ai', aiAgentsRouter);
 
 export { router as consoleRouter };
