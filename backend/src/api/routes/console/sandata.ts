@@ -8,27 +8,26 @@
 import { Router, Response } from 'express';
 import { AuthenticatedRequest } from '../../middleware/auth';
 import { ApiErrors } from '../../middleware/error-handler';
-import { getSandataIndividualsService } from '../../../services/sandata/individuals.service';
-import { getSandataEmployeesService } from '../../../services/sandata/employees.service';
-import { getSandataVisitsService } from '../../../services/sandata/visits.service';
+import { getOhioSubmissionOrchestrator } from '../../../services/sandata/ohio-submission-orchestrator.service';
 import { getSandataCorrectionsService } from '../../../services/sandata/corrections.service';
 import { getSandataRepository } from '../../../services/sandata/repositories/sandata.repository';
 import { getDbClient } from '../../../database/client';
+import type { ClientData } from '../../../services/sandata/ohio-patient-builder.service';
+import type { StaffData } from '../../../services/sandata/ohio-staff-builder.service';
+import type { EVVRecordData, PatientData, StaffData as VisitStaffData } from '../../../services/sandata/ohio-visit-builder.service';
 
 const router = Router();
-const individualsService = getSandataIndividualsService();
-const employeesService = getSandataEmployeesService();
-const visitsService = getSandataVisitsService();
+const orchestrator = getOhioSubmissionOrchestrator();
 const correctionsService = getSandataCorrectionsService();
 const repository = getSandataRepository(getDbClient());
 
 /**
- * POST /api/console/sandata/individuals/sync
- * Sync a client to Sandata Individuals feed
+ * POST /api/console/sandata/patients/sync
+ * Sync a patient to Sandata using Ohio Alt-EVV v4.3 spec
  */
-router.post('/individuals/sync', async (req: AuthenticatedRequest, res: Response, next) => {
+router.post('/patients/sync', async (req: AuthenticatedRequest, res: Response, next) => {
   try {
-    const { clientId, forceUpdate, dryRun } = req.body;
+    const { clientId, forceUpdate } = req.body;
 
     if (!clientId) {
       throw ApiErrors.badRequest('clientId is required');
@@ -40,30 +39,29 @@ router.post('/individuals/sync', async (req: AuthenticatedRequest, res: Response
       throw ApiErrors.notFound('Client');
     }
 
-    // Sync to Sandata
-    const result = await individualsService.syncIndividual(
-      {
-        id: client.id,
-        firstName: client.first_name,
-        lastName: client.last_name,
-        dateOfBirth: client.date_of_birth,
-        medicaidNumber: client.medicaid_number || undefined,
-        sandataClientId: client.sandata_client_id || null,
-        evvConsentDate: client.evv_consent_date || null,
-        evvConsentStatus: client.evv_consent_status || null,
-        addressLine1: client.address_line_1,
-        city: client.city,
-        state: client.state,
-        zipCode: client.zip_code,
-        phoneNumber: client.phone_number,
-        email: client.email,
-        status: client.status,
-        organizationId: client.organization_id,
-        createdAt: client.created_at,
-        updatedAt: client.updated_at,
-      },
-      { forceUpdate, dryRun }
-    );
+    // Map to Ohio ClientData structure
+    const clientData: ClientData = {
+      id: client.id,
+      organizationId: client.organization_id,
+      firstName: client.first_name,
+      lastName: client.last_name,
+      middleName: client.middle_name || undefined,
+      dateOfBirth: new Date(client.date_of_birth),
+      gender: (client.gender as 'M' | 'F' | 'U') || undefined,
+      medicaidNumber: client.medicaid_number || undefined,
+      addressLine1: client.address_line_1 || undefined,
+      addressLine2: client.address_line_2 || undefined,
+      city: client.city || undefined,
+      state: client.state || undefined,
+      zipCode: client.zip_code || undefined,
+      phoneNumber: client.phone_number || undefined,
+      email: client.email || undefined,
+    };
+
+    // Submit to Sandata using Ohio orchestrator
+    const result = await orchestrator.submitPatient(clientData, {
+      generateNewSequenceId: forceUpdate,
+    });
 
     res.json(result);
   } catch (error) {
@@ -72,12 +70,12 @@ router.post('/individuals/sync', async (req: AuthenticatedRequest, res: Response
 });
 
 /**
- * POST /api/console/sandata/employees/sync
- * Sync a caregiver to Sandata Employees feed
+ * POST /api/console/sandata/staff/sync
+ * Sync a staff member to Sandata using Ohio Alt-EVV v4.3 spec
  */
-router.post('/employees/sync', async (req: AuthenticatedRequest, res: Response, next) => {
+router.post('/staff/sync', async (req: AuthenticatedRequest, res: Response, next) => {
   try {
-    const { userId, forceUpdate, dryRun, includeCertifications } = req.body;
+    const { userId, forceUpdate } = req.body;
 
     if (!userId) {
       throw ApiErrors.badRequest('userId is required');
@@ -89,31 +87,32 @@ router.post('/employees/sync', async (req: AuthenticatedRequest, res: Response, 
       throw ApiErrors.notFound('User');
     }
 
-    // Sync to Sandata
-    const result = await employeesService.syncEmployee(
-      {
-        id: user.id,
-        firstName: user.first_name,
-        lastName: user.last_name,
-        dateOfBirth: user.date_of_birth,
-        sandataEmployeeId: user.sandata_employee_id || null,
-        addressLine1: user.address_line_1,
-        city: user.city,
-        state: user.state,
-        zipCode: user.zip_code,
-        phoneNumber: user.phone_number,
-        email: user.email,
-        hireDate: user.hire_date,
-        terminationDate: user.termination_date,
-        status: user.status,
-        role: user.role,
-        organizationId: user.organization_id,
-        createdAt: user.created_at,
-        updatedAt: user.updated_at,
-      },
-      [], // TODO: Fetch certifications from database
-      { forceUpdate, dryRun, includeCertifications }
-    );
+    // Map to Ohio StaffData structure
+    const staffData: StaffData = {
+      id: user.id,
+      organizationId: user.organization_id,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      middleName: user.middle_name || undefined,
+      dateOfBirth: user.date_of_birth ? new Date(user.date_of_birth) : undefined,
+      gender: (user.gender as 'M' | 'F' | 'U') || undefined,
+      ssnEncrypted: user.ssn_encrypted || undefined,
+      hireDate: user.hire_date ? new Date(user.hire_date) : undefined,
+      terminationDate: user.termination_date ? new Date(user.termination_date) : undefined,
+      addressLine1: user.address_line_1 || undefined,
+      addressLine2: user.address_line_2 || undefined,
+      city: user.city || undefined,
+      state: user.state || undefined,
+      zipCode: user.zip_code || undefined,
+      phoneNumber: user.phone_number || undefined,
+      email: user.email || undefined,
+    };
+
+    // Submit to Sandata using Ohio orchestrator
+    const result = await orchestrator.submitStaff(staffData, {
+      generateNewSequenceId: forceUpdate,
+      generateStaffPin: !user.sandata_staff_pin,
+    });
 
     res.json(result);
   } catch (error) {
@@ -123,11 +122,11 @@ router.post('/employees/sync', async (req: AuthenticatedRequest, res: Response, 
 
 /**
  * POST /api/console/sandata/visits/submit
- * Submit a visit to Sandata Visits feed
+ * Submit a visit to Sandata using Ohio Alt-EVV v4.3 spec (with Calls[] array)
  */
 router.post('/visits/submit', async (req: AuthenticatedRequest, res: Response, next) => {
   try {
-    const { evvRecordId, dryRun, skipValidation } = req.body;
+    const { evvRecordId, skipValidation } = req.body;
 
     if (!evvRecordId) {
       throw ApiErrors.badRequest('evvRecordId is required');
@@ -147,47 +146,47 @@ router.post('/visits/submit', async (req: AuthenticatedRequest, res: Response, n
       throw ApiErrors.badRequest('Client or caregiver not found');
     }
 
-    // Submit to Sandata
-    const result = await visitsService.submitVisit(
-      {
-        id: evvRecord.id,
-        shiftId: evvRecord.shift_id,
-        clientId: evvRecord.client_id,
-        caregiverId: evvRecord.caregiver_id,
-        serviceCode: evvRecord.service_code,
-        serviceDate: evvRecord.service_date,
-        clockInTime: evvRecord.clock_in_time,
-        clockOutTime: evvRecord.clock_out_time,
-        clockInLatitude: evvRecord.clock_in_latitude,
-        clockInLongitude: evvRecord.clock_in_longitude,
-        clockOutLatitude: evvRecord.clock_out_latitude,
-        clockOutLongitude: evvRecord.clock_out_longitude,
-        billableUnits: evvRecord.billable_units,
-        authorizationNumber: evvRecord.authorization_number,
-        visitKey: evvRecord.visit_key,
-        sandataVisitId: evvRecord.sandata_visit_id,
-        sandataStatus: evvRecord.sandata_status,
-        sandataSubmittedAt: evvRecord.sandata_submitted_at,
-        sandataRejectedReason: evvRecord.sandata_rejected_reason,
-        organizationId: evvRecord.organization_id,
-        createdAt: evvRecord.created_at,
-        updatedAt: evvRecord.updated_at,
-      },
-      {
-        id: client.id,
-        sandataClientId: client.sandata_client_id,
-        addressLine1: client.address_line_1,
-        city: client.city,
-        state: client.state,
-        zipCode: client.zip_code,
-        evvConsentStatus: client.evv_consent_status,
-      },
-      {
-        id: caregiver.id,
-        sandataEmployeeId: caregiver.sandata_employee_id,
-      },
-      { dryRun, skipValidation }
-    );
+    // Map to Ohio EVVRecordData structure
+    const evvData: EVVRecordData = {
+      id: evvRecord.id,
+      clientId: evvRecord.client_id,
+      caregiverId: evvRecord.caregiver_id,
+      organizationId: evvRecord.organization_id,
+      clockInTime: new Date(evvRecord.clock_in_time),
+      clockOutTime: new Date(evvRecord.clock_out_time),
+      clockInLatitude: evvRecord.clock_in_latitude || undefined,
+      clockInLongitude: evvRecord.clock_in_longitude || undefined,
+      clockOutLatitude: evvRecord.clock_out_latitude || undefined,
+      clockOutLongitude: evvRecord.clock_out_longitude || undefined,
+      serviceDate: new Date(evvRecord.service_date),
+      serviceCode: evvRecord.service_code,
+      modifiers: evvRecord.modifiers || [],
+      units: evvRecord.billable_units || undefined,
+      authorizationNumber: evvRecord.authorization_number || undefined,
+      payer: evvRecord.payer || undefined,
+      payerProgram: evvRecord.payer_program || undefined,
+      clockMethod: evvRecord.clock_method || 'mobile',
+      locationType: evvRecord.location_type || 'home',
+    };
+
+    // Map patient data
+    const patientData: PatientData = {
+      id: client.id,
+      sandataOtherId: client.sandata_other_id || undefined,
+      medicaidNumber: client.medicaid_number || undefined,
+    };
+
+    // Map staff data
+    const staffData: VisitStaffData = {
+      id: caregiver.id,
+      sandataOtherId: caregiver.sandata_other_id || undefined,
+    };
+
+    // Submit to Sandata using Ohio orchestrator
+    // CRITICAL: This builds the Calls[] array with Call In and Call Out
+    const result = await orchestrator.submitVisit(evvData, patientData, staffData, undefined, {
+      skipAppendixGValidation: skipValidation,
+    });
 
     res.json(result);
   } catch (error) {

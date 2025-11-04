@@ -14,6 +14,7 @@
  */
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import { createLogger } from '../../utils/logger';
 import {
   getActiveSandataConfig,
   getSandataBusinessRules,
@@ -39,6 +40,7 @@ export class SandataClient {
   private authToken: SandataAuthToken | null = null;
   private readonly config = getActiveSandataConfig();
   private readonly businessRules = getSandataBusinessRules();
+  private readonly logger = createLogger('sandata-client');
 
   constructor() {
     // Initialize axios instance with base configuration
@@ -52,7 +54,7 @@ export class SandataClient {
       },
     });
 
-    // Request interceptor: Add auth token
+    // Request interceptor: Add auth token and Ohio Alt-EVV headers
     this.axiosInstance.interceptors.request.use(
       async (config) => {
         // Skip auth for token endpoint
@@ -61,6 +63,11 @@ export class SandataClient {
           if (token) {
             config.headers.Authorization = `Bearer ${token.token}`;
           }
+
+          // Add Ohio Alt-EVV v4.3 required headers
+          // CRITICAL: These headers are REQUIRED for all Patient, Staff, and Visit submissions
+          config.headers['BusinessEntityID'] = this.config.businessEntityId;
+          config.headers['BusinessEntityMedicaidIdentifier'] = this.config.providerId;
         }
         return config;
       },

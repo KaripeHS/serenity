@@ -8,11 +8,14 @@
  * - Production secrets stored in AWS Secrets Manager
  */
 
+import { logger } from '../utils/logger';
+
 export interface SandataEnvironmentConfig {
   baseUrl: string;
   clientId: string;
   clientSecret: string;
-  providerId: string;
+  providerId: string; // 7-digit ODME Provider ID (BusinessEntityMedicaidIdentifier)
+  businessEntityId: string; // Sandata's ID for Serenity (assigned during onboarding)
   apiVersion: string;
 }
 
@@ -52,21 +55,23 @@ export interface SandataConfig {
  * - For Phase 2+, real credentials from AWS Secrets Manager
  */
 const sandataConfig: SandataConfig = {
-  // Sandbox environment (Phase 0-1)
+  // Sandbox environment (Phase 0-1) - Ohio Alt-EVV v4.3 UAT
   sandbox: {
-    baseUrl: process.env.SANDATA_SANDBOX_URL || 'https://sandbox-api.sandata.com/v4.3',
+    baseUrl: process.env.SANDATA_SANDBOX_URL || 'https://uat-api.sandata.com',
     clientId: process.env.SANDATA_SANDBOX_CLIENT_ID || 'SERENITY_SANDBOX_CLIENT_ID',
     clientSecret: process.env.SANDATA_SANDBOX_SECRET || 'PLACEHOLDER_SECRET',
-    providerId: process.env.SANDATA_PROVIDER_ID || 'OH_ODME_123456', // PLACEHOLDER
+    providerId: process.env.SANDATA_PROVIDER_ID || '1234567', // PLACEHOLDER - 7-digit ODME Provider ID (BusinessEntityMedicaidIdentifier)
+    businessEntityId: process.env.SANDATA_BUSINESS_ENTITY_ID || 'SERENITY_BE_PLACEHOLDER', // PLACEHOLDER - Sandata's ID for Serenity (BusinessEntityID)
     apiVersion: 'v4.3',
   },
 
-  // Production environment (Phase 2+)
+  // Production environment (Phase 2+) - Ohio Alt-EVV v4.3 Production
   production: {
-    baseUrl: process.env.SANDATA_PRODUCTION_URL || 'https://api.sandata.com/v4.3',
+    baseUrl: process.env.SANDATA_PRODUCTION_URL || 'https://api.sandata.com',
     clientId: process.env.SANDATA_PRODUCTION_CLIENT_ID || 'SERENITY_PROD_CLIENT_ID',
     clientSecret: process.env.SANDATA_PRODUCTION_SECRET || 'PLACEHOLDER_SECRET',
-    providerId: process.env.SANDATA_PROVIDER_ID || 'OH_ODME_123456', // PLACEHOLDER
+    providerId: process.env.SANDATA_PROVIDER_ID || '1234567', // PLACEHOLDER - 7-digit ODME Provider ID (BusinessEntityMedicaidIdentifier)
+    businessEntityId: process.env.SANDATA_BUSINESS_ENTITY_ID || 'SERENITY_BE_PLACEHOLDER', // PLACEHOLDER - Sandata's ID for Serenity (BusinessEntityID)
     apiVersion: 'v4.3',
   },
 
@@ -168,29 +173,27 @@ export function validateSandataConfig(): boolean {
 }
 
 /**
- * Sandata API Endpoints
+ * Sandata API Endpoints - Ohio Alt-EVV v4.3 Specification
+ *
+ * IMPORTANT: Ohio Alt-EVV uses POST-only endpoints for all operations.
+ * Updates are handled by re-POSTing with the same SequenceID.
+ * There are no separate GET/UPDATE/DELETE endpoints.
  */
 export const SANDATA_ENDPOINTS = {
+  // OAuth 2.0 authentication
   auth: '/oauth/token',
-  individuals: {
-    create: '/individuals',
-    update: '/individuals/:id',
-    get: '/individuals/:id',
-    search: '/individuals/search',
-  },
-  employees: {
-    create: '/employees',
-    update: '/employees/:id',
-    get: '/employees/:id',
-    search: '/employees/search',
-  },
-  visits: {
-    create: '/visits',
-    update: '/visits/:id',
-    get: '/visits/:id',
-    search: '/visits/search',
-    void: '/visits/:id/void',
-  },
+
+  // Ohio Alt-EVV v4.3 Alternate Data Collection Interface
+  patient: '/interfaces/intake/patient/v2',     // POST only - create/update patients
+  staff: '/interfaces/intake/staff/v1',         // POST only - create/update staff
+  visit: '/interfaces/intake/visit/v2',         // POST only - create/update/void visits
+
+  // Legacy naming for backwards compatibility (will be removed in Phase 2)
+  individuals: '/interfaces/intake/patient/v2',
+  employees: '/interfaces/intake/staff/v1',
+  visits: '/interfaces/intake/visit/v2',
+
+  // Health check (if available)
   status: '/health',
 } as const;
 
