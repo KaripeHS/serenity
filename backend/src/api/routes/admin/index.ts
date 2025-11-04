@@ -10,6 +10,7 @@ import { requireAuth, requireRole, AuthenticatedRequest } from '../../middleware
 import { ApiErrors } from '../../middleware/error-handler';
 import { getSandataRepository } from '../../../services/sandata/repositories/sandata.repository';
 import { getDbClient } from '../../../database/client';
+import { sandataConfigRouter } from './sandata-config';
 
 const router = Router();
 const repository = getSandataRepository(getDbClient());
@@ -485,5 +486,19 @@ router.get('/metrics', async (req: AuthenticatedRequest, res: Response, next) =>
     next(error);
   }
 });
+
+// ============================================================================
+// SANDATA CONFIGURATION UI (OAuth, Business Rules, Feature Flags)
+// ============================================================================
+
+/**
+ * Mount the Sandata Config Router
+ * Handles:
+ * - GET /api/admin/sandata/config - Get current configuration
+ * - POST /api/admin/sandata/config - Update configuration
+ * - POST /api/admin/sandata/test-connection - Test Sandata credentials
+ * - GET /api/admin/sandata/validation-status - Get validation status
+ */
+router.use('/sandata', sandataConfigRouter);
 
 export { router as adminRouter };

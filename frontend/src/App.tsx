@@ -23,6 +23,7 @@ import { PodManager } from './components/pods/PodManager';
 import { OnCallDispatch } from './components/operations/OnCallDispatch';
 import { DenialWorkflow } from './components/billing/DenialWorkflow';
 import { SystemConfiguration } from './components/admin/SystemConfiguration';
+import { SandataConfigUI } from './components/admin/SandataConfigUI';
 
 // Layouts
 import DashboardLayout from './components/layouts/DashboardLayout';
@@ -73,6 +74,7 @@ function App() {
                       <Route path="dispatch" element={<OnCallDispatch />} />
                       <Route path="denials" element={<DenialWorkflow />} />
                       <Route path="settings" element={<SystemConfiguration />} />
+                      <Route path="sandata-config" element={<SandataConfigUI />} />
 
                       {/* Legacy dashboard routes */}
                       <Route path="legacy/executive" element={<WorkingExecutiveDashboard />} />
