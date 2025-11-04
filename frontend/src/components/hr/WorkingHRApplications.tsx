@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { Card, CardHeader, CardContent, CardTitle } from '../ui/Card';
+import { Badge } from '../ui/Badge';
+import { Button } from '../ui/Button';
+import { Alert, AlertDescription } from '../ui/Alert';
 
 interface Application {
   id: string;
@@ -31,6 +36,57 @@ interface Position {
   openings: number;
   urgency: 'low' | 'medium' | 'high' | 'critical';
   requirements: string[];
+}
+
+// Custom Badge Components for Status/Priority
+function StatusBadge({ status }: { status: Application['status'] }) {
+  const configs = {
+    new: { color: 'bg-blue-100 text-blue-800', icon: '🆕', label: 'NEW' },
+    reviewing: { color: 'bg-amber-100 text-amber-800', icon: '👁️', label: 'REVIEWING' },
+    interview_scheduled: { color: 'bg-purple-100 text-purple-800', icon: '📅', label: 'INTERVIEW SCHEDULED' },
+    background_check: { color: 'bg-cyan-100 text-cyan-800', icon: '🔍', label: 'BACKGROUND CHECK' },
+    approved: { color: 'bg-emerald-100 text-emerald-800', icon: '✅', label: 'APPROVED' },
+    rejected: { color: 'bg-red-100 text-red-800', icon: '❌', label: 'REJECTED' },
+    hired: { color: 'bg-green-100 text-green-800', icon: '🎉', label: 'HIRED' }
+  };
+  const config = configs[status];
+  return (
+    <Badge className={`${config.color} px-3 py-1`}>
+      {config.icon} {config.label}
+    </Badge>
+  );
+}
+
+function PriorityBadge({ priority }: { priority: Application['priority'] }) {
+  const configs = {
+    urgent: { color: 'bg-red-100 text-red-700', label: 'URGENT' },
+    high: { color: 'bg-orange-100 text-orange-700', label: 'HIGH' },
+    medium: { color: 'bg-yellow-100 text-yellow-700', label: 'MEDIUM' },
+    low: { color: 'bg-lime-100 text-lime-700', label: 'LOW' }
+  };
+  const config = configs[priority];
+  return <Badge className={`${config.color} px-2 py-0.5 text-xs`}>{config.label}</Badge>;
+}
+
+function UrgencyBadge({ urgency }: { urgency: Position['urgency'] }) {
+  const configs = {
+    critical: { color: 'bg-red-100 text-red-700', label: 'CRITICAL' },
+    high: { color: 'bg-orange-100 text-orange-700', label: 'HIGH' },
+    medium: { color: 'bg-yellow-100 text-yellow-700', label: 'MEDIUM' },
+    low: { color: 'bg-lime-100 text-lime-700', label: 'LOW' }
+  };
+  const config = configs[urgency];
+  return <Badge className={`${config.color} px-2 py-0.5 text-xs`}>{config.label}</Badge>;
+}
+
+function BackgroundCheckBadge({ status }: { status: 'pending' | 'cleared' | 'flagged' }) {
+  const configs = {
+    pending: { color: 'text-amber-600', label: 'PENDING' },
+    cleared: { color: 'text-emerald-600', label: 'CLEARED' },
+    flagged: { color: 'text-red-600', label: 'FLAGGED' }
+  };
+  const config = configs[status];
+  return <span className={`text-sm font-medium ${config.color}`}>{config.label}</span>;
 }
 
 export function WorkingHRApplications() {
@@ -223,39 +279,6 @@ export function WorkingHRApplications() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'new': return '#3B82F6';
-      case 'reviewing': return '#F59E0B';
-      case 'interview_scheduled': return '#8B5CF6';
-      case 'background_check': return '#06B6D4';
-      case 'approved': return '#10B981';
-      case 'rejected': return '#EF4444';
-      case 'hired': return '#059669';
-      default: return '#6B7280';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return '#DC2626';
-      case 'high': return '#EA580C';
-      case 'medium': return '#D97706';
-      case 'low': return '#65A30D';
-      default: return '#6B7280';
-    }
-  };
-
-  const getUrgencyColor = (urgency: string) => {
-    switch (urgency) {
-      case 'critical': return '#DC2626';
-      case 'high': return '#EA580C';
-      case 'medium': return '#D97706';
-      case 'low': return '#65A30D';
-      default: return '#6B7280';
-    }
-  };
-
   const filteredApplications = applications.filter(app => {
     switch (activeTab) {
       case 'new': return app.status === 'new';
@@ -268,126 +291,57 @@ export function WorkingHRApplications() {
   });
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f9fafb',
-      padding: '2rem'
-    }}>
-      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '2rem'
-        }}>
+        <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: '#1f2937',
-              marginBottom: '0.5rem'
-            }}>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               👥 HR Application Management
             </h1>
-            <p style={{ color: '#6b7280' }}>
+            <p className="text-gray-600">
               Manage job applications and recruiting pipeline
             </p>
           </div>
-          <a href="/" style={{
-            color: '#2563eb',
-            textDecoration: 'underline'
-          }}>
+          <Link to="/" className="text-blue-600 underline hover:text-blue-700">
             ← Back to Home
-          </a>
+          </Link>
         </div>
 
         {/* Open Positions Overview */}
-        <div style={{
-          backgroundColor: 'white',
-          padding: '1.5rem',
-          borderRadius: '0.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb',
-          marginBottom: '2rem'
-        }}>
-          <h3 style={{
-            fontSize: '1.25rem',
-            fontWeight: '600',
-            color: '#1f2937',
-            marginBottom: '1rem'
-          }}>
-            🎯 Open Positions
-          </h3>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '1rem'
-          }}>
-            {positions.map((position) => (
-              <div
-                key={position.id}
-                style={{
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '0.5rem',
-                  padding: '1rem',
-                  backgroundColor: '#f9fafb'
-                }}
-              >
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '0.5rem'
-                }}>
-                  <h4 style={{
-                    fontSize: '1.125rem',
-                    fontWeight: '600',
-                    color: '#1f2937'
-                  }}>
-                    {position.title}
-                  </h4>
-                  <span style={{
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '9999px',
-                    fontSize: '0.75rem',
-                    fontWeight: '500',
-                    backgroundColor: `${getUrgencyColor(position.urgency)}20`,
-                    color: getUrgencyColor(position.urgency)
-                  }}>
-                    {position.urgency.toUpperCase()}
-                  </span>
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>🎯 Open Positions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {positions.map((position) => (
+                <div
+                  key={position.id}
+                  className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="text-lg font-semibold text-gray-900">
+                      {position.title}
+                    </h4>
+                    <UrgencyBadge urgency={position.urgency} />
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {position.department} • {position.openings} openings
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {position.requirements.slice(0, 2).join(', ')}
+                    {position.requirements.length > 2 && '...'}
+                  </p>
                 </div>
-                <p style={{
-                  fontSize: '0.875rem',
-                  color: '#6b7280',
-                  marginBottom: '0.5rem'
-                }}>
-                  {position.department} • {position.openings} openings
-                </p>
-                <div style={{
-                  fontSize: '0.75rem',
-                  color: '#9ca3af'
-                }}>
-                  {position.requirements.slice(0, 2).join(', ')}
-                  {position.requirements.length > 2 && '...'}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Application Tabs */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '0.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb'
-        }}>
-          <div style={{
-            display: 'flex',
-            borderBottom: '1px solid #e5e7eb'
-          }}>
+        <Card>
+          <div className="flex border-b border-gray-200">
             {[
               { key: 'new', label: 'New Applications', count: applications.filter(a => a.status === 'new').length },
               { key: 'reviewing', label: 'Under Review', count: applications.filter(a => a.status === 'reviewing').length },
@@ -398,482 +352,251 @@ export function WorkingHRApplications() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as any)}
-                style={{
-                  flex: 1,
-                  padding: '1rem',
-                  backgroundColor: activeTab === tab.key ? '#f3f4f6' : 'white',
-                  color: activeTab === tab.key ? '#1f2937' : '#6b7280',
-                  border: 'none',
-                  borderBottom: activeTab === tab.key ? '2px solid #3B82F6' : '2px solid transparent',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  textAlign: 'center'
-                }}
+                className={`flex-1 px-4 py-4 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === tab.key
+                    ? 'bg-gray-50 text-gray-900 border-blue-600'
+                    : 'bg-white text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50'
+                }`}
               >
                 {tab.label}
                 {tab.count > 0 && (
-                  <span style={{
-                    marginLeft: '0.5rem',
-                    padding: '0.125rem 0.5rem',
-                    backgroundColor: activeTab === tab.key ? '#3B82F6' : '#e5e7eb',
-                    color: activeTab === tab.key ? 'white' : '#6b7280',
-                    borderRadius: '9999px',
-                    fontSize: '0.75rem'
-                  }}>
+                  <Badge className={`ml-2 ${
+                    activeTab === tab.key ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                  }`}>
                     {tab.count}
-                  </span>
+                  </Badge>
                 )}
               </button>
             ))}
           </div>
 
           {/* Applications List */}
-          <div style={{ padding: '1.5rem' }}>
+          <CardContent>
             {filteredApplications.length === 0 ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '2rem',
-                color: '#6b7280'
-              }}>
+              <div className="text-center py-8 text-gray-600">
                 <p>No applications in this category.</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="space-y-4">
                 {filteredApplications.map((application) => (
-                  <div
-                    key={application.id}
-                    style={{
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '0.5rem',
-                      padding: '1.5rem',
-                      backgroundColor: 'white'
-                    }}
-                  >
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '1rem'
-                    }}>
-                      <div>
-                        <h4 style={{
-                          fontSize: '1.25rem',
-                          fontWeight: '600',
-                          color: '#1f2937',
-                          marginBottom: '0.25rem'
-                        }}>
-                          {application.applicantName}
-                        </h4>
-                        <p style={{
-                          fontSize: '0.875rem',
-                          color: '#6b7280'
-                        }}>
-                          {application.position} • Applied {application.submissionDate}
-                        </p>
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <span style={{
-                          padding: '0.25rem 0.75rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.75rem',
-                          fontWeight: '500',
-                          backgroundColor: `${getPriorityColor(application.priority)}20`,
-                          color: getPriorityColor(application.priority)
-                        }}>
-                          {application.priority.toUpperCase()}
-                        </span>
-                        <span style={{
-                          padding: '0.5rem 1rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.875rem',
-                          fontWeight: '500',
-                          backgroundColor: `${getStatusColor(application.status)}20`,
-                          color: getStatusColor(application.status)
-                        }}>
-                          {application.status.replace('_', ' ').toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                      gap: '1rem',
-                      marginBottom: '1rem'
-                    }}>
-                      <div>
-                        <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Contact</p>
-                        <p style={{ fontSize: '0.875rem', color: '#1f2937' }}>{application.email}</p>
-                        <p style={{ fontSize: '0.875rem', color: '#1f2937' }}>{application.phone}</p>
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Experience</p>
-                        <p style={{ fontSize: '0.875rem', color: '#1f2937' }}>{application.experience}</p>
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Certifications</p>
-                        <p style={{ fontSize: '0.875rem', color: '#1f2937' }}>
-                          {application.certifications.join(', ')}
-                        </p>
-                      </div>
-                      {application.interviewDate && (
+                  <Card key={application.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-center mb-4">
                         <div>
-                          <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Interview</p>
-                          <p style={{ fontSize: '0.875rem', color: '#1f2937' }}>{application.interviewDate}</p>
-                        </div>
-                      )}
-                      {application.backgroundCheckStatus && (
-                        <div>
-                          <p style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Background Check</p>
-                          <p style={{
-                            fontSize: '0.875rem',
-                            color: application.backgroundCheckStatus === 'cleared' ? '#10B981' :
-                                   application.backgroundCheckStatus === 'flagged' ? '#EF4444' : '#F59E0B'
-                          }}>
-                            {application.backgroundCheckStatus.toUpperCase()}
+                          <h4 className="text-xl font-semibold text-gray-900 mb-1">
+                            {application.applicantName}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {application.position} • Applied {application.submissionDate}
                           </p>
                         </div>
-                      )}
-                    </div>
-
-                    {application.notes && (
-                      <div style={{
-                        backgroundColor: '#f9fafb',
-                        padding: '0.75rem',
-                        borderRadius: '0.375rem',
-                        marginBottom: '1rem'
-                      }}>
-                        <p style={{ fontSize: '0.875rem', color: '#374151' }}>{application.notes}</p>
+                        <div className="flex gap-2 items-center">
+                          <PriorityBadge priority={application.priority} />
+                          <StatusBadge status={application.status} />
+                        </div>
                       </div>
-                    )}
 
-                    {/* Action Buttons */}
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {application.status === 'new' && (
-                        <>
-                          <button
-                            onClick={() => handleStatusChange(application.id, 'reviewing')}
-                            disabled={isProcessing}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#F59E0B',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: isProcessing ? 'not-allowed' : 'pointer'
-                            }}
-                          >
-                            👁️ Start Review
-                          </button>
-                          <button
-                            onClick={() => handleScheduleInterview(application)}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#8B5CF6',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            📅 Schedule Interview
-                          </button>
-                          <button
-                            onClick={() => handleRejectApplication(application)}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#EF4444',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            ❌ Reject
-                          </button>
-                        </>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                        <div>
+                          <p className="text-sm text-gray-600 font-medium">Contact</p>
+                          <p className="text-sm text-gray-900">{application.email}</p>
+                          <p className="text-sm text-gray-900">{application.phone}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600 font-medium">Experience</p>
+                          <p className="text-sm text-gray-900">{application.experience}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600 font-medium">Certifications</p>
+                          <p className="text-sm text-gray-900">
+                            {application.certifications.join(', ')}
+                          </p>
+                        </div>
+                        {application.interviewDate && (
+                          <div>
+                            <p className="text-sm text-gray-600 font-medium">Interview</p>
+                            <p className="text-sm text-gray-900">{application.interviewDate}</p>
+                          </div>
+                        )}
+                        {application.backgroundCheckStatus && (
+                          <div>
+                            <p className="text-sm text-gray-600 font-medium">Background Check</p>
+                            <BackgroundCheckBadge status={application.backgroundCheckStatus} />
+                          </div>
+                        )}
+                      </div>
+
+                      {application.notes && (
+                        <div className="bg-gray-50 p-3 rounded-md mb-4">
+                          <p className="text-sm text-gray-700">{application.notes}</p>
+                        </div>
                       )}
 
-                      {application.status === 'reviewing' && (
-                        <>
-                          <button
-                            onClick={() => handleScheduleInterview(application)}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#8B5CF6',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            📅 Schedule Interview
-                          </button>
-                          <button
-                            onClick={() => handleBackgroundCheck(application)}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#06B6D4',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            🔍 Background Check
-                          </button>
-                          <button
-                            onClick={() => handleRejectApplication(application)}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#EF4444',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            ❌ Reject
-                          </button>
-                        </>
-                      )}
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 flex-wrap">
+                        {application.status === 'new' && (
+                          <>
+                            <Button
+                              onClick={() => handleStatusChange(application.id, 'reviewing')}
+                              disabled={isProcessing}
+                              className="bg-amber-600 hover:bg-amber-700"
+                              size="sm"
+                            >
+                              👁️ Start Review
+                            </Button>
+                            <Button
+                              onClick={() => handleScheduleInterview(application)}
+                              className="bg-purple-600 hover:bg-purple-700"
+                              size="sm"
+                            >
+                              📅 Schedule Interview
+                            </Button>
+                            <Button
+                              onClick={() => handleRejectApplication(application)}
+                              className="bg-red-600 hover:bg-red-700"
+                              size="sm"
+                            >
+                              ❌ Reject
+                            </Button>
+                          </>
+                        )}
 
-                      {application.status === 'interview_scheduled' && (
-                        <>
-                          <button
-                            onClick={() => alert('📹 Starting video interview...')}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#8B5CF6',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            📹 Join Interview
-                          </button>
-                          <button
-                            onClick={() => handleBackgroundCheck(application)}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#06B6D4',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            🔍 Background Check
-                          </button>
-                          <button
-                            onClick={() => handleSendOffer(application)}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#10B981',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            💼 Send Offer
-                          </button>
-                        </>
-                      )}
+                        {application.status === 'reviewing' && (
+                          <>
+                            <Button
+                              onClick={() => handleScheduleInterview(application)}
+                              className="bg-purple-600 hover:bg-purple-700"
+                              size="sm"
+                            >
+                              📅 Schedule Interview
+                            </Button>
+                            <Button
+                              onClick={() => handleBackgroundCheck(application)}
+                              className="bg-cyan-600 hover:bg-cyan-700"
+                              size="sm"
+                            >
+                              🔍 Background Check
+                            </Button>
+                            <Button
+                              onClick={() => handleRejectApplication(application)}
+                              className="bg-red-600 hover:bg-red-700"
+                              size="sm"
+                            >
+                              ❌ Reject
+                            </Button>
+                          </>
+                        )}
 
-                      {application.status === 'background_check' && (
-                        <>
-                          <button
-                            onClick={() => alert('🔍 Background check details:\n\nProvider: Sterling Talent Solutions\nStatus: Pending\nExpected completion: 2-3 days')}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: '#06B6D4',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            🔍 Check Status
-                          </button>
-                          <button
-                            onClick={() => handleSendOffer(application)}
-                            disabled={application.backgroundCheckStatus !== 'cleared'}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              backgroundColor: application.backgroundCheckStatus === 'cleared' ? '#10B981' : '#9ca3af',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: application.backgroundCheckStatus === 'cleared' ? 'pointer' : 'not-allowed'
-                            }}
-                          >
-                            💼 Send Offer
-                          </button>
-                        </>
-                      )}
+                        {application.status === 'interview_scheduled' && (
+                          <>
+                            <Button
+                              onClick={() => alert('📹 Starting video interview...')}
+                              className="bg-purple-600 hover:bg-purple-700"
+                              size="sm"
+                            >
+                              📹 Join Interview
+                            </Button>
+                            <Button
+                              onClick={() => handleBackgroundCheck(application)}
+                              className="bg-cyan-600 hover:bg-cyan-700"
+                              size="sm"
+                            >
+                              🔍 Background Check
+                            </Button>
+                            <Button
+                              onClick={() => handleSendOffer(application)}
+                              className="bg-emerald-600 hover:bg-emerald-700"
+                              size="sm"
+                            >
+                              💼 Send Offer
+                            </Button>
+                          </>
+                        )}
 
-                      {application.status === 'approved' && (
-                        <button
-                          onClick={() => {
-                            setApplications(prev => prev.map(app =>
-                              app.id === application.id ? { ...app, status: 'hired' } : app
-                            ));
-                            alert(`🎉 Welcome to the team!\n\nEmployee: ${application.applicantName}\nPosition: ${application.position}\n\nOnboarding checklist initiated.`);
-                          }}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            backgroundColor: '#059669',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '0.375rem',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            cursor: 'pointer'
-                          }}
+                        {application.status === 'background_check' && (
+                          <>
+                            <Button
+                              onClick={() => alert('🔍 Background check details:\n\nProvider: Sterling Talent Solutions\nStatus: Pending\nExpected completion: 2-3 days')}
+                              className="bg-cyan-600 hover:bg-cyan-700"
+                              size="sm"
+                            >
+                              🔍 Check Status
+                            </Button>
+                            <Button
+                              onClick={() => handleSendOffer(application)}
+                              disabled={application.backgroundCheckStatus !== 'cleared'}
+                              className="bg-emerald-600 hover:bg-emerald-700"
+                              size="sm"
+                            >
+                              💼 Send Offer
+                            </Button>
+                          </>
+                        )}
+
+                        {application.status === 'approved' && (
+                          <Button
+                            onClick={() => {
+                              setApplications(prev => prev.map(app =>
+                                app.id === application.id ? { ...app, status: 'hired' } : app
+                              ));
+                              alert(`🎉 Welcome to the team!\n\nEmployee: ${application.applicantName}\nPosition: ${application.position}\n\nOnboarding checklist initiated.`);
+                            }}
+                            className="bg-green-600 hover:bg-green-700"
+                            size="sm"
+                          >
+                            🎉 Mark as Hired
+                          </Button>
+                        )}
+
+                        <Button
+                          onClick={() => setSelectedApplication(application)}
+                          variant="outline"
+                          size="sm"
                         >
-                          🎉 Mark as Hired
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => setSelectedApplication(application)}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          backgroundColor: 'white',
-                          color: '#374151',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '0.375rem',
-                          fontSize: '0.875rem',
-                          fontWeight: '500',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        📄 View Full Application
-                      </button>
-                    </div>
-                  </div>
+                          📄 View Full Application
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Compliance Notice */}
-        <div style={{
-          backgroundColor: '#f0f9ff',
-          border: '1px solid #bae6fd',
-          borderRadius: '0.5rem',
-          padding: '1rem',
-          marginTop: '2rem'
-        }}>
-          <h4 style={{
-            fontSize: '0.875rem',
-            fontWeight: '600',
-            color: '#0284c7',
-            marginBottom: '0.5rem'
-          }}>
-            🛡️ HIPAA & Employment Compliance
-          </h4>
-          <p style={{
-            fontSize: '0.875rem',
-            color: '#0c4a6e'
-          }}>
-            All background checks include HIPAA training verification. Credentials and certifications are validated through primary sources before hire.
-          </p>
-        </div>
+        <Alert className="mt-8 bg-blue-50 border-blue-200">
+          <AlertDescription>
+            <h4 className="text-sm font-semibold text-blue-800 mb-1">
+              🛡️ HIPAA & Employment Compliance
+            </h4>
+            <p className="text-sm text-blue-700">
+              All background checks include HIPAA training verification. Credentials and certifications are validated through primary sources before hire.
+            </p>
+          </AlertDescription>
+        </Alert>
 
         {/* Application Details Modal */}
         {selectedApplication && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}>
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '0.5rem',
-              padding: '2rem',
-              maxWidth: '700px',
-              width: '90%',
-              maxHeight: '80vh',
-              overflowY: 'auto',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '1.5rem',
-                borderBottom: '1px solid #e5e7eb',
-                paddingBottom: '1rem'
-              }}>
-                <h2 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  color: '#1f2937'
-                }}>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-8 max-w-3xl w-11/12 max-h-[80vh] overflow-y-auto shadow-2xl">
+              <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
+                <h2 className="text-2xl font-bold text-gray-900">
                   Application Details - {selectedApplication.applicantName}
                 </h2>
                 <button
                   onClick={() => setSelectedApplication(null)}
-                  style={{
-                    backgroundColor: '#f3f4f6',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '2rem',
-                    height: '2rem',
-                    cursor: 'pointer',
-                    fontSize: '1rem'
-                  }}
+                  className="bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center text-gray-600 transition-colors"
                 >
                   ✕
                 </button>
               </div>
 
-              <div style={{ display: 'grid', gap: '1.5rem' }}>
+              <div className="space-y-6">
                 {/* Personal Information */}
-                <div style={{
-                  backgroundColor: '#f9fafb',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #e5e7eb'
-                }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.75rem' }}>
-                    Personal Information
-                  </h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.875rem' }}>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Personal Information</h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
                     <div><strong>Full Name:</strong> {selectedApplication.applicantName}</div>
                     <div><strong>Email:</strong> {selectedApplication.email}</div>
                     <div><strong>Phone:</strong> {selectedApplication.phone}</div>
@@ -884,16 +607,9 @@ export function WorkingHRApplications() {
                 </div>
 
                 {/* Position & Experience */}
-                <div style={{
-                  backgroundColor: '#f0f9ff',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #bae6fd'
-                }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.75rem' }}>
-                    Position & Experience
-                  </h3>
-                  <div style={{ display: 'grid', gap: '0.75rem', fontSize: '0.875rem' }}>
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Position & Experience</h3>
+                  <div className="space-y-2 text-sm">
                     <div><strong>Applied Position:</strong> {selectedApplication.position}</div>
                     <div><strong>Department:</strong> {positions.find(p => p.title === selectedApplication.position)?.department}</div>
                     <div><strong>Years of Experience:</strong> {selectedApplication.experience}</div>
@@ -905,73 +621,37 @@ export function WorkingHRApplications() {
                 </div>
 
                 {/* Certifications & Skills */}
-                <div style={{
-                  backgroundColor: '#f0fdf4',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #bbf7d0'
-                }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.75rem' }}>
-                    Certifications & Skills
-                  </h3>
-                  <div style={{ marginBottom: '1rem' }}>
-                    <p style={{ fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>Current Certifications:</p>
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Certifications & Skills</h3>
+                  <div className="mb-4">
+                    <p className="text-sm font-medium mb-2">Current Certifications:</p>
+                    <div className="flex gap-2 flex-wrap">
                       {selectedApplication.certifications.map((cert, index) => (
-                        <span key={index} style={{
-                          backgroundColor: '#dcfce7',
-                          color: '#166534',
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.75rem',
-                          fontWeight: '500'
-                        }}>
+                        <Badge key={index} className="bg-green-100 text-green-800">
                           {cert}
-                        </span>
+                        </Badge>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <p style={{ fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>Core Skills:</p>
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <p className="text-sm font-medium mb-2">Core Skills:</p>
+                    <div className="flex gap-2 flex-wrap">
                       {selectedApplication.skills.map((skill, index) => (
-                        <span key={index} style={{
-                          backgroundColor: '#e0f2fe',
-                          color: '#0c4a6e',
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.75rem',
-                          fontWeight: '500'
-                        }}>
+                        <Badge key={index} className="bg-blue-100 text-blue-800">
                           {skill}
-                        </span>
+                        </Badge>
                       ))}
                     </div>
                   </div>
                 </div>
 
                 {/* Application Status & History */}
-                <div style={{
-                  backgroundColor: '#fefce8',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #fef08a'
-                }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.75rem' }}>
-                    Application Status & Timeline
-                  </h3>
-                  <div style={{ display: 'grid', gap: '0.5rem', fontSize: '0.875rem' }}>
-                    <div><strong>Current Status:</strong>
-                      <span style={{
-                        backgroundColor: `${getStatusColor(selectedApplication.status)}20`,
-                        color: getStatusColor(selectedApplication.status),
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '9999px',
-                        fontSize: '0.75rem',
-                        marginLeft: '0.5rem'
-                      }}>
-                        {selectedApplication.status.replace('_', ' ').toUpperCase()}
-                      </span>
+                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Application Status & Timeline</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <strong>Current Status:</strong>
+                      <StatusBadge status={selectedApplication.status} />
                     </div>
                     <div><strong>Application Date:</strong> {selectedApplication.applicationDate}</div>
                     <div><strong>Source:</strong> {selectedApplication.source}</div>
@@ -985,44 +665,30 @@ export function WorkingHRApplications() {
                 </div>
 
                 {/* References */}
-                <div style={{
-                  backgroundColor: '#f3f4f6',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #d1d5db'
-                }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.75rem' }}>
-                    Professional References
-                  </h3>
-                  <div style={{ display: 'grid', gap: '0.75rem' }}>
-                    <div style={{ padding: '0.5rem', backgroundColor: 'white', borderRadius: '0.25rem' }}>
-                      <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#1f2937' }}>Dr. Sarah Mitchell, RN Supervisor</p>
-                      <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>Columbus Regional Medical Center • (614) 555-0901</p>
-                      <p style={{ fontSize: '0.75rem', color: '#059669' }}>✓ Reference verified - Excellent work ethic and patient care</p>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Professional References</h3>
+                  <div className="space-y-3">
+                    <div className="p-3 bg-white rounded-md">
+                      <p className="text-sm font-medium text-gray-900">Dr. Sarah Mitchell, RN Supervisor</p>
+                      <p className="text-xs text-gray-600">Columbus Regional Medical Center • (614) 555-0901</p>
+                      <p className="text-xs text-green-700">✓ Reference verified - Excellent work ethic and patient care</p>
                     </div>
-                    <div style={{ padding: '0.5rem', backgroundColor: 'white', borderRadius: '0.25rem' }}>
-                      <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#1f2937' }}>James Rodriguez, Department Manager</p>
-                      <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>Home Care Solutions • (614) 555-0902</p>
-                      <p style={{ fontSize: '0.75rem', color: '#059669' }}>✓ Reference verified - Highly recommended for home health role</p>
+                    <div className="p-3 bg-white rounded-md">
+                      <p className="text-sm font-medium text-gray-900">James Rodriguez, Department Manager</p>
+                      <p className="text-xs text-gray-600">Home Care Solutions • (614) 555-0902</p>
+                      <p className="text-xs text-green-700">✓ Reference verified - Highly recommended for home health role</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Notes & Comments */}
-                <div style={{
-                  backgroundColor: '#fff7ed',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #fed7aa'
-                }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.75rem' }}>
-                    Interview Notes & Comments
-                  </h3>
-                  <div style={{ fontSize: '0.875rem', color: '#9a3412' }}>
-                    <p style={{ marginBottom: '0.5rem' }}>
+                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Interview Notes & Comments</h3>
+                  <div className="text-sm text-orange-900 space-y-2">
+                    <p>
                       <strong>HR Notes:</strong> Strong candidate with excellent references. Patient care experience in both hospital and home settings. Shows genuine interest in home health mission.
                     </p>
-                    <p style={{ marginBottom: '0.5rem' }}>
+                    <p>
                       <strong>Interview Feedback:</strong> Articulate communicator, demonstrates empathy and professionalism. Asked thoughtful questions about patient population and care protocols.
                     </p>
                     <p>
@@ -1032,89 +698,49 @@ export function WorkingHRApplications() {
                 </div>
               </div>
 
-              <div style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '0.5rem',
-                marginTop: '1.5rem',
-                paddingTop: '1rem',
-                borderTop: '1px solid #e5e7eb'
-              }}>
+              <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-200">
                 {selectedApplication.status === 'new' && (
                   <>
-                    <button
+                    <Button
                       onClick={() => {
                         setSelectedApplication(null);
                         handleStatusChange(selectedApplication.id, 'reviewing');
                       }}
-                      style={{
-                        padding: '0.75rem 1rem',
-                        backgroundColor: '#2563eb',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '0.25rem',
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        cursor: 'pointer'
-                      }}
+                      size="sm"
                     >
                       ✓ Move to Review
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={() => {
                         setSelectedApplication(null);
                         handleRejectApplication(selectedApplication);
                       }}
-                      style={{
-                        padding: '0.75rem 1rem',
-                        backgroundColor: '#dc2626',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '0.25rem',
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        cursor: 'pointer'
-                      }}
+                      className="bg-red-600 hover:bg-red-700"
+                      size="sm"
                     >
                       ✗ Reject
-                    </button>
+                    </Button>
                   </>
                 )}
                 {selectedApplication.status === 'reviewing' && (
-                  <button
+                  <Button
                     onClick={() => {
                       setSelectedApplication(null);
                       handleScheduleInterview(selectedApplication);
                     }}
-                    style={{
-                      padding: '0.75rem 1rem',
-                      backgroundColor: '#059669',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '0.25rem',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      cursor: 'pointer'
-                    }}
+                    className="bg-green-600 hover:bg-green-700"
+                    size="sm"
                   >
                     📅 Schedule Interview
-                  </button>
+                  </Button>
                 )}
-                <button
+                <Button
                   onClick={() => setSelectedApplication(null)}
-                  style={{
-                    padding: '0.75rem 1rem',
-                    backgroundColor: '#6b7280',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '0.25rem',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    cursor: 'pointer'
-                  }}
+                  variant="secondary"
+                  size="sm"
                 >
                   Close
-                </button>
+                </Button>
               </div>
             </div>
           </div>

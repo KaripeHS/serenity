@@ -1,4 +1,9 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Card, CardHeader, CardContent, CardTitle } from '../ui/Card';
+import { Button } from '../ui/Button';
+import { Alert, AlertDescription } from '../ui/Alert';
+import { Badge } from '../ui/Badge';
 
 interface FamilyPortalData {
   patientName: string;
@@ -118,453 +123,306 @@ export function WorkingFamilyPortal() {
 
   if (!data) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        backgroundColor: '#f9fafb',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid #e5e7eb',
-            borderTop: '4px solid #2563eb',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 1rem'
-          }}></div>
-          <p style={{ color: '#6b7280' }}>Loading Family Portal...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading Family Portal...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f9fafb',
-      padding: '2rem'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '2rem'
-        }}>
+        <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: '#1f2937',
-              marginBottom: '0.5rem'
-            }}>
-              Family Portal
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              👨‍👩‍👧 Family Portal
             </h1>
-            <p style={{ color: '#6b7280' }}>
+            <p className="text-gray-600">
               Care updates for {data.patientName}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <button
-              onClick={sendMessage}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#2563eb',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.25rem',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}
-            >
+          <div className="flex gap-4">
+            <Button onClick={sendMessage}>
               💬 Send Message
-            </button>
-            <a href="/" style={{
-              color: '#2563eb',
-              textDecoration: 'underline',
-              display: 'flex',
-              alignItems: 'center'
-            }}>
+            </Button>
+            <Link to="/" className="text-blue-600 underline hover:text-blue-700 flex items-center">
               ← Back to Home
-            </a>
+            </Link>
           </div>
         </div>
 
         {/* Next Visit Alert */}
-        <div style={{
-          backgroundColor: '#f0f9ff',
-          border: '1px solid #bae6fd',
-          borderRadius: '0.5rem',
-          padding: '1rem',
-          marginBottom: '2rem'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.5rem' }}>📅</span>
-              <div>
-                <p style={{
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  color: '#0284c7',
-                  margin: 0
-                }}>
-                  Next Visit: {data.nextVisit.date} at {data.nextVisit.time}
-                </p>
-                <p style={{ fontSize: '0.875rem', color: '#0c4a6e', margin: 0 }}>
-                  {data.nextVisit.serviceType} with {data.nextVisit.caregiver}
-                </p>
+        <Alert className="mb-8 bg-blue-50 border-blue-200">
+          <AlertDescription>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📅</span>
+                <div>
+                  <p className="font-semibold text-blue-800">
+                    Next Visit: {data.nextVisit.date} at {data.nextVisit.time}
+                  </p>
+                  <p className="text-sm text-blue-700">
+                    {data.nextVisit.serviceType} with {data.nextVisit.caregiver}
+                  </p>
+                </div>
               </div>
+              <Button size="sm" onClick={() => alert('Visit reminder set!')}>
+                Set Reminder
+              </Button>
             </div>
-            <button
-              onClick={() => alert('Visit reminder set!')}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#2563eb',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.25rem',
-                fontSize: '0.875rem',
-                cursor: 'pointer'
-              }}
-            >
-              Set Reminder
-            </button>
-          </div>
-        </div>
+          </AlertDescription>
+        </Alert>
 
         {/* Navigation Tabs */}
-        <div style={{
-          backgroundColor: 'white',
-          padding: '1rem',
-          borderRadius: '0.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb',
-          marginBottom: '2rem'
-        }}>
-          <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto' }}>
-            {[
-              { key: 'overview', label: '🏠 Overview' },
-              { key: 'schedule', label: '📅 Schedule' },
-              { key: 'caregivers', label: '👥 Care Team' },
-              { key: 'billing', label: '💳 Billing' },
-              { key: 'messages', label: '💬 Messages', count: messages.length }
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveView(tab.key as any)}
-                style={{
-                  padding: '0.75rem 1rem',
-                  backgroundColor: activeView === tab.key ? '#2563eb' : 'transparent',
-                  color: activeView === tab.key ? 'white' : '#6b7280',
-                  border: 'none',
-                  borderRadius: '0.25rem',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                {tab.label}
-                {tab.count && (
-                  <span style={{
-                    backgroundColor: activeView === tab.key ? 'rgba(255,255,255,0.2)' : '#dc2626',
-                    color: 'white',
-                    padding: '0.125rem 0.375rem',
-                    borderRadius: '9999px',
-                    fontSize: '0.75rem',
-                    fontWeight: 'bold'
-                  }}>
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
+        <Card className="mb-8">
+          <CardContent className="p-4">
+            <div className="flex gap-4 overflow-x-auto">
+              {[
+                { key: 'overview', label: '🏠 Overview' },
+                { key: 'schedule', label: '📅 Schedule' },
+                { key: 'caregivers', label: '👥 Care Team' },
+                { key: 'billing', label: '💳 Billing' },
+                { key: 'messages', label: '💬 Messages', count: messages.length }
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveView(tab.key as any)}
+                  className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap flex items-center gap-2 transition-colors ${
+                    activeView === tab.key
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {tab.label}
+                  {tab.count && (
+                    <Badge className={`${
+                      activeView === tab.key ? 'bg-white/20 text-white' : 'bg-red-600 text-white'
+                    } text-xs font-bold`}>
+                      {tab.count}
+                    </Badge>
+                  )}
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Overview */}
         {activeView === 'overview' && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-            gap: '1.5rem'
-          }}>
-            {/* Recent Visit Summary */}
-            <div style={{
-              backgroundColor: 'white',
-              padding: '1.5rem',
-              borderRadius: '0.5rem',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-              border: '1px solid #e5e7eb'
-            }}>
-              <h3 style={{
-                fontSize: '1.125rem',
-                fontWeight: '600',
-                color: '#1f2937',
-                marginBottom: '1rem'
-              }}>
-                Recent Care Updates
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {data.recentVisits.slice(0, 3).map((visit, index) => (
-                  <div key={index} style={{
-                    padding: '1rem',
-                    backgroundColor: '#f9fafb',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #e5e7eb'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'start',
-                      marginBottom: '0.5rem'
-                    }}>
-                      <div>
-                        <p style={{
-                          fontSize: '0.875rem',
-                          fontWeight: '500',
-                          color: '#1f2937',
-                          marginBottom: '0.25rem'
-                        }}>
-                          {visit.serviceType} with {visit.caregiver}
-                        </p>
-                        <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                          {visit.date}
-                        </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Care Updates */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Care Updates</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {data.recentVisits.slice(0, 3).map((visit, index) => (
+                    <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 mb-1">
+                            {visit.serviceType} with {visit.caregiver}
+                          </p>
+                          <p className="text-xs text-gray-600">{visit.date}</p>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <span key={i} className={`text-sm ${i < visit.rating ? 'text-amber-400' : 'text-gray-300'}`}>
+                              ⭐
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        {[...Array(5)].map((_, i) => (
-                          <span key={i} style={{
-                            color: i < visit.rating ? '#f59e0b' : '#e5e7eb',
-                            fontSize: '0.875rem'
-                          }}>
-                            ⭐
-                          </span>
-                        ))}
-                      </div>
+                      <p className="text-sm text-gray-700">{visit.notes}</p>
                     </div>
-                    <p style={{ fontSize: '0.875rem', color: '#4b5563' }}>
-                      {visit.notes}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Care Team Quick Contact */}
-            <div style={{
-              backgroundColor: 'white',
-              padding: '1.5rem',
-              borderRadius: '0.5rem',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-              border: '1px solid #e5e7eb'
-            }}>
-              <h3 style={{
-                fontSize: '1.125rem',
-                fontWeight: '600',
-                color: '#1f2937',
-                marginBottom: '1rem'
-              }}>
-                Care Team
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {data.caregiverTeam.slice(0, 3).map((caregiver, index) => (
-                  <div key={index} style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '0.75rem',
-                    backgroundColor: '#f9fafb',
-                    borderRadius: '0.5rem'
-                  }}>
-                    <div>
-                      <p style={{
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        color: '#1f2937',
-                        marginBottom: '0.25rem'
-                      }}>
-                        {caregiver.name}
-                      </p>
-                      <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                        {caregiver.role} • ⭐ {caregiver.rating}
-                      </p>
+            <Card>
+              <CardHeader>
+                <CardTitle>Care Team</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {data.caregiverTeam.slice(0, 3).map((caregiver, index) => (
+                    <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 mb-1">
+                          {caregiver.name}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {caregiver.role} • ⭐ {caregiver.rating}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => alert(`Calling ${caregiver.name} at ${caregiver.phone}`)}
+                          className="bg-green-600 hover:bg-green-700 text-xs px-2 py-1"
+                        >
+                          📞
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => alert(`Sending message to ${caregiver.name}`)}
+                          className="text-xs px-2 py-1"
+                        >
+                          💬
+                        </Button>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button
-                        onClick={() => alert(`Calling ${caregiver.name} at ${caregiver.phone}`)}
-                        style={{
-                          padding: '0.25rem 0.5rem',
-                          backgroundColor: '#059669',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '0.25rem',
-                          fontSize: '0.75rem',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        📞
-                      </button>
-                      <button
-                        onClick={() => alert(`Sending message to ${caregiver.name}`)}
-                        style={{
-                          padding: '0.25rem 0.5rem',
-                          backgroundColor: '#2563eb',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '0.25rem',
-                          fontSize: '0.75rem',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        💬
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
         {/* Schedule View */}
         {activeView === 'schedule' && (
-          <div style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '0.5rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e5e7eb'
-          }}>
-            <h3 style={{
-              fontSize: '1.125rem',
-              fontWeight: '600',
-              color: '#1f2937',
-              marginBottom: '1rem'
-            }}>
-              Upcoming Care Schedule
-            </h3>
-            <div style={{
-              padding: '2rem',
-              textAlign: 'center',
-              backgroundColor: '#f9fafb',
-              borderRadius: '0.5rem',
-              border: '1px solid #e5e7eb'
-            }}>
-              <span style={{ fontSize: '3rem', marginBottom: '1rem', display: 'block' }}>📅</span>
-              <h4 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.5rem' }}>
-                Care Schedule
-              </h4>
-              <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
-                View upcoming visits, appointment times, and caregiver assignments
-              </p>
-              <button
-                onClick={() => alert('Opening detailed calendar view...')}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#2563eb',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.25rem',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  cursor: 'pointer'
-                }}
-              >
-                View Full Calendar
-              </button>
-            </div>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Upcoming Care Schedule</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-6xl block mb-4">📅</span>
+                <h4 className="text-xl font-semibold text-gray-900 mb-2">
+                  Care Schedule
+                </h4>
+                <p className="text-gray-600 mb-6">
+                  View upcoming visits, appointment times, and caregiver assignments
+                </p>
+                <Button onClick={() => alert('Opening detailed calendar view...')}>
+                  View Full Calendar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Caregivers View */}
+        {activeView === 'caregivers' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Care Team</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {data.caregiverTeam.map((caregiver, index) => (
+                  <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-1">{caregiver.name}</h4>
+                        <p className="text-sm text-gray-600 mb-2">{caregiver.role}</p>
+                        <div className="flex items-center gap-1 mb-2">
+                          <span className="text-amber-400">⭐</span>
+                          <span className="text-sm font-medium text-gray-900">{caregiver.rating}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-1 mb-3">
+                      <p className="text-sm text-gray-700">📞 {caregiver.phone}</p>
+                      <p className="text-sm text-gray-700">📧 {caregiver.email}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => alert(`Calling ${caregiver.name}`)}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                      >
+                        📞 Call
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => alert(`Messaging ${caregiver.name}`)}
+                        className="flex-1"
+                      >
+                        💬 Message
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Billing View */}
+        {activeView === 'billing' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Billing Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <p className="text-sm text-green-800 mb-1">Last Payment</p>
+                  <p className="text-2xl font-bold text-green-900">{data.billingInfo.lastPayment}</p>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800 mb-1">Next Billing</p>
+                  <p className="text-2xl font-bold text-blue-900">{data.billingInfo.nextBilling}</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <p className="text-sm text-gray-800 mb-1">Current Balance</p>
+                  <p className="text-2xl font-bold text-gray-900">{data.billingInfo.balance}</p>
+                </div>
+              </div>
+              <div className="text-center py-8">
+                <Button onClick={() => alert('Opening payment portal...')}>
+                  💳 View Payment History
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Messages View */}
         {activeView === 'messages' && (
-          <div style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '0.5rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e5e7eb'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '1rem'
-            }}>
-              <h3 style={{
-                fontSize: '1.125rem',
-                fontWeight: '600',
-                color: '#1f2937'
-              }}>
-                Messages & Updates
-              </h3>
-              <button
-                onClick={sendMessage}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#2563eb',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.25rem',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  cursor: 'pointer'
-                }}
-              >
-                📝 New Message
-              </button>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {messages.map((message) => (
-                <div key={message.id} style={{
-                  padding: '1rem',
-                  backgroundColor: message.from === 'You' ? '#f0f9ff' : '#f9fafb',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #e5e7eb'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'start',
-                    marginBottom: '0.5rem'
-                  }}>
-                    <p style={{
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      color: '#1f2937'
-                    }}>
-                      {message.from}
-                    </p>
-                    <span style={{
-                      fontSize: '0.75rem',
-                      color: '#6b7280'
-                    }}>
-                      {message.time}
-                    </span>
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle>Messages & Updates</CardTitle>
+                <Button size="sm" onClick={sendMessage}>
+                  📝 New Message
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`p-4 rounded-lg border ${
+                      message.from === 'You'
+                        ? 'bg-blue-50 border-blue-200'
+                        : 'bg-gray-50 border-gray-200'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <p className="text-sm font-medium text-gray-900">
+                        {message.from}
+                      </p>
+                      <span className="text-xs text-gray-600">
+                        {message.time}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700">{message.message}</p>
                   </div>
-                  <p style={{ fontSize: '0.875rem', color: '#4b5563' }}>
-                    {message.message}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         )}
-
-        {/* Other views would be implemented similarly */}
       </div>
     </div>
   );
