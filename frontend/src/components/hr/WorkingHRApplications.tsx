@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Card } from '../ui/Card';
+import { Card, CardHeader, CardContent, CardTitle } from '../ui/Card';
 import { Badge } from '../ui/Badge';
-import { Alert } from '../ui/Alert';
+import { Button } from '../ui/Button';
+import { Alert, AlertDescription } from '../ui/Alert';
 
 interface Application {
   id: string;
@@ -37,53 +38,56 @@ interface Position {
   requirements: string[];
 }
 
-// Badge Components
+// Custom Badge Components for Status/Priority
 function StatusBadge({ status }: { status: Application['status'] }) {
-  const variants: Record<Application['status'], { variant: any; label: string; icon: string }> = {
-    new: { variant: 'info', label: 'New', icon: '🆕' },
-    reviewing: { variant: 'warning', label: 'Reviewing', icon: '👁️' },
-    interview_scheduled: { variant: 'primary', label: 'Interview Scheduled', icon: '📅' },
-    background_check: { variant: 'info', label: 'Background Check', icon: '🔍' },
-    approved: { variant: 'success', label: 'Approved', icon: '✅' },
-    rejected: { variant: 'danger', label: 'Rejected', icon: '❌' },
-    hired: { variant: 'success', label: 'Hired', icon: '🎉' }
+  const configs = {
+    new: { color: 'bg-blue-100 text-blue-800', icon: '🆕', label: 'NEW' },
+    reviewing: { color: 'bg-amber-100 text-amber-800', icon: '👁️', label: 'REVIEWING' },
+    interview_scheduled: { color: 'bg-purple-100 text-purple-800', icon: '📅', label: 'INTERVIEW SCHEDULED' },
+    background_check: { color: 'bg-cyan-100 text-cyan-800', icon: '🔍', label: 'BACKGROUND CHECK' },
+    approved: { color: 'bg-emerald-100 text-emerald-800', icon: '✅', label: 'APPROVED' },
+    rejected: { color: 'bg-red-100 text-red-800', icon: '❌', label: 'REJECTED' },
+    hired: { color: 'bg-green-100 text-green-800', icon: '🎉', label: 'HIRED' }
   };
-  const config = variants[status];
-  return <Badge variant={config.variant}>{config.icon} {config.label}</Badge>;
+  const config = configs[status];
+  return (
+    <Badge className={`${config.color} px-3 py-1`}>
+      {config.icon} {config.label}
+    </Badge>
+  );
 }
 
 function PriorityBadge({ priority }: { priority: Application['priority'] }) {
-  const variants: Record<Application['priority'], any> = {
-    urgent: 'danger',
-    high: 'warning',
-    medium: 'info',
-    low: 'gray'
+  const configs = {
+    urgent: { color: 'bg-red-100 text-red-700', label: 'URGENT' },
+    high: { color: 'bg-orange-100 text-orange-700', label: 'HIGH' },
+    medium: { color: 'bg-yellow-100 text-yellow-700', label: 'MEDIUM' },
+    low: { color: 'bg-lime-100 text-lime-700', label: 'LOW' }
   };
-  return <Badge variant={variants[priority]} size="sm">{priority.toUpperCase()}</Badge>;
+  const config = configs[priority];
+  return <Badge className={`${config.color} px-2 py-0.5 text-xs`}>{config.label}</Badge>;
 }
 
 function UrgencyBadge({ urgency }: { urgency: Position['urgency'] }) {
-  const variants: Record<Position['urgency'], any> = {
-    critical: 'danger',
-    high: 'warning',
-    medium: 'info',
-    low: 'gray'
+  const configs = {
+    critical: { color: 'bg-red-100 text-red-700', label: 'CRITICAL' },
+    high: { color: 'bg-orange-100 text-orange-700', label: 'HIGH' },
+    medium: { color: 'bg-yellow-100 text-yellow-700', label: 'MEDIUM' },
+    low: { color: 'bg-lime-100 text-lime-700', label: 'LOW' }
   };
-  return <Badge variant={variants[urgency]} size="sm">{urgency.toUpperCase()}</Badge>;
+  const config = configs[urgency];
+  return <Badge className={`${config.color} px-2 py-0.5 text-xs`}>{config.label}</Badge>;
 }
 
-// Helper function to map backend status to frontend status
-const mapBackendStatus = (backendStatus: string): Application['status'] => {
-  const statusMap: Record<string, Application['status']> = {
-    'new': 'new',
-    'screening': 'reviewing',
-    'interviewing': 'interview_scheduled',
-    'offer': 'approved',
-    'hired': 'hired',
-    'rejected': 'rejected'
+function BackgroundCheckBadge({ status }: { status: 'pending' | 'cleared' | 'flagged' }) {
+  const configs = {
+    pending: { color: 'text-amber-600', label: 'PENDING' },
+    cleared: { color: 'text-emerald-600', label: 'CLEARED' },
+    flagged: { color: 'text-red-600', label: 'FLAGGED' }
   };
-  return statusMap[backendStatus] || 'new';
-};
+  const config = configs[status];
+  return <span className={`text-sm font-medium ${config.color}`}>{config.label}</span>;
+}
 
 export function WorkingHRApplications() {
   const { user: _user } = useAuth();
@@ -99,42 +103,6 @@ export function WorkingHRApplications() {
   }, []);
 
   const loadApplications = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/api/console/hr/applicants', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const mappedApplications = data.applicants.map((app: any) => ({
-          id: app.id,
-          applicantName: `${app.firstName} ${app.lastName}`,
-          position: app.positionAppliedFor,
-          email: app.email,
-          phone: app.phone,
-          submissionDate: app.applicationDate,
-          status: mapBackendStatus(app.status),
-          priority: 'medium',
-          experience: `${app.yearsExperience} years`,
-          certifications: app.hasLicense ? ['Licensed'] : [],
-          skills: [],
-          location: app.address || 'Ohio',
-          applicationDate: app.applicationDate,
-          source: app.source,
-          expectedSalary: app.desiredPayRate || 'Not specified',
-          availability: app.availability || 'Not specified',
-          notes: app.notes || ''
-        }));
-        setApplications(mappedApplications);
-        return;
-      }
-    } catch (error) {
-      console.error('Failed to load applications from API, using mock data:', error);
-    }
-
-    // Fallback mock data
     const productionApplications: Application[] = [
       {
         id: 'app_001',
@@ -254,39 +222,16 @@ export function WorkingHRApplications() {
   const handleStatusChange = async (applicationId: string, newStatus: Application['status']) => {
     setIsProcessing(true);
     try {
-      const statusMap: Record<Application['status'], string> = {
-        'new': 'new',
-        'reviewing': 'screening',
-        'interview_scheduled': 'interviewing',
-        'background_check': 'screening',
-        'approved': 'offer',
-        'rejected': 'rejected',
-        'hired': 'hired'
-      };
-      const backendStatus = statusMap[newStatus] || 'new';
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const response = await fetch(`http://localhost:3000/api/console/hr/applicants/${applicationId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
-        },
-        body: JSON.stringify({ status: backendStatus, stage: newStatus })
-      });
+      setApplications(prev => prev.map(app =>
+        app.id === applicationId ? { ...app, status: newStatus } : app
+      ));
 
-      if (response.ok) {
-        setApplications(prev => prev.map(app =>
-          app.id === applicationId ? { ...app, status: newStatus } : app
-        ));
-
-        const app = applications.find(a => a.id === applicationId);
-        alert(`✅ Status Updated!\n\nApplicant: ${app?.applicantName}\nNew Status: ${newStatus.replace('_', ' ').toUpperCase()}\n\nNext steps will be automatically triggered.`);
-      } else {
-        throw new Error('API request failed');
-      }
+      const app = applications.find(a => a.id === applicationId);
+      alert(`✅ Status Updated!\n\nApplicant: ${app?.applicantName}\nNew Status: ${newStatus.replace('_', ' ').toUpperCase()}\n\nNext steps will be automatically triggered.`);
     } catch (error) {
       alert('Failed to update status. Please try again.');
-      console.error('Status update error:', error);
     } finally {
       setIsProcessing(false);
     }
@@ -346,304 +291,302 @@ export function WorkingHRApplications() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4 animate-fade-in">
+        <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               👥 HR Application Management
             </h1>
             <p className="text-gray-600">
               Manage job applications and recruiting pipeline
             </p>
           </div>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium transition-colors"
-          >
+          <Link to="/" className="text-blue-600 underline hover:text-blue-700">
             ← Back to Home
           </Link>
         </div>
 
         {/* Open Positions Overview */}
-        <Card className="mb-8 animate-fade-in">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            🎯 Open Positions
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {positions.map((position) => (
-              <div
-                key={position.id}
-                className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <h4 className="text-lg font-semibold text-gray-900">
-                    {position.title}
-                  </h4>
-                  <UrgencyBadge urgency={position.urgency} />
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>🎯 Open Positions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {positions.map((position) => (
+                <div
+                  key={position.id}
+                  className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="text-lg font-semibold text-gray-900">
+                      {position.title}
+                    </h4>
+                    <UrgencyBadge urgency={position.urgency} />
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {position.department} • {position.openings} openings
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {position.requirements.slice(0, 2).join(', ')}
+                    {position.requirements.length > 2 && '...'}
+                  </p>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">
-                  {position.department} • {position.openings} opening{position.openings > 1 ? 's' : ''}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {position.requirements.slice(0, 2).join(', ')}
-                  {position.requirements.length > 2 && '...'}
-                </p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </CardContent>
         </Card>
 
         {/* Application Tabs */}
-        <Card className="animate-fade-in">
-          <div className="border-b border-gray-200">
-            <div className="flex flex-wrap gap-2 md:gap-0">
-              {[
-                { key: 'new', label: 'New', count: applications.filter(a => a.status === 'new').length },
-                { key: 'reviewing', label: 'Under Review', count: applications.filter(a => a.status === 'reviewing').length },
-                { key: 'scheduled', label: 'Interviews', count: applications.filter(a => a.status === 'interview_scheduled').length },
-                { key: 'approved', label: 'Approved/Hired', count: applications.filter(a => a.status === 'approved' || a.status === 'hired').length },
-                { key: 'rejected', label: 'Rejected', count: applications.filter(a => a.status === 'rejected').length }
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key as any)}
-                  className={`flex-1 min-w-fit px-4 py-3 text-sm font-medium border-b-2 transition-all ${
-                    activeTab === tab.key
-                      ? 'border-primary-600 text-primary-600 bg-primary-50'
-                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                  }`}
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    {tab.label}
-                    {tab.count > 0 && (
-                      <Badge variant={activeTab === tab.key ? 'primary' : 'gray'} size="sm">
-                        {tab.count}
-                      </Badge>
-                    )}
-                  </span>
-                </button>
-              ))}
-            </div>
+        <Card>
+          <div className="flex border-b border-gray-200">
+            {[
+              { key: 'new', label: 'New Applications', count: applications.filter(a => a.status === 'new').length },
+              { key: 'reviewing', label: 'Under Review', count: applications.filter(a => a.status === 'reviewing').length },
+              { key: 'scheduled', label: 'Interview Scheduled', count: applications.filter(a => a.status === 'interview_scheduled').length },
+              { key: 'approved', label: 'Approved/Hired', count: applications.filter(a => a.status === 'approved' || a.status === 'hired').length },
+              { key: 'rejected', label: 'Rejected', count: applications.filter(a => a.status === 'rejected').length }
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key as any)}
+                className={`flex-1 px-4 py-4 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === tab.key
+                    ? 'bg-gray-50 text-gray-900 border-blue-600'
+                    : 'bg-white text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                {tab.label}
+                {tab.count > 0 && (
+                  <Badge className={`ml-2 ${
+                    activeTab === tab.key ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    {tab.count}
+                  </Badge>
+                )}
+              </button>
+            ))}
           </div>
 
           {/* Applications List */}
-          <div className="p-6">
+          <CardContent>
             {filteredApplications.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <p className="text-lg">No applications in this category.</p>
+              <div className="text-center py-8 text-gray-600">
+                <p>No applications in this category.</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {filteredApplications.map((application) => (
-                  <div
-                    key={application.id}
-                    className="border border-gray-200 rounded-lg p-6 bg-white hover:border-primary-300 hover:shadow-md transition-all"
-                  >
-                    {/* Application Header */}
-                    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
-                      <div className="flex-1">
-                        <h4 className="text-xl font-semibold text-gray-900 mb-1">
-                          {application.applicantName}
-                        </h4>
-                        <p className="text-sm text-gray-600">
-                          {application.position} • Applied {application.submissionDate}
-                        </p>
-                      </div>
-                      <div className="flex gap-2 flex-wrap">
-                        <PriorityBadge priority={application.priority} />
-                        <StatusBadge status={application.status} />
-                      </div>
-                    </div>
-
-                    {/* Application Details Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Contact</p>
-                        <p className="text-sm text-gray-900">{application.email}</p>
-                        <p className="text-sm text-gray-900">{application.phone}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Experience</p>
-                        <p className="text-sm text-gray-900">{application.experience}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Certifications</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {application.certifications.map((cert, i) => (
-                            <Badge key={i} variant="success" size="sm">{cert}</Badge>
-                          ))}
+                  <Card key={application.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <div>
+                          <h4 className="text-xl font-semibold text-gray-900 mb-1">
+                            {application.applicantName}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {application.position} • Applied {application.submissionDate}
+                          </p>
+                        </div>
+                        <div className="flex gap-2 items-center">
+                          <PriorityBadge priority={application.priority} />
+                          <StatusBadge status={application.status} />
                         </div>
                       </div>
-                      {application.interviewDate && (
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                         <div>
-                          <p className="text-sm font-medium text-gray-500">Interview</p>
-                          <p className="text-sm text-gray-900">📅 {application.interviewDate}</p>
+                          <p className="text-sm text-gray-600 font-medium">Contact</p>
+                          <p className="text-sm text-gray-900">{application.email}</p>
+                          <p className="text-sm text-gray-900">{application.phone}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600 font-medium">Experience</p>
+                          <p className="text-sm text-gray-900">{application.experience}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600 font-medium">Certifications</p>
+                          <p className="text-sm text-gray-900">
+                            {application.certifications.join(', ')}
+                          </p>
+                        </div>
+                        {application.interviewDate && (
+                          <div>
+                            <p className="text-sm text-gray-600 font-medium">Interview</p>
+                            <p className="text-sm text-gray-900">{application.interviewDate}</p>
+                          </div>
+                        )}
+                        {application.backgroundCheckStatus && (
+                          <div>
+                            <p className="text-sm text-gray-600 font-medium">Background Check</p>
+                            <BackgroundCheckBadge status={application.backgroundCheckStatus} />
+                          </div>
+                        )}
+                      </div>
+
+                      {application.notes && (
+                        <div className="bg-gray-50 p-3 rounded-md mb-4">
+                          <p className="text-sm text-gray-700">{application.notes}</p>
                         </div>
                       )}
-                      {application.backgroundCheckStatus && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Background Check</p>
-                          <Badge
-                            variant={
-                              application.backgroundCheckStatus === 'cleared' ? 'success' :
-                              application.backgroundCheckStatus === 'flagged' ? 'danger' : 'warning'
-                            }
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 flex-wrap">
+                        {application.status === 'new' && (
+                          <>
+                            <Button
+                              onClick={() => handleStatusChange(application.id, 'reviewing')}
+                              disabled={isProcessing}
+                              className="bg-amber-600 hover:bg-amber-700"
+                              size="sm"
+                            >
+                              👁️ Start Review
+                            </Button>
+                            <Button
+                              onClick={() => handleScheduleInterview(application)}
+                              className="bg-purple-600 hover:bg-purple-700"
+                              size="sm"
+                            >
+                              📅 Schedule Interview
+                            </Button>
+                            <Button
+                              onClick={() => handleRejectApplication(application)}
+                              className="bg-red-600 hover:bg-red-700"
+                              size="sm"
+                            >
+                              ❌ Reject
+                            </Button>
+                          </>
+                        )}
+
+                        {application.status === 'reviewing' && (
+                          <>
+                            <Button
+                              onClick={() => handleScheduleInterview(application)}
+                              className="bg-purple-600 hover:bg-purple-700"
+                              size="sm"
+                            >
+                              📅 Schedule Interview
+                            </Button>
+                            <Button
+                              onClick={() => handleBackgroundCheck(application)}
+                              className="bg-cyan-600 hover:bg-cyan-700"
+                              size="sm"
+                            >
+                              🔍 Background Check
+                            </Button>
+                            <Button
+                              onClick={() => handleRejectApplication(application)}
+                              className="bg-red-600 hover:bg-red-700"
+                              size="sm"
+                            >
+                              ❌ Reject
+                            </Button>
+                          </>
+                        )}
+
+                        {application.status === 'interview_scheduled' && (
+                          <>
+                            <Button
+                              onClick={() => alert('📹 Starting video interview...')}
+                              className="bg-purple-600 hover:bg-purple-700"
+                              size="sm"
+                            >
+                              📹 Join Interview
+                            </Button>
+                            <Button
+                              onClick={() => handleBackgroundCheck(application)}
+                              className="bg-cyan-600 hover:bg-cyan-700"
+                              size="sm"
+                            >
+                              🔍 Background Check
+                            </Button>
+                            <Button
+                              onClick={() => handleSendOffer(application)}
+                              className="bg-emerald-600 hover:bg-emerald-700"
+                              size="sm"
+                            >
+                              💼 Send Offer
+                            </Button>
+                          </>
+                        )}
+
+                        {application.status === 'background_check' && (
+                          <>
+                            <Button
+                              onClick={() => alert('🔍 Background check details:\n\nProvider: Sterling Talent Solutions\nStatus: Pending\nExpected completion: 2-3 days')}
+                              className="bg-cyan-600 hover:bg-cyan-700"
+                              size="sm"
+                            >
+                              🔍 Check Status
+                            </Button>
+                            <Button
+                              onClick={() => handleSendOffer(application)}
+                              disabled={application.backgroundCheckStatus !== 'cleared'}
+                              className="bg-emerald-600 hover:bg-emerald-700"
+                              size="sm"
+                            >
+                              💼 Send Offer
+                            </Button>
+                          </>
+                        )}
+
+                        {application.status === 'approved' && (
+                          <Button
+                            onClick={() => {
+                              setApplications(prev => prev.map(app =>
+                                app.id === application.id ? { ...app, status: 'hired' } : app
+                              ));
+                              alert(`🎉 Welcome to the team!\n\nEmployee: ${application.applicantName}\nPosition: ${application.position}\n\nOnboarding checklist initiated.`);
+                            }}
+                            className="bg-green-600 hover:bg-green-700"
                             size="sm"
                           >
-                            {application.backgroundCheckStatus.toUpperCase()}
-                          </Badge>
-                        </div>
-                      )}
-                    </div>
+                            🎉 Mark as Hired
+                          </Button>
+                        )}
 
-                    {/* Notes */}
-                    {application.notes && (
-                      <div className="bg-gray-50 p-3 rounded-lg mb-4">
-                        <p className="text-sm text-gray-700">{application.notes}</p>
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="flex flex-wrap gap-2">
-                      {application.status === 'new' && (
-                        <>
-                          <button
-                            onClick={() => handleStatusChange(application.id, 'reviewing')}
-                            disabled={isProcessing}
-                            className="px-4 py-2 bg-warning-600 text-white rounded-lg text-sm font-medium hover:bg-warning-700 transition-colors disabled:opacity-50"
-                          >
-                            👁️ Start Review
-                          </button>
-                          <button
-                            onClick={() => handleScheduleInterview(application)}
-                            className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
-                          >
-                            📅 Schedule Interview
-                          </button>
-                          <button
-                            onClick={() => handleRejectApplication(application)}
-                            className="px-4 py-2 bg-danger-600 text-white rounded-lg text-sm font-medium hover:bg-danger-700 transition-colors"
-                          >
-                            ❌ Reject
-                          </button>
-                        </>
-                      )}
-
-                      {application.status === 'reviewing' && (
-                        <>
-                          <button
-                            onClick={() => handleScheduleInterview(application)}
-                            className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
-                          >
-                            📅 Schedule Interview
-                          </button>
-                          <button
-                            onClick={() => handleBackgroundCheck(application)}
-                            className="px-4 py-2 bg-info-600 text-white rounded-lg text-sm font-medium hover:bg-info-700 transition-colors"
-                          >
-                            🔍 Background Check
-                          </button>
-                          <button
-                            onClick={() => handleRejectApplication(application)}
-                            className="px-4 py-2 bg-danger-600 text-white rounded-lg text-sm font-medium hover:bg-danger-700 transition-colors"
-                          >
-                            ❌ Reject
-                          </button>
-                        </>
-                      )}
-
-                      {application.status === 'interview_scheduled' && (
-                        <>
-                          <button
-                            onClick={() => alert('📹 Starting video interview...')}
-                            className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
-                          >
-                            📹 Join Interview
-                          </button>
-                          <button
-                            onClick={() => handleBackgroundCheck(application)}
-                            className="px-4 py-2 bg-info-600 text-white rounded-lg text-sm font-medium hover:bg-info-700 transition-colors"
-                          >
-                            🔍 Background Check
-                          </button>
-                          <button
-                            onClick={() => handleSendOffer(application)}
-                            className="px-4 py-2 bg-success-600 text-white rounded-lg text-sm font-medium hover:bg-success-700 transition-colors"
-                          >
-                            💼 Send Offer
-                          </button>
-                        </>
-                      )}
-
-                      {application.status === 'background_check' && (
-                        <>
-                          <button
-                            onClick={() => alert('🔍 Background check details:\n\nProvider: Sterling Talent Solutions\nStatus: Pending\nExpected completion: 2-3 days')}
-                            className="px-4 py-2 bg-info-600 text-white rounded-lg text-sm font-medium hover:bg-info-700 transition-colors"
-                          >
-                            🔍 Check Status
-                          </button>
-                          <button
-                            onClick={() => handleSendOffer(application)}
-                            disabled={application.backgroundCheckStatus !== 'cleared'}
-                            className={`px-4 py-2 text-white rounded-lg text-sm font-medium transition-colors ${
-                              application.backgroundCheckStatus === 'cleared'
-                                ? 'bg-success-600 hover:bg-success-700'
-                                : 'bg-gray-400 cursor-not-allowed'
-                            }`}
-                          >
-                            💼 Send Offer
-                          </button>
-                        </>
-                      )}
-
-                      {application.status === 'approved' && (
-                        <button
-                          onClick={() => {
-                            setApplications(prev => prev.map(app =>
-                              app.id === application.id ? { ...app, status: 'hired' } : app
-                            ));
-                            alert(`🎉 Welcome to the team!\n\nEmployee: ${application.applicantName}\nPosition: ${application.position}\n\nOnboarding checklist initiated.`);
-                          }}
-                          className="px-4 py-2 bg-success-700 text-white rounded-lg text-sm font-medium hover:bg-success-800 transition-colors"
+                        <Button
+                          onClick={() => setSelectedApplication(application)}
+                          variant="outline"
+                          size="sm"
                         >
-                          🎉 Mark as Hired
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => setSelectedApplication(application)}
-                        className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-                      >
-                        📄 View Full Application
-                      </button>
-                    </div>
-                  </div>
+                          📄 View Full Application
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             )}
-          </div>
+          </CardContent>
         </Card>
 
         {/* Compliance Notice */}
-        <Alert variant="info" title="🛡️ HIPAA & Employment Compliance" className="mt-8 animate-fade-in">
-          All background checks include HIPAA training verification. Credentials and certifications are validated through primary sources before hire.
+        <Alert className="mt-8 bg-blue-50 border-blue-200">
+          <AlertDescription>
+            <h4 className="text-sm font-semibold text-blue-800 mb-1">
+              🛡️ HIPAA & Employment Compliance
+            </h4>
+            <p className="text-sm text-blue-700">
+              All background checks include HIPAA training verification. Credentials and certifications are validated through primary sources before hire.
+            </p>
+          </AlertDescription>
         </Alert>
 
         {/* Application Details Modal */}
         {selectedApplication && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
-            <div className="bg-white rounded-lg p-6 md:p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-              {/* Modal Header */}
-              <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-8 max-w-3xl w-11/12 max-h-[80vh] overflow-y-auto shadow-2xl">
+              <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
                 <h2 className="text-2xl font-bold text-gray-900">
                   Application Details - {selectedApplication.applicantName}
                 </h2>
                 <button
                   onClick={() => setSelectedApplication(null)}
-                  className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+                  className="bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center text-gray-600 transition-colors"
                 >
                   ✕
                 </button>
@@ -651,9 +594,9 @@ export function WorkingHRApplications() {
 
               <div className="space-y-6">
                 {/* Personal Information */}
-                <Card>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Personal Information</h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
                     <div><strong>Full Name:</strong> {selectedApplication.applicantName}</div>
                     <div><strong>Email:</strong> {selectedApplication.email}</div>
                     <div><strong>Phone:</strong> {selectedApplication.phone}</div>
@@ -661,11 +604,11 @@ export function WorkingHRApplications() {
                     <div><strong>Date of Birth:</strong> March 15, 1985</div>
                     <div><strong>SSN:</strong> ***-**-{Math.floor(Math.random() * 9000) + 1000}</div>
                   </div>
-                </Card>
+                </div>
 
                 {/* Position & Experience */}
-                <Card className="bg-info-50 border-info-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Position & Experience</h3>
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Position & Experience</h3>
                   <div className="space-y-2 text-sm">
                     <div><strong>Applied Position:</strong> {selectedApplication.position}</div>
                     <div><strong>Department:</strong> {positions.find(p => p.title === selectedApplication.position)?.department}</div>
@@ -675,34 +618,36 @@ export function WorkingHRApplications() {
                     <div><strong>Salary Expectation:</strong> {selectedApplication.expectedSalary}</div>
                     <div><strong>Availability:</strong> {selectedApplication.availability}</div>
                   </div>
-                </Card>
+                </div>
 
                 {/* Certifications & Skills */}
-                <Card className="bg-success-50 border-success-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Certifications & Skills</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">Current Certifications:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedApplication.certifications.map((cert, i) => (
-                          <Badge key={i} variant="success">{cert}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">Core Skills:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedApplication.skills.map((skill, i) => (
-                          <Badge key={i} variant="info">{skill}</Badge>
-                        ))}
-                      </div>
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Certifications & Skills</h3>
+                  <div className="mb-4">
+                    <p className="text-sm font-medium mb-2">Current Certifications:</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {selectedApplication.certifications.map((cert, index) => (
+                        <Badge key={index} className="bg-green-100 text-green-800">
+                          {cert}
+                        </Badge>
+                      ))}
                     </div>
                   </div>
-                </Card>
+                  <div>
+                    <p className="text-sm font-medium mb-2">Core Skills:</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {selectedApplication.skills.map((skill, index) => (
+                        <Badge key={index} className="bg-blue-100 text-blue-800">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
 
-                {/* Application Status */}
-                <Card className="bg-warning-50 border-warning-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Application Status & Timeline</h3>
+                {/* Application Status & History */}
+                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Application Status & Timeline</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2">
                       <strong>Current Status:</strong>
@@ -717,77 +662,85 @@ export function WorkingHRApplications() {
                       <div><strong>Background Check:</strong> {selectedApplication.backgroundCheckStatus} (Started: {selectedApplication.backgroundCheckDate})</div>
                     )}
                   </div>
-                </Card>
+                </div>
 
                 {/* References */}
-                <Card>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Professional References</h3>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Professional References</h3>
                   <div className="space-y-3">
-                    <div className="p-3 bg-success-50 rounded-lg">
+                    <div className="p-3 bg-white rounded-md">
                       <p className="text-sm font-medium text-gray-900">Dr. Sarah Mitchell, RN Supervisor</p>
                       <p className="text-xs text-gray-600">Columbus Regional Medical Center • (614) 555-0901</p>
-                      <p className="text-xs text-success-600 mt-1">✓ Reference verified - Excellent work ethic and patient care</p>
+                      <p className="text-xs text-green-700">✓ Reference verified - Excellent work ethic and patient care</p>
                     </div>
-                    <div className="p-3 bg-success-50 rounded-lg">
+                    <div className="p-3 bg-white rounded-md">
                       <p className="text-sm font-medium text-gray-900">James Rodriguez, Department Manager</p>
                       <p className="text-xs text-gray-600">Home Care Solutions • (614) 555-0902</p>
-                      <p className="text-xs text-success-600 mt-1">✓ Reference verified - Highly recommended for home health role</p>
+                      <p className="text-xs text-green-700">✓ Reference verified - Highly recommended for home health role</p>
                     </div>
                   </div>
-                </Card>
+                </div>
 
-                {/* Notes */}
-                <Card className="bg-orange-50 border-orange-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Interview Notes & Comments</h3>
-                  <div className="text-sm text-gray-700 space-y-2">
-                    <p><strong>HR Notes:</strong> Strong candidate with excellent references. Patient care experience in both hospital and home settings. Shows genuine interest in home health mission.</p>
-                    <p><strong>Interview Feedback:</strong> Articulate communicator, demonstrates empathy and professionalism. Asked thoughtful questions about patient population and care protocols.</p>
-                    <p><strong>Next Steps:</strong> Recommend for background check and reference verification. Strong candidate for immediate hire upon clearance.</p>
+                {/* Notes & Comments */}
+                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Interview Notes & Comments</h3>
+                  <div className="text-sm text-orange-900 space-y-2">
+                    <p>
+                      <strong>HR Notes:</strong> Strong candidate with excellent references. Patient care experience in both hospital and home settings. Shows genuine interest in home health mission.
+                    </p>
+                    <p>
+                      <strong>Interview Feedback:</strong> Articulate communicator, demonstrates empathy and professionalism. Asked thoughtful questions about patient population and care protocols.
+                    </p>
+                    <p>
+                      <strong>Next Steps:</strong> Recommend for background check and reference verification. Strong candidate for immediate hire upon clearance.
+                    </p>
                   </div>
-                </Card>
+                </div>
               </div>
 
-              {/* Modal Actions */}
-              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+              <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-200">
                 {selectedApplication.status === 'new' && (
                   <>
-                    <button
+                    <Button
                       onClick={() => {
                         setSelectedApplication(null);
                         handleStatusChange(selectedApplication.id, 'reviewing');
                       }}
-                      className="px-6 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors"
+                      size="sm"
                     >
                       ✓ Move to Review
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={() => {
                         setSelectedApplication(null);
                         handleRejectApplication(selectedApplication);
                       }}
-                      className="px-6 py-2 bg-danger-600 text-white rounded-lg font-medium hover:bg-danger-700 transition-colors"
+                      className="bg-red-600 hover:bg-red-700"
+                      size="sm"
                     >
                       ✗ Reject
-                    </button>
+                    </Button>
                   </>
                 )}
                 {selectedApplication.status === 'reviewing' && (
-                  <button
+                  <Button
                     onClick={() => {
                       setSelectedApplication(null);
                       handleScheduleInterview(selectedApplication);
                     }}
-                    className="px-6 py-2 bg-success-600 text-white rounded-lg font-medium hover:bg-success-700 transition-colors"
+                    className="bg-green-600 hover:bg-green-700"
+                    size="sm"
                   >
                     📅 Schedule Interview
-                  </button>
+                  </Button>
                 )}
-                <button
+                <Button
                   onClick={() => setSelectedApplication(null)}
-                  className="px-6 py-2 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                  variant="secondary"
+                  size="sm"
                 >
                   Close
-                </button>
+                </Button>
               </div>
             </div>
           </div>
