@@ -8,6 +8,8 @@
  * - Production secrets stored in AWS Secrets Manager
  */
 
+import { logger } from '../utils/logger';
+
 export interface SandataEnvironmentConfig {
   baseUrl: string;
   clientId: string;

@@ -14,6 +14,7 @@
  */
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import { createLogger } from '../../utils/logger';
 import {
   getActiveSandataConfig,
   getSandataBusinessRules,
@@ -39,6 +40,7 @@ export class SandataClient {
   private authToken: SandataAuthToken | null = null;
   private readonly config = getActiveSandataConfig();
   private readonly businessRules = getSandataBusinessRules();
+  private readonly logger = createLogger('sandata-client');
 
   constructor() {
     // Initialize axios instance with base configuration
