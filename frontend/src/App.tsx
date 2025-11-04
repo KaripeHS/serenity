@@ -24,6 +24,7 @@ import { OnCallDispatch } from './components/operations/OnCallDispatch';
 import { DenialWorkflow } from './components/billing/DenialWorkflow';
 import { SystemConfiguration } from './components/admin/SystemConfiguration';
 import { SandataConfigUI } from './components/admin/SandataConfigUI';
+import { SandataExceptionsPage } from './components/admin/SandataExceptionsPage';
 
 // Layouts
 import DashboardLayout from './components/layouts/DashboardLayout';
@@ -75,6 +76,7 @@ function App() {
                       <Route path="denials" element={<DenialWorkflow />} />
                       <Route path="settings" element={<SystemConfiguration />} />
                       <Route path="sandata-config" element={<SandataConfigUI />} />
+                      <Route path="sandata-exceptions" element={<SandataExceptionsPage />} />
 
                       {/* Legacy dashboard routes */}
                       <Route path="legacy/executive" element={<WorkingExecutiveDashboard />} />
