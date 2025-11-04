@@ -267,12 +267,75 @@ export class AppendixGValidatorService {
 
   /**
    * Load Appendix G data into cache
-   * TODO: Replace with database query in production
+   * Loads from database (migration 023_appendix_g_payer_procedure_codes.sql)
    */
   private async loadAppendixGData(): Promise<void> {
+    try {
+      // Try to load from database
+      await this.loadFromDatabase();
+    } catch (error) {
+      // Fallback to sample data if database not available
+      console.warn('[AppendixG] Failed to load from database, using sample data:', error);
+      await this.loadSampleData();
+    }
+  }
+
+  /**
+   * Load Appendix G data from database
+   */
+  private async loadFromDatabase(): Promise<void> {
+    const { getDbClient } = await import('../../database/client');
+    const db = getDbClient();
+
+    const result = await db.query(`
+      SELECT
+        payer,
+        payer_program AS "payerProgram",
+        procedure_code AS "procedureCode",
+        valid_modifiers AS "validModifiers",
+        description,
+        requires_authorization AS "requiresAuthorization",
+        max_units_per_day AS "maxUnitsPerDay",
+        max_units_per_week AS "maxUnitsPerWeek",
+        effective_date AS "effectiveDate",
+        end_date AS "endDate"
+      FROM appendix_g_codes
+      WHERE is_active = TRUE
+        AND (effective_date IS NULL OR effective_date <= CURRENT_DATE)
+        AND (end_date IS NULL OR end_date >= CURRENT_DATE)
+      ORDER BY payer, payer_program, procedure_code
+    `);
+
+    const entries: AppendixGEntry[] = result.rows.map((row) => ({
+      payer: row.payer,
+      payerProgram: row.payerProgram,
+      procedureCode: row.procedureCode,
+      validModifiers: row.validModifiers || [],
+      description: row.description,
+      requiresAuthorization: row.requiresAuthorization,
+      maxUnitsPerDay: row.maxUnitsPerDay,
+      maxUnitsPerWeek: row.maxUnitsPerWeek,
+      effectiveDate: row.effectiveDate,
+      endDate: row.endDate,
+    }));
+
+    // Populate cache
+    for (const entry of entries) {
+      const key = this.generateCacheKey(entry.payer, entry.payerProgram, entry.procedureCode);
+      this.appendixGCache.set(key, entry);
+    }
+
+    console.log(`[AppendixG] Loaded ${this.appendixGCache.size} valid combinations from database`);
+  }
+
+  /**
+   * Load sample Appendix G data (fallback when database not available)
+   * DEPRECATED: Use database migration 023 instead
+   */
+  private async loadSampleData(): Promise<void> {
     // Sample Appendix G entries for Ohio Alt-EVV v4.3
     // CRITICAL: This is a PARTIAL list for demonstration
-    // Full Appendix G must be loaded from official ODM/Sandata documentation
+    // Full Appendix G should be loaded from database (migration 023)
     const sampleEntries: AppendixGEntry[] = [
       // ODJFS - PASSPORT Program
       {

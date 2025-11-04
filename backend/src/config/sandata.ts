@@ -12,7 +12,8 @@ export interface SandataEnvironmentConfig {
   baseUrl: string;
   clientId: string;
   clientSecret: string;
-  providerId: string;
+  providerId: string; // 7-digit ODME Provider ID (BusinessEntityMedicaidIdentifier)
+  businessEntityId: string; // Sandata's ID for Serenity (assigned during onboarding)
   apiVersion: string;
 }
 
@@ -57,7 +58,8 @@ const sandataConfig: SandataConfig = {
     baseUrl: process.env.SANDATA_SANDBOX_URL || 'https://uat-api.sandata.com',
     clientId: process.env.SANDATA_SANDBOX_CLIENT_ID || 'SERENITY_SANDBOX_CLIENT_ID',
     clientSecret: process.env.SANDATA_SANDBOX_SECRET || 'PLACEHOLDER_SECRET',
-    providerId: process.env.SANDATA_PROVIDER_ID || 'OH_ODME_123456', // PLACEHOLDER - 7-digit ODME Provider ID
+    providerId: process.env.SANDATA_PROVIDER_ID || '1234567', // PLACEHOLDER - 7-digit ODME Provider ID (BusinessEntityMedicaidIdentifier)
+    businessEntityId: process.env.SANDATA_BUSINESS_ENTITY_ID || 'SERENITY_BE_PLACEHOLDER', // PLACEHOLDER - Sandata's ID for Serenity (BusinessEntityID)
     apiVersion: 'v4.3',
   },
 
@@ -66,7 +68,8 @@ const sandataConfig: SandataConfig = {
     baseUrl: process.env.SANDATA_PRODUCTION_URL || 'https://api.sandata.com',
     clientId: process.env.SANDATA_PRODUCTION_CLIENT_ID || 'SERENITY_PROD_CLIENT_ID',
     clientSecret: process.env.SANDATA_PRODUCTION_SECRET || 'PLACEHOLDER_SECRET',
-    providerId: process.env.SANDATA_PROVIDER_ID || 'OH_ODME_123456', // PLACEHOLDER - 7-digit ODME Provider ID
+    providerId: process.env.SANDATA_PROVIDER_ID || '1234567', // PLACEHOLDER - 7-digit ODME Provider ID (BusinessEntityMedicaidIdentifier)
+    businessEntityId: process.env.SANDATA_BUSINESS_ENTITY_ID || 'SERENITY_BE_PLACEHOLDER', // PLACEHOLDER - Sandata's ID for Serenity (BusinessEntityID)
     apiVersion: 'v4.3',
   },
 

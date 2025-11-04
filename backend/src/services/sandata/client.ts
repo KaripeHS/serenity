@@ -52,7 +52,7 @@ export class SandataClient {
       },
     });
 
-    // Request interceptor: Add auth token
+    // Request interceptor: Add auth token and Ohio Alt-EVV headers
     this.axiosInstance.interceptors.request.use(
       async (config) => {
         // Skip auth for token endpoint
@@ -61,6 +61,11 @@ export class SandataClient {
           if (token) {
             config.headers.Authorization = `Bearer ${token.token}`;
           }
+
+          // Add Ohio Alt-EVV v4.3 required headers
+          // CRITICAL: These headers are REQUIRED for all Patient, Staff, and Visit submissions
+          config.headers['BusinessEntityID'] = this.config.businessEntityId;
+          config.headers['BusinessEntityMedicaidIdentifier'] = this.config.providerId;
         }
         return config;
       },
