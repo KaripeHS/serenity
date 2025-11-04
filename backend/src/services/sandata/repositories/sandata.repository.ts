@@ -568,6 +568,52 @@ export class SandataRepository {
 
     return result.rows;
   }
+
+  // ============================================================================
+  // Encryption/Decryption Utilities
+  // ============================================================================
+
+  /**
+   * Decrypt SSN using PostgreSQL decrypt_ssn() function
+   * CRITICAL: Only use when necessary for Sandata submission
+   * NEVER log the decrypted SSN
+   *
+   * @param ssnEncrypted - Encrypted SSN (bytea)
+   * @returns Decrypted SSN (9 digits, no dashes)
+   */
+  async decryptSSN(ssnEncrypted: Buffer | string, context?: QueryContext): Promise<string | null> {
+    if (!ssnEncrypted) {
+      return null;
+    }
+
+    const result = await this.db.query<{ ssn: string }>(
+      'SELECT decrypt_ssn($1) AS ssn',
+      [ssnEncrypted],
+      context
+    );
+
+    return result.rows[0]?.ssn || null;
+  }
+
+  /**
+   * Encrypt SSN using PostgreSQL encrypt_ssn() function
+   *
+   * @param ssn - Plain text SSN (9 digits, no dashes)
+   * @returns Encrypted SSN (bytea)
+   */
+  async encryptSSN(ssn: string, context?: QueryContext): Promise<Buffer | null> {
+    if (!ssn) {
+      return null;
+    }
+
+    const result = await this.db.query<{ encrypted: Buffer }>(
+      'SELECT encrypt_ssn($1) AS encrypted',
+      [ssn],
+      context
+    );
+
+    return result.rows[0]?.encrypted || null;
+  }
 }
 
 /**
