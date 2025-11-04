@@ -407,6 +407,12 @@ if [ "$JSON_OUTPUT" = true ]; then
   ]
 }
 EOF
+    # Set exit code based on failures
+    if [ $CHECKS_FAILED -eq 0 ]; then
+        EXIT_CODE=0
+    else
+        EXIT_CODE=1
+    fi
 else
     # Human-readable output
     log ""
