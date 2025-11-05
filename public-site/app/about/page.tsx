@@ -1,16 +1,26 @@
 import Link from 'next/link';
+import { Button } from '../components/Button';
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-16">
+      <section className="relative bg-gradient-to-br from-green-50 via-white to-blue-50 py-20">
         <div className="container mx-auto px-6">
-          <h1 className="text-4xl font-bold mb-4">About Serenity Care Partners</h1>
-          <p className="text-xl text-blue-100 max-w-3xl">
-            Revolutionizing home health care with our innovative pod-based model,
-            caregiver-first culture, and commitment to excellence.
-          </p>
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full border border-green-200 mb-6">
+              <span className="text-green-700 font-semibold text-sm">Our Story</span>
+            </div>
+            <h1 className="text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6 tracking-tight">
+              Redefining Home Health Care
+              <span className="block bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent mt-2">
+                One Pod at a Time
+              </span>
+            </h1>
+            <p className="text-xl text-gray-600 leading-relaxed">
+              We believe exceptional care starts with exceptional caregivers. Our innovative pod-based model transforms how home health care is delivered across Ohio.
+            </p>
+          </div>
         </div>
       </section>
 
