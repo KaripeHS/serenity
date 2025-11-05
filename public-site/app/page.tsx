@@ -6,11 +6,11 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section - Trust-First Design */}
-      <section className="relative bg-gradient-to-br from-green-50 via-white to-blue-50 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-green-50 via-white to-green-50 overflow-hidden">
         {/* Subtle background pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-20 left-10 w-72 h-72 bg-green-400 rounded-full filter blur-3xl"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-400 rounded-full filter blur-3xl"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-green-500 rounded-full filter blur-3xl"></div>
         </div>
 
         <div className="relative container mx-auto px-6 py-20 lg:py-32">
@@ -128,7 +128,7 @@ export default function Home() {
                 icon: '👥',
                 title: 'Pod-Based Care Model',
                 description: 'Small, dedicated teams of 35-40 patients ensure personalized attention and consistent relationships.',
-                color: 'from-blue-50 to-blue-100',
+                color: 'from-green-50 to-green-100',
               },
               {
                 icon: '❤️',
@@ -140,7 +140,7 @@ export default function Home() {
                 icon: '📊',
                 title: 'Data-Driven Excellence',
                 description: 'Real-time performance tracking and Serenity Performance Index (SPI) ensure quality outcomes.',
-                color: 'from-purple-50 to-purple-100',
+                color: 'from-green-50 to-green-100',
               },
             ].map((feature, index) => (
               <div
@@ -311,8 +311,8 @@ export default function Home() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full border border-blue-200 mb-6">
-              <span className="text-blue-700 font-semibold text-sm">Trusted by Families Across Ohio</span>
+            <div className="inline-flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full border border-green-200 mb-6">
+              <span className="text-green-700 font-semibold text-sm">Trusted by Families Across Ohio</span>
             </div>
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
               Hear From Our Families
@@ -391,7 +391,7 @@ export default function Home() {
             ].map((stat, index) => (
               <div
                 key={index}
-                className="text-center p-6 bg-gradient-to-br from-green-50 to-blue-50 rounded-xl fade-in"
+                className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl fade-in"
                 style={{ animationDelay: `${(index + 3) * 100}ms` }}
               >
                 <div className="text-3xl mb-2">{stat.icon}</div>
