@@ -5,33 +5,42 @@ export default function ServicesPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-green-50 via-white to-green-50 overflow-hidden py-20">
-        {/* Subtle background pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-green-400 rounded-full filter blur-3xl"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-green-500 rounded-full filter blur-3xl"></div>
-        </div>
+      <section className="relative bg-gradient-to-br from-green-50 via-white to-green-50 overflow-hidden py-20 lg:py-32">
+        <div className="container mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Column - Content */}
+            <div className="space-y-6 fade-in">
+              <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-green-100">
+                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span className="text-sm font-semibold text-gray-700">Comprehensive Care Services</span>
+              </div>
 
-        <div className="relative container mx-auto px-6">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-green-100 mb-6 fade-in">
-              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm font-semibold text-gray-700">Comprehensive Care Services</span>
+              <h1 className="text-5xl lg:text-6xl font-extrabold tracking-tight leading-none">
+                <span className="text-gray-900">Expert Care.</span>
+                <br />
+                <span className="bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
+                  Delivered with Compassion.
+                </span>
+              </h1>
+
+              <p className="text-xl lg:text-2xl text-gray-600 leading-relaxed">
+                Comprehensive home health care services delivered with professionalism, compassion, and a commitment to your loved one's independence.
+              </p>
             </div>
 
-            <h1 className="text-5xl lg:text-6xl font-extrabold tracking-tight leading-none mb-6 fade-in" style={{ animationDelay: '100ms' }}>
-              <span className="text-gray-900">Expert Care.</span>
-              <br />
-              <span className="bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
-                Delivered with Compassion.
-              </span>
-            </h1>
-
-            <p className="text-xl lg:text-2xl text-gray-600 leading-relaxed max-w-3xl mx-auto fade-in" style={{ animationDelay: '200ms' }}>
-              Comprehensive home health care services delivered with professionalism, compassion, and a commitment to your loved one's independence.
-            </p>
+            {/* Right Column - Hero Image */}
+            <div className="relative h-[500px] lg:h-[600px] fade-in" style={{ animationDelay: '200ms' }}>
+              <div className="absolute inset-0 rounded-3xl shadow-2xl hover-lift overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1584515933487-779824d29309?q=80&w=1200&auto=format&fit=crop"
+                  alt="Professional nurse providing compassionate care to elderly patient at home"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -347,6 +356,37 @@ export default function ServicesPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Service Images Grid */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="rounded-2xl overflow-hidden shadow-lg hover-lift h-80 fade-in">
+                <img
+                  src="https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?q=80&w=800&auto=format&fit=crop"
+                  alt="Caregiver assisting elderly patient with personal care"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="rounded-2xl overflow-hidden shadow-lg hover-lift h-80 fade-in" style={{ animationDelay: '100ms' }}>
+                <img
+                  src="https://images.unsplash.com/photo-1581594549595-35f6edc7b762?q=80&w=800&auto=format&fit=crop"
+                  alt="Skilled nurse providing medical care at home"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="rounded-2xl overflow-hidden shadow-lg hover-lift h-80 fade-in" style={{ animationDelay: '200ms' }}>
+                <img
+                  src="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=800&auto=format&fit=crop"
+                  alt="Companion caregiver enjoying time with senior patient"
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
           </div>
