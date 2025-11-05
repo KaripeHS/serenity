@@ -11,6 +11,7 @@ import { publicRateLimiter } from '../../middleware/rate-limiter';
 import { getDbClient } from '../../database/client';
 import { createLogger } from '../../utils/logger';
 import { getEmailService } from '../../services/notifications/email.service';
+import contentRouter from './content';
 
 const router = Router();
 const logger = createLogger('public-api');
@@ -194,5 +195,11 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
     next(error);
   }
 });
+
+/**
+ * Mount Content Management Routes
+ * Public endpoints for website content
+ */
+router.use('/content', contentRouter);
 
 export { router as publicRouter };
