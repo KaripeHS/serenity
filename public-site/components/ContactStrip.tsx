@@ -17,8 +17,8 @@ interface ContactStripProps {
 }
 
 export default function ContactStrip({
-  phone = "1-800-555-0100",
-  email = "info@serenitycare.com",
+  phone = "(513) 400-5113",
+  email = "Hello@serenitycarepartners.com",
   locations = ["Columbus", "Dayton", "Cincinnati"],
   backgroundColor = 'sage'
 }: ContactStripProps) {

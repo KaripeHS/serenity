@@ -90,9 +90,9 @@ export default function ContactPage() {
             <p className="text-gray-700 font-semibold text-lg">
               Need immediate assistance?
             </p>
-            <a href="tel:1-800-555-0100">
+            <a href="tel:+15134005113">
               <Button size="lg" variant="primary">
-                Call: 1-800-555-0100
+                Call: (513) 400-5113
               </Button>
             </a>
           </div>
@@ -104,37 +104,37 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-green-50 via-white to-green-50 overflow-hidden py-20 lg:py-32">
+      <section className="relative overflow-hidden py-20 lg:py-32" style={{ background: 'var(--gradient-hero)' }}>
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Column - Content */}
             <div className="space-y-6 fade-in">
-              <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-green-100">
-                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+              <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-serenity-green-100" style={{ boxShadow: 'var(--shadow-sm)' }}>
+                <svg className="w-5 h-5 text-serenity-green-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-sm font-semibold text-gray-700">We're Here to Help</span>
+                <span className="text-sm font-semibold text-warm-gray-700">We're Here to Help</span>
               </div>
 
-              <h1 className="text-5xl lg:text-6xl font-extrabold tracking-tight leading-none">
-                <span className="text-gray-900">Request Care</span>
+              <h1 className="text-5xl lg:text-6xl leading-tight" style={{ fontFamily: 'var(--font-serif)', letterSpacing: 'var(--tracking-tighter)' }}>
+                <span className="text-warm-gray-900">Request Care</span>
                 <br />
-                <span className="bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-serenity-green-600 to-serenity-green-700 bg-clip-text text-transparent">
                   Information
                 </span>
               </h1>
 
-              <p className="text-xl lg:text-2xl text-gray-600 leading-relaxed">
+              <p className="text-xl lg:text-2xl text-warm-gray-600 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
                 Complete the form below and we'll contact you within 24 hours to discuss your care needs and answer any questions.
               </p>
             </div>
 
             {/* Right Column - Hero Image */}
             <div className="relative h-[500px] lg:h-[600px] fade-in" style={{ animationDelay: '200ms' }}>
-              <div className="absolute inset-0 rounded-3xl shadow-2xl hover-lift overflow-hidden">
+              <div className="absolute inset-0 rounded-xl hover-lift overflow-hidden" style={{ boxShadow: 'var(--shadow-xl)' }}>
                 <img
-                  src="https://images.unsplash.com/photo-1516549655169-df83a0774514?q=80&w=1200&auto=format&fit=crop"
-                  alt="Friendly healthcare professional ready to help patients"
+                  src="https://images.unsplash.com/photo-1544027993-37dbfe43562a?q=80&w=1200&auto=format&fit=crop"
+                  alt="Caregiver having a warm conversation with elderly patient in comfortable home setting"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -155,8 +155,8 @@ export default function ContactPage() {
                 </svg>
               </div>
               <h3 className="font-bold text-lg mb-2 text-gray-900">Phone</h3>
-              <a href="tel:1-800-555-0100" className="text-green-600 hover:text-green-700 font-semibold transition-colors">
-                1-800-555-0100
+              <a href="tel:+15134005113" className="text-green-600 hover:text-green-700 font-semibold transition-colors">
+                (513) 400-5113
               </a>
             </div>
 
@@ -186,27 +186,29 @@ export default function ContactPage() {
       </section>
 
       {/* Trust & Credentials Section with Images */}
-      <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
+      <section className="py-16" style={{ background: 'var(--gradient-section-alt)' }}>
         <div className="container mx-auto px-6">
           <div className="max-w-5xl mx-auto mb-16">
             <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Families Trust Us</h2>
-              <p className="text-xl text-gray-600">
+              <h2 className="text-4xl font-bold text-warm-gray-900 mb-4" style={{ fontFamily: 'var(--font-serif)', letterSpacing: 'var(--tracking-tighter)' }}>
+                Why Families Trust Us
+              </h2>
+              <p className="text-xl text-warm-gray-600" style={{ fontFamily: 'var(--font-body)' }}>
                 Licensed, insured, and dedicated to exceptional patient care
               </p>
             </div>
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="rounded-2xl overflow-hidden shadow-lg hover-lift h-72 fade-in">
+              <div className="rounded-xl overflow-hidden hover-lift h-72 fade-in" style={{ boxShadow: 'var(--shadow-md)' }}>
                 <img
-                  src="https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?q=80&w=1000&auto=format&fit=crop"
-                  alt="Professional healthcare team meeting with family"
+                  src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?q=80&w=1000&auto=format&fit=crop"
+                  alt="Caregiver helping elderly patient in warm home environment"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="rounded-2xl overflow-hidden shadow-lg hover-lift h-72 fade-in" style={{ animationDelay: '100ms' }}>
+              <div className="rounded-xl overflow-hidden hover-lift h-72 fade-in" style={{ animationDelay: '100ms', boxShadow: 'var(--shadow-md)' }}>
                 <img
-                  src="https://images.unsplash.com/photo-1556742044-3c52d6e88c62?q=80&w=1000&auto=format&fit=crop"
-                  alt="Caregiver providing compassionate support"
+                  src="https://images.unsplash.com/photo-1544027993-37dbfe43562a?q=80&w=1000&auto=format&fit=crop"
+                  alt="Caregiver and senior patient sharing a happy moment together"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -488,6 +490,11 @@ export default function ContactPage() {
                 <p className="text-sm text-gray-500 text-center mt-4">
                   By submitting this form, you consent to be contacted by Serenity Care Partners regarding your care needs.
                 </p>
+                <div className="mt-4 p-4 bg-serenity-green-50 border border-serenity-green-200 rounded-lg">
+                  <p className="text-xs text-warm-gray-700 leading-relaxed">
+                    <strong className="text-serenity-green-700">HIPAA Privacy Notice:</strong> Serenity Care Partners is committed to protecting your health information. All information submitted through this form is encrypted and handled in accordance with HIPAA regulations. We will never share your personal health information without your explicit consent.
+                  </p>
+                </div>
               </div>
             </form>
           </div>

@@ -5,34 +5,34 @@ export default function ServicesPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-green-50 via-white to-green-50 overflow-hidden py-20 lg:py-32">
+      <section className="relative overflow-hidden py-20 lg:py-32" style={{ background: 'var(--gradient-hero)' }}>
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Column - Content */}
             <div className="space-y-6 fade-in">
-              <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-green-100">
-                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+              <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-serenity-green-100" style={{ boxShadow: 'var(--shadow-sm)' }}>
+                <svg className="w-5 h-5 text-serenity-green-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-sm font-semibold text-gray-700">Comprehensive Care Services</span>
+                <span className="text-sm font-semibold text-warm-gray-700">Comprehensive Care Services</span>
               </div>
 
-              <h1 className="text-5xl lg:text-6xl font-extrabold tracking-tight leading-none">
-                <span className="text-gray-900">Expert Care.</span>
+              <h1 className="text-5xl lg:text-6xl leading-tight" style={{ fontFamily: 'var(--font-serif)', letterSpacing: 'var(--tracking-tighter)' }}>
+                <span className="text-warm-gray-900">Expert Care.</span>
                 <br />
-                <span className="bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-serenity-green-600 to-serenity-green-700 bg-clip-text text-transparent">
                   Delivered with Compassion.
                 </span>
               </h1>
 
-              <p className="text-xl lg:text-2xl text-gray-600 leading-relaxed">
+              <p className="text-xl lg:text-2xl text-warm-gray-600 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
                 Comprehensive home health care services delivered with professionalism, compassion, and a commitment to your loved one's independence.
               </p>
             </div>
 
             {/* Right Column - Hero Image */}
             <div className="relative h-[500px] lg:h-[600px] fade-in" style={{ animationDelay: '200ms' }}>
-              <div className="absolute inset-0 rounded-3xl shadow-2xl hover-lift overflow-hidden">
+              <div className="absolute inset-0 rounded-xl hover-lift overflow-hidden" style={{ boxShadow: 'var(--shadow-xl)' }}>
                 <img
                   src="https://images.unsplash.com/photo-1584515933487-779824d29309?q=80&w=1200&auto=format&fit=crop"
                   alt="Professional nurse providing compassionate care to elderly patient at home"
@@ -394,7 +394,7 @@ export default function ServicesPage() {
       </section>
 
       {/* Service Authorization Process */}
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
+      <section className="py-20" style={{ background: 'var(--gradient-section-alt)' }}>
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
@@ -489,21 +489,23 @@ export default function ServicesPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 bg-gradient-to-br from-green-600 to-green-700 text-white">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6">Ready to Get Started?</h2>
-          <p className="text-xl mb-10 text-green-50 max-w-2xl mx-auto">
+      <section className="py-24 text-white" style={{ background: 'var(--gradient-cta)' }}>
+        <div className="container mx-auto px-6 text-center fade-in-up">
+          <h2 className="text-4xl lg:text-5xl mb-6 text-white" style={{ fontFamily: 'var(--font-serif)', letterSpacing: 'var(--tracking-tighter)' }}>
+            Ready to Get Started?
+          </h2>
+          <p className="text-xl mb-10 max-w-2xl mx-auto opacity-95" style={{ fontFamily: 'var(--font-body)', color: 'var(--sage-50)' }}>
             Contact us today for a free consultation. We'll create a personalized care plan for your loved one.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/contact">
-              <Button size="lg" className="bg-white text-green-700 hover:bg-gray-50">
+              <Button size="lg" variant="gold">
                 Request Care Information
               </Button>
             </Link>
-            <a href="tel:1-800-555-0100">
-              <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-green-800">
-                Call: 1-800-555-0100
+            <a href="tel:+15134005113">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-serenity-green-700">
+                Call: (513) 400-5113
               </Button>
             </a>
           </div>

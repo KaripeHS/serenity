@@ -29,7 +29,7 @@ export default function CTASection({
   subheadline,
   primaryCTA,
   secondaryCTA,
-  phoneNumber = "1-800-555-0100",
+  phoneNumber = "(513) 400-5113",
   backgroundColor = '#0C5A3D'
 }: CTASectionProps) {
   return (
