@@ -11,6 +11,7 @@ import { ApiErrors } from '../../middleware/error-handler';
 import { getSandataRepository } from '../../../services/sandata/repositories/sandata.repository';
 import { getDbClient } from '../../../database/client';
 import { sandataConfigRouter } from './sandata-config';
+import contentRouter from './content';
 
 const router = Router();
 const repository = getSandataRepository(getDbClient());
@@ -500,5 +501,21 @@ router.get('/metrics', async (req: AuthenticatedRequest, res: Response, next) =>
  * - GET /api/admin/sandata/validation-status - Get validation status
  */
 router.use('/sandata', sandataConfigRouter);
+
+// ============================================================================
+// CONTENT MANAGEMENT SYSTEM
+// ============================================================================
+
+/**
+ * Mount the Content Management Router
+ * Handles public website content management:
+ * - Pages (pages, sections)
+ * - Team members
+ * - Testimonials
+ * - Services
+ * - Organization settings
+ * - Media assets
+ */
+router.use('/content', contentRouter);
 
 export { router as adminRouter };

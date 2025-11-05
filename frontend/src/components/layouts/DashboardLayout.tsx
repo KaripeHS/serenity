@@ -22,7 +22,8 @@ import {
   BellIcon,
   CogIcon,
   QuestionMarkCircleIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import { Badge } from '../ui/Badge';
 
@@ -101,6 +102,12 @@ const navigation: NavigationItem[] = [
     href: '/family-portal',
     icon: BuildingOffice2Icon,
     description: 'Family engagement portal'
+  },
+  {
+    name: 'Website Content',
+    href: '/dashboard/content',
+    icon: DocumentTextIcon,
+    description: 'Manage public website content'
   }
 ];
 
