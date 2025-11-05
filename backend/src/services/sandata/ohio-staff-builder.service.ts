@@ -20,6 +20,8 @@
  */
 
 import { getSandataSequenceService } from './sequence.service';
+import { getSandataRepository } from './repositories/sandata.repository';
+import { getDbClient } from '../../database/client';
 import type {
   OhioStaff,
   OhioStaffRequest,
@@ -107,6 +109,18 @@ export interface StaffBuildResult {
  */
 export class OhioStaffBuilderService {
   private readonly sequenceService = getSandataSequenceService();
+  private sandataRepo: any = null;
+
+  /**
+   * Get repository instance (lazy-loaded)
+   */
+  private getRepository() {
+    if (!this.sandataRepo) {
+      const db = getDbClient();
+      this.sandataRepo = getSandataRepository(db);
+    }
+    return this.sandataRepo;
+  }
 
   /**
    * Build Ohio Alt-EVV v4.3 staff payload from user/caregiver data
@@ -185,7 +199,19 @@ export class OhioStaffBuilderService {
         return { success: false, errors };
       }
 
-      const ssn = staff.ssnDecrypted || this.decryptSSN(staff.ssnEncrypted);
+      // Decrypt SSN if needed
+      let ssn: string;
+      if (staff.ssnDecrypted) {
+        ssn = staff.ssnDecrypted;
+      } else {
+        const decryptedSSN = await this.decryptSSN(staff.ssnEncrypted);
+        if (!decryptedSSN) {
+          errors.push('Failed to decrypt SSN. Please verify SSN encryption is valid.');
+          return { success: false, errors };
+        }
+        ssn = decryptedSSN;
+      }
+
       if (!this.isValidSSN(ssn)) {
         errors.push(
           `Invalid SSN format. Must be 9 digits, no dashes. Got: "${this.maskSSN(ssn)}"`
@@ -442,23 +468,36 @@ export class OhioStaffBuilderService {
   }
 
   /**
-   * Decrypt SSN from database
-   * CRITICAL: This should use the same decryption method as migration 022
+   * Decrypt SSN from database using PostgreSQL decrypt_ssn() function
+   * CRITICAL: Uses same decryption method as migration 022
+   * NEVER log the decrypted SSN
    *
-   * @param ssnEncrypted - Encrypted SSN bytea
+   * @param ssnEncrypted - Encrypted SSN bytea or string
    * @returns Decrypted SSN (9 digits, no dashes)
    */
-  private decryptSSN(ssnEncrypted?: string): string {
-    // TODO: Implement actual decryption using pgcrypto
-    // For now, this is a placeholder that assumes SSN is already decrypted
-    // In production, this should call the decrypt_ssn() PostgreSQL function
-
+  private async decryptSSN(ssnEncrypted?: string | Buffer): Promise<string | null> {
     if (!ssnEncrypted) {
-      return '';
+      return null;
     }
 
-    // This is a placeholder - replace with actual decryption
-    return ssnEncrypted;
+    try {
+      // Call repository method which calls decrypt_ssn() PostgreSQL function
+      const repo = this.getRepository();
+      const decrypted = await repo.decryptSSN(ssnEncrypted);
+
+      if (!decrypted) {
+        throw new Error('Decryption returned null or empty value');
+      }
+
+      return decrypted;
+    } catch (error) {
+      // Log error but DON'T log the encrypted value for security
+      console.error('[StaffBuilder] SSN decryption failed', {
+        error: this.getErrorMessage(error),
+        note: 'Check that pgcrypto extension is enabled and app.ssn_encryption_key is set',
+      });
+      throw error;
+    }
   }
 
   /**
