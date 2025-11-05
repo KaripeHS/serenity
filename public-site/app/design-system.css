@@ -1,0 +1,343 @@
+/**
+ * Serenity Care Partners - Design System
+ * "Airbnb-Inspired Modern Trust-First Design"
+ *
+ * Core Pillars:
+ * 1. Trust Through Visual Consistency
+ * 2. Professional Typography Hierarchy
+ * 3. Polished Micro-interactions
+ * 4. Mobile-First Excellence
+ * 5. Conversion-Optimized Components
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ============================================
+     DUAL COLOR PSYCHOLOGY
+     ============================================ */
+
+  /* Primary Brand: Deep Forest Green (Growth/Safety) - Marketing */
+  --karipe-green-50: #e8f5e9;
+  --karipe-green-100: #c8e6c9;
+  --karipe-green-200: #a5d6a7;
+  --karipe-green-300: #81c784;
+  --karipe-green-400: #66bb6a;
+  --karipe-green-500: #003912; /* Brand authority */
+  --karipe-green-600: #00331f;
+  --karipe-green-700: #002d1a;
+  --karipe-green-800: #002715;
+  --karipe-green-900: #001d0f;
+
+  /* Secondary: Trustworthy Blue (Console/Professional) */
+  --karipe-blue-50: #e3f2fd;
+  --karipe-blue-100: #bbdefb;
+  --karipe-blue-200: #90caf9;
+  --karipe-blue-300: #64b5f6;
+  --karipe-blue-400: #42a5f5;
+  --karipe-blue-500: #0d7cc1; /* Console trust */
+  --karipe-blue-600: #0b6ba8;
+  --karipe-blue-700: #095a8f;
+  --karipe-blue-800: #074a76;
+  --karipe-blue-900: #053a5d;
+
+  /* Trust Signals */
+  --karipe-teal-50: #e0f2f1;
+  --karipe-teal-100: #b2dfdb;
+  --karipe-teal-200: #80cbc4;
+  --karipe-teal-300: #4db6ac;
+  --karipe-teal-400: #26a69a;
+  --karipe-teal-500: #00897B; /* Verified/Trust */
+  --karipe-teal-600: #00796b;
+  --karipe-teal-700: #00695c;
+  --karipe-teal-800: #00594d;
+  --karipe-teal-900: #004d40;
+
+  /* Premium Highlights */
+  --karipe-gold-50: #fff8e1;
+  --karipe-gold-100: #ffecb3;
+  --karipe-gold-200: #ffe082;
+  --karipe-gold-300: #ffd54f;
+  --karipe-gold-400: #ffca28;
+  --karipe-gold-500: #EFA130; /* Premium */
+  --karipe-gold-600: #d78d2a;
+  --karipe-gold-700: #bf7924;
+  --karipe-gold-800: #a7651e;
+  --karipe-gold-900: #8f5118;
+
+  /* Semantic Colors */
+  --verified-green-50: #e8f5e9;
+  --verified-green-500: #4caf50;
+  --verified-green-700: #388e3c;
+
+  --escrow-purple-50: #f3e5f5;
+  --escrow-purple-500: #9c27b0;
+  --escrow-purple-700: #7b1fa2;
+
+  --review-amber-50: #fff8e1;
+  --review-amber-500: #ffc107;
+  --review-amber-700: #ffa000;
+
+  /* Neutrals (High Contrast) */
+  --neutral-50: #fafafa;
+  --neutral-100: #f5f5f5;
+  --neutral-200: #eeeeee;
+  --neutral-300: #e0e0e0;
+  --neutral-400: #bdbdbd;
+  --neutral-500: #9e9e9e;
+  --neutral-600: #757575;
+  --neutral-700: #616161;
+  --neutral-800: #424242;
+  --neutral-900: #212121;
+
+  /* ============================================
+     TYPOGRAPHY SYSTEM
+     ============================================ */
+
+  /* Font Families */
+  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-body: 'Manrope', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+
+  /* Font Sizes (Responsive) */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.875rem;   /* 14px */
+  --text-base: 1rem;     /* 16px - prevents iOS zoom */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+  --text-3xl: 1.875rem;  /* 30px */
+  --text-4xl: 2.25rem;   /* 36px */
+  --text-5xl: 3rem;      /* 48px */
+  --text-6xl: 3.75rem;   /* 60px */
+  --text-7xl: 4.5rem;    /* 72px */
+
+  /* Letter Spacing (Apple-inspired tight) */
+  --tracking-tighter: -0.03em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: -0.01em;
+  --tracking-wide: 0.01em;
+
+  /* Line Heights */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+
+  /* ============================================
+     SPACING SYSTEM (8px grid)
+     ============================================ */
+
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+  --space-24: 6rem;     /* 96px */
+  --space-32: 8rem;     /* 128px */
+
+  /* Semantic Spacing */
+  --space-modern: var(--space-6);     /* 24px */
+  --space-comfortable: var(--space-8); /* 32px */
+
+  /* ============================================
+     BORDER RADIUS
+     ============================================ */
+
+  --radius-sm: 0.375rem;   /* 6px */
+  --radius-md: 0.5rem;     /* 8px */
+  --radius-lg: 0.75rem;    /* 12px */
+  --radius-xl: 1rem;       /* 16px */
+  --radius-2xl: 1.5rem;    /* 24px */
+  --radius-full: 9999px;
+
+  /* ============================================
+     SHADOWS (Layered, Interactive)
+     ============================================ */
+
+  /* Flat State */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+  /* Lifted State (Hover) */
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+  /* Floating State (Active) */
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* ============================================
+     TRANSITIONS (GPU Accelerated)
+     ============================================ */
+
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Staggered Animation Delays */
+  --delay-100: 100ms;
+  --delay-200: 200ms;
+  --delay-300: 300ms;
+
+  /* ============================================
+     MOBILE-FIRST TOUCH TARGETS
+     ============================================ */
+
+  --touch-sm: 44px;  /* iOS minimum */
+  --touch-md: 48px;  /* Material Design */
+  --touch-lg: 56px;  /* Comfortable */
+
+  /* ============================================
+     Z-INDEX LAYERS
+     ============================================ */
+
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================ */
+
+@media (min-width: 640px) {
+  :root {
+    --text-4xl: 2.5rem;   /* 40px */
+    --text-5xl: 3.5rem;   /* 56px */
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --text-5xl: 4rem;     /* 64px */
+    --text-6xl: 4.5rem;   /* 72px */
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --neutral-900: #000000;
+    --karipe-green-500: #00551f;
+    --karipe-blue-500: #0056b3;
+  }
+}
+
+/* ============================================
+   BASE RESETS
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--neutral-900);
+  background-color: var(--neutral-50);
+  margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  margin: 0;
+}
+
+h1 { font-size: var(--text-4xl); }
+h2 { font-size: var(--text-3xl); }
+h3 { font-size: var(--text-2xl); }
+h4 { font-size: var(--text-xl); }
+h5 { font-size: var(--text-lg); }
+h6 { font-size: var(--text-base); }
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.hover-lift {
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  will-change: transform;
+}
+
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.hover-lift:active {
+  transform: scale(0.98);
+  box-shadow: var(--shadow-md);
+}
+
+.fade-in {
+  animation: fadeIn var(--transition-slow) var(--transition-base);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Trust Badge Pulse */
+.trust-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
