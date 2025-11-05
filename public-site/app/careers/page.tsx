@@ -147,10 +147,75 @@ export default function CareersPage() {
     }, 100);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Submit to ERP API endpoint
-    alert('Thank you! Our HR team will contact you within 48 hours.');
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    try {
+      // Prepare form data for submission
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        position: formData.position,
+        licenseType: formData.licenseType,
+        availability: formData.availability,
+        preferredCity: formData.preferredCity,
+        desiredPayRange: formData.desiredPayRange,
+        shiftPreference: formData.shiftPreference,
+        overtimeAvailable: formData.overtimeAvailable,
+        willingToTravel: formData.willingToTravel,
+        priorExperience: formData.priorExperience,
+        // Resume file will be handled separately in future enhancement
+        resume: null
+      };
+
+      // Submit to internal ERP talent pipeline API
+      const response = await fetch('/api/public/careers/apply', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to submit application');
+      }
+
+      // Success! Show confirmation
+      alert('Thank you! Your application has been submitted successfully. Our HR team will contact you within 48 hours.');
+
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        position: '',
+        licenseType: '',
+        availability: '',
+        preferredCity: '',
+        desiredPayRange: '',
+        shiftPreference: '',
+        overtimeAvailable: '',
+        willingToTravel: '',
+        priorExperience: '',
+        resume: null
+      });
+      setShowForm(false);
+
+    } catch (error) {
+      console.error('Application submission error:', error);
+      setSubmitError(error instanceof Error ? error.message : 'Failed to submit application. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -679,11 +744,22 @@ export default function CareersPage() {
               </div>
 
               <div className="mt-8 text-center">
+                {submitError && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+                    {submitError}
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  className="px-12 py-4 text-lg font-semibold text-white bg-serenity-green-500 rounded-xl hover:bg-serenity-green-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                  disabled={isSubmitting}
+                  className={`px-12 py-4 text-lg font-semibold text-white rounded-xl transition-all duration-300 shadow-lg ${
+                    isSubmitting
+                      ? 'bg-warm-gray-400 cursor-not-allowed'
+                      : 'bg-serenity-green-500 hover:bg-serenity-green-600 hover:shadow-xl hover:scale-105'
+                  }`}
                 >
-                  Submit Application
+                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
                 </button>
                 <p className="mt-4 text-sm text-warm-gray-600">
                   Our HR team will contact you within 48 hours

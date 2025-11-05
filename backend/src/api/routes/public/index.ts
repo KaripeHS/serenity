@@ -75,29 +75,31 @@ router.get('/careers/jobs', async (req: Request, res: Response, next) => {
 router.post('/careers/apply', async (req: Request, res: Response, next) => {
   try {
     const {
-      firstName,
-      lastName,
+      name,
       email,
       phone,
-      address,
-      jobId,
+      position,
+      licenseType,
       availability,
-      hasLicense,
-      consent
+      preferredCity,
+      desiredPayRange,
+      shiftPreference,
+      overtimeAvailable,
+      willingToTravel,
+      priorExperience,
+      resume
     } = req.body;
 
-    // Validation
-    if (!firstName || !lastName || !email || !phone || !jobId) {
-      return res.status(400).json({
-        error: 'ValidationError',
-        message: 'Missing required fields: firstName, lastName, email, phone, jobId',
-      });
-    }
+    // Parse full name into first/last
+    const nameParts = (name || '').trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
 
-    if (!consent) {
+    // Validation
+    if (!name || !email || !phone || !position) {
       return res.status(400).json({
         error: 'ValidationError',
-        message: 'Consent is required to submit application',
+        message: 'Missing required fields: name, email, phone, position',
       });
     }
 
@@ -113,6 +115,30 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
     const db = getDbClient();
     const applicationId = uuidv4();
 
+    // Build availability JSON object
+    const availabilityData = {
+      type: availability || 'full-time',
+      shift: shiftPreference || '',
+      overtime: overtimeAvailable || '',
+      travel: willingToTravel || '',
+      preferredCity: preferredCity || ''
+    };
+
+    // Build skills array from prior experience
+    const skills: string[] = [];
+    if (priorExperience && priorExperience.toLowerCase() !== 'no prior experience') {
+      skills.push('Prior healthcare experience');
+    }
+    if (licenseType && licenseType !== 'N/A') {
+      skills.push(licenseType);
+    }
+
+    // Determine experience level based on prior experience
+    let experienceLevel = 'entry';
+    if (priorExperience && priorExperience.length > 50) {
+      experienceLevel = 'junior'; // Detailed experience suggests some background
+    }
+
     // Store application in database
     await db.insert('applicants', {
       id: applicationId,
@@ -121,14 +147,39 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
       last_name: lastName,
       email,
       phone,
-      address: address || '',
-      position_applied_for: jobId,
+      address: '', // Not collected in form
+      position_applied_for: position,
       application_date: new Date(),
       source: 'website',
-      availability: availability || 'full-time',
-      has_license: hasLicense || false,
+
+      // Enhanced fields from new form
+      availability: availabilityData,
+      experience_level: experienceLevel,
+      certifications: licenseType && licenseType !== 'N/A' ? [licenseType] : [],
+      skills,
+
+      // Salary expectations
+      desired_salary_min: desiredPayRange ? parsePayRange(desiredPayRange).min : null,
+      desired_salary_max: desiredPayRange ? parsePayRange(desiredPayRange).max : null,
+
+      // Resume file handling (if uploaded)
+      resume_file_id: resume ? await handleResumeUpload(resume) : null,
+
+      // Parsed resume data includes all optional fields
+      parsed_resume_data: {
+        priorExperience: priorExperience || '',
+        shiftPreference: shiftPreference || '',
+        overtimeAvailable: overtimeAvailable || '',
+        willingToTravel: willingToTravel || '',
+        preferredCity: preferredCity || '',
+        licenseType: licenseType || ''
+      },
+
+      // Application status
       status: 'new',
-      current_stage: 'application_received',
+      current_stage: 'application',
+
+      // Timestamps
       created_at: new Date(),
       updated_at: new Date()
     });
@@ -136,7 +187,7 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
     logger.info('Application submitted successfully', {
       applicationId,
       email,
-      jobId,
+      position,
       organizationId: DEFAULT_ORG_ID
     });
 
@@ -144,34 +195,35 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
     // Don't wait for emails to send - return success immediately
     setImmediate(async () => {
       try {
-        // Fetch job title for email
-        const jobResult = await db.query(
-          'SELECT title FROM job_requisitions WHERE id = $1',
-          [jobId]
-        );
-
-        const jobTitle = jobResult.rows[0]?.title || 'Home Health Position';
         const emailService = getEmailService();
 
         // Send confirmation email to applicant
         await emailService.sendApplicationConfirmation({
-          applicantName: `${firstName} ${lastName}`,
+          applicantName: name,
           applicantEmail: email,
-          jobTitle,
+          jobTitle: position,
           applicationId,
           submittedAt: new Date().toISOString()
         });
 
-        // Send alert email to HR
+        // Send alert email to HR with all decision-making data
         await emailService.sendNewApplicationAlert({
-          applicantName: `${firstName} ${lastName}`,
+          applicantName: name,
           applicantEmail: email,
           applicantPhone: phone,
-          jobTitle,
+          jobTitle: position,
           applicationId,
           submittedAt: new Date().toISOString(),
-          experience: hasLicense ? 'Licensed caregiver' : 'Not specified',
-          availability: availability || 'full-time'
+          experience: priorExperience || 'Not specified',
+          availability: availability || 'Full-time',
+          additionalInfo: {
+            licenseType: licenseType || 'None',
+            preferredCity: preferredCity || 'Any',
+            desiredPayRange: desiredPayRange || 'Not specified',
+            shiftPreference: shiftPreference || 'Flexible',
+            overtimeAvailable: overtimeAvailable || 'Not specified',
+            willingToTravel: willingToTravel || 'Not specified'
+          }
         });
 
         logger.info('Application confirmation emails sent', { applicationId });
@@ -194,5 +246,26 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
     next(error);
   }
 });
+
+// Helper functions
+function parsePayRange(rangeString: string): { min: number | null; max: number | null } {
+  if (!rangeString) return { min: null, max: null };
+
+  // Handle ranges like "$15-$18/hour", "$42+/hour"
+  const match = rangeString.match(/\$(\d+)(?:-\$(\d+))?/);
+  if (!match) return { min: null, max: null };
+
+  const min = parseInt(match[1], 10);
+  const max = match[2] ? parseInt(match[2], 10) : null;
+
+  return { min, max };
+}
+
+async function handleResumeUpload(resumeData: any): Promise<string | null> {
+  // In production, this would upload to S3 or file storage
+  // For now, return a placeholder
+  // TODO: Implement actual resume file upload to storage
+  return null;
+}
 
 export { router as publicRouter };
