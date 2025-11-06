@@ -14,28 +14,45 @@
 
 :root {
   /* ============================================
-     WARM, PREMIUM COLOR PALETTE
+     PREMIUM HUMAN COLOR PALETTE (v4.0)
      ============================================ */
 
-  /* Primary: Deep Serenity Green */
+  /* Primary: Deep Forest Green - Trust, Growth, Serenity */
+  --primary-forest: #0C5A3D;
   --serenity-green-50: #E8F4EE;    /* Soft Sage */
   --serenity-green-100: #d1e9dd;
   --serenity-green-200: #a3d3bb;
   --serenity-green-300: #75bd99;
   --serenity-green-400: #47a777;
-  --serenity-green-500: #0A7D4F;   /* Deep Serenity Green - Primary */
-  --serenity-green-600: #08643f;
-  --serenity-green-700: #064b2f;
-  --serenity-green-800: #043220;
-  --serenity-green-900: #021910;
+  --serenity-green-500: #0C5A3D;   /* Deep Forest Green - Primary */
+  --serenity-green-600: #0a4c32;
+  --serenity-green-700: #083e28;
+  --serenity-green-800: #06301f;
+  --serenity-green-900: #042215;
 
-  /* Secondary: Soft Sage (backgrounds, cards) */
+  /* Secondary: Mist Sage - Calm, Spacious, Clean */
+  --secondary-mist: #EAF2ED;
   --sage-50: #f8fbf9;
-  --sage-100: #E8F4EE;
+  --sage-100: #EAF2ED;
   --sage-200: #d4ebe1;
   --sage-300: #c0e2d4;
 
-  /* Neutrals: Warm grays with slight sage tint */
+  /* Accent: Warm Gold - Optimism, Care, Premium */
+  --accent-gold: #D6B56C;
+  --champagne-gold-50: #fefce8;
+  --champagne-gold-100: #fef9c3;
+  --champagne-gold-200: #fef08a;
+  --champagne-gold-300: #fde047;
+  --champagne-gold-400: #e3c580;
+  --champagne-gold-500: #D6B56C;   /* Warm Gold - Accent */
+  --champagne-gold-600: #c29e54;
+  --champagne-gold-700: #a6863e;
+  --champagne-gold-800: #8a6f2a;
+  --champagne-gold-900: #6e5716;
+
+  /* Neutrals: Charcoal Gray - Sophisticated, Readable */
+  --text-primary: #2B2B2B;         /* Charcoal Gray for body text */
+  --text-secondary: #666666;       /* Lighter gray for secondary text */
   --mist-white: #FAFAFA;
   --warm-gray-50: #fafaf9;
   --warm-gray-100: #f5f5f4;
@@ -43,22 +60,11 @@
   --warm-gray-300: #d6d3d1;
   --warm-gray-400: #a8a29e;
   --warm-gray-500: #78716c;
-  --warm-gray-600: #57534e;
-  --graphite-gray: #333333;
-  --warm-gray-800: #292524;
-  --warm-gray-900: #1c1917;
-
-  /* Accent: Champagne Gold */
-  --champagne-gold-50: #fefce8;
-  --champagne-gold-100: #fef9c3;
-  --champagne-gold-200: #fef08a;
-  --champagne-gold-300: #fde047;
-  --champagne-gold-400: #facc15;
-  --champagne-gold-500: #E0B973;   /* Champagne Gold - Accent */
-  --champagne-gold-600: #ca8a04;
-  --champagne-gold-700: #a16207;
-  --champagne-gold-800: #854d0e;
-  --champagne-gold-900: #713f12;
+  --warm-gray-600: #666666;
+  --warm-gray-700: #2B2B2B;        /* Charcoal Gray - Primary text */
+  --graphite-gray: #292524;
+  --warm-gray-800: #1c1917;
+  --warm-gray-900: #0f0e0d;
 
   /* Semantic Colors (WCAG AA compliant) */
   --success-green: #10b981;
@@ -80,18 +86,21 @@
   --font-body: 'Manrope', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
 
-  /* Font Sizes (Fluid, Responsive) */
-  --text-xs: 0.75rem;    /* 12px */
-  --text-sm: 0.875rem;   /* 14px */
-  --text-base: 1rem;     /* 16px - prevents iOS zoom */
-  --text-lg: 1.125rem;   /* 18px */
-  --text-xl: 1.25rem;    /* 20px */
-  --text-2xl: 1.5rem;    /* 24px */
-  --text-3xl: 1.875rem;  /* 30px */
-  --text-4xl: 2.25rem;   /* 36px */
-  --text-5xl: 3rem;      /* 48px */
-  --text-6xl: 3.75rem;   /* 60px */
-  --text-7xl: 4.5rem;    /* 72px */
+  /* Font Sizes (v4.0 - Human Scale Typography) */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px - prevents iOS zoom */
+  --text-body: 1.0625rem;  /* 17px - body text */
+  --text-body-lg: 1.125rem;/* 18px - large body */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.75rem;     /* 28px - H3 */
+  --text-4xl: 2.5rem;      /* 40px - H2 */
+  --text-5xl: 3rem;        /* 48px */
+  --text-6xl: 4rem;        /* 64px */
+  --text-hero: 4.5rem;     /* 72px - Hero Headlines */
+  --text-7xl: 4.5rem;      /* 72px */
 
   /* Font Weights */
   --font-normal: 400;
@@ -106,13 +115,13 @@
   --tracking-normal: 0;
   --tracking-wide: 0.01em;
 
-  /* Line Heights (Optimized for readability) */
+  /* Line Heights (v4.0 - Optimized for readability & breathing room) */
   --leading-none: 1;
-  --leading-tight: 1.25;
-  --leading-snug: 1.375;
+  --leading-tight: 1.1;        /* Headlines */
+  --leading-snug: 1.3;         /* Subheadings */
   --leading-normal: 1.5;
-  --leading-relaxed: 1.6;
-  --leading-loose: 1.75;
+  --leading-relaxed: 1.7;      /* Body text - comfortable reading */
+  --leading-loose: 1.8;
 
   /* ============================================
      SPACING SYSTEM (8px grid)
@@ -149,24 +158,24 @@
   --radius-full: 9999px;
 
   /* ============================================
-     SUBTLE, LAYERED SHADOWS
+     SUBTLE, LAYERED SHADOWS (v3.2 - Softer)
      ============================================ */
 
-  /* Flat State */
-  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  /* Flat State - Very subtle shadows */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+  --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.06);
 
-  /* Lifted State (Hover) */
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+  /* Lifted State (Hover) - Gentle depth */
+  --shadow-lg: 0 8px 16px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.04);
 
   /* Floating State (Active/Focus) */
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
-  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 16px 32px -8px rgba(0, 0, 0, 0.1), 0 8px 16px -4px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 24px 48px -12px rgba(0, 0, 0, 0.12);
 
   /* Glow Effects (for CTAs) */
-  --glow-green: 0 0 20px rgba(10, 125, 79, 0.15);
-  --glow-gold: 0 0 20px rgba(224, 185, 115, 0.2);
+  --glow-green: 0 0 24px rgba(10, 125, 79, 0.2);
+  --glow-gold: 0 0 24px rgba(224, 185, 115, 0.25);
 
   /* ============================================
      SMOOTH TRANSITIONS (ease-out)
@@ -190,9 +199,11 @@
      ============================================ */
 
   --gradient-hero: radial-gradient(ellipse at top, var(--sage-100), var(--mist-white) 60%);
-  --gradient-cta: linear-gradient(135deg, var(--serenity-green-500), var(--serenity-green-600));
+  --gradient-cta: linear-gradient(135deg, #0A7D4F, #1BAE6F);  /* More vibrant green gradient */
+  --gradient-cta-subtle: linear-gradient(135deg, rgba(10, 125, 79, 0.95), rgba(27, 174, 111, 0.95));
   --gradient-warm: linear-gradient(135deg, var(--sage-50), var(--warm-gray-50));
   --gradient-gold: linear-gradient(135deg, var(--champagne-gold-400), var(--champagne-gold-500));
+  --gradient-section-alt: linear-gradient(180deg, #FAFAFA 0%, #E8F4EE 100%);  /* Subtle section background */
 
   /* ============================================
      Z-INDEX LAYERS
@@ -280,10 +291,10 @@ html {
 
 body {
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-body);       /* 17px for comfortable reading */
   font-weight: var(--font-normal);
-  line-height: var(--leading-relaxed);
-  color: var(--graphite-gray);
+  line-height: var(--leading-relaxed); /* 1.7 for breathing room */
+  color: var(--text-primary);        /* #2B2B2B Charcoal Gray */
   background-color: var(--mist-white);
 }
 
@@ -350,6 +361,10 @@ a:hover {
   animation: fadeInUp var(--transition-slow) var(--transition-base) both;
 }
 
+.fade-in-up {
+  animation: fadeInUp var(--transition-slow) var(--transition-base) both;
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -378,6 +393,22 @@ a:hover {
   }
   100% {
     transform: scale(1.05) translate(2%, 1%);
+  }
+}
+
+/* Zoom In on Scroll (hero elements) */
+.zoom-in {
+  animation: zoomIn 0.8s cubic-bezier(0.2, 0, 0.38, 0.9) both;
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 

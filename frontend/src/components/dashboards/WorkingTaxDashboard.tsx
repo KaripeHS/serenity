@@ -6,7 +6,7 @@ import { Badge } from '../ui/Badge';
 import { Skeleton } from '../ui/Skeleton';
 import { Alert } from '../ui/Alert';
 import {
-  Arrow LeftIcon,
+  ArrowLeftIcon,
   CurrencyDollarIcon,
   DocumentTextIcon,
   ChartBarIcon
