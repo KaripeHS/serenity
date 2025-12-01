@@ -19,7 +19,7 @@ export interface AlertProps {
   /**
    * Semantic variant
    */
-  variant?: 'success' | 'warning' | 'danger' | 'info';
+  variant?: 'success' | 'warning' | 'danger' | 'info' | 'error';
 
   /**
    * Alert content
@@ -27,9 +27,19 @@ export interface AlertProps {
   children: React.ReactNode;
 
   /**
+   * Alert title (displayed above content)
+   */
+  title?: string;
+
+  /**
    * Show icon
    */
   icon?: boolean;
+
+  /**
+   * Dismissible alert (alias for onDismiss)
+   */
+  onClose?: () => void;
 
   /**
    * Dismissible alert
@@ -94,11 +104,16 @@ const InfoIcon = () => (
 export function Alert({
   variant = 'info',
   children,
+  title,
   icon = true,
   onDismiss,
+  onClose,
   className = '',
 }: AlertProps) {
   const baseClasses = 'p-4 rounded-lg border-l-4 flex items-start gap-3';
+
+  // Map 'error' to 'danger' for compatibility
+  const normalizedVariant = variant === 'error' ? 'danger' : variant;
 
   const variantClasses = {
     success: 'bg-success-50 border-success-600 text-success-800',
@@ -106,6 +121,9 @@ export function Alert({
     danger: 'bg-danger-50 border-danger-600 text-danger-800',
     info: 'bg-info-50 border-info-600 text-info-800',
   };
+
+  // Support both onDismiss and onClose
+  const dismissHandler = onDismiss || onClose;
 
   const iconComponents = {
     success: <SuccessIcon />,
@@ -115,25 +133,28 @@ export function Alert({
   };
 
   // ARIA live region for screen readers
-  const ariaLive = variant === 'danger' ? 'assertive' : 'polite';
+  const ariaLive = normalizedVariant === 'danger' ? 'assertive' : 'polite';
 
   return (
     <div
-      className={`${baseClasses} ${variantClasses[variant]} ${className}`}
+      className={`${baseClasses} ${variantClasses[normalizedVariant]} ${className}`}
       role="alert"
       aria-live={ariaLive}
     >
       {/* Icon */}
-      {icon && <div className="flex-shrink-0">{iconComponents[variant]}</div>}
+      {icon && <div className="flex-shrink-0">{iconComponents[normalizedVariant]}</div>}
 
       {/* Content */}
-      <div className="flex-1">{children}</div>
+      <div className="flex-1">
+        {title && <h4 className="font-semibold mb-1">{title}</h4>}
+        {children}
+      </div>
 
       {/* Dismiss button */}
-      {onDismiss && (
+      {dismissHandler && (
         <button
           type="button"
-          onClick={onDismiss}
+          onClick={dismissHandler}
           className="flex-shrink-0 ml-2 hover:opacity-70 transition-opacity"
           aria-label="Dismiss"
         >

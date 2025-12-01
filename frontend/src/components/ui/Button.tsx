@@ -21,7 +21,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   /**
    * Visual style variant
    */
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline';
 
   /**
    * Button size
@@ -145,6 +145,15 @@ export function Button({
       'active:bg-gray-100',
       'focus:ring-gray-500',
       'shadow-sm',
+    ],
+    outline: [
+      'bg-transparent',
+      'text-primary-600',
+      'border',
+      'border-primary-600',
+      'hover:bg-primary-50',
+      'active:bg-primary-100',
+      'focus:ring-primary-500',
     ],
     danger: [
       'bg-danger-600',

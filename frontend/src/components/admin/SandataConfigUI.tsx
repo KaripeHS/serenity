@@ -17,11 +17,11 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, CardHeader, CardContent, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Select } from '../ui/select';
-import { Alert } from '../ui/alert';
+import { Card, CardHeader, CardContent, CardTitle } from '../ui/Card';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
+import { Alert } from '../ui/Alert';
 
 /**
  * Sandata configuration structure

@@ -8,15 +8,18 @@
 import { Router, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { publicRateLimiter } from '../../middleware/rate-limiter';
-import { getDbClient } from '../../database/client';
-import { createLogger } from '../../utils/logger';
-import { getEmailService } from '../../services/notifications/email.service';
+import { getDbClient } from '../../../database/client';
+import { createLogger } from '../../../utils/logger';
+import { getEmailService } from '../../../services/notifications/email.service';
 
 const router = Router();
 const logger = createLogger('public-api');
 
 // Apply lenient rate limiting to public routes
 router.use(publicRateLimiter);
+
+import leadsRouter from '../../public/leads.routes';
+router.use('/leads', leadsRouter);
 
 // Default organization ID (first org in system - Serenity Care Partners)
 const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';

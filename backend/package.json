@@ -5,11 +5,13 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "dev:api": "tsx watch src/server.ts",
+    "dev:api": "tsx watch src/server-simple.ts",
+    "dev:api:full": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "migrate": "tsx src/database/migrate.ts",
-    "seed": "tsx src/database/seeds/002_run_sample_data.ts",
+    "start:simple": "tsx src/server-simple.ts",
+    "migrate": "tsx src/database/run-migrations.ts",
+    "seed": "tsx src/database/seeds/seed-initial-data.ts",
     "seed:generate": "tsx src/database/seeds/001_sample_data_generator.ts",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -17,7 +19,10 @@
     "typecheck": "tsc --noEmit",
     "dev:agents": "tsx watch src/ai/agent-server.ts",
     "agents:health": "curl http://localhost:3001/agents/health",
-    "db:reset": "tsx src/database/reset.ts && npm run migrate && npm run seed"
+    "db:create": "tsx src/database/create-database.ts",
+    "db:auth-tables": "tsx src/database/create-auth-tables.ts",
+    "db:reset": "tsx src/database/reset.ts && npm run migrate && npm run seed",
+    "db:setup": "npm run db:create && npm run migrate && npm run db:auth-tables && npm run seed"
   },
   "keywords": [
     "healthcare",

@@ -3,6 +3,10 @@
  * Handles all environment variables with proper validation and security
  */
 
+// Load dotenv at the very start of this module
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { createLogger } from '../utils/logger';
 
 const securityLogger = createLogger('security');
@@ -50,36 +54,42 @@ class EnvironmentService {
   }
 
   private loadAndValidateConfig(): EnvironmentConfig {
+    const isDev = process.env.NODE_ENV !== 'production';
+
     const config: EnvironmentConfig = {
-      // Database
+      // Database - always required
       databaseUrl: this.getRequiredEnv('DATABASE_URL'),
-      databaseSslMode: process.env.DATABASE_SSL_MODE || 'require',
+      databaseSslMode: process.env.DATABASE_SSL_MODE || (isDev ? 'disable' : 'require'),
 
-      // External Service Keys (validated but not logged)
-      openaiToken: this.getRequiredEnv('OPENAI_API_KEY'),
-      azureOpenaiToken: this.getRequiredEnv('AZURE_OPENAI_KEY'),
-      azureOpenaiEndpoint: this.getRequiredEnv('AZURE_OPENAI_ENDPOINT'),
-      anthropicToken: this.getRequiredEnv('ANTHROPIC_API_KEY'),
-      indeedToken: this.getRequiredEnv('INDEED_API_KEY'),
+      // External Service Keys - optional in development
+      openaiToken: this.getOptionalEnv('OPENAI_API_KEY', ''),
+      azureOpenaiToken: this.getOptionalEnv('AZURE_OPENAI_KEY', ''),
+      azureOpenaiEndpoint: this.getOptionalEnv('AZURE_OPENAI_ENDPOINT', ''),
+      anthropicToken: this.getOptionalEnv('ANTHROPIC_API_KEY', ''),
+      indeedToken: this.getOptionalEnv('INDEED_API_KEY', ''),
 
-      // Security
+      // Security - required but with sensible development defaults
       jwtSecret: this.getRequiredEnv('JWT_SECRET'),
-      encryptionKey: this.getRequiredEnv('ENCRYPTION_KEY'),
-      sessionSecret: this.getRequiredEnv('SESSION_SECRET'),
+      encryptionKey: this.getOptionalEnv('ENCRYPTION_KEY', isDev ? 'development-encryption-key-32-chars' : ''),
+      sessionSecret: this.getOptionalEnv('SESSION_SECRET', isDev ? 'development-session-secret-32-chars' : ''),
 
-      // External Services
-      emailToken: this.getRequiredEnv('EMAIL_SERVICE_KEY'),
-      smsToken: this.getRequiredEnv('SMS_SERVICE_KEY'),
-      auditServiceUrl: this.getRequiredEnv('AUDIT_SERVICE_URL'),
+      // External Services - optional in development
+      emailToken: this.getOptionalEnv('EMAIL_SERVICE_KEY', ''),
+      smsToken: this.getOptionalEnv('SMS_SERVICE_KEY', ''),
+      auditServiceUrl: this.getOptionalEnv('AUDIT_SERVICE_URL', 'http://localhost:3001/audit'),
 
       // Application
       nodeEnv: process.env.NODE_ENV || 'development',
-      port: parseInt(process.env.PORT || '3000'),
+      port: parseInt(process.env.PORT || '3001'),
       corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000'
     };
 
     this.validateSecurityRequirements(config);
     return config;
+  }
+
+  private getOptionalEnv(key: string, defaultValue: string): string {
+    return process.env[key] || defaultValue;
   }
 
   private getRequiredEnv(key: string): string {

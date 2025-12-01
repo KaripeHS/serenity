@@ -11,6 +11,8 @@ import { ApiErrors } from '../../middleware/error-handler';
 import { getSandataRepository } from '../../../services/sandata/repositories/sandata.repository';
 import { getDbClient } from '../../../database/client';
 import { sandataConfigRouter } from './sandata-config';
+import leadsRouter from '../../admin/leads.routes';
+import proposalsRouter from '../../admin/proposals.routes';
 
 const router = Router();
 const repository = getSandataRepository(getDbClient());
@@ -500,5 +502,7 @@ router.get('/metrics', async (req: AuthenticatedRequest, res: Response, next) =>
  * - GET /api/admin/sandata/validation-status - Get validation status
  */
 router.use('/sandata', sandataConfigRouter);
+router.use('/leads', leadsRouter);
+router.use('/proposals', proposalsRouter);
 
 export { router as adminRouter };

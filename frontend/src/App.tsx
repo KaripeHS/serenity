@@ -1,96 +1,56 @@
-/**
- * Main App Component for Serenity ERP
- * Handles routing and global application state
- */
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-// Pages
-import HomePage from './pages/HomePage';
-import { WorkingExecutiveDashboard } from './components/dashboards/WorkingExecutiveDashboard';
-import { WorkingHRDashboard } from './components/dashboards/WorkingHRDashboard';
-import { WorkingTaxDashboard } from './components/dashboards/WorkingTaxDashboard';
-import { WorkingClinicalDashboard } from './components/dashboards/WorkingClinicalDashboard';
-import { WorkingSchedulingDashboard } from './components/dashboards/WorkingSchedulingDashboard';
-import { WorkingBillingDashboard } from './components/dashboards/WorkingBillingDashboard';
-import { WorkingComplianceDashboard } from './components/dashboards/WorkingComplianceDashboard';
-import { WorkingFamilyPortal } from './components/family/WorkingFamilyPortal';
-import { MorningCheckIn } from './components/operations/MorningCheckIn';
-import { WebEVVClock } from './components/evv/WebEVVClock';
-import { JobRequisitionsManager } from './components/admin/JobRequisitionsManager';
-import { PodManager } from './components/pods/PodManager';
-import { OnCallDispatch } from './components/operations/OnCallDispatch';
-import { DenialWorkflow } from './components/billing/DenialWorkflow';
-import { SystemConfiguration } from './components/admin/SystemConfiguration';
-import { SandataConfigUI } from './components/admin/SandataConfigUI';
-import { SandataExceptionsPage } from './components/admin/SandataExceptionsPage';
-
-// Layouts
-import DashboardLayout from './components/layouts/DashboardLayout';
-
-// Contexts
 import { AuthProvider } from './contexts/AuthContext';
+import DashboardLayout from './components/layouts/DashboardLayout';
+import { PrivateCareLanding } from './pages/public/PrivateCareLanding';
+import { LeadPipeline } from './pages/admin/crm/LeadPipeline';
+import { AssessmentWizard } from './pages/admin/intake/AssessmentWizard';
+import { PartnerPortal } from './pages/partners/PartnerPortal';
+import { FamilyPortal } from './pages/family/FamilyPortal';
+import { WebEVVClock } from './components/evv/WebEVVClock';
+import HomePage from './pages/HomePage';
 
-// Styles
-import './App.css';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router>
-          <div className="App">
+          <div className="min-h-screen bg-gray-50">
             <Routes>
-              {/* Home Page */}
+              {/* Public Routes */}
               <Route path="/" element={<HomePage />} />
-              <Route path="/home" element={<HomePage />} />
+              <Route path="/private-care" element={<PrivateCareLanding />} />
 
-              {/* Dashboard Routes with Layout */}
+              {/* Admin Routes */}
               <Route
-                path="/dashboard/*"
+                path="/dashboard/crm"
                 element={
                   <DashboardLayout>
-                    <Routes>
-                      <Route path="executive" element={<WorkingExecutiveDashboard />} />
-                      <Route path="hr" element={<WorkingHRDashboard />} />
-                      <Route path="tax" element={<WorkingTaxDashboard />} />
-                      <Route path="operations" element={<WorkingSchedulingDashboard />} />
-                      <Route path="clinical" element={<WorkingClinicalDashboard />} />
-                      <Route path="billing" element={<WorkingBillingDashboard />} />
-                      <Route path="compliance" element={<WorkingComplianceDashboard />} />
-                      <Route path="training" element={<div className="p-6"><h1 className="text-2xl font-bold">Training Dashboard</h1><p>Coming soon...</p></div>} />
-                      <Route path="morning-check-in" element={<MorningCheckIn />} />
-                      <Route path="jobs" element={<JobRequisitionsManager />} />
-                      <Route path="pods" element={<PodManager />} />
-                      <Route path="dispatch" element={<OnCallDispatch />} />
-                      <Route path="denials" element={<DenialWorkflow />} />
-                      <Route path="settings" element={<SystemConfiguration />} />
-                      <Route path="sandata-config" element={<SandataConfigUI />} />
-                      <Route path="sandata-exceptions" element={<SandataExceptionsPage />} />
-
-                      {/* Legacy dashboard routes */}
-                      <Route path="legacy/executive" element={<WorkingExecutiveDashboard />} />
-                      <Route path="legacy/caregiver" element={<WorkingClinicalDashboard />} />
-                    </Routes>
+                    <LeadPipeline />
+                  </DashboardLayout>
+                }
+              />
+              <Route
+                path="/dashboard/intake/new"
+                element={
+                  <DashboardLayout>
+                    <AssessmentWizard />
                   </DashboardLayout>
                 }
               />
 
-              {/* Standalone Routes */}
-              <Route path="/family-portal" element={<WorkingFamilyPortal />} />
+              {/* Partner Portal */}
+              <Route path="/partners" element={<PartnerPortal />} />
+
+              {/* Family Portal */}
+              <Route path="/family-portal" element={<FamilyPortal />} />
+
+              {/* EVV Clock */}
               <Route path="/evv-clock" element={<WebEVVClock />} />
 
-              {/* Feature Routes */}
+              {/* Feature Placeholders */}
               <Route
                 path="/scheduling/*"
                 element={

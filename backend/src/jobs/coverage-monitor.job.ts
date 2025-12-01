@@ -4,7 +4,7 @@
  * Runs every 5 minutes to detect coverage gaps (no-shows, late clock-ins)
  * and alert Pod Leads for immediate action.
  *
- * Cron Schedule: */5 * * * * (Every 5 minutes)
+ * Cron Schedule: Every 5 minutes (0/5 * * * *)
  *
  * Detection Logic:
  * - Find shifts that should have started but no clock-in

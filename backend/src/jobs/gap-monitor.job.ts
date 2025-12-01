@@ -3,7 +3,7 @@
  *
  * Runs every 5 minutes to detect coverage gaps and alert Pod Leads.
  *
- * Cron Schedule: */5 * * * * (Every 5 minutes)
+ * Cron Schedule: *\/5 * * * * (Every 5 minutes)
  *
  * Detection Rules:
  * - No-Show: Caregiver hasn't clocked in >15 min after scheduled start

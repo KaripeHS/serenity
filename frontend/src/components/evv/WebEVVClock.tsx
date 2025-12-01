@@ -8,6 +8,9 @@ import {
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
 
+// API base URL - use environment variable or default to localhost:3001
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 interface Shift {
   id: string;
   patient: {
@@ -106,7 +109,7 @@ export const WebEVVClock: React.FC = () => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:3000/api/mobile/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/mobile/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: caregiverId, pin })
@@ -139,7 +142,7 @@ export const WebEVVClock: React.FC = () => {
   const fetchTodaysShifts = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('http://localhost:3000/api/mobile/shifts/today', {
+      const response = await fetch(`${API_BASE_URL}/api/mobile/shifts/today`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -225,7 +228,7 @@ export const WebEVVClock: React.FC = () => {
 
       try {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('http://localhost:3000/api/mobile/evv/clock-in', {
+        const response = await fetch(`${API_BASE_URL}/api/mobile/evv/clock-in`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify(clockInData)
@@ -281,7 +284,7 @@ export const WebEVVClock: React.FC = () => {
 
       try {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('http://localhost:3000/api/mobile/evv/clock-out', {
+        const response = await fetch(`${API_BASE_URL}/api/mobile/evv/clock-out`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify(clockOutData)
@@ -330,8 +333,8 @@ export const WebEVVClock: React.FC = () => {
     for (const record of pending) {
       try {
         const endpoint = record.type === 'clock-in'
-          ? 'http://localhost:3000/api/mobile/evv/clock-in'
-          : 'http://localhost:3000/api/mobile/evv/clock-out';
+          ? `${API_BASE_URL}/api/mobile/evv/clock-in`
+          : `${API_BASE_URL}/api/mobile/evv/clock-out`;
 
         const response = await fetch(endpoint, {
           method: 'POST',

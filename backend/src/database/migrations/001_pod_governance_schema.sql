@@ -143,11 +143,11 @@ CREATE TABLE user_attributes (
     granted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     expires_at TIMESTAMP WITH TIME ZONE,
     is_active BOOLEAN DEFAULT true,
-    metadata JSONB DEFAULT '{}',
-
-    INDEX(user_id, attribute_name),
-    INDEX(attribute_name, is_active)
+    metadata JSONB DEFAULT '{}'
 );
+
+CREATE INDEX idx_user_attributes_user_attribute ON user_attributes(user_id, attribute_name);
+CREATE INDEX idx_user_attributes_active ON user_attributes(attribute_name, is_active);
 
 -- JIT Access grants (Just-in-Time temporary access)
 CREATE TABLE jit_access_grants (
@@ -698,40 +698,8 @@ CREATE TRIGGER check_sod_user_attributes BEFORE INSERT OR UPDATE ON user_attribu
 -- Initial Data Setup
 -- ============================================================================
 
--- Insert default organization
-INSERT INTO organizations (id, name, slug, type, status, settings) VALUES (
-    'org-serenity-001',
-    'Serenity Care Partners',
-    'serenity-care-partners',
-    'home_health',
-    'active',
-    '{
-        "timezone": "America/New_York",
-        "evv_provider": "ohio_medicaid",
-        "compliance_level": "hipaa_high",
-        "pod_capacity_default": 35,
-        "auto_audit_enabled": true
-    }'::jsonb
-);
-
--- Insert system roles
-INSERT INTO roles (organization_id, name, description, permissions, is_system_role) VALUES
-    ('org-serenity-001', 'Founder', 'System founder with full access', ARRAY['*'], true),
-    ('org-serenity-001', 'Pod Team Lead', 'Manages pod operations and caregivers', ARRAY[
-        'client:read', 'schedule:read', 'schedule:update', 'evv:read', 'evv:update', 'hr:read'
-    ], true),
-    ('org-serenity-001', 'Caregiver', 'Provides direct client care', ARRAY[
-        'schedule:read', 'evv:create', 'evv:read', 'client:read'
-    ], true),
-    ('org-serenity-001', 'Scheduler', 'Manages visit scheduling', ARRAY[
-        'client:read', 'schedule:create', 'schedule:read', 'schedule:update', 'schedule:assign'
-    ], true);
-
--- Insert initial pods
-INSERT INTO pods (id, organization_id, code, name, city, state, capacity, status) VALUES
-    ('pod-cin-a-001', 'org-serenity-001', 'CIN-A', 'Cincinnati Pod A', 'Cincinnati', 'OH', 35, 'active'),
-    ('pod-cin-b-001', 'org-serenity-001', 'CIN-B', 'Cincinnati Pod B', 'Cincinnati', 'OH', 35, 'active'),
-    ('pod-col-a-001', 'org-serenity-001', 'COL-A', 'Columbus Pod A', 'Columbus', 'OH', 35, 'active');
+-- Note: Initial data will be inserted via seed script to allow proper UUID generation
+-- See backend/src/database/seeds/seed-initial-data.ts
 
 -- ============================================================================
 -- Views for Common Queries

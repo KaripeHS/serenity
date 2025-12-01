@@ -7,6 +7,8 @@ import { DatabaseClient } from '../database/client';
 import { AuditLogger } from '../audit/logger';
 import { UserContext } from '../auth/access-control';
 import { createLogger, payrollLogger } from '../utils/logger';
+import { GustoPayrollProvider } from './payroll/gusto.service';
+import { PayrollRun, PayrollSyncResult, PayrollHours } from './payroll/payroll.interface';
 
 export interface PayrollPeriod {
   id: string;
@@ -82,6 +84,7 @@ export interface OvertimeAnalysis {
 export class PayrollService {
   private db: DatabaseClient;
   private auditLogger: AuditLogger;
+  private provider: GustoPayrollProvider;
 
   // 2024 Tax Rates and Limits
   private readonly TAX_CONFIG: TaxWithholding = {
@@ -98,6 +101,7 @@ export class PayrollService {
   constructor(db: DatabaseClient, auditLogger: AuditLogger) {
     this.db = db;
     this.auditLogger = auditLogger;
+    this.provider = new GustoPayrollProvider();
   }
 
   /**
@@ -150,6 +154,33 @@ export class PayrollService {
   }
 
   /**
+   * Process payroll using external provider (Enforced for Compliance)
+   */
+  async processPayroll(payPeriodId: string, runDate: Date): Promise<PayrollSyncResult> {
+    // CRITICAL COMPLIANCE CHECK
+    if (process.env.NODE_ENV === 'production' && !this.provider.isConfigured()) {
+      throw new Error('COMPLIANCE ERROR: Cannot process payroll in production without a configured external provider (Gusto/ADP). Native processing is disabled.');
+    }
+
+    // In a real implementation, this would gather hours and submit to Gusto
+    // For now, we delegate to the provider which handles the API call
+    // We would fetch hours from the DB here and pass them
+    const hours: PayrollHours[] = []; // Placeholder: await this.getPayrollHours(payPeriodId);
+    return this.provider.submitHours(hours);
+  }
+
+  private async mockProcessPayroll(payPeriodId: string, runDate: Date): Promise<PayrollSyncResult> {
+    // Mock implementation for dev/test
+    return {
+      success: true,
+      employeesSynced: 0,
+      hoursSubmitted: 0,
+      errors: [],
+      syncedAt: new Date()
+    };
+  }
+
+  /**
    * Calculate payroll for all employees in period
    */
   async calculatePayroll(
@@ -158,7 +189,7 @@ export class PayrollService {
   ): Promise<{ entries: PayrollEntry[]; summary: PayrollPeriod }> {
     try {
       const period = await this.getPayrollPeriodById(payrollPeriodId, userContext);
-      
+
       if (period.status !== 'draft') {
         throw new Error('Can only calculate payroll for draft periods');
       }
@@ -197,8 +228,8 @@ export class PayrollService {
           payrollEntries.push(entry);
           totalGross += entry.grossPay;
           totalNet += entry.netPay;
-          totalTaxes += (entry.federalTax + entry.stateTax + entry.socialSecurityTax + 
-                         entry.medicareTax + entry.stateDisabilityTax);
+          totalTaxes += (entry.federalTax + entry.stateTax + entry.socialSecurityTax +
+            entry.medicareTax + entry.stateDisabilityTax);
         }
       }
 
@@ -263,7 +294,7 @@ export class PayrollService {
       ]);
 
       const totalHours = parseFloat(hoursResult.rows[0]?.total_hours || '0');
-      
+
       if (totalHours === 0) {
         return null; // No hours worked
       }
@@ -279,9 +310,9 @@ export class PayrollService {
       const overtimeRate = hourlyRate * 1.5;
       const doubleTimeRate = hourlyRate * 2.0;
 
-      const grossPay = (regularHours * hourlyRate) + 
-                      (overtimeHours * overtimeRate) + 
-                      (doubleTimeHours * doubleTimeRate);
+      const grossPay = (regularHours * hourlyRate) +
+        (overtimeHours * overtimeRate) +
+        (doubleTimeHours * doubleTimeRate);
 
       // Get YTD totals
       const ytdTotals = await this.getYTDTotals(employee.id, period.endDate);
@@ -289,8 +320,8 @@ export class PayrollService {
       // Calculate taxes
       const taxes = this.calculateTaxes(grossPay, ytdTotals.ytdGross + grossPay);
 
-      const totalTaxes = taxes.federalTax + taxes.stateTax + taxes.socialSecurityTax + 
-                        taxes.medicareTax + taxes.stateDisabilityTax;
+      const totalTaxes = taxes.federalTax + taxes.stateTax + taxes.socialSecurityTax +
+        taxes.medicareTax + taxes.stateDisabilityTax;
       const netPay = grossPay - totalTaxes;
 
       const entryId = await this.generatePayrollEntryId();
@@ -423,7 +454,7 @@ export class PayrollService {
   ): Promise<NACHAFile> {
     try {
       const period = await this.getPayrollPeriodById(payrollPeriodId, userContext);
-      
+
       if (period.status !== 'processed') {
         throw new Error('Can only generate NACHA file for processed payroll');
       }
@@ -547,7 +578,7 @@ export class PayrollService {
         const hourlyRate = parseFloat(row.hourly_rate);
 
         const overtimePercent = totalHours > 0 ? ((overtimeHours + doubleTimeHours) / totalHours) * 100 : 0;
-        
+
         // Calculate cost impact
         const regularCost = regularHours * hourlyRate;
         const overtimeCost = (overtimeHours * hourlyRate * 1.5) + (doubleTimeHours * hourlyRate * 2.0);
@@ -680,7 +711,7 @@ export class PayrollService {
 
   private async getYTDTotals(employeeId: string, asOfDate: Date): Promise<{ ytdGross: number; ytdTaxes: number }> {
     const yearStart = new Date(asOfDate.getFullYear(), 0, 1);
-    
+
     const result = await this.db.query(`
       SELECT 
         COALESCE(SUM(gross_pay), 0) as ytd_gross,

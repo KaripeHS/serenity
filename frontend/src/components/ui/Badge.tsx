@@ -21,12 +21,12 @@ export interface BadgeProps {
   /**
    * Semantic variant
    */
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'gray';
+  variant?: 'default' | 'primary' | 'secondary' | 'outline' | 'success' | 'warning' | 'danger' | 'info' | 'gray';
 
   /**
    * Badge size
    */
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
 
   /**
    * Show dot indicator
@@ -60,10 +60,14 @@ export function Badge({
   const sizeClasses = {
     sm: 'px-2 py-0.5 text-xs gap-1',
     md: 'px-2.5 py-1 text-sm gap-1.5',
+    lg: 'px-3 py-1.5 text-base gap-2',
   };
 
   const variantClasses = {
     default: 'bg-primary-100 text-primary-800',
+    primary: 'bg-primary-100 text-primary-800',
+    secondary: 'bg-gray-100 text-gray-800',
+    outline: 'bg-transparent border border-gray-300 text-gray-700',
     success: 'bg-success-100 text-success-800',
     warning: 'bg-warning-100 text-warning-800',
     danger: 'bg-danger-100 text-danger-800',
@@ -73,6 +77,9 @@ export function Badge({
 
   const dotColors = {
     default: 'bg-primary-600',
+    primary: 'bg-primary-600',
+    secondary: 'bg-gray-600',
+    outline: 'bg-gray-600',
     success: 'bg-success-600',
     warning: 'bg-warning-600',
     danger: 'bg-danger-600',

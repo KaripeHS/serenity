@@ -54,6 +54,20 @@ interface CredentialDigestData {
   date: string;
 }
 
+export interface ComplianceAlertData {
+  to: string;
+  subject: string;
+  gaps: Array<{
+    id: string;
+    type: string;
+    severity: string;
+    patientName: string;
+    caregiverName?: string;
+    details: string;
+    detectedAt: Date;
+  }>;
+}
+
 export class EmailService {
   private isConfigured: boolean = false;
   private fromEmail: string;
@@ -116,8 +130,8 @@ export class EmailService {
    */
   async sendCredentialExpirationAlert(data: CredentialExpirationAlertData): Promise<void> {
     const emoji = data.alertLevel === 'critical' ? '🔴' :
-                  data.alertLevel === 'urgent' ? '⚠️' :
-                  data.alertLevel === 'warning' ? '⏰' : '📋';
+      data.alertLevel === 'urgent' ? '⚠️' :
+        data.alertLevel === 'warning' ? '⏰' : '📋';
 
     const subject = `${emoji} ${data.credentialType} ${data.daysLeft <= 0 ? 'Expired' : `Expires in ${data.daysLeft} Days`}`;
     const html = this.getCredentialExpirationAlertHTML(data);
@@ -156,9 +170,39 @@ export class EmailService {
   }
 
   /**
+   * Send compliance alert to compliance officer
+   */
+  async sendComplianceAlert(data: ComplianceAlertData): Promise<void> {
+    const html = `
+      <h2>Compliance Alert</h2>
+      <p>The following compliance gaps were detected:</p>
+      <ul>
+        ${data.gaps.map(g => `
+          <li>
+            <strong>${g.severity.toUpperCase()}</strong>: ${g.type} - ${g.patientName}
+            <br/>${g.details}
+          </li>
+        `).join('')}
+      </ul>
+    `;
+
+    await this.sendEmail({
+      to: data.to,
+      subject: data.subject,
+      html,
+      text: JSON.stringify(data.gaps, null, 2) // Simplified text version
+    });
+
+    console.log(`[EmailService] Compliance alert sent to ${data.to}`);
+  }
+
+  /**
    * Send email via SendGrid or log if not configured
    */
-  private async sendEmail(params: {
+  /**
+   * Send email via SendGrid or log if not configured
+   */
+  public async sendEmail(params: {
     to: string;
     subject: string;
     html: string;
@@ -258,9 +302,9 @@ export class EmailService {
                     </p>
                     <p style="margin: 0; color: #6b7280; font-size: 14px;">
                       <strong>Submitted:</strong> ${new Date(data.submittedAt).toLocaleString('en-US', {
-                        dateStyle: 'long',
-                        timeStyle: 'short'
-                      })}
+      dateStyle: 'long',
+      timeStyle: 'short'
+    })}
                     </p>
                   </td>
                 </tr>
@@ -382,9 +426,9 @@ export class EmailService {
                     </p>
                     <p style="margin: 0; color: #374151; font-size: 14px;">
                       <strong>Submitted:</strong> ${new Date(data.submittedAt).toLocaleString('en-US', {
-                        dateStyle: 'long',
-                        timeStyle: 'short'
-                      })}
+      dateStyle: 'long',
+      timeStyle: 'short'
+    })}
                     </p>
                   </td>
                 </tr>
@@ -534,8 +578,8 @@ This is an automated notification from Serenity ERP
     const isExpired = daysLeft <= 0;
     const urgency = isExpired ? 'EXPIRED' : `EXPIRES IN ${daysLeft} DAYS`;
     const statusColor = alertLevel === 'critical' ? '#dc2626' :
-                        alertLevel === 'urgent' ? '#ea580c' :
-                        alertLevel === 'warning' ? '#d97706' : '#2563eb';
+      alertLevel === 'urgent' ? '#ea580c' :
+        alertLevel === 'warning' ? '#d97706' : '#2563eb';
     const actionText = isExpired ?
       'Your credential has expired and you cannot be scheduled for shifts until it is renewed.' :
       `Please renew your ${credentialType} as soon as possible to avoid scheduling issues.`;
@@ -782,12 +826,12 @@ This is an automated notification from Serenity ERP
 
           <!-- Expiring Soon -->
           ${sortedDays.map(days => {
-            const creds = expiringSoon[days];
-            const color = days <= 7 ? '#ea580c' : days <= 15 ? '#d97706' : '#2563eb';
-            const bgColor = days <= 7 ? '#fff7ed' : days <= 15 ? '#fef3c7' : '#dbeafe';
-            const borderColor = days <= 7 ? '#fed7aa' : days <= 15 ? '#fde68a' : '#bfdbfe';
+      const creds = expiringSoon[days];
+      const color = days <= 7 ? '#ea580c' : days <= 15 ? '#d97706' : '#2563eb';
+      const bgColor = days <= 7 ? '#fff7ed' : days <= 15 ? '#fef3c7' : '#dbeafe';
+      const borderColor = days <= 7 ? '#fed7aa' : days <= 15 ? '#fde68a' : '#bfdbfe';
 
-            return `
+      return `
           <tr>
             <td style="padding: 30px; padding-top: 0;">
               <h2 style="margin: 0 0 20px 0; color: ${color}; font-size: 20px; border-bottom: 2px solid ${color}; padding-bottom: 10px;">
@@ -814,7 +858,7 @@ This is an automated notification from Serenity ERP
             </td>
           </tr>
             `;
-          }).join('')}
+    }).join('')}
 
           <!-- Footer -->
           <tr>

@@ -55,6 +55,7 @@ export class TaxService {
 
   /**
    * Calculate federal tax withholding using 2024 tax tables
+   * @deprecated NATIVE TAX CALCULATION IS DISABLED FOR PRODUCTION. USE GUSTO/ADP INTEGRATION.
    */
   async calculateFederalWithholding(
     grossPay: number,
@@ -63,6 +64,9 @@ export class TaxService {
     allowances: number,
     additionalWithholding: number = 0
   ): Promise<number> {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('CRITICAL COMPLIANCE ERROR: Native tax calculation is disabled in production. Use Gusto or ADP integration.');
+    }
     // 2024 Federal Income Tax Withholding Tables
     const federalTaxBrackets: { [key: string]: { min: number; max: number; rate: number; }[] } = {
       single: [
@@ -123,6 +127,7 @@ export class TaxService {
 
   /**
    * Calculate Ohio state tax withholding
+   * @deprecated NATIVE TAX CALCULATION IS DISABLED FOR PRODUCTION. USE GUSTO/ADP INTEGRATION.
    */
   async calculateOhioStateWithholding(
     grossPay: number,
@@ -130,6 +135,9 @@ export class TaxService {
     filingStatus: 'single' | 'married_joint' | 'married_separate',
     allowances: number
   ): Promise<number> {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('CRITICAL COMPLIANCE ERROR: Native tax calculation is disabled in production. Use Gusto or ADP integration.');
+    }
     const annualPay = this.convertToAnnual(grossPay, payFrequency);
 
     // Ohio tax brackets for 2024
@@ -158,12 +166,16 @@ export class TaxService {
 
   /**
    * Calculate Social Security and Medicare taxes (FICA)
+   * @deprecated NATIVE TAX CALCULATION IS DISABLED FOR PRODUCTION. USE GUSTO/ADP INTEGRATION.
    */
   async calculateFICATaxes(grossPay: number, ytdGrossPay: number): Promise<{
     socialSecurity: number;
     medicare: number;
     additionalMedicare: number;
   }> {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('CRITICAL COMPLIANCE ERROR: Native tax calculation is disabled in production. Use Gusto or ADP integration.');
+    }
     const ssWageBase = 160200; // 2024 SS wage base
     const ssRate = 0.062;
     const medicareRate = 0.0145;
@@ -193,6 +205,7 @@ export class TaxService {
 
   /**
    * Calculate unemployment taxes (FUTA and SUTA)
+   * @deprecated NATIVE TAX CALCULATION IS DISABLED FOR PRODUCTION. USE GUSTO/ADP INTEGRATION.
    */
   async calculateUnemploymentTaxes(
     grossPay: number,
@@ -202,6 +215,9 @@ export class TaxService {
     federalUnemployment: number;
     ohioSUI: number;
   }> {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('CRITICAL COMPLIANCE ERROR: Native tax calculation is disabled in production. Use Gusto or ADP integration.');
+    }
     const futaWageBase = 7000; // 2024 FUTA wage base
     const futaRate = 0.006; // After SUTA credit
     const ohioSUIWageBase = 9000; // 2024 Ohio SUTA wage base

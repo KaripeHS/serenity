@@ -6,6 +6,24 @@
  * Implements mandatory PHI scrubbing and audit trails
  */
 
+// Helper to check if running in development mode
+const isDev = (): boolean => {
+  try {
+    return import.meta.env?.MODE === 'development' || import.meta.env?.DEV === true;
+  } catch {
+    return false;
+  }
+};
+
+// Helper to check if running in production mode
+const isProd = (): boolean => {
+  try {
+    return import.meta.env?.MODE === 'production' || import.meta.env?.PROD === true;
+  } catch {
+    return false;
+  }
+};
+
 interface LogEntry {
   timestamp: string;
   level: LogLevel;
@@ -96,8 +114,8 @@ class HIPAACompliantLogger {
           args: args.map(arg => typeof arg === 'string' ? this.scrubPHI(arg) : '[OBJECT]'),
           stack: new Error().stack
         });
-        if (process.env.NODE_ENV === 'development') {
-          process.stdout.write('🚨 HIPAA VIOLATION: Use logger.debug() instead\n');
+        if (isDev()) {
+          // In browser, we can't use process.stdout - silently log violation
         }
       };
 
@@ -106,8 +124,8 @@ class HIPAACompliantLogger {
           args: args.map(arg => typeof arg === 'string' ? this.scrubPHI(arg) : '[OBJECT]'),
           stack: new Error().stack
         });
-        if (process.env.NODE_ENV === 'development') {
-          process.stdout.write('🚨 HIPAA VIOLATION: Use logger.warn() instead\n');
+        if (isDev()) {
+          // In browser, we can't use process.stdout - silently log violation
         }
       };
 
@@ -116,8 +134,8 @@ class HIPAACompliantLogger {
           args: args.map(arg => typeof arg === 'string' ? this.scrubPHI(arg) : '[OBJECT]'),
           stack: new Error().stack
         });
-        if (process.env.NODE_ENV === 'development') {
-          process.stdout.write('🚨 HIPAA VIOLATION: Use logger.error() instead\n');
+        if (isDev()) {
+          // In browser, we can't use process.stdout - silently log violation
         }
       };
 
@@ -126,8 +144,8 @@ class HIPAACompliantLogger {
           args: args.map(arg => typeof arg === 'string' ? this.scrubPHI(arg) : '[OBJECT]'),
           stack: new Error().stack
         });
-        if (process.env.NODE_ENV === 'development') {
-          process.stdout.write('🚨 HIPAA VIOLATION: Use logger.info() instead\n');
+        if (isDev()) {
+          // In browser, we can't use process.stdout - silently log violation
         }
       };
     }
@@ -226,26 +244,14 @@ class HIPAACompliantLogger {
       // Ignore localStorage errors in production
     }
 
-    // Output to stdout in development only - NO OTHER OUTPUT METHODS
-    if (process.env.NODE_ENV === 'development') {
-      const levelPrefix = `[${entry.level.toUpperCase()}]`;
-      process.stdout.write(`${levelPrefix} ${entry.message}\n`);
-      process.stdout.write(`  Timestamp: ${entry.timestamp}\n`);
-      process.stdout.write(`  Audit Hash: ${entry.audit.hash}\n`);
-      process.stdout.write(`  Classification: ${entry.audit.classification}\n`);
-      if (entry.audit.scrubbed) {
-        process.stdout.write(`  ⚠️ PHI was detected and redacted from this log\n`);
-      }
-      if (entry.metadata) {
-        process.stdout.write(`  Metadata: ${JSON.stringify(entry.metadata)}\n`);
-      }
-      if (entry.context) {
-        process.stdout.write(`  Context: ${JSON.stringify(entry.context)}\n`);
-      }
+    // In development, we could use a debug panel or localStorage viewer
+    // In browser, we avoid using process.stdout
+    if (isDev()) {
+      // Development logging happens via localStorage only to avoid console
     }
 
     // Send to backend audit service in production
-    if (process.env.NODE_ENV === 'production') {
+    if (isProd()) {
       this.sendToAuditService(entry);
     }
   }
@@ -290,7 +296,7 @@ class HIPAACompliantLogger {
    */
   private setupPeriodicAuditDump(): void {
     // Dump audit logs every 5 minutes in production
-    if (process.env.NODE_ENV === 'production') {
+    if (isProd()) {
       setInterval(() => {
         this.dumpAuditLogs();
       }, 5 * 60 * 1000);

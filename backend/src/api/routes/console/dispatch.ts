@@ -8,7 +8,7 @@
 import { Router, Response, NextFunction } from 'express';
 import { requireAuth, AuthenticatedRequest } from '../../middleware/auth';
 import { ApiErrors } from '../../middleware/error-handler';
-import { detectCoverageGaps, getOnCallCaregivers } from '../../jobs/coverage-monitor.job';
+import { detectCoverageGaps, getOnCallCaregivers } from '../../../jobs/coverage-monitor.job';
 import { getSMSService } from '../../../services/notifications/sms.service';
 
 const router = Router();

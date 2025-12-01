@@ -4,7 +4,7 @@
  * Runs every 15 minutes to automatically submit validated EVV records to Sandata.
  * This ensures real-time compliance and prevents submission backlogs.
  *
- * Cron Schedule: */15 * * * * (Every 15 minutes)
+ * Cron Schedule: *\/15 * * * * (Every 15 minutes)
  *
  * Workflow:
  * 1. Query for pending EVV records (clock_out complete, not yet submitted)

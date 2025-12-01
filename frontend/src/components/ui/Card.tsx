@@ -27,6 +27,11 @@ export interface CardProps {
   hoverable?: boolean;
 
   /**
+   * Alias for onClick presence - indicates card is clickable
+   */
+  clickable?: boolean;
+
+  /**
    * Make card clickable
    */
   onClick?: () => void;
@@ -87,13 +92,14 @@ interface CardDescriptionProps {
 export function Card({
   variant = 'default',
   hoverable = false,
+  clickable = false,
   onClick,
   children,
   className = '',
   role,
   tabIndex,
 }: CardProps) {
-  const isClickable = !!onClick;
+  const isClickable = !!onClick || clickable;
 
   // Base classes
   const baseClasses = [

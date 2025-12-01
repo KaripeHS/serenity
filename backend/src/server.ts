@@ -5,9 +5,12 @@
  * @module server
  */
 
+// Load environment variables FIRST, before any other imports
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { startServer } from './api';
 import { createLogger } from './utils/logger';
-import { environmentService } from './config/environment';
 
 const logger = createLogger('server');
 

@@ -20,6 +20,7 @@ import { publicRouter } from './routes/public';
 import { consoleRouter } from './routes/console';
 import { adminRouter } from './routes/admin';
 import { mobileRouter } from './routes/mobile';
+import partnersRouter from './partners/partners.routes';
 import webhooksRouter from './routes/webhooks';
 import { errorHandler } from './middleware/error-handler';
 import { requestLogger } from './middleware/request-logger';
@@ -74,6 +75,7 @@ export function createApp(config: ApiConfig): Application {
   app.use('/api/console', consoleRouter);
   app.use('/api/admin', adminRouter);
   app.use('/api/mobile', mobileRouter);
+  app.use('/api/partners', partnersRouter);
 
   // 404 handler
   app.use((_req: Request, res: Response) => {

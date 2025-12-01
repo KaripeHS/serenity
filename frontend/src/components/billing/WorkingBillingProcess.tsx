@@ -8,8 +8,7 @@ import {
   ArrowLeftIcon,
   CurrencyDollarIcon,
   DocumentTextIcon,
-  CheckCircleIcon,
-  XCircleIcon
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
 interface ClaimBatch {
