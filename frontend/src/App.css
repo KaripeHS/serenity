@@ -78,3 +78,79 @@
 .App {
   min-height: 100vh;
 }
+
+/* ============================================= */
+/* PUBLIC MARKETING SITE ANIMATIONS              */
+/* ============================================= */
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.fade-in-up {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+/* Hover lift effect */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
+}
+
+/* Ken Burns effect for hero images */
+.ken-burns {
+  animation: kenBurns 20s ease-in-out infinite alternate;
+}
+
+@keyframes kenBurns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+/* Pulse subtle for status indicators */
+.pulse-subtle {
+  animation: pulseSoft 2s ease-in-out infinite;
+}
+
+@keyframes pulseSoft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Count up animation helper */
+.count-up {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Glow on hover for buttons */
+.glow-on-hover:hover {
+  box-shadow: 0 0 20px rgba(12, 90, 61, 0.3);
+}

@@ -137,8 +137,8 @@ export const LeadPipeline: React.FC = () => {
                     <button
                         onClick={() => setView('leads')}
                         className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${view === 'leads'
-                                ? 'border-indigo-500 text-indigo-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            ? 'border-indigo-500 text-indigo-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             }`}
                     >
                         Leads Pipeline
@@ -146,8 +146,8 @@ export const LeadPipeline: React.FC = () => {
                     <button
                         onClick={() => setView('proposals')}
                         className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${view === 'proposals'
-                                ? 'border-indigo-500 text-indigo-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            ? 'border-indigo-500 text-indigo-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             }`}
                     >
                         Pending Proposals
@@ -217,7 +217,7 @@ export const LeadPipeline: React.FC = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {new Date(lead.createdAt).toLocaleDateString()}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-4">
                                             <select
                                                 value={lead.status}
                                                 onChange={(e) => updateStatusMutation.mutate({ id: lead.id, status: e.target.value })}
@@ -227,6 +227,12 @@ export const LeadPipeline: React.FC = () => {
                                                     <option key={value} value={value}>{label}</option>
                                                 ))}
                                             </select>
+                                            <a
+                                                href={`/dashboard/intake/new?leadId=${lead.id}`}
+                                                className="text-indigo-600 hover:text-indigo-900 font-bold text-xs uppercase tracking-wide border border-indigo-200 px-3 py-1 rounded-full hover:bg-indigo-50 transition"
+                                            >
+                                                Create Proposal
+                                            </a>
                                         </td>
                                     </tr>
                                 ))}
@@ -265,7 +271,7 @@ export const LeadPipeline: React.FC = () => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${proposal.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                                proposal.status === 'draft' ? 'bg-gray-100 text-gray-800' : 'bg-yellow-100 text-yellow-800'
+                                            proposal.status === 'draft' ? 'bg-gray-100 text-gray-800' : 'bg-yellow-100 text-yellow-800'
                                             }`}>
                                             {proposal.status.toUpperCase().replace('_', ' ')}
                                         </span>

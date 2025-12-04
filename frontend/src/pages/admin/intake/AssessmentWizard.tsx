@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 // Assessment Schema
 const assessmentSchema = z.object({
@@ -93,16 +93,39 @@ export const AssessmentWizard: React.FC = () => {
         setStep('proposal');
     };
 
+    const [searchParams] = useSearchParams();
+    const leadId = searchParams.get('leadId');
+
+    // Fetch Lead Data if leadId is present
+    const { data: lead } = useQuery({
+        queryKey: ['lead', leadId],
+        queryFn: async () => {
+            if (!leadId) return null;
+            const res = await fetch(`/api/admin/leads/${leadId}`);
+            if (!res.ok) throw new Error('Failed to fetch lead');
+            const json = await res.json();
+            return json.data;
+        },
+        enabled: !!leadId
+    });
+
+    // Pre-fill form when lead data loads
+    useEffect(() => {
+        if (lead) {
+            assessmentForm.setValue('clientName', `${lead.firstName} ${lead.lastName}`);
+        }
+    }, [lead, assessmentForm]);
+
     const handleSaveDraft = () => {
         if (!clientData || !quote) return;
 
-        // In a real app, we'd need a Lead ID. For this demo, we'll create a dummy one or assume context.
-        // We'll create a new lead on the fly or just fail if no lead context.
-        // For MVP, let's assume we are creating a proposal for a NEW lead implicitly or just mocking the leadId.
-        const MOCK_LEAD_ID = '00000000-0000-0000-0000-000000000000'; // Needs a real UUID
+        if (!leadId) {
+            alert('Error: No Lead ID found. Please start from the Lead Pipeline.');
+            return;
+        }
 
         createProposalMutation.mutate({
-            leadId: MOCK_LEAD_ID,
+            leadId: leadId,
             careConfiguration: { ...careConfig, daysPerWeek: clientData.daysPerWeek },
             totalWeeklyCost: quote.weeklyCost,
             status: 'draft'
