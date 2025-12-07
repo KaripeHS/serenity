@@ -1,7 +1,44 @@
 
 import { request } from './api';
 
-// ... (Existing interfaces)
+// Bank Account Interface
+export interface BankAccount {
+    id: string;
+    organizationId: string;
+    name: string;
+    institutionName?: string;
+    accountNumberLast4?: string;
+    routingNumber?: string;
+    glAccountId?: string;
+    isPrimary: boolean;
+    createdAt: Date;
+}
+
+// Vendor Interface
+export interface Vendor {
+    id: string;
+    organizationId: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    taxId?: string;
+    paymentTerms?: string;
+    createdAt: Date;
+}
+
+// Bill Interface
+export interface Bill {
+    id: string;
+    organizationId: string;
+    vendorId: string;
+    invoiceNumber?: string;
+    amount: number;
+    dueDate: Date;
+    status: 'pending' | 'approved' | 'paid' | 'rejected';
+    description?: string;
+    createdAt: Date;
+}
 
 export interface GrossMarginReport {
     period: { start: string; end: string };

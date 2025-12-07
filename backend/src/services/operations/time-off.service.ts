@@ -19,8 +19,8 @@ export const timeOffService = {
      * Submit a Time Off Request
      */
     async requestTimeOff(data: Partial<TimeOffRequest>) {
-        constdb = getDbClient();
-        const result = awaitdb.query(`
+        const db = getDbClient();
+        const result = await db.query(`
             INSERT INTO time_off_requests 
             (user_id, organization_id, start_date, end_date, type, reason, status)
             VALUES ($1, $2, $3, $4, $5, $6, 'pending')
@@ -36,8 +36,8 @@ export const timeOffService = {
      * Get pending requests for Admin
      */
     async getPendingRequests(organizationId: string) {
-        constdb = getDbClient();
-        const result = awaitdb.query(`
+        const db = getDbClient();
+        const result = await db.query(`
             SELECT t.*, u.first_name || ' ' || u.last_name as user_name
             FROM time_off_requests t
             JOIN users u ON t.user_id = u.id
@@ -51,8 +51,8 @@ export const timeOffService = {
      * Approve or Deny Request
      */
     async reviewRequest(requestId: string, status: 'approved' | 'denied', reviewerId: string, reason?: string) {
-        constdb = getDbClient();
-        const result = awaitdb.query(`
+        const db = getDbClient();
+        const result = await db.query(`
             UPDATE time_off_requests
             SET status = $1, reviewed_by = $2, reviewed_at = NOW(), rejection_reason = $3, updated_at = NOW()
             WHERE id = $4
@@ -65,9 +65,9 @@ export const timeOffService = {
      * Check if user is unavailable during a range
      * Used by Scheduling Engine
      */
-    async isUserunavailable(userId: string, start: Date, end: Date): Promise<boolean> {
-        constdb = getDbClient();
-        const result = awaitdb.query(`
+    async isUserUnavailable(userId: string, start: Date, end: Date): Promise<boolean> {
+        const db = getDbClient();
+        const result = await db.query(`
             SELECT 1 FROM time_off_requests
             WHERE user_id = $1
             AND status = 'approved'

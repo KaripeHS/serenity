@@ -1,6 +1,6 @@
 
 import { Router } from 'express';
-import { aiService } from '../../services/ai/ai.service';
+import { aiService } from '../../../services/ai/ai.service';
 import { requireAuth, AuthenticatedRequest } from '../../middleware/auth';
 
 const router = Router();
@@ -15,7 +15,7 @@ router.post('/chat', async (req: AuthenticatedRequest, res) => {
         // Pass user context for Role-Based Guardrails
         const response = await aiService.chat(messages, {
             role: user.role,
-            name: `${user.firstName} ${user.lastName}`,
+            name: user.userId, // Use userId as identifier
             orgId: user.organizationId
         });
 

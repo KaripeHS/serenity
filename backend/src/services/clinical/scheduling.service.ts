@@ -79,7 +79,7 @@ export class SchedulingService {
 
         for (const candidate of candidates) {
             // CHECK 1: Time Off Availability
-            const isUnavailable = await timeOffService.isUserunavailable(candidate.id, start, end);
+            const isUnavailable = await timeOffService.isUserUnavailable(candidate.id, start, end);
             if (isUnavailable) continue;
 
             const reasons: string[] = [];

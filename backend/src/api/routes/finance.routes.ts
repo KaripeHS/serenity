@@ -1,11 +1,34 @@
 
 import { Router } from 'express';
-import { bankAccountsService } from '../../services/finance/bank-accounts.service'; // Ensure correct import
+import { bankAccountsService } from '../../services/finance/bank-accounts.service';
 import { accountingService } from '../../services/finance/accounting.service';
 import { financialWorkflowsService } from '../../services/finance/financial-workflows.service';
+import { financialIntelligenceService } from '../../services/finance/financial-intelligence.service';
+import { plaidService } from '../../services/finance/plaid.service';
+
+const router = Router();
+
+// --- Bank Accounts ---
+
+router.get('/bank-accounts', async (req, res) => {
+    try {
+        const accounts = await bankAccountsService.getAll(req.user!.organizationId);
+        res.json(accounts);
     } catch (error: any) {
-    res.status(500).json({ error: error.message });
-}
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/bank-accounts', async (req, res) => {
+    try {
+        const account = await bankAccountsService.create({
+            ...req.body,
+            organizationId: req.user!.organizationId
+        });
+        res.json(account);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 router.put('/bank-accounts/:id', async (req, res) => {
@@ -37,7 +60,37 @@ router.get('/reports/balance-sheet', async (req, res) => {
     }
 });
 
+router.get('/reports/gross-margin', async (req, res) => {
+    try {
+        const start = req.query.startDate ? new Date(req.query.startDate as string) : new Date(new Date().getFullYear(), 0, 1);
+        const end = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+
+        const report = await financialIntelligenceService.getGrossMarginAnalysis(req.user!.organizationId, start, end);
+        res.json(report);
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.get('/reports/unbilled-revenue', async (req, res) => {
+    try {
+        const report = await financialIntelligenceService.getUnbilledRevenue(req.user!.organizationId);
+        res.json(report);
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // --- Vendors ---
+router.get('/vendors', async (req, res) => {
+    try {
+        const vendors = await financialWorkflowsService.getVendors(req.user!.organizationId);
+        res.json(vendors.rows);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 router.post('/vendors', async (req, res) => {
     try {
         const vendor = await financialWorkflowsService.createVendor({
@@ -48,11 +101,6 @@ router.post('/vendors', async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: 'Failed to create vendor' });
     }
-});
-
-router.get('/vendors', async (req, res) => {
-    const vendors = await financialWorkflowsService.getVendors(req.user!.organizationId);
-    res.json(vendors.rows);
 });
 
 // --- Bills ---
@@ -90,37 +138,20 @@ router.post('/approvals/:type/:id', async (req, res) => {
 
 // --- Plaid ---
 router.post('/plaid/link-token', async (req, res) => {
-    const token = await plaidService.createLinkToken(req.user!.userId);
-    res.json(token);
-});
-
-router.post('/plaid/exchange', async (req, res) => {
-    const result = await plaidService.exchangePublicToken(req.user!.organizationId, req.body.publicToken);
-    res.json(result);
-});
-
-import { financialIntelligenceService } from '../../services/finance/financial-intelligence.service';
-
-// --- Intelligence ---
-
-router.get('/reports/gross-margin', async (req, res) => {
     try {
-        const start = req.query.startDate ? new Date(req.query.startDate as string) : new Date(new Date().getFullYear(), 0, 1);
-        const end = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
-
-        const report = await financialIntelligenceService.getGrossMarginAnalysis(req.user!.organizationId, start, end);
-        res.json(report);
-    } catch (err: any) {
-        res.status(500).json({ error: err.message });
+        const token = await plaidService.createLinkToken(req.user!.userId);
+        res.json(token);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
     }
 });
 
-router.get('/reports/unbilled-revenue', async (req, res) => {
+router.post('/plaid/exchange', async (req, res) => {
     try {
-        const report = await financialIntelligenceService.getUnbilledRevenue(req.user!.organizationId);
-        res.json(report);
-    } catch (err: any) {
-        res.status(500).json({ error: err.message });
+        const result = await plaidService.exchangePublicToken(req.user!.organizationId, req.body.publicToken);
+        res.json(result);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
     }
 });
 

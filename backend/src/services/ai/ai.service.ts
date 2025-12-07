@@ -1,17 +1,21 @@
 
 import OpenAI from 'openai';
-import { getDbClient } from '../../database/client';
 
 export class AIService {
-    private openai: OpenAI;
-    private readonly MODEL = 'gpt-3.5-turbo'; // Fallback mapping for "gpt-5.1-nano" concept until actual availability
+    private openai: OpenAI | null = null;
+    private readonly MODEL = 'gpt-3.5-turbo';
     private readonly MAX_TOKENS = 500;
-    private readonly TEMPERATURE = 0.2; // Strict, deterministic
+    private readonly TEMPERATURE = 0.2;
 
-    constructor() {
-        this.openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY,
-        });
+    private getClient(): OpenAI {
+        if (!this.openai) {
+            const apiKey = process.env.OPENAI_API_KEY;
+            if (!apiKey) {
+                throw new Error('OPENAI_API_KEY not configured');
+            }
+            this.openai = new OpenAI({ apiKey });
+        }
+        return this.openai;
     }
 
     /**
@@ -19,6 +23,8 @@ export class AIService {
      */
     async chat(messages: any[], userContext: { role: string; name: string; orgId: string }) {
         try {
+            const client = this.getClient();
+
             // 1. Guardrail: System Prompt "Constitution"
             const systemPrompt = {
                 role: 'system',
@@ -38,13 +44,10 @@ CONTEXT:
 `
             };
 
-            // 2. Guardrail: Context Injection (Placeholder for RAG)
-            // In future, we would inject specific policy docs here based on the query.
-
-            const response = await this.openai.chat.completions.create({
+            const response = await client.chat.completions.create({
                 model: this.MODEL,
                 messages: [systemPrompt, ...messages],
-                temperature: this.TEMPERATURE, // 3. Guardrail: Low Creativity
+                temperature: this.TEMPERATURE,
                 max_tokens: this.MAX_TOKENS,
             });
 
