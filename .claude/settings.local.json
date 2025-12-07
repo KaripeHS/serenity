@@ -52,7 +52,9 @@
       "Bash(docker builder prune:*)",
       "Bash(firebase hosting:channel:list:*)",
       "Bash(firebase hosting:sites:list:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(Start-Sleep -Seconds 30)",
+      "Bash(gcloud builds submit:*)"
     ],
     "deny": [],
     "ask": []

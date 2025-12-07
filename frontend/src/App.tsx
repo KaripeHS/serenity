@@ -22,9 +22,13 @@ import { WorkingBillingDashboard } from './components/dashboards/WorkingBillingD
 import { WorkingComplianceDashboard } from './components/dashboards/WorkingComplianceDashboard';
 import { WorkingTrainingDashboard } from './components/dashboards/WorkingTrainingDashboard';
 import { WorkingSchedulingDashboard } from './components/dashboards/WorkingSchedulingDashboard';
+import BankAccounts from './pages/finance/BankAccounts';
 import FinancialReports from './pages/finance/FinancialReports';
+import { VendorCenter } from './pages/finance/VendorCenter';
 import { ExpensePortal } from './pages/finance/ExpensePortal';
 import { BankFeed } from './pages/finance/BankFeed';
+import { PayrollManager } from './pages/admin/PayrollManager';
+import CommunicationSettings from './pages/admin/CommunicationSettings';
 
 // Helper to detect subdomain
 const getSubdomain = (): string | null => {
@@ -395,12 +399,13 @@ function App() {
                 }
               />
 
+
               {/* Finance Routes (Phase 11) */}
               <Route
                 path="/dashboard/finance/bank-accounts"
                 element={
                   <DashboardLayout>
-                    <div className="p-6"><h1 className="text-2xl font-bold">Bank Accounts</h1><p className="text-gray-600 mt-2">Coming soon...</p></div>
+                    <BankAccounts />
                   </DashboardLayout>
                 }
               />
@@ -416,7 +421,7 @@ function App() {
                 path="/dashboard/finance/vendors"
                 element={
                   <DashboardLayout>
-                    <div className="p-6"><h1 className="text-2xl font-bold">Vendor Center</h1><p className="text-gray-600 mt-2">Coming soon...</p></div>
+                    <VendorCenter />
                   </DashboardLayout>
                 }
               />
@@ -440,7 +445,7 @@ function App() {
                 path="/dashboard/finance/payroll"
                 element={
                   <DashboardLayout>
-                    <div className="p-6"><h1 className="text-2xl font-bold">Payroll Manager</h1><p className="text-gray-600 mt-2">Coming soon...</p></div>
+                    <PayrollManager />
                   </DashboardLayout>
                 }
               />
@@ -448,7 +453,7 @@ function App() {
                 path="/admin/settings/communications"
                 element={
                   <DashboardLayout>
-                    <div className="p-6"><h1 className="text-2xl font-bold">Communication Settings</h1><p className="text-gray-600 mt-2">Coming soon...</p></div>
+                    <CommunicationSettings />
                   </DashboardLayout>
                 }
               />
