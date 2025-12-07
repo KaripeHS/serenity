@@ -1,66 +1,41 @@
 {
   "expo": {
-    "name": "Serenity EVV",
-    "slug": "serenity-evv",
+    "name": "mobile",
+    "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/icon.png",
+    "scheme": "mobile",
     "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#2563eb"
+      "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "com.serenitycarepartners.evv",
-      "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Serenity EVV needs your location to verify you are at the client's home when clocking in.",
-        "NSLocationAlwaysUsageDescription": "Serenity EVV needs your location to verify you are at the client's home when clocking in.",
-        "NSCameraUsageDescription": "Serenity EVV needs camera access to take verification photos during visits.",
-        "NSPhotoLibraryUsageDescription": "Serenity EVV needs photo library access to attach photos to visits."
-      }
+      "supportsTablet": true,
+      "bundleIdentifier": "com.serenity.mobile"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#2563eb"
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
       },
-      "package": "com.serenitycarepartners.evv",
-      "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION",
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
-      ]
+      "package": "com.serenity.mobile",
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Allow Serenity EVV to use your location to verify you are at the client's home.",
-          "locationWhenInUsePermission": "Allow Serenity EVV to use your location to verify you are at the client's home."
-        }
-      ],
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow Serenity EVV to take verification photos during visits."
-        }
-      ]
+      "expo-router"
     ],
-    "extra": {
-      "eas": {
-        "projectId": "serenity-evv-mobile"
-      }
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }

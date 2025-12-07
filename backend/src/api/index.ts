@@ -29,6 +29,7 @@ import { requestLogger } from './middleware/request-logger';
 import { rateLimiter } from './middleware/rate-limiter';
 import operationsRouter from './routes/operations.routes';
 import complianceRouter from './routes/compliance.routes';
+import { clinicalRouter } from './routes/clinical';
 
 const logger = createLogger('api');
 
@@ -85,6 +86,7 @@ export function createApp(config: ApiConfig): Application {
   app.use('/api/console/ai', aiRouter);
   app.use('/api/operations', operationsRouter);
   app.use('/api/compliance', complianceRouter);
+  app.use('/api/clinical', clinicalRouter);
 
   // 404 handler
   app.use((_req: Request, res: Response) => {
