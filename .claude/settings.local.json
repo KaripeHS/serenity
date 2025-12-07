@@ -51,7 +51,8 @@
       "Bash(gcloud logging read:*)",
       "Bash(docker builder prune:*)",
       "Bash(firebase hosting:channel:list:*)",
-      "Bash(firebase hosting:sites:list:*)"
+      "Bash(firebase hosting:sites:list:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
