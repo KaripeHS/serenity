@@ -11,6 +11,10 @@ import { ApiErrors } from '../../middleware/error-handler';
 import { getClaimsGateService } from '../../../modules/billing/claims-gate.service';
 import { getEDI837GeneratorService } from '../../../modules/billing/edi-generator.service';
 import { getPayrollExportService } from '../../../modules/billing/payroll-export.service';
+import { PrivateBillingService } from '../../../modules/billing/private-billing.service';
+import { BillingService } from '../../../modules/billing/billing.service';
+import { getDbClient } from '../../../database/client';
+import { AuditLogger } from '../../../audit/logger';
 
 const router = Router();
 const claimsGateService = getClaimsGateService();
@@ -94,7 +98,7 @@ router.post('/claims/generate', async (req: AuthenticatedRequest, res: Response,
       }
     } else {
       // Force submit requires special permission and audit log
-      if (!req.user?.permissions?.includes('force_claims_submission')) {
+      if (!req.user?.permissions?.includes('force_claims_submission' as any)) {
         throw ApiErrors.forbidden('Force claims submission requires special permission');
       }
 
@@ -105,40 +109,19 @@ router.post('/claims/generate', async (req: AuthenticatedRequest, res: Response,
       //   details: { visitIds, reason: req.body.forceReason || 'No reason provided' }
       // });
 
-      console.log(`[CLAIMS] Force submit by ${req.user.email} for ${visitIds.length} visits`);
+      console.log(`[CLAIMS] Force submit by ${req.user.userId} for ${visitIds.length} visits`);
     }
 
     // Generate claims file
     const claimsFileId = `claims-${Date.now()}`;
     const fileName = `claims_${new Date().toISOString().split('T')[0]}.${format}`;
 
-    // Mock visit data (TODO: fetch from database)
-    const mockVisits = visitIds.map((id, index) => ({
-      id,
-      visitDate: new Date(),
-      serviceCode: index % 2 === 0 ? 'T1019' : 'S5125',
-      billableUnits: 8,
-      diagnosisCode: 'Z7409',
-      authorizationNumber: `AUTH-${index + 1}`,
-      client: {
-        id: `client-${index + 1}`,
-        firstName: 'Margaret',
-        lastName: 'Johnson',
-        dateOfBirth: new Date('1940-05-15'),
-        medicaidNumber: `OH${(1234567890 + index).toString()}`,
-        addressLine1: '123 Main St',
-        city: 'Dayton',
-        state: 'OH',
-        zipCode: '45402'
-      },
-      caregiver: {
-        id: `cg-${index + 1}`,
-        firstName: 'Mary',
-        lastName: 'Smith',
-        npi: '1234567890'
-      },
-      placeOfService: '12' // Home
-    }));
+    // Fetch real visit data for claims
+    const requestVisits = await claimsGateService.getClaimsDataForEDI(visitIds);
+
+    if (requestVisits.length === 0) {
+      throw ApiErrors.badRequest('No valid visits found for claims generation');
+    }
 
     const organizationInfo = {
       name: 'SERENITY CARE PARTNERS',
@@ -160,7 +143,7 @@ router.post('/claims/generate', async (req: AuthenticatedRequest, res: Response,
 
     // Generate 837P file
     const claimsFileContent = await edi837Generator.generate837P(
-      mockVisits,
+      requestVisits,
       organizationInfo,
       clearinghouse
     );
@@ -213,7 +196,7 @@ router.get('/claims/:claimsFileId', async (req: AuthenticatedRequest, res: Respo
       visitCount: 150,
       totalAmount: 37500,
       status: 'pending',
-      createdBy: req.user?.id,
+      createdBy: req.user?.userId,
       createdAt: new Date().toISOString(),
       submittedAt: null,
       fileName: `claims_${new Date().toISOString().split('T')[0]}.837`
@@ -579,6 +562,91 @@ router.get('/payroll/export', async (req: AuthenticatedRequest, res: Response, n
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send(csvContent);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/console/billing/private/package
+ * Download billing package (Invoice + Visit Logs) for private pay claims
+ */
+router.get('/private/package', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { claimIds } = req.query;
+
+    if (!claimIds) {
+      throw ApiErrors.badRequest('claimIds are required');
+    }
+
+    const ids = (claimIds as string).split(',');
+
+    // Initialize services
+    const db = getDbClient();
+    const auditLogger = new AuditLogger('billing-api');
+    const billingService = new BillingService(db, auditLogger);
+    const privateBillingService = new PrivateBillingService(db, billingService);
+
+    const zipStream = await privateBillingService.generateBillingPackage(ids, {
+      userId: req.user?.userId || 'system',
+      organizationId: req.user?.organizationId || '00000000-0000-0000-0000-000000000001',
+      role: (req.user?.role || 'admin') as any,
+      permissions: [],
+      attributes: [],
+      sessionId: 'system',
+      ipAddress: '127.0.0.1',
+      userAgent: 'system'
+    });
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="billing_package_${new Date().toISOString().split('T')[0]}.zip"`);
+
+    zipStream.pipe(res);
+
+  } catch (error) {
+    next(error);
+  }
+});
+/**
+ * GET /api/console/billing/batches
+ * Get list of claim batches
+ */
+router.get('/batches', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { status, page = '1', limit = '20' } = req.query;
+    const organizationId = req.user?.organizationId || '00000000-0000-0000-0000-000000000001';
+
+    const db = getDbClient();
+
+    let query = `
+      SELECT *
+      FROM claims_batches
+      WHERE organization_id = $1
+    `;
+    const params: any[] = [organizationId];
+
+    if (status) {
+      query += ` AND status = $2`;
+      params.push(status);
+    }
+
+    query += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    params.push(Number(limit), (Number(page) - 1) * Number(limit));
+
+    const result = await db.query(query, params);
+
+    res.json(result.rows.map(row => ({
+      id: row.id,
+      batchNumber: row.batch_number,
+      totalClaims: row.claim_count,
+      totalAmount: parseFloat(row.total_amount),
+      status: row.status,
+      createdDate: row.created_at,
+      submissionDate: row.submission_date,
+      payer: row.payer_name,
+      // For now, empty claims array as details are fetched separately
+      claims: []
+    })));
   } catch (error) {
     next(error);
   }

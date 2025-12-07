@@ -1,171 +1,94 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { Select, SelectOption } from '../ui/Select';
-
-interface Caregiver {
-  id: string;
-  name: string;
-  role: string;
-  skills: string[];
-  availability: string;
-  location: string;
-  matchScore: number;
-  certifications: string[];
-}
-
-interface Patient {
-  id: string;
-  name: string;
-  requiredSkills: string[];
-  location: string;
-  serviceType: string;
-  scheduledTime: string;
-}
+import { schedulingService, CaregiverMatch, SchedulingClient, SchedulingServiceType } from '../../services/scheduling.service';
 
 interface CaregiverMatcherProps {
   className?: string;
 }
 
 export function CaregiverMatcher({ className = '' }: CaregiverMatcherProps) {
-  const [selectedPatient, setSelectedPatient] = useState<string>('');
-  const [matches, setMatches] = useState<Caregiver[]>([]);
+  const [clients, setClients] = useState<SchedulingClient[]>([]);
+  const [services, setServices] = useState<SchedulingServiceType[]>([]);
+
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
+  const [selectedServiceId, setSelectedServiceId] = useState<string>('');
+  const [startTime, setStartTime] = useState<string>('');
+  const [endTime, setEndTime] = useState<string>('');
+
+  const [matches, setMatches] = useState<CaregiverMatch[]>([]);
   const [isMatching, setIsMatching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const patients: Patient[] = [
-    {
-      id: '1',
-      name: 'Eleanor Johnson',
-      requiredSkills: ['Personal Care', 'Medication Management', 'Wound Care'],
-      location: 'Columbus, OH',
-      serviceType: 'Personal Care',
-      scheduledTime: '09:00 AM'
-    },
-    {
-      id: '2',
-      name: 'Robert Smith',
-      requiredSkills: ['Physical Therapy', 'Mobility Training'],
-      location: 'Dublin, OH',
-      serviceType: 'Physical Therapy',
-      scheduledTime: '11:30 AM'
-    },
-    {
-      id: '3',
-      name: 'Mary Williams',
-      requiredSkills: ['Medication Management', 'Vital Signs'],
-      location: 'Westerville, OH',
-      serviceType: 'Medication Management',
-      scheduledTime: '02:00 PM'
-    }
-  ];
+  useEffect(() => {
+    loadResources();
+    // Set default time to tomorrow 9am-5pm
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(9, 0, 0, 0);
+    setStartTime(tomorrow.toISOString().slice(0, 16));
 
-  const caregivers: Caregiver[] = [
-    {
-      id: '1',
-      name: 'Maria Rodriguez',
-      role: 'Senior Caregiver',
-      skills: ['Personal Care', 'Medication Management', 'Wound Care', 'Companionship'],
-      availability: 'Available',
-      location: 'Columbus, OH',
-      matchScore: 95,
-      certifications: ['CNA', 'CPR', 'First Aid']
-    },
-    {
-      id: '2',
-      name: 'David Chen',
-      role: 'Physical Therapist',
-      skills: ['Physical Therapy', 'Mobility Training', 'Pain Management'],
-      availability: 'Available 12:00 PM',
-      location: 'Dublin, OH',
-      matchScore: 92,
-      certifications: ['PT', 'CPR', 'Manual Therapy']
-    },
-    {
-      id: '3',
-      name: 'Lisa Rodriguez',
-      role: 'Home Health Aide',
-      skills: ['Personal Care', 'Companionship', 'Light Housekeeping'],
-      availability: 'Available',
-      location: 'Columbus, OH',
-      matchScore: 78,
-      certifications: ['HHA', 'CPR']
-    },
-    {
-      id: '4',
-      name: 'Jennifer Miller',
-      role: 'Registered Nurse',
-      skills: ['Medication Management', 'Vital Signs', 'Wound Care', 'IV Therapy'],
-      availability: 'Available 1:00 PM',
-      location: 'Westerville, OH',
-      matchScore: 88,
-      certifications: ['RN', 'CPR', 'BLS']
+    const tomorrowEnd = new Date(tomorrow);
+    tomorrowEnd.setHours(17, 0, 0, 0);
+    setEndTime(tomorrowEnd.toISOString().slice(0, 16));
+  }, []);
+
+  const loadResources = async () => {
+    try {
+      const [currClients, currServices] = await Promise.all([
+        schedulingService.getClients(),
+        schedulingService.getServices()
+      ]);
+      setClients(currClients);
+      setServices(currServices);
+    } catch (err) {
+      console.error('Failed to load resources', err);
+      // Fallback for demo if API fails (e.g. auth issues)
+      // setError('Failed to load lists');
     }
-  ];
+  };
 
   const handleFindMatches = async () => {
-    if (!selectedPatient) return;
+    if (!selectedClientId || !selectedServiceId || !startTime || !endTime) {
+      setError('Please select client, service, and time range');
+      return;
+    }
 
+    setError(null);
     setIsMatching(true);
 
-    // Simulate AI matching
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const patient = patients.find(p => p.id === selectedPatient);
-    if (!patient) return;
-
-    // Filter and score caregivers based on patient requirements
-    const filteredMatches = caregivers
-      .map(caregiver => {
-        let score = 0;
-
-        // Skill matching
-        const skillMatches = patient.requiredSkills.filter(skill =>
-          caregiver.skills.includes(skill)
-        ).length;
-        score += (skillMatches / patient.requiredSkills.length) * 40;
-
-        // Location proximity (simplified)
-        if (caregiver.location === patient.location) {
-          score += 30;
-        } else {
-          score += 15; // nearby areas
-        }
-
-        // Availability
-        if (caregiver.availability === 'Available') {
-          score += 20;
-        } else {
-          score += 10;
-        }
-
-        // Experience/role bonus
-        if (caregiver.role.includes('Senior') || caregiver.role.includes('Registered')) {
-          score += 10;
-        }
-
-        return { ...caregiver, matchScore: Math.round(score) };
-      })
-      .filter(caregiver => caregiver.matchScore >= 50)
-      .sort((a, b) => b.matchScore - a.matchScore);
-
-    setMatches(filteredMatches);
-    setIsMatching(false);
+    try {
+      const results = await schedulingService.getCaregiverMatches(
+        selectedClientId,
+        selectedServiceId,
+        new Date(startTime),
+        new Date(endTime),
+        30, // max distance default
+        true // continuity default
+      );
+      setMatches(results);
+    } catch (err) {
+      console.error('Error finding matches:', err);
+      setError('Failed to find matches. Please try again.');
+    } finally {
+      setIsMatching(false);
+    }
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'bg-green-100 text-green-800';
-    if (score >= 75) return 'bg-yellow-100 text-yellow-800';
+    if (score >= 0.9) return 'bg-green-100 text-green-800';
+    if (score >= 0.7) return 'bg-yellow-100 text-yellow-800';
     return 'bg-red-100 text-red-800';
   };
 
   const handleAssignCaregiver = (caregiverId: string) => {
-    const caregiver = matches.find(c => c.id === caregiverId);
-    const patient = patients.find(p => p.id === selectedPatient);
-
-    if (caregiver && patient) {
-      alert(`Assigned ${caregiver.name} to ${patient.name}`);
-      // In real app, this would make the assignment
+    const match = matches.find(c => c.caregiver.id === caregiverId);
+    if (match) {
+      alert(`Assigned ${match.caregiver.name} to shift`);
+      // In real app, call createShift API here
     }
   };
 
@@ -176,70 +99,76 @@ export function CaregiverMatcher({ className = '' }: CaregiverMatcherProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Patient Selection */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Select Patient
-            </label>
-            <div className="flex space-x-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Client Selection */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Select Patient</label>
               <Select
-                value={selectedPatient}
-                onChange={(e) => setSelectedPatient(e.target.value)}
-                className="flex-1"
+                value={selectedClientId}
+                onChange={(e) => setSelectedClientId(e.target.value)}
               >
                 <SelectOption value="">Choose a patient...</SelectOption>
-                {patients.map((patient) => (
-                  <SelectOption key={patient.id} value={patient.id}>
-                    {patient.name} - {patient.serviceType} at {patient.scheduledTime}
+                {clients.map((client) => (
+                  <SelectOption key={client.id} value={client.id}>
+                    {client.name} - {client.location}
                   </SelectOption>
                 ))}
               </Select>
-              <Button
-                onClick={handleFindMatches}
-                disabled={!selectedPatient || isMatching}
+            </div>
+
+            {/* Service Selection */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Select Service</label>
+              <Select
+                value={selectedServiceId}
+                onChange={(e) => setSelectedServiceId(e.target.value)}
               >
-                {isMatching ? 'Matching...' : 'Find Matches'}
-              </Button>
+                <SelectOption value="">Choose a service...</SelectOption>
+                {services.map((service) => (
+                  <SelectOption key={service.id} value={service.id}>
+                    {service.name} ({service.code})
+                  </SelectOption>
+                ))}
+              </Select>
+            </div>
+
+            {/* Time Selection */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Start Time</label>
+              <input
+                type="datetime-local"
+                className="w-full rounded-md border border-gray-300 p-2"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">End Time</label>
+              <input
+                type="datetime-local"
+                className="w-full rounded-md border border-gray-300 p-2"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              />
             </div>
           </div>
 
-          {/* Patient Requirements */}
-          {selectedPatient && (
-            <div className="bg-blue-50 p-4 rounded-lg">
-              {(() => {
-                const patient = patients.find(p => p.id === selectedPatient);
-                return patient ? (
-                  <div>
-                    <h4 className="font-medium text-blue-900 mb-2">
-                      Patient Requirements
-                    </h4>
-                    <div className="grid grid-cols-2 gap-4 text-sm text-blue-800">
-                      <div>
-                        <span className="font-medium">Location:</span> {patient.location}
-                      </div>
-                      <div>
-                        <span className="font-medium">Time:</span> {patient.scheduledTime}
-                      </div>
-                    </div>
-                    <div className="mt-2">
-                      <span className="font-medium text-blue-800">Required Skills:</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {patient.requiredSkills.map((skill) => (
-                          <Badge key={skill} className="bg-blue-100 text-blue-800">
-                            {skill}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : null;
-              })()}
-            </div>
+          <div className="flex justify-end">
+            <Button
+              onClick={handleFindMatches}
+              disabled={!selectedClientId || !selectedServiceId || isMatching}
+            >
+              {isMatching ? 'Analyzing...' : 'Find Matches'}
+            </Button>
+          </div>
+
+          {error && (
+            <div className="text-red-500 text-sm mt-2">{error}</div>
           )}
 
           {/* Matching Progress */}
           {isMatching && (
-            <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+            <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mt-4">
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-yellow-800">AI analyzing caregiver matches...</span>
@@ -249,36 +178,42 @@ export function CaregiverMatcher({ className = '' }: CaregiverMatcherProps) {
 
           {/* Matches */}
           {matches.length > 0 && (
-            <div className="space-y-3">
+            <div className="space-y-3 mt-6">
               <h4 className="font-medium">Best Matches ({matches.length})</h4>
-              {matches.map((caregiver) => (
-                <div key={caregiver.id} className="border rounded-lg p-4">
+              {matches.map((match) => (
+                <div key={match.caregiver.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
-                        <h5 className="font-medium">{caregiver.name}</h5>
-                        <Badge className={getScoreColor(caregiver.matchScore)}>
-                          {caregiver.matchScore}% Match
+                        <h5 className="font-medium">{match.caregiver.name}</h5>
+                        <Badge className={getScoreColor(match.score)}>
+                          {Math.round(match.score * 100)}% Match
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-600 mb-2">
-                        {caregiver.role} • {caregiver.location}
+                        {match.caregiver.role} • {match.travelDistance.toFixed(1)} miles away
                       </p>
-                      <div className="text-sm text-gray-600 mb-2">
-                        <span className="font-medium">Availability:</span> {caregiver.availability}
-                      </div>
+
+                      {/* Skills */}
                       <div className="flex flex-wrap gap-1 mb-2">
-                        {caregiver.skills.map((skill) => (
+                        {match.caregiver.skills.map((skill) => (
                           <Badge key={skill} variant="outline" className="text-xs">
                             {skill}
                           </Badge>
                         ))}
                       </div>
-                      <div className="flex flex-wrap gap-1">
-                        {caregiver.certifications.map((cert) => (
-                          <Badge key={cert} className="bg-green-100 text-green-800 text-xs">
-                            {cert}
-                          </Badge>
+
+                      {/* Reasons/Warnings */}
+                      <div className="space-y-1">
+                        {match.reasons.map((r, idx) => (
+                          <div key={idx} className="text-xs text-green-700 flex items-center">
+                            ✓ {r}
+                          </div>
+                        ))}
+                        {match.warnings.map((w, idx) => (
+                          <div key={idx} className="text-xs text-amber-600 flex items-center">
+                            ! {w}
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -287,15 +222,12 @@ export function CaregiverMatcher({ className = '' }: CaregiverMatcherProps) {
                   <div className="flex space-x-2">
                     <Button
                       size="sm"
-                      onClick={() => handleAssignCaregiver(caregiver.id)}
+                      onClick={() => handleAssignCaregiver(match.caregiver.id)}
                     >
                       Assign
                     </Button>
                     <Button variant="outline" size="sm">
                       View Profile
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      Message
                     </Button>
                   </div>
                 </div>
@@ -303,10 +235,9 @@ export function CaregiverMatcher({ className = '' }: CaregiverMatcherProps) {
             </div>
           )}
 
-          {matches.length === 0 && selectedPatient && !isMatching && (
+          {matches.length === 0 && !isMatching && selectedClientId && (
             <div className="text-center py-8 text-gray-500">
-              <div className="text-2xl mb-2">🔍</div>
-              <p>Click "Find Matches" to see available caregivers</p>
+              {error ? null : <p>Click "Find Matches" to see available caregivers</p>}
             </div>
           )}
         </div>

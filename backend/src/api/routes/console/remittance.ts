@@ -15,7 +15,7 @@ import express, { Request, Response } from 'express';
 import multer from 'multer';
 import { remittanceAutoPostingService } from '../../../services/billing/remittance-auto-posting.service';
 import { edi835ParserService } from '../../../services/billing/edi-835-parser.service';
-import { logger } from '../../../shared/utils/logger';
+import { logger } from '../../../utils/logger';
 
 const router = express.Router();
 
@@ -42,7 +42,7 @@ const upload = multer({
  * POST /api/console/remittance/upload
  * Upload and parse 835 file (preview only, no auto-posting)
  */
-router.post('/upload', upload.single('file'), async (req: Request, res: Response) => {
+router.post('/upload', upload.single('file'), async (req: any, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -94,7 +94,7 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
  * POST /api/console/remittance/process
  * Upload and process 835 file with auto-posting
  */
-router.post('/process', upload.single('file'), async (req: Request, res: Response) => {
+router.post('/process', upload.single('file'), async (req: any, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });

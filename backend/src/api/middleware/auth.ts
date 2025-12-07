@@ -11,6 +11,7 @@ import { createLogger } from '../../utils/logger';
 import * as jwt from 'jsonwebtoken';
 import { getSandataRepository } from '../../services/sandata/repositories/sandata.repository';
 import { getDbClient } from '../../database/client';
+import { UserContext, UserRole } from '../../auth/access-control';
 
 const logger = createLogger('auth-middleware');
 const JWT_SECRET = process.env.JWT_SECRET || 'serenity-erp-secret-key-change-in-production';
@@ -20,13 +21,7 @@ const repository = getSandataRepository(getDbClient());
  * Extended Request with user information
  */
 export interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    role: string;
-    organizationId: string;
-    podId?: string;
-  };
+  user?: UserContext;
 }
 
 /**
@@ -59,7 +54,7 @@ export async function requireAuth(
     req.user = user;
 
     logger.debug('User authenticated', {
-      userId: user.id,
+      userId: user.userId,
       role: user.role,
       path: req.path,
     });
@@ -143,7 +138,7 @@ export async function optionalAuth(
 /**
  * Validate JWT token and return user
  */
-async function validateToken(token: string): Promise<AuthenticatedRequest['user'] | null> {
+async function validateToken(token: string): Promise<UserContext | null> {
   try {
     // Verify JWT signature and expiration
     const decoded = jwt.verify(token, JWT_SECRET) as any;
@@ -160,11 +155,14 @@ async function validateToken(token: string): Promise<AuthenticatedRequest['user'
 
     // Return user info
     return {
-      id: user.id,
-      email: user.email,
-      role: user.role,
+      userId: user.id,
       organizationId: user.organization_id,
-      podId: user.pod_id,
+      role: user.role as UserRole,
+      permissions: [], // TODO: Load permissions based on role
+      attributes: [], // TODO: Load attributes
+      sessionId: 'session-' + Date.now(), // Mock session ID
+      ipAddress: 'unknown',
+      userAgent: 'unknown'
     };
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {

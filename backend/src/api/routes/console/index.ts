@@ -32,11 +32,15 @@ import checkInRouter from './check-in';
 import gapsRouter from './gaps';
 import clearinghouseRouter from './clearinghouse';
 import payrollRouter from './payroll';
+import financeRouter from '../finance.routes';
 
 const router = Router();
 
 // All Console routes require authentication
 router.use(requireAuth);
+
+// Finance & Accounting routes (Phase 11)
+router.use('/finance', financeRouter);
 
 // Dashboard builder routes (old)
 // router.use('/dashboard', dashboardRouter);
@@ -111,6 +115,17 @@ router.use('/gaps', gapsRouter);
 router.use('/clearinghouse', clearinghouseRouter);
 
 // Payroll routes (Gusto, ADP, etc.)
+// Payroll routes (Gusto, ADP, etc.)
 router.use('/payroll', payrollRouter);
+
+// Intelligent Scheduling routes (Phase 6)
+import { createSchedulingRoutes } from './scheduling';
+import { DatabaseClient } from '../../../database/client';
+import { AuditLogger } from '../../../audit/logger';
+
+// Instantiate scheduling router dependencies
+const db = new DatabaseClient();
+const audit = new AuditLogger('api-gateway');
+router.use('/scheduling', createSchedulingRoutes(db, audit));
 
 export { router as consoleRouter };

@@ -866,7 +866,7 @@ export class TalentPipelineService extends EventEmitter {
           }
         }
       } catch (error) {
-        talentLogger.warn(`Failed to source from ${source.name}:`, error instanceof Error ? error.message : String(error));
+        talentLogger.warn(`Failed to source from ${source.name}:`, { error: error instanceof Error ? error.message : String(error) });
       }
     }
 
@@ -939,7 +939,7 @@ export class TalentPipelineService extends EventEmitter {
         this.emit('candidate:screened', { candidate, result: screeningResult, agent: agent.id });
 
       } catch (error) {
-        talentLogger.error(`Screening failed for candidate ${candidate.id}:`, error instanceof Error ? error.message : String(error));
+        talentLogger.error(`Screening failed for candidate ${candidate.id}:`, { error: error instanceof Error ? error.message : String(error) });
       }
     }
 
@@ -1018,7 +1018,7 @@ export class TalentPipelineService extends EventEmitter {
         this.emit('candidate:onboarding_started', { candidate: newHire, plan: onboardingPlan, agent: agent.id });
 
       } catch (error) {
-        talentLogger.error(`Onboarding setup failed for ${newHire.id}:`, error instanceof Error ? error.message : String(error));
+        talentLogger.error(`Onboarding setup failed for ${newHire.id}:`, { error: error instanceof Error ? error.message : String(error) });
       }
     }
 
@@ -1292,7 +1292,11 @@ export class TalentPipelineService extends EventEmitter {
           required: true,
           exemptionsAllowed: true,
           verificationRequired: true
-        }]
+        }],
+        commutingDistance: 30,
+        remoteWorkAllowed: false,
+        benefitsRequired: ['health_insurance', 'paid_time_off'],
+        incentivePrograms: ['sign_on_bonus']
       },
       automationRules: [{
         id: 'high_match_notification',
@@ -1417,7 +1421,11 @@ export class TalentPipelineService extends EventEmitter {
         },
         backgroundCheckRequirements: [],
         drugTestingRequired: false,
-        vaccinationRequirements: []
+        vaccinationRequirements: [],
+        commutingDistance: 0,
+        remoteWorkAllowed: true,
+        benefitsRequired: [],
+        incentivePrograms: []
       },
       automationRules: [],
       performance: {
@@ -1746,7 +1754,7 @@ interface AgentExecutionResult {
   executionId?: string;
   success: boolean;
   error?: string;
-  executionTime: number;
+  executionTime?: number;
   results: any[];
   recommendations: string[];
   nextActions: string[];
@@ -1777,5 +1785,3 @@ interface CandidateMatch {
 // ============================================================================
 // Export
 // ============================================================================
-
-export { TalentPipelineService };

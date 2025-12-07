@@ -47,7 +47,14 @@ export type SecurityEvent =
   | 'session_hijack_attempt'
   | 'injection_attempt'
   | 'file_upload_violation'
-  | 'api_abuse';
+  | 'api_abuse'
+  | 'login_success'
+  | 'logout'
+  | 'login_blocked'
+  | 'mfa_enabled'
+  | 'mfa_disabled'
+  | 'mfa_failed'
+  | 'password_change';
 
 export interface AuditLogEntry {
   timestamp: Date;
@@ -266,7 +273,14 @@ export class AuditLogger {
       'session_hijack_attempt': 'Session hijacking attempt detected',
       'injection_attempt': 'SQL/Code injection attempt',
       'file_upload_violation': 'Malicious file upload attempt',
-      'api_abuse': 'API abuse detected'
+      'api_abuse': 'API abuse detected',
+      'login_success': 'Successful user login',
+      'logout': 'User logout',
+      'login_blocked': 'Login blocked due to security policy',
+      'mfa_enabled': 'Multi-Factor Authentication enabled',
+      'mfa_disabled': 'Multi-Factor Authentication disabled',
+      'mfa_failed': 'Multi-Factor Authentication failed',
+      'password_change': 'User password changed'
     };
 
     return descriptions[event] || 'Unknown security event';

@@ -11,6 +11,8 @@ dotenv.config();
 
 import { startServer } from './api';
 import { createLogger } from './utils/logger';
+import { marketingAutomationJob } from './jobs/marketing-automation.job';
+import { ClinicalRiskMonitor } from './jobs/clinical-risk-monitor.job';
 
 const logger = createLogger('server');
 
@@ -28,6 +30,11 @@ async function main() {
       nodeEnv,
       corsOrigins,
     });
+
+    // Initialize background jobs
+    marketingAutomationJob.start();
+    const clinicalRiskMonitor = new ClinicalRiskMonitor();
+    clinicalRiskMonitor.start();
 
     // Start server
     await startServer({

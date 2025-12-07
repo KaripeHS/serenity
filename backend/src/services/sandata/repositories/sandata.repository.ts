@@ -63,6 +63,8 @@ export interface SandataConfigRow {
   block_over_authorization: boolean;
   auto_submit_enabled: boolean;
   corrections_enabled: boolean;
+  sandata_api_key?: string;
+  sandata_environment?: string;
   created_at: Date;
   updated_at: Date;
   updated_by?: string;
@@ -82,12 +84,17 @@ export interface EVVRecordRow {
   clock_out_latitude: number;
   clock_out_longitude: number;
   billable_units?: number;
+  modifiers?: string;
+  payer?: string;
+  payer_program?: string;
   authorization_number?: string;
   visit_key?: string;
   sandata_visit_id?: string;
   sandata_status?: string;
   sandata_submitted_at?: Date;
   sandata_rejected_reason?: string;
+  clock_method?: string;
+  location_type?: string;
   organization_id: string;
   created_at: Date;
   updated_at: Date;
@@ -97,19 +104,33 @@ export interface ClientRow {
   id: string;
   first_name: string;
   last_name: string;
+  middle_name?: string;
   date_of_birth: string;
+  gender?: string;
   medicaid_number?: string;
   sandata_client_id?: string;
+  sandata_other_id?: string;
   evv_consent_date?: Date;
   evv_consent_status?: string;
   address_line_1?: string;
+  address_line_2?: string;
   city?: string;
   state?: string;
   zip_code?: string;
+  latitude?: number;
+  longitude?: number;
   phone_number?: string;
   email?: string;
   status: string;
+  pod_id?: string;
+  pod_name?: string;
   organization_id: string;
+  evv_consent_signed_by?: string;
+  emergency_contact_name?: string;
+  emergency_contact_relationship?: string;
+  emergency_contact_phone?: string;
+  created_by?: string;
+  updated_by?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -118,28 +139,82 @@ export interface UserRow {
   id: string;
   first_name: string;
   last_name: string;
+  middle_name?: string;
   date_of_birth?: string;
+  gender?: string;
+  ssn_encrypted?: string;
   sandata_employee_id?: string;
+  sandata_staff_pin?: string;
+  sandata_other_id?: string;
   address_line_1?: string;
+  address_line_2?: string;
   city?: string;
   state?: string;
   zip_code?: string;
   phone_number?: string;
   email?: string;
+  password_hash?: string;
   hire_date?: Date;
   termination_date?: Date;
   status: string;
   role: string;
+  pod_id?: string;
+  pod_name?: string;
   organization_id: string;
+  created_by?: string;
+  updated_by?: string;
   created_at: Date;
   updated_at: Date;
+}
+
+export interface PodRow {
+  id: string;
+  name: string;
+  code: string;
+  organization_id: string;
+  pod_lead_user_id?: string;
+  status: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+
+export interface DatabaseCertification {
+  id: string;
+  userId: string;
+  certificationType: string;
+  certificationNumber?: string;
+  issuingAuthority?: string;
+  issueDate?: Date;
+  expirationDate?: Date;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
  * Sandata Repository
  */
 export class SandataRepository {
-  constructor(private db: DatabaseClient) {}
+  constructor(private db: DatabaseClient) { }
+
+
+  /**
+   * Get all organizations
+   */
+  async getAllOrganizations(): Promise<any[]> {
+    const result = await this.db.query(
+      `SELECT o.*,
+              (SELECT COUNT(*) FROM users WHERE organization_id = o.id) as user_count,
+              (SELECT COUNT(*) FROM clients WHERE organization_id = o.id) as client_count,
+              sc.sandata_provider_id
+       FROM organizations o
+       LEFT JOIN sandata_config sc ON sc.organization_id = o.id
+       ORDER BY o.name ASC`
+    );
+    return result.rows;
+  }
+
 
   // ============================================================================
   // Sandata Transactions
@@ -593,35 +668,21 @@ export class SandataRepository {
    * Create a new user
    */
   async createUser(
-    user: {
-      email: string;
-      passwordHash: string;
-      firstName: string;
-      lastName: string;
-      organizationId?: string | null;
-      role: string;
-      status: string;
-      phone?: string;
-    },
+    user: Partial<UserRow> & { passwordHash?: string },
     context?: QueryContext
   ): Promise<string> {
-    const result = await this.db.query<{ id: string }>(
-      `INSERT INTO users (email, password_hash, first_name, last_name, organization_id, role, status, phone)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING id`,
-      [
-        user.email.toLowerCase(),
-        user.passwordHash,
-        user.firstName,
-        user.lastName,
-        user.organizationId,
-        user.role,
-        user.status,
-        user.phone || null,
-      ],
-      context
-    );
+    const data: any = { ...user };
+    if (user.passwordHash) {
+      data.password_hash = user.passwordHash;
+      delete data.passwordHash;
+    }
 
+    // Ensure email is lowercase
+    if (data.email) {
+      data.email = data.email.toLowerCase();
+    }
+
+    const result = await this.db.insert('users', data, context);
     return result.rows[0].id;
   }
 
@@ -630,56 +691,26 @@ export class SandataRepository {
    */
   async updateUser(
     userId: string,
-    updates: {
-      passwordHash?: string;
-      firstName?: string;
-      lastName?: string;
-      status?: string;
-      phone?: string;
-      updatedBy?: string;
-    },
+    updates: Partial<UserRow> & { passwordHash?: string },
     context?: QueryContext
   ): Promise<void> {
-    const updateFields: string[] = [];
-    const updateValues: any[] = [];
-    let paramIndex = 1;
+    const data: any = { ...updates };
 
-    if (updates.passwordHash !== undefined) {
-      updateFields.push(`password_hash = $${paramIndex++}`);
-      updateValues.push(updates.passwordHash);
-    }
-    if (updates.firstName !== undefined) {
-      updateFields.push(`first_name = $${paramIndex++}`);
-      updateValues.push(updates.firstName);
-    }
-    if (updates.lastName !== undefined) {
-      updateFields.push(`last_name = $${paramIndex++}`);
-      updateValues.push(updates.lastName);
-    }
-    if (updates.status !== undefined) {
-      updateFields.push(`status = $${paramIndex++}`);
-      updateValues.push(updates.status);
-    }
-    if (updates.phone !== undefined) {
-      updateFields.push(`phone = $${paramIndex++}`);
-      updateValues.push(updates.phone);
+    if (data.passwordHash) {
+      data.password_hash = data.passwordHash;
+      delete data.passwordHash;
     }
 
-    if (updateFields.length === 0) return;
+    // Remove undefined fields
+    Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
 
-    updateFields.push(`updated_at = NOW()`);
-    updateValues.push(userId);
+    if (Object.keys(data).length === 0) return;
 
-    await this.db.query(
-      `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${paramIndex}`,
-      updateValues,
-      context
-    );
+    // Add updated_at
+    data.updated_at = new Date();
+
+    await this.db.update('users', data, 'id = $1', [userId], context);
   }
-
-  // ============================================================================
-  // Authentication - Sessions
-  // ============================================================================
 
   /**
    * Create a session (for JWT refresh tokens)
@@ -856,6 +887,7 @@ export class SandataRepository {
 
   /**
    * Create audit log entry
+   * Maps to actual audit_events table schema from migration 001
    */
   async createAuditLog(
     log: {
@@ -871,20 +903,105 @@ export class SandataRepository {
     context?: QueryContext
   ): Promise<void> {
     await this.db.query(
-      `INSERT INTO audit_events (user_id, organization_id, action, entity_type, entity_id, ip_address, user_agent, metadata, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
+      `INSERT INTO audit_events (user_id, organization_id, action, event_type, resource_type, resource_id, ip_address, user_agent, event_data, outcome, timestamp)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'success', NOW())`,
       [
         log.userId,
         log.organizationId,
         log.action,
-        log.entityType,
-        log.entityId,
+        log.entityType, // maps to event_type
+        log.entityType, // maps to resource_type
+        log.entityId,   // maps to resource_id
         log.ipAddress,
         log.userAgent,
-        log.metadata ? JSON.stringify(log.metadata) : null,
+        log.metadata ? JSON.stringify(log.metadata) : '{}',
       ],
       context
     );
+  }
+
+  /**
+   * Get audit logs with filtering
+   * Uses actual audit_events table schema from migration 001
+   */
+  async getAuditLogs(filters: {
+    organizationId?: string;
+    userId?: string;
+    action?: string;
+    entityType?: string;
+    startDate?: string;
+    endDate?: string;
+    limit?: number;
+  }, context?: QueryContext): Promise<any[]> {
+    let query = `
+      SELECT ae.id, ae.organization_id, ae.user_id, ae.action,
+             ae.event_type, ae.resource_type, ae.resource_id,
+             ae.ip_address, ae.user_agent, ae.event_data, ae.outcome, ae.timestamp,
+             CONCAT(u.first_name, ' ', u.last_name) as user_name
+      FROM audit_events ae
+      LEFT JOIN users u ON ae.user_id = u.id
+      WHERE 1=1
+    `;
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (filters.organizationId) {
+      query += ` AND ae.organization_id = $${paramIndex++}`;
+      params.push(filters.organizationId);
+    }
+    if (filters.userId) {
+      query += ` AND ae.user_id = $${paramIndex++}`;
+      params.push(filters.userId);
+    }
+    if (filters.action) {
+      query += ` AND ae.action = $${paramIndex++}`;
+      params.push(filters.action);
+    }
+    if (filters.entityType) {
+      query += ` AND ae.event_type = $${paramIndex++}`;
+      params.push(filters.entityType);
+    }
+    if (filters.startDate) {
+      query += ` AND ae.timestamp >= $${paramIndex++}`;
+      params.push(filters.startDate);
+    }
+    if (filters.endDate) {
+      query += ` AND ae.timestamp <= $${paramIndex++}`;
+      params.push(filters.endDate);
+    }
+
+    query += ` ORDER BY ae.timestamp DESC LIMIT $${paramIndex}`;
+    params.push(filters.limit || 50);
+
+    const result = await this.db.query(query, params, context);
+    return result.rows.map(row => ({
+      ...row,
+      entity_type: row.event_type,
+      entity_id: row.resource_id,
+      metadata: row.event_data,
+      created_at: row.timestamp
+    }));
+  }
+
+  /**
+   * Get system metrics
+   */
+  async getSystemMetrics(startDate: string, endDate: string, context?: QueryContext): Promise<any> {
+    const result = await this.db.query(`
+      SELECT
+        (SELECT COUNT(*) FROM organizations) as total_organizations,
+        (SELECT COUNT(*) FROM users) as total_users,
+        (SELECT COUNT(*) FROM clients) as total_clients,
+        (SELECT COUNT(*) FROM shifts WHERE start_time >= $1 AND start_time <= $2) as total_shifts,
+        (SELECT COUNT(*) FROM evv_records WHERE created_at >= $1 AND created_at <= $2) as total_evv_records,
+        (SELECT COUNT(*) FROM evv_records WHERE created_at >= $1 AND created_at <= $2) as sandata_total_submissions,
+        (SELECT COUNT(*) FROM evv_records WHERE sandata_status = 'accepted' AND created_at >= $1 AND created_at <= $2) as sandata_accepted,
+        (SELECT COUNT(*) FROM evv_records WHERE sandata_status = 'rejected' AND created_at >= $1 AND created_at <= $2) as sandata_rejected,
+        (SELECT COUNT(*) FROM evv_records WHERE sandata_status = 'pending' AND created_at >= $1 AND created_at <= $2) as sandata_pending,
+        (SELECT COUNT(*) FROM sessions WHERE expires_at > NOW() AND revoked_at IS NULL) as active_sessions
+    `, [startDate, endDate], context);
+
+    return result.rows[0];
   }
 
   // ============================================================================
@@ -911,9 +1028,9 @@ export class SandataRepository {
   /**
    * Get pod by ID
    */
-  async getPod(podId: string, context?: QueryContext): Promise<{ id: string; pod_name: string; code: string; city: string; state: string } | null> {
-    const result = await this.db.query<{ id: string; pod_name: string; code: string; city: string; state: string }>(
-      `SELECT id, name as pod_name, code, city, state FROM pods WHERE id = $1`,
+  async getPod(podId: string, context?: QueryContext): Promise<PodRow | null> {
+    const result = await this.db.query<PodRow>(
+      `SELECT * FROM pods WHERE id = $1`,
       [podId],
       context
     );
@@ -1157,25 +1274,12 @@ export class SandataRepository {
   // Clients
   // ============================================================================
 
-  /**
-   * Get client by ID
-   */
-  async getClient(clientId: string, context?: QueryContext): Promise<any | null> {
-    const result = await this.db.query(
-      `SELECT c.*, p.name as pod_name, p.code as pod_code
-       FROM clients c
-       LEFT JOIN pods p ON c.pod_id = p.id
-       WHERE c.id = $1`,
-      [clientId],
-      context
-    );
-    return result.rows[0] || null;
-  }
+
 
   /**
    * Get clients for organization
    */
-  async getClients(organizationId: string, limit: number = 100, context?: QueryContext): Promise<any[]> {
+  async getClients(organizationId: string, limit: number = 100, context?: QueryContext): Promise<ClientRow[]> {
     const result = await this.db.query(
       `SELECT c.*, p.name as pod_name, p.code as pod_code
        FROM clients c
@@ -1193,20 +1297,7 @@ export class SandataRepository {
   // Users (extended)
   // ============================================================================
 
-  /**
-   * Get user by ID
-   */
-  async getUser(userId: string, context?: QueryContext): Promise<any | null> {
-    const result = await this.db.query(
-      `SELECT u.*,
-              (SELECT pod_id FROM user_pod_memberships WHERE user_id = u.id AND is_primary = true LIMIT 1) as pod_id
-       FROM users u
-       WHERE u.id = $1`,
-      [userId],
-      context
-    );
-    return result.rows[0] || null;
-  }
+
 
   /**
    * Get active users by role
@@ -1455,17 +1546,7 @@ export class SandataRepository {
   // EVV Records
   // ============================================================================
 
-  /**
-   * Get EVV record by ID
-   */
-  async getEVVRecord(evvRecordId: string, context?: QueryContext): Promise<any | null> {
-    const result = await this.db.query(
-      'SELECT * FROM evv_records WHERE id = $1',
-      [evvRecordId],
-      context
-    );
-    return result.rows[0] || null;
-  }
+
 
   // ============================================================================
   // Certifications
@@ -1708,6 +1789,516 @@ export class SandataRepository {
     );
 
     return result.rows[0]?.encrypted || null;
+  }
+  /**
+   * Create a new client
+   */
+  async createClient(client: Partial<ClientRow>): Promise<string> {
+    const result = await this.db.insert('clients', client);
+    return result.rows[0].id;
+  }
+
+  /**
+   * Update a client
+   */
+  async updateClient(clientId: string, updates: Partial<ClientRow>): Promise<void> {
+    await this.db.update('clients', updates, 'id = $1', [clientId]);
+  }
+
+  /**
+   * Get active clients
+   */
+  async getActiveClients(organizationId: string): Promise<ClientRow[]> {
+    const result = await this.db.query<ClientRow>(
+      `SELECT c.*, p.name as pod_name
+       FROM clients c
+       LEFT JOIN pods p ON c.pod_id = p.id
+       WHERE c.organization_id = $1 AND c.status = 'active'
+       ORDER BY c.last_name, c.first_name`,
+      [organizationId]
+    );
+    return result.rows;
+  }
+
+  /**
+   * Get client by Medicaid Number
+   */
+  async getClientByMedicaidNumber(medicaidNumber: string, organizationId: string): Promise<ClientRow | null> {
+    const result = await this.db.query<ClientRow>(
+      'SELECT * FROM clients WHERE medicaid_number = $1 AND organization_id = $2',
+      [medicaidNumber, organizationId]
+    );
+    return result.rows[0] || null;
+  }
+
+  /**
+   * Get client caregivers
+   */
+  async getClientCaregivers(clientId: string): Promise<UserRow[]> {
+    return [];
+  }
+
+  /**
+   * Get client recent shifts
+   */
+  async getClientRecentShifts(clientId: string, limit: number = 5): Promise<any[]> {
+    const result = await this.db.query(
+      `SELECT s.*, u.first_name as caregiver_first_name, u.last_name as caregiver_last_name
+       FROM shifts s
+       JOIN users u ON s.caregiver_id = u.id
+       WHERE s.client_id = $1
+       ORDER BY s.scheduled_start_time DESC
+       LIMIT $2`,
+      [clientId, limit]
+    );
+    return result.rows;
+  }
+
+  /**
+   * Get client authorizations
+   */
+  async getClientAuthorizations(clientId: string): Promise<any[]> {
+    const result = await this.db.query(
+      'SELECT * FROM authorizations WHERE client_id = $1 ORDER BY start_date DESC',
+      [clientId]
+    );
+    return result.rows;
+  }
+
+  /**
+   * Create authorization
+   */
+  async createAuthorization(auth: any): Promise<string> {
+    const result = await this.db.insert('authorizations', auth);
+    return result.rows[0].id;
+  }
+
+  /**
+   * Get client care plan
+   */
+  async getClientCarePlan(clientId: string): Promise<any | null> {
+    const result = await this.db.query(
+      'SELECT * FROM care_plans WHERE client_id = $1',
+      [clientId]
+    );
+    return result.rows[0] || null;
+  }
+
+  /**
+   * Create care plan
+   */
+  async createCarePlan(plan: any): Promise<string> {
+    const result = await this.db.insert('care_plans', plan);
+    return result.rows[0].id;
+  }
+
+  /**
+   * Update care plan
+   */
+  async updateCarePlan(planId: string, updates: any): Promise<void> {
+    await this.db.update('care_plans', updates, 'id = $1', [planId]);
+  }
+
+  /**
+   * Get client shifts by date range
+   */
+  async getClientShiftsByDateRange(clientId: string, startDate: string, endDate: string): Promise<any[]> {
+    const result = await this.db.query(
+      `SELECT s.*, u.first_name as caregiver_first_name, u.last_name as caregiver_last_name
+       FROM shifts s
+       JOIN users u ON s.caregiver_id = u.id
+       WHERE s.client_id = $1 AND s.scheduled_start_time >= $2 AND s.scheduled_end_time <= $3
+       ORDER BY s.scheduled_start_time ASC`,
+      [clientId, startDate, endDate]
+    );
+    return result.rows;
+  }
+
+
+  // ============================================================================
+  // Organizations (Additional)
+  // ============================================================================
+
+  /**
+   * Create organization
+   */
+  async createOrganization(data: { name: string; status: string; createdBy?: string }, context?: QueryContext): Promise<{ id: string }> {
+    const result = await this.db.query<{ id: string }>(
+      `INSERT INTO organizations (name, status, created_by)
+       VALUES ($1, $2, $3)
+       RETURNING id`,
+      [data.name, data.status, data.createdBy],
+      context
+    );
+    return result.rows[0];
+  }
+
+  /**
+   * Update organization
+   */
+  async updateOrganization(id: string, updates: { name?: string; status?: string; sandataProviderId?: string; updatedBy?: string }, context?: QueryContext): Promise<void> {
+    const updateFields: string[] = [];
+    const updateValues: any[] = [];
+    let paramIndex = 1;
+
+    if (updates.name !== undefined) {
+      updateFields.push(`name = $${paramIndex++}`);
+      updateValues.push(updates.name);
+    }
+    if (updates.status !== undefined) {
+      updateFields.push(`status = $${paramIndex++}`);
+      updateValues.push(updates.status);
+    }
+
+    if (updateFields.length > 0) {
+      updateFields.push(`updated_at = NOW()`);
+      updateValues.push(id);
+      await this.db.query(
+        `UPDATE organizations SET ${updateFields.join(', ')} WHERE id = $${paramIndex}`,
+        updateValues,
+        context
+      );
+    }
+  }
+
+  // ============================================================================
+  // Sandata Configuration (Additional)
+  // ============================================================================
+
+  /**
+   * Create Sandata config
+   */
+  async createConfig(data: any, context?: QueryContext): Promise<void> {
+    const fields = Object.keys(data);
+    const values = Object.values(data);
+    const placeholders = fields.map((_, i) => `$${i + 1}`).join(', ');
+
+    await this.db.query(
+      `INSERT INTO sandata_config (${fields.join(', ')}) VALUES (${placeholders})`,
+      values,
+      context
+    );
+  }
+
+  // ============================================================================
+  // Feature Flags
+  // ============================================================================
+
+  async getFeatureFlags(context?: QueryContext): Promise<any[]> {
+    const result = await this.db.query('SELECT * FROM feature_flags ORDER BY key', [], context);
+    return result.rows;
+  }
+
+  async getFeatureFlag(key: string, context?: QueryContext): Promise<any | null> {
+    const result = await this.db.query('SELECT * FROM feature_flags WHERE key = $1', [key], context);
+    return result.rows[0] || null;
+  }
+
+  async createFeatureFlag(data: any, context?: QueryContext): Promise<void> {
+    await this.db.query(
+      `INSERT INTO feature_flags (key, value, description, created_by) VALUES ($1, $2, $3, $4)`,
+      [data.key, data.value, data.description, data.createdBy],
+      context
+    );
+  }
+
+  async updateFeatureFlag(key: string, updates: any, context?: QueryContext): Promise<void> {
+    const updateFields: string[] = [];
+    const updateValues: any[] = [];
+    let paramIndex = 1;
+
+    if (updates.value !== undefined) {
+      updateFields.push(`value = $${paramIndex++}`);
+      updateValues.push(updates.value);
+    }
+    if (updates.description !== undefined) {
+      updateFields.push(`description = $${paramIndex++}`);
+      updateValues.push(updates.description);
+    }
+    if (updates.updatedBy !== undefined) {
+      updateFields.push(`updated_by = $${paramIndex++}`);
+      updateValues.push(updates.updatedBy);
+    }
+
+    if (updateFields.length === 0) return;
+
+    updateFields.push(`updated_at = NOW()`);
+    updateValues.push(key);
+
+    await this.db.query(
+      `UPDATE feature_flags SET ${updateFields.join(', ')} WHERE key = $${paramIndex}`,
+      updateValues,
+      context
+    );
+  }
+
+  // ============================================================================
+  // User Filtering
+  // ============================================================================
+
+  /**
+   * Get users with filters
+   */
+  async getUsersWithFilters(filters: {
+    organizationId?: string;
+    role?: string;
+    status?: string;
+    search?: string;
+    limit?: number;
+  }, context?: QueryContext): Promise<any[]> {
+    let query = `
+      SELECT u.*, o.name as organization_name
+      FROM users u
+      LEFT JOIN organizations o ON u.organization_id = o.id
+      WHERE 1=1
+    `;
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (filters.organizationId) {
+      query += ` AND u.organization_id = $${paramIndex++}`;
+      params.push(filters.organizationId);
+    }
+    if (filters.role) {
+      query += ` AND u.role = $${paramIndex++}`;
+      params.push(filters.role);
+    }
+    if (filters.status) {
+      query += ` AND u.status = $${paramIndex++}`;
+      params.push(filters.status);
+    }
+    if (filters.search) {
+      query += ` AND (u.first_name ILIKE $${paramIndex} OR u.last_name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex})`;
+      params.push(`%${filters.search}%`);
+      paramIndex++;
+    }
+
+    query += ` ORDER BY u.created_at DESC LIMIT $${paramIndex}`;
+    params.push(filters.limit || 100);
+
+    const result = await this.db.query(query, params, context);
+    return result.rows;
+  }
+
+  // ============================================================================
+  // Pods (Additional)
+  // ============================================================================
+
+  /**
+   * Get all pods for an organization
+   */
+  async getPods(organizationId: string, context?: QueryContext): Promise<any[]> {
+    const result = await this.db.query(
+      `SELECT p.*,
+              (SELECT COUNT(*) FROM user_pod_memberships WHERE pod_id = p.id AND status = 'active') as member_count,
+              (SELECT COUNT(*) FROM clients WHERE pod_id = p.id AND status = 'active') as client_count
+       FROM pods p
+       WHERE p.organization_id = $1
+       ORDER BY p.name`,
+      [organizationId],
+      context
+    );
+    return result.rows;
+  }
+
+
+  /**
+   * Create a new pod
+   */
+  async createPod(data: { organizationId: string; podName: string; podLeadUserId?: string | null; status: string }, context?: QueryContext): Promise<string> {
+    const result = await this.db.query<{ id: string }>(
+      `INSERT INTO pods (organization_id, name, pod_lead_user_id, status)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id`,
+      [data.organizationId, data.podName, data.podLeadUserId, data.status],
+      context
+    );
+    return result.rows[0].id;
+  }
+
+  /**
+   * Update a pod
+   */
+  async updatePod(podId: string, updates: { podName?: string; podLeadUserId?: string | null; status?: string }, context?: QueryContext): Promise<void> {
+    const updateFields: string[] = [];
+    const updateValues: any[] = [];
+    let paramIndex = 1;
+
+    if (updates.podName !== undefined) {
+      updateFields.push(`name = $${paramIndex++}`);
+      updateValues.push(updates.podName);
+    }
+    if (updates.podLeadUserId !== undefined) {
+      updateFields.push(`pod_lead_user_id = $${paramIndex++}`);
+      updateValues.push(updates.podLeadUserId);
+    }
+    if (updates.status !== undefined) {
+      updateFields.push(`status = $${paramIndex++}`);
+      updateValues.push(updates.status);
+    }
+
+    if (updateFields.length === 0) return;
+
+    updateFields.push(`updated_at = NOW()`);
+    updateValues.push(podId);
+
+    await this.db.query(
+      `UPDATE pods SET ${updateFields.join(', ')} WHERE id = $${paramIndex}`,
+      updateValues,
+      context
+    );
+  }
+
+  /**
+   * Get clients assigned to a pod
+   */
+  async getPodClients(podId: string, context?: QueryContext): Promise<any[]> {
+    const result = await this.db.query(
+      `SELECT c.*, p.name as pod_name
+       FROM clients c
+       JOIN pods p ON c.pod_id = p.id
+       WHERE c.pod_id = $1
+       ORDER BY c.last_name, c.first_name`,
+      [podId],
+      context
+    );
+    return result.rows;
+  }
+
+  /**
+   * Assign users to a pod
+   */
+  async assignUsersToPod(podId: string, userIds: string[], context?: QueryContext): Promise<void> {
+    // This assumes a user_pod_memberships table exists or we update users table directly if 1:1
+    // Based on getPodMembers query earlier: `FROM users u JOIN user_pod_memberships upm ON u.id = upm.user_id`
+    // So it's a many-to-many or 1-to-many via a join table.
+
+    for (const userId of userIds) {
+      // Check if membership exists
+      const existing = await this.db.query(
+        `SELECT id FROM user_pod_memberships WHERE user_id = $1 AND pod_id = $2`,
+        [userId, podId],
+        context
+      );
+
+      if (existing.rows.length > 0) {
+        // Update status to active if it was inactive
+        await this.db.query(
+          `UPDATE user_pod_memberships SET status = 'active', updated_at = NOW() WHERE user_id = $1 AND pod_id = $2`,
+          [userId, podId],
+          context
+        );
+      } else {
+        // Insert new membership
+        await this.db.query(
+          `INSERT INTO user_pod_memberships (user_id, pod_id, status, role_in_pod, is_primary)
+           VALUES ($1, $2, 'active', 'member', false)`,
+          [userId, podId],
+          context
+        );
+      }
+    }
+  }
+
+  /**
+   * Remove user from pod
+   */
+  async removeUserFromPod(podId: string, userId: string, context?: QueryContext): Promise<void> {
+    await this.db.query(
+      `UPDATE user_pod_memberships SET status = 'inactive', updated_at = NOW() WHERE user_id = $1 AND pod_id = $2`,
+      [userId, podId],
+      context
+    );
+  }
+
+  /**
+   * Assign clients to a pod
+   */
+  async assignClientsToPod(podId: string, clientIds: string[], context?: QueryContext): Promise<void> {
+    // Clients usually have a direct pod_id column based on getClients query
+    // `LEFT JOIN pods p ON c.pod_id = p.id`
+
+    for (const clientId of clientIds) {
+      await this.db.query(
+        `UPDATE clients SET pod_id = $1, updated_at = NOW() WHERE id = $2`,
+        [podId, clientId],
+        context
+      );
+    }
+  }
+
+  /**
+   * Remove client from pod
+   */
+  async removeClientFromPod(podId: string, clientId: string, context?: QueryContext): Promise<void> {
+    await this.db.query(
+      `UPDATE clients SET pod_id = NULL, updated_at = NOW() WHERE id = $1 AND pod_id = $2`,
+      [clientId, podId],
+      context
+    );
+  }
+
+  /**
+   * Get EVV records by date range
+   */
+  async getEVVRecordsByDateRange(
+    organizationId: string,
+    startDate: string,
+    endDate: string,
+    context?: QueryContext
+  ): Promise<EVVRecordRow[]> {
+    const result = await this.db.query(
+      `SELECT * FROM evv_records 
+       WHERE organization_id = $1 
+       AND service_date >= $2 
+       AND service_date <= $3
+       ORDER BY service_date DESC`,
+      [organizationId, startDate, endDate],
+      context
+    );
+    return result.rows;
+  }
+
+  /**
+   * Get expiring certifications
+   */
+  async getExpiringCertifications(
+    organizationId: string,
+    beforeDate: string,
+    context?: QueryContext
+  ): Promise<any[]> {
+    const result = await this.db.query(
+      `SELECT c.*, u.first_name, u.last_name, u.email
+       FROM credentials c
+       JOIN users u ON c.user_id = u.id
+       WHERE u.organization_id = $1
+       AND c.expiration_date IS NOT NULL
+       AND c.expiration_date <= $2
+       AND c.status = 'active'
+       ORDER BY c.expiration_date ASC`,
+      [organizationId, beforeDate],
+      context
+    );
+    return result.rows;
+  }
+
+  /**
+   * Get recent transactions
+   */
+  async getRecentTransactions(
+    organizationId: string,
+    limit: number,
+    context?: QueryContext
+  ): Promise<SandataTransactionRow[]> {
+    const result = await this.db.query(
+      `SELECT * FROM sandata_transactions 
+       WHERE organization_id = $1
+       ORDER BY created_at DESC
+       LIMIT $2`,
+      [organizationId, limit],
+      context
+    );
+    return result.rows;
   }
 }
 

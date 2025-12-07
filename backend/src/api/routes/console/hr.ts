@@ -234,7 +234,7 @@ router.put('/applicants/:id/status', async (req: AuthenticatedRequest, res: Resp
     //   changes: { status, stage, notes }
     // });
 
-    console.log(`[HR] Applicant ${id} status updated to ${status} (${stage}) by ${req.user?.id}`);
+    console.log(`[HR] Applicant ${id} status updated to ${status} (${stage}) by ${req.user?.userId}`);
 
     res.json({
       success: true,

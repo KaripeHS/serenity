@@ -12,20 +12,12 @@ import { Hero, SectionHeading } from '../../components/marketing';
 // Always-open positions for continuous pipeline
 const CORE_POSITIONS = [
   {
-    id: 'rn',
-    role: 'Registered Nurse (RN)',
+    id: 'caregiver',
+    role: 'Personal Care Aide / Caregiver',
     badge: 'Ongoing Hiring',
-    description: 'Provide skilled nursing care and clinical oversight in client homes. Flexible scheduling, strong support, and mileage reimbursement.',
-    requirements: ['Active Ohio RN license', 'Minimum 1 year experience', 'Reliable transportation'],
-    benefits: ['$32-$42/hour', 'Flexible schedules', 'Mileage reimbursement', 'Clinical support']
-  },
-  {
-    id: 'lpn',
-    role: 'Licensed Practical Nurse (LPN)',
-    badge: 'Ongoing Hiring',
-    description: 'Deliver compassionate one-on-one care with our pod-based team model. Build lasting client relationships.',
-    requirements: ['Active Ohio LPN license', 'Experience preferred', 'Reliable transportation'],
-    benefits: ['$24-$32/hour', 'Pod-based care', 'Weekly direct deposit', 'Paid training']
+    description: 'Provide compassionate personal care assistance, companionship, and homemaker services with our pod-based team model. Build lasting client relationships.',
+    requirements: ['STNA or HHA certification (or willingness to obtain)', 'Compassionate nature', 'Reliable transportation'],
+    benefits: ['$15-$20/hour', 'Pod-based care', 'Weekly direct deposit', 'Paid training']
   },
   {
     id: 'hha',
@@ -34,6 +26,14 @@ const CORE_POSITIONS = [
     description: 'Support seniors with daily living, companionship, and personal care. Paid training opportunities available. No prior experience required!',
     requirements: ['HHA certification (or willingness to obtain)', 'Compassionate nature', 'Reliable transportation'],
     benefits: ['$15-$18/hour', 'Paid training', 'Flexible hours', 'Career growth path']
+  },
+  {
+    id: 'homemaker',
+    role: 'Homemaker / Companion',
+    badge: 'Ongoing Hiring',
+    description: 'Help seniors maintain their independence at home with meal prep, light housekeeping, errands, and friendly companionship. No certification required!',
+    requirements: ['Compassionate and reliable', 'Valid driver\'s license', 'No experience necessary'],
+    benefits: ['$14-$17/hour', 'Flexible schedules', 'Paid training', 'Meaningful work']
   }
 ];
 
@@ -42,28 +42,28 @@ const OTHER_ROLES = [
   {
     id: 'pod-lead',
     role: 'Pod Lead',
-    location: 'Columbus, Dayton, Cincinnati',
-    description: 'Oversee pod operations, mentor caregivers, and ensure quality care delivery across your assigned team. Lead daily coordination and provide frontline clinical support.',
+    location: 'Southwest Ohio',
+    description: 'Oversee pod operations, mentor caregivers, and ensure quality care delivery across your assigned team. Lead daily coordination and provide frontline support.',
     status: 'Currently Filled'
   },
   {
     id: 'director-operations',
     role: 'Director of Operations',
-    location: 'Columbus Office',
-    description: 'Oversee all operational activities across Ohio markets, manage pod performance, drive continuous improvement, and ensure compliance with healthcare regulations.',
+    location: 'Blue Ash Office',
+    description: 'Oversee all operational activities across Southwest Ohio, manage pod performance, drive continuous improvement, and ensure compliance with state regulations.',
     status: 'Currently Filled'
   },
   {
     id: 'finance-accounting-manager',
     role: 'Finance and Accounting Manager',
-    location: 'Columbus Office',
+    location: 'Blue Ash Office',
     description: 'Manage financial planning, budgeting, reporting, and accounting operations. Oversee billing, payroll, and financial compliance for the organization.',
     status: 'Currently Filled'
   },
   {
     id: 'hr-manager',
     role: 'HR Manager',
-    location: 'Columbus Office',
+    location: 'Blue Ash Office',
     description: 'Lead talent acquisition, employee relations, benefits administration, and training programs. Drive culture and retention initiatives across all locations.',
     status: 'Currently Filled'
   }
@@ -91,11 +91,11 @@ const BENEFITS = [
   {
     icon: (
       <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
-    title: 'Health Benefits',
-    description: 'Comprehensive health, dental, and vision coverage for eligible employees'
+    title: 'Bonus Programs',
+    description: 'Attractive quarterly and annual bonuses for all qualified employees'
   },
   {
     icon: (
@@ -113,7 +113,7 @@ const BENEFITS = [
       </svg>
     ),
     title: 'Supportive Leadership',
-    description: '24/7 coordinator support and clinical guidance from experienced team leads'
+    description: '24/7 coordinator support and guidance from experienced team leads'
   },
   {
     icon: (
@@ -122,7 +122,7 @@ const BENEFITS = [
       </svg>
     ),
     title: 'Career Growth',
-    description: 'Clear pathways from HHA → LPN → RN with tuition assistance'
+    description: 'Clear pathways for advancement with training and certification support'
   }
 ];
 
@@ -232,7 +232,7 @@ export default function CareersPage() {
             That Feels Like Family
           </>
         }
-        subheadline="We're always hiring compassionate RNs, LPNs, and Home Health Aides who want to make a real difference in the lives of Ohio families."
+        subheadline="We're always hiring compassionate caregivers and home health aides who want to make a real difference in the lives of Southwest Ohio families."
         primaryCTA={{
           text: "Apply Now",
           href: "#application-form"
@@ -241,7 +241,7 @@ export default function CareersPage() {
           text: "Why Work at Serenity",
           href: "#benefits"
         }}
-        backgroundImage="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?q=80&w=2400&auto=format&fit=crop"
+        backgroundImage="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=2400&auto=format&fit=crop"
       />
 
       {/* Always-Open Positions */}
@@ -397,23 +397,23 @@ export default function CareersPage() {
             {/* Photo Grid */}
             <div className="grid grid-cols-2 gap-4">
               <img
-                src="https://images.unsplash.com/photo-1527613426441-4da17471b66d?q=80&w=800&auto=format&fit=crop"
-                alt="Team collaboration"
+                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop"
+                alt="Serenity team member smiling"
                 className="rounded-2xl shadow-lg h-64 object-cover"
               />
               <img
-                src="https://images.unsplash.com/photo-1571844307880-751c6d86f3f3?q=80&w=800&auto=format&fit=crop"
-                alt="Caregiver with client"
+                src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=800&auto=format&fit=crop"
+                alt="Caring team member"
                 className="rounded-2xl shadow-lg h-64 object-cover mt-8"
               />
               <img
-                src="https://images.unsplash.com/photo-1516733968668-dbdce39c4651?q=80&w=800&auto=format&fit=crop"
-                alt="Compassionate care"
+                src="https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?q=80&w=800&auto=format&fit=crop"
+                alt="Professional caregiver"
                 className="rounded-2xl shadow-lg h-64 object-cover"
               />
               <img
-                src="https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?q=80&w=800&auto=format&fit=crop"
-                alt="Senior care"
+                src="https://images.unsplash.com/photo-1594824476967-48c8b964273f?q=80&w=800&auto=format&fit=crop"
+                alt="Dedicated team member"
                 className="rounded-2xl shadow-lg h-64 object-cover mt-8"
               />
             </div>
@@ -442,15 +442,25 @@ export default function CareersPage() {
                   <p className="text-warm-gray-700 italic mb-4 leading-relaxed">
                     "Working with Serenity has been the most supportive experience of my career. The pod model means I truly get to know my clients, and leadership is always just a phone call away."
                   </p>
-                  <p className="font-semibold text-warm-gray-900">— Sarah K., RN</p>
+                  <p className="font-semibold text-warm-gray-900">— Sarah K., Caregiver</p>
                 </div>
 
                 <div className="bg-sage-50 rounded-xl p-6 border border-warm-gray-200">
                   <p className="text-warm-gray-700 italic mb-4 leading-relaxed">
-                    "I started as an HHA and Serenity supported me through my LPN certification. Now I'm working toward my RN. They truly invest in their people."
+                    "I started with no healthcare experience and Serenity supported me through my HHA certification. The training was excellent and I found meaningful work. They truly invest in their people."
                   </p>
-                  <p className="font-semibold text-warm-gray-900">— Marcus T., LPN</p>
+                  <p className="font-semibold text-warm-gray-900">— Marcus T., Home Health Aide</p>
                 </div>
+              </div>
+
+              {/* CTA */}
+              <div className="pt-4">
+                <button
+                  onClick={scrollToForm}
+                  className="px-8 py-4 text-base font-semibold text-white bg-serenity-green-500 rounded-xl hover:bg-serenity-green-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                >
+                  Join Our Team
+                </button>
               </div>
             </div>
           </div>
@@ -584,9 +594,9 @@ export default function CareersPage() {
                     onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                   >
                     <option value="">Select a position...</option>
-                    <option value="Registered Nurse (RN)">Registered Nurse (RN)</option>
-                    <option value="Licensed Practical Nurse (LPN)">Licensed Practical Nurse (LPN)</option>
+                    <option value="Personal Care Aide / Caregiver">Personal Care Aide / Caregiver</option>
                     <option value="Home Health Aide (HHA)">Home Health Aide (HHA)</option>
+                    <option value="Homemaker / Companion">Homemaker / Companion</option>
                     <option value="Other">Other</option>
                   </select>
                 </div>
@@ -623,7 +633,7 @@ export default function CareersPage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-warm-gray-700 mb-2">
-                    Preferred City *
+                    Preferred Area *
                   </label>
                   <select
                     required
@@ -631,10 +641,13 @@ export default function CareersPage() {
                     value={formData.preferredCity}
                     onChange={(e) => setFormData({ ...formData, preferredCity: e.target.value })}
                   >
-                    <option value="">Select a city...</option>
-                    <option value="Columbus">Columbus</option>
-                    <option value="Dayton">Dayton</option>
-                    <option value="Cincinnati">Cincinnati</option>
+                    <option value="">Select an area...</option>
+                    <option value="Greater Cincinnati (Hamilton County)">Greater Cincinnati (Hamilton County)</option>
+                    <option value="Northern Cincinnati (Butler/Warren)">Northern Cincinnati (Butler/Warren)</option>
+                    <option value="Eastern Cincinnati (Clermont)">Eastern Cincinnati (Clermont)</option>
+                    <option value="Dayton Area (Montgomery)">Dayton Area (Montgomery)</option>
+                    <option value="Western Ohio (Preble/Clinton)">Western Ohio (Preble/Clinton)</option>
+                    <option value="Flexible - Any Area">Flexible - Any Area</option>
                   </select>
                 </div>
 
@@ -795,7 +808,7 @@ export default function CareersPage() {
               Get Started Today
             </button>
             <a
-              href="mailto:careers@serenitycarepartners.com"
+              href="mailto:Hello@serenitycarepartners.com"
               className="px-10 py-4 text-base font-semibold text-white border-2 border-white rounded-xl hover:bg-white hover:text-serenity-green-600 transition-all duration-300"
             >
               Contact HR Team

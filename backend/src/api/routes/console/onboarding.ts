@@ -235,8 +235,8 @@ router.put('/:employeeId/items/:itemId', async (req: AuthenticatedRequest, res: 
   try {
     const { employeeId, itemId } = req.params;
     const { status, notes } = req.body;
-    const userId = req.user?.id;
-    const userName = req.user?.name || 'Current User';
+    const userId = req.user?.userId;
+    const userName = 'Current User';
 
     if (!employeeId || !itemId) {
       throw ApiErrors.badRequest('Employee ID and Item ID are required');
@@ -312,7 +312,7 @@ router.put('/:employeeId/items/:itemId', async (req: AuthenticatedRequest, res: 
 router.post('/:employeeId/create', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { employeeId } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!employeeId) {
       throw ApiErrors.badRequest('Employee ID is required');
@@ -455,7 +455,7 @@ router.post('/:employeeId/items/:itemId/notes', async (req: AuthenticatedRequest
   try {
     const { employeeId, itemId } = req.params;
     const { notes } = req.body;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!employeeId || !itemId) {
       throw ApiErrors.badRequest('Employee ID and Item ID are required');

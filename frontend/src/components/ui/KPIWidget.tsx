@@ -1,11 +1,13 @@
 import { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { Card } from './Card';
 import { Badge } from './Badge';
 import { Sparkline } from './Chart';
 import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  MinusIcon
+  MinusIcon,
+  ArrowRightIcon
 } from '@heroicons/react/24/outline';
 
 export interface KPIWidgetProps {
@@ -20,6 +22,8 @@ export interface KPIWidgetProps {
   iconColor?: string;
   status?: 'success' | 'warning' | 'danger' | 'info' | 'neutral';
   onClick?: () => void;
+  href?: string; // For drill-down navigation
+  drillDownLabel?: string; // Label for drill-down link
   className?: string;
 }
 
@@ -35,6 +39,8 @@ export function KPIWidget({
   iconColor = 'bg-primary-600',
   status = 'neutral',
   onClick,
+  href,
+  drillDownLabel = 'View Details',
   className = ''
 }: KPIWidgetProps) {
   // Determine trend from change if not explicitly provided
@@ -123,6 +129,17 @@ export function KPIWidget({
             <span className="text-xs text-gray-500">{changeLabel}</span>
           )}
         </div>
+      )}
+
+      {/* Drill-down link */}
+      {href && (
+        <Link
+          to={href}
+          className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors group"
+        >
+          <span>{drillDownLabel}</span>
+          <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+        </Link>
       )}
     </Card>
   );

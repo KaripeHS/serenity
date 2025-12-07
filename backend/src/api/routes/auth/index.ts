@@ -13,6 +13,8 @@ import { getSandataRepository } from '../../../services/sandata/repositories/san
 import { getDbClient } from '../../../database/client';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
+import { auditLogger } from '../../../audit/logger';
+import { UserRole } from '../../../auth/access-control';
 
 const router = Router();
 const repository = getSandataRepository(getDbClient());
@@ -64,8 +66,13 @@ router.post('/register', authRateLimiter, async (req: Request, res: Response, ne
       firstName,
       lastName,
       organizationId,
-      role = 'caregiver',
+      role = 'client', // Default to client if public
     } = req.body;
+
+    // Security: Public registration only allowed for Client/Family
+    if (role !== 'client' && role !== 'family') {
+      throw ApiErrors.forbidden('Public registration is restricted to Clients and Family members. Staff must be onboarded by an administrator.');
+    }
 
     // Validate required fields
     if (!email || !password || !firstName || !lastName) {
@@ -96,9 +103,9 @@ router.post('/register', authRateLimiter, async (req: Request, res: Response, ne
     const userId = await repository.createUser({
       email,
       passwordHash,
-      firstName,
-      lastName,
-      organizationId: organizationId || null,
+      first_name: firstName,
+      last_name: lastName,
+      organization_id: organizationId || '',
       role,
       status: 'active',
     });
@@ -272,11 +279,11 @@ router.post('/logout', requireAuth, async (req: AuthenticatedRequest, res: Respo
 
     // Audit log
     await repository.createAuditLog({
-      userId: req.user?.id,
+      userId: req.user?.userId,
       organizationId: req.user?.organizationId,
       action: 'user_logout',
       entityType: 'session',
-      entityId: req.user?.id,
+      entityId: req.user?.userId,
       ipAddress: req.ip || null,
       userAgent: req.headers['user-agent'] || null,
     });
@@ -295,7 +302,7 @@ router.post('/logout', requireAuth, async (req: AuthenticatedRequest, res: Respo
  */
 router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response, next) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
       throw ApiErrors.unauthorized('User not authenticated');
@@ -325,15 +332,15 @@ router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response, 
       phoneNumber: user.phone_number,
       organization: organization
         ? {
-            id: organization.id,
-            name: organization.name,
-          }
+          id: organization.id,
+          name: organization.name,
+        }
         : null,
       pod: pod
         ? {
-            id: pod.id,
-            name: pod.pod_name,
-          }
+          id: pod.id,
+          name: pod.name,
+        }
         : null,
       sandataEmployeeId: user.sandata_employee_id,
       hireDate: user.hire_date,
@@ -354,7 +361,7 @@ router.put(
   authRateLimiter,
   async (req: AuthenticatedRequest, res: Response, next) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
       const { currentPassword, newPassword } = req.body;
 
       if (!currentPassword || !newPassword) {
@@ -384,7 +391,7 @@ router.put(
       // Update password
       await repository.updateUser(userId!, {
         passwordHash: newPasswordHash,
-        updatedBy: userId,
+        updated_by: userId,
       });
 
       // Revoke all existing sessions (force re-login)
@@ -550,7 +557,7 @@ router.post('/reset-password', authRateLimiter, async (req: Request, res: Respon
  */
 router.get('/sessions', requireAuth, async (req: AuthenticatedRequest, res: Response, next) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     const sessions = await repository.getUserSessions(userId!);
 
@@ -579,7 +586,7 @@ router.delete(
   requireAuth,
   async (req: AuthenticatedRequest, res: Response, next) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
       const { sessionId } = req.params;
 
       // Verify session belongs to user
@@ -594,6 +601,69 @@ router.delete(
       res.json({
         message: 'Session revoked successfully',
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/auth/break-glass
+ * Request emergency access to a patient outside of assigned caseload
+ */
+router.post(
+  '/break-glass',
+  requireAuth,
+  authRateLimiter,
+  async (req: AuthenticatedRequest, res: Response, next) => {
+    try {
+      const userId = req.user?.userId;
+      const { patientId, reason } = req.body;
+
+      if (!patientId || !reason) {
+        throw ApiErrors.badRequest('patientId and reason are required');
+      }
+
+      // 1. Log the attempt
+      auditLogger.logSecurity('phi_access_violation', 'high', {
+        userId,
+        organizationId: req.user?.organizationId,
+        details: {
+          action: 'break_glass_request',
+          patientId,
+          reason,
+          description: 'Break-Glass Access Requested'
+        }
+      });
+
+      // 2. Insert permit into DB
+      const db = getDbClient();
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      const result = await db.query(
+        `INSERT INTO break_glass_requests (user_id, client_id, reason, expires_at)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id, expires_at`,
+        [userId, patientId, reason, expiresAt]
+      );
+
+      // 3. Log success
+      auditLogger.logSecurity('privilege_escalation', 'critical', {
+        userId,
+        details: {
+          requestId: result.rows[0].id,
+          patientId,
+          description: 'Break-Glass Access GRANTED'
+        }
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Emergency access granted for 24 hours',
+        permitId: result.rows[0].id,
+        expiresAt: result.rows[0].expires_at
+      });
+
     } catch (error) {
       next(error);
     }

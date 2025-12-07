@@ -7,6 +7,8 @@ import { DatabaseClient } from '../client';
 import SampleDataGenerator from './001_sample_data_generator';
 import { createLogger } from '../../utils/logger';
 
+const apiLogger = createLogger('api');
+
 async function runSampleDataGeneration() {
   apiLogger.info('🚀 Serenity ERP Sample Data Generation');
   apiLogger.info('=====================================');
@@ -23,7 +25,7 @@ async function runSampleDataGeneration() {
   try {
     // Initialize database connection
     const db = new DatabaseClient();
-    await db.connect();
+    // await db.connect(); // Connection is handled by pool
 
     // Initialize sample data generator
     const generator = new SampleDataGenerator(db);
@@ -50,7 +52,7 @@ async function runSampleDataGeneration() {
     apiLogger.info('• Tax Dashboard: http://localhost:3000/dashboard/tax');
     apiLogger.info('• API Documentation: http://localhost:3001/docs');
 
-    await db.disconnect();
+    await db.close();
 
   } catch (error) {
     apiLogger.error('❌ Error generating sample data:', error);

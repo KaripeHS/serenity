@@ -16,15 +16,7 @@ import {
   UserPlusIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
-
-interface ClinicalMetrics {
-  activePatients: number;
-  criticalAlerts: number;
-  medicationCompliance: number;
-  vitalSignsUpdated: number;
-  careplanReviews: number;
-  admissionsToday: number;
-}
+import { clinicalDashboardService, ClinicalMetrics } from '../../services/clinicalDashboard.service';
 
 interface MetricCardProps {
   title: string;
@@ -59,43 +51,37 @@ export function WorkingClinicalDashboard() {
   const [metrics, setMetrics] = useState<ClinicalMetrics | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Mock chart data
-  const vitalSignsData = [
-    { label: 'Mon', value: 487 },
-    { label: 'Tue', value: 512 },
-    { label: 'Wed', value: 498 },
-    { label: 'Thu', value: 523 },
-    { label: 'Fri', value: 541 },
-    { label: 'Sat', value: 315 },
-    { label: 'Sun', value: 289 }
-  ];
-
-  const admissionsData = [
-    { label: 'Week 1', value: 12 },
-    { label: 'Week 2', value: 15 },
-    { label: 'Week 3', value: 11 },
-    { label: 'Week 4', value: 18 }
-  ];
+  // State for charts
+  const [chartData, setChartData] = useState<{ vitals: any[]; admissions: any[] }>({
+    vitals: [],
+    admissions: []
+  });
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMetrics({
-        activePatients: 847,
-        criticalAlerts: 5,
-        medicationCompliance: 96.8,
-        vitalSignsUpdated: 523,
-        careplanReviews: 18,
-        admissionsToday: 7
-      });
-      setLoading(false);
-    }, 1100);
+    async function loadDashboardData() {
+      if (!user?.organizationId) return;
 
-    return () => clearTimeout(timer);
-  }, []);
+      try {
+        setLoading(true);
+        const [metricsData, chartsData] = await Promise.all([
+          clinicalDashboardService.getMetrics(user.organizationId),
+          clinicalDashboardService.getChartsData(user.organizationId)
+        ]);
+        setMetrics(metricsData);
+        setChartData(chartsData);
+      } catch (error) {
+        console.error("Failed to load clinical dashboard", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDashboardData();
+  }, [user?.organizationId]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="bg-gray-50 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <Skeleton className="h-10 w-96 mb-3" />
@@ -117,7 +103,7 @@ export function WorkingClinicalDashboard() {
   if (!metrics) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       <div className="max-w-7xl mx-auto p-4 md:p-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
@@ -302,7 +288,7 @@ export function WorkingClinicalDashboard() {
           <Card className="lg:col-span-2">
             <Chart
               type="line"
-              data={vitalSignsData}
+              data={chartData.vitals}
               title="Vital Signs Recorded (This Week)"
               height={220}
               width={600}
@@ -317,7 +303,7 @@ export function WorkingClinicalDashboard() {
         <div className="mb-8 animate-fade-in">
           <Chart
             type="bar"
-            data={admissionsData}
+            data={chartData.admissions}
             title="Monthly Admissions Trend"
             height={240}
             width={1200}

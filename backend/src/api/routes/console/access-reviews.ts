@@ -197,7 +197,7 @@ router.post('/access-reviews/:reviewId/approve', async (req: AuthenticatedReques
     //   WHERE review_id = $3 AND user_id = $4
     // `, [req.user?.id, notes, reviewId, userId]);
 
-    console.log(`[ACCESS REVIEW] ${req.user?.email} approved access for user ${userId}`);
+    console.log(`[ACCESS REVIEW] ${req.user?.userId} approved access for user ${userId}`);
 
     res.json({
       success: true,
@@ -236,7 +236,7 @@ router.post('/access-reviews/:reviewId/revoke', async (req: AuthenticatedRequest
     //   reviewId: reviewId
     // });
 
-    console.log(`[ACCESS REVIEW] ${req.user?.email} revoked access for user ${userId}: ${reason}`);
+    console.log(`[ACCESS REVIEW] ${req.user?.userId} revoked access for user ${userId}: ${reason}`);
 
     res.json({
       success: true,
@@ -262,7 +262,7 @@ router.post('/access-reviews/:reviewId/complete', async (req: AuthenticatedReque
     //   WHERE id = $2
     // `, [req.user?.id, reviewId]);
 
-    console.log(`[ACCESS REVIEW] ${req.user?.email} completed review ${reviewId}`);
+    console.log(`[ACCESS REVIEW] ${req.user?.userId} completed review ${reviewId}`);
 
     res.json({
       success: true,

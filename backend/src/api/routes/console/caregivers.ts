@@ -114,8 +114,8 @@ router.get(
         hireDate: caregiver.hire_date,
         terminationDate: caregiver.termination_date,
         address: {
-          line1: caregiver.address_line1,
-          line2: caregiver.address_line2,
+          line1: caregiver.address_line_1,
+          line2: caregiver.address_line_2,
           city: caregiver.city,
           state: caregiver.state,
           zipCode: caregiver.zip_code,
@@ -201,21 +201,21 @@ router.post('/:organizationId', async (req: AuthenticatedRequest, res: Response,
     }
 
     const caregiverId = await repository.createUser({
-      organizationId,
-      firstName,
-      lastName,
+      organization_id: organizationId,
+      first_name: firstName,
+      last_name: lastName,
       email,
-      phoneNumber: phoneNumber || null,
-      dateOfBirth: dateOfBirth || null,
-      addressLine1: addressLine1 || null,
+      phone_number: phoneNumber || null,
+      date_of_birth: dateOfBirth || null,
+      address_line_1: addressLine1 || null,
       city: city || null,
       state: state || null,
-      zipCode: zipCode || null,
-      hireDate: hireDate || new Date().toISOString(),
+      zip_code: zipCode || null,
+      hire_date: hireDate || new Date().toISOString(),
       role: 'caregiver',
       status: 'active',
-      podId: podId || null,
-      createdBy: req.user?.id,
+      pod_id: podId || null,
+      created_by: req.user?.userId,
     });
 
     res.status(201).json({
@@ -283,20 +283,20 @@ router.put(
       }
 
       await repository.updateUser(caregiverId, {
-        firstName,
-        lastName,
+        first_name: firstName,
+        last_name: lastName,
         email,
-        phoneNumber,
-        dateOfBirth,
-        addressLine1,
-        addressLine2,
+        phone_number: phoneNumber,
+        date_of_birth: dateOfBirth,
+        address_line_1: addressLine1,
+        address_line_2: addressLine2,
         city,
         state,
-        zipCode,
+        zip_code: zipCode,
         status,
-        podId,
-        terminationDate,
-        updatedBy: req.user?.id,
+        pod_id: podId,
+        termination_date: terminationDate,
+        updated_by: req.user?.userId,
       });
 
       res.json({
@@ -362,7 +362,7 @@ router.post(
         issueDate,
         expirationDate,
         status: 'active',
-        createdBy: req.user?.id,
+        createdBy: req.user?.userId,
       });
 
       res.status(201).json({
@@ -401,7 +401,7 @@ router.delete(
       // Mark as expired rather than deleting
       await repository.updateCertification(certificationId, {
         status: 'expired',
-        updatedBy: req.user?.id,
+        updatedBy: req.user?.userId,
       });
 
       res.json({

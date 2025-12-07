@@ -452,6 +452,77 @@ export class ClaimsGateService {
       [evvRecordIds, sandataVisitId]
     );
   }
+
+  /**
+   * Get rich visit data for EDI claims generation
+   */
+  async getClaimsDataForEDI(visitIds: string[]): Promise<any[]> {
+    if (visitIds.length === 0) return [];
+
+    const result = await this.db.query(
+      `SELECT
+        e.id,
+        e.visit_id,
+        e.clock_in_time,
+        e.billable_units,
+        s.service_code,
+        c.id as client_id,
+        c.first_name as client_first_name,
+        c.last_name as client_last_name,
+        c.date_of_birth,
+        c.medicaid_number,
+        c.address,
+        c.medical_info,
+        c.care_plan,
+        u.id as caregiver_id,
+        u.first_name as caregiver_first_name,
+        u.last_name as caregiver_last_name
+      FROM evv_records e
+      JOIN clients c ON e.client_id = c.id
+      JOIN users u ON e.caregiver_id = u.id
+      LEFT JOIN shifts s ON e.visit_id = s.id
+      WHERE e.id = ANY($1) OR e.visit_id = ANY($1)`,
+      [visitIds]
+    );
+
+    return result.rows.map(row => {
+      // Extract address components
+      const address = row.address || {};
+
+      // Extract diagnosis code (ICD-10) from medical info
+      // Fallback to default Z74.09 (Need for assistance...) if not found
+      const diagnosisCode = row.medical_info?.diagnosis_code ||
+        row.care_plan?.diagnosis_code ||
+        'Z7409';
+
+      return {
+        id: row.id,
+        visitDate: row.clock_in_time,
+        serviceCode: row.service_code || 'T1019',
+        billableUnits: row.billable_units || 0,
+        diagnosisCode: diagnosisCode.replace('.', ''), // Strip dots for EDI
+        authorizationNumber: 'AUTH0001', // TODO: Link to authorizations table
+        client: {
+          id: row.client_id,
+          firstName: row.client_first_name,
+          lastName: row.client_last_name,
+          dateOfBirth: new Date(row.date_of_birth),
+          medicaidNumber: row.medicaid_number || 'UNKNOWN',
+          addressLine1: address.street || '123 Client St',
+          city: address.city || 'Columbus',
+          state: address.state || 'OH',
+          zipCode: address.zipCode || address.zip || '43085'
+        },
+        caregiver: {
+          id: row.caregiver_id,
+          firstName: row.caregiver_first_name,
+          lastName: row.caregiver_last_name,
+          npi: '1234567890' // TODO: add NPI to caregivers table
+        },
+        placeOfService: '12' // Home
+      };
+    });
+  }
 }
 
 // Singleton instance

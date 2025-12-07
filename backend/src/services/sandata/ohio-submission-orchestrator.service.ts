@@ -148,7 +148,7 @@ export class OhioSubmissionOrchestratorService {
           warnings: sandataResponse.Warnings?.map((w) => w.WarningMessage) || [],
           sandataResponse,
           transactionId: sandataResponse.TransactionID,
-          httpStatus: response.status,
+          httpStatus: response.statusCode,
           submittedAt: new Date(),
         };
       }
@@ -163,7 +163,7 @@ export class OhioSubmissionOrchestratorService {
         warnings: sandataResponse.Warnings?.map((w) => w.WarningMessage) || warnings,
         sandataResponse,
         transactionId: sandataResponse.TransactionID,
-        httpStatus: response.status,
+        httpStatus: response.statusCode,
         submittedAt: new Date(),
       };
     } catch (error) {
@@ -229,7 +229,7 @@ export class OhioSubmissionOrchestratorService {
           warnings: sandataResponse.Warnings?.map((w) => w.WarningMessage) || [],
           sandataResponse,
           transactionId: sandataResponse.TransactionID,
-          httpStatus: response.status,
+          httpStatus: response.statusCode,
           submittedAt: new Date(),
         };
       }
@@ -244,7 +244,7 @@ export class OhioSubmissionOrchestratorService {
         warnings: sandataResponse.Warnings?.map((w) => w.WarningMessage) || warnings,
         sandataResponse,
         transactionId: sandataResponse.TransactionID,
-        httpStatus: response.status,
+        httpStatus: response.statusCode,
         submittedAt: new Date(),
       };
     } catch (error) {
@@ -383,7 +383,7 @@ export class OhioSubmissionOrchestratorService {
           warnings: sandataResponse.Warnings?.map((w) => w.WarningMessage) || [],
           sandataResponse,
           transactionId: sandataResponse.TransactionID,
-          httpStatus: response.status,
+          httpStatus: response.statusCode,
           submittedAt: new Date(),
         };
       }
@@ -399,7 +399,7 @@ export class OhioSubmissionOrchestratorService {
         warnings: sandataResponse.Warnings?.map((w) => w.WarningMessage) || warnings,
         sandataResponse,
         transactionId: sandataResponse.TransactionID,
-        httpStatus: response.status,
+        httpStatus: response.statusCode,
         submittedAt: new Date(),
       };
     } catch (error) {

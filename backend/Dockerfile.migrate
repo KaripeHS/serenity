@@ -1,0 +1,19 @@
+# Dockerfile for Database Migration Job
+# This runs migrations and seeds the database
+
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install ALL dependencies (including dev for tsx)
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Run migrations and seed
+CMD ["npx", "tsx", "src/database/migrate-and-seed.ts"]

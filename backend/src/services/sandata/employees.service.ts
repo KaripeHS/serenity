@@ -31,6 +31,7 @@ interface DatabaseUser {
   firstName: string;
   lastName: string;
   dateOfBirth?: string;
+  ssnEncrypted?: string; // Encrypted SSN from DB (bytea converted to string or hex)
   sandataEmployeeId?: string | null;
   addressLine1?: string;
   city?: string;
@@ -159,11 +160,11 @@ export class SandataEmployeesService {
       // Submit to Sandata
       const response = isUpdate
         ? await this.client.put<SandataEmployeeResponse>(endpoint, {
-            employee: sandataEmployee,
-          })
+          employee: sandataEmployee,
+        })
         : await this.client.post<SandataEmployeeResponse>(endpoint, {
-            employee: sandataEmployee,
-          });
+          employee: sandataEmployee,
+        });
 
       // Handle response
       if (!response.success) {
@@ -397,6 +398,20 @@ export class SandataEmployeesService {
       employee.terminationDate = this.formatDate(user.terminationDate);
     }
 
+    // Handle SSN (Decrypt securely)
+    if (user.ssnEncrypted) {
+      try {
+        const decryptedSSN = await this.repository.decryptSSN(user.ssnEncrypted);
+        if (decryptedSSN) {
+          employee.socialSecurityNumber = decryptedSSN;
+          // Note: We avoid logging this field in any logs
+        }
+      } catch (error) {
+        console.error('Failed to decrypt SSN for user', user.id);
+        // We do not stop the process but validation will fail if SSN is required
+      }
+    }
+
     // Add certifications
     if (certifications.length > 0) {
       employee.certifications = certifications
@@ -435,7 +450,9 @@ export class SandataEmployeesService {
     if (!employee.providerId) errors.push('Provider ID is required');
     if (!employee.lastName) errors.push('Last name is required');
     if (!employee.firstName) errors.push('First name is required');
+    if (!employee.firstName) errors.push('First name is required');
     if (!employee.dateOfBirth) errors.push('Date of birth is required');
+    if (!employee.socialSecurityNumber) errors.push('Social Security Number is required for EVV compliance');
 
     // Date format validation
     if (employee.dateOfBirth && !this.isValidDate(employee.dateOfBirth)) {

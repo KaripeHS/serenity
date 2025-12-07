@@ -134,7 +134,7 @@ router.post('/:organizationId', async (req: AuthenticatedRequest, res: Response,
       status,
       checkInTime: new Date().toISOString(),
       notes: notes || null,
-      recordedBy: req.user?.id || userId,
+      recordedBy: req.user?.userId || userId,
     });
 
     res.status(201).json({
@@ -179,7 +179,7 @@ router.put(
       await repository.updateMorningCheckIn(checkInId, {
         status: status || checkIn.status,
         notes: notes !== undefined ? notes : checkIn.notes,
-        updatedBy: req.user?.id,
+        updatedBy: req.user?.userId,
       });
 
       res.json({
@@ -277,7 +277,7 @@ router.get(
       res.json({
         organizationId,
         podId,
-        podName: pod.pod_name,
+        podName: pod.name,
         date: today,
         summary: {
           totalMembers: podMembers.length,

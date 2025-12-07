@@ -7,6 +7,7 @@
 
 import { Router, Response, NextFunction } from 'express';
 import { requireAuth, AuthenticatedRequest } from '../../middleware/auth';
+import { UserRole } from '../../../auth/access-control';
 import { ApiErrors } from '../../middleware/error-handler';
 
 const router = Router();
@@ -16,7 +17,7 @@ router.use(requireAuth);
 
 // Middleware to check admin permissions
 const requireAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  if (!req.user.permissions?.includes('system:admin') && req.user.role !== 'admin' && req.user.role !== 'founder') {
+  if (req.user?.role !== UserRole.FOUNDER && req.user?.role !== UserRole.IT_ADMIN) {
     throw ApiErrors.forbidden('Admin permissions required');
   }
   next();

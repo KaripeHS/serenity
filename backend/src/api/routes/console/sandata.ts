@@ -160,13 +160,13 @@ router.post('/visits/submit', async (req: AuthenticatedRequest, res: Response, n
       clockOutLongitude: evvRecord.clock_out_longitude || undefined,
       serviceDate: new Date(evvRecord.service_date),
       serviceCode: evvRecord.service_code,
-      modifiers: evvRecord.modifiers || [],
+      modifiers: evvRecord.modifiers ? (typeof evvRecord.modifiers === 'string' ? [evvRecord.modifiers] : evvRecord.modifiers) : [],
       units: evvRecord.billable_units || undefined,
       authorizationNumber: evvRecord.authorization_number || undefined,
       payer: evvRecord.payer || undefined,
       payerProgram: evvRecord.payer_program || undefined,
-      clockMethod: evvRecord.clock_method || 'mobile',
-      locationType: evvRecord.location_type || 'home',
+      clockMethod: (evvRecord.clock_method as any) || 'mobile',
+      locationType: (evvRecord.location_type as any) || 'home',
     };
 
     // Map patient data
@@ -211,7 +211,7 @@ router.post('/visits/correct', async (req: AuthenticatedRequest, res: Response, 
       correctionType,
       correctionReason,
       correctedFields,
-      correctedBy: correctedBy || req.user?.id || 'unknown',
+      correctedBy: correctedBy || req.user?.userId || 'unknown',
     });
 
     res.json(result);
@@ -236,7 +236,7 @@ router.post('/visits/void', async (req: AuthenticatedRequest, res: Response, nex
       evvRecordId,
       voidReason,
       voidReasonDescription,
-      voidedBy: voidedBy || req.user?.id || 'unknown',
+      voidedBy: voidedBy || req.user?.userId || 'unknown',
     });
 
     res.json(result);

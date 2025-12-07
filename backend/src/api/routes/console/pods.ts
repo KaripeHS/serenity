@@ -74,14 +74,14 @@ router.get('/:organizationId/:podId', async (req: AuthenticatedRequest, res: Res
 
     res.json({
       id: pod.id,
-      name: pod.pod_name,
+      name: pod.name,
       organizationId: pod.organization_id,
       podLead: podLead
         ? {
-            id: podLead.id,
-            name: `${podLead.first_name} ${podLead.last_name}`,
-            email: podLead.email,
-          }
+          id: podLead.id,
+          name: `${podLead.first_name} ${podLead.last_name}`,
+          email: podLead.email,
+        }
         : null,
       members: members.map((member: any) => ({
         id: member.id,

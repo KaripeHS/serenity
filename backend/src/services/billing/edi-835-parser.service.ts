@@ -24,7 +24,7 @@
  * @module services/billing/edi-835-parser
  */
 
-import { logger } from '../../shared/utils/logger';
+import { logger } from '../../utils/logger';
 
 /**
  * EDI 835 Parsed Data Structure

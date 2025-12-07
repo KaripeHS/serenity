@@ -9,42 +9,68 @@
 export * from './types';
 
 // HTTP Client
-export { SandataClient, getSandataClient, resetSandataClient } from './client';
+import { SandataClient, getSandataClient, resetSandataClient } from './client';
+export { SandataClient, getSandataClient, resetSandataClient };
 
 // Validator
-export { SandataValidatorService, getSandataValidator } from './validator.service';
+import { SandataValidatorService, getSandataValidator } from './validator.service';
+export { SandataValidatorService, getSandataValidator };
 
 // Orchestration Services
-export {
+import {
   SandataIndividualsService,
   getSandataIndividualsService,
   resetSandataIndividualsService,
 } from './individuals.service';
 
 export {
+  SandataIndividualsService,
+  getSandataIndividualsService,
+  resetSandataIndividualsService,
+};
+
+import {
   SandataEmployeesService,
   getSandataEmployeesService,
   resetSandataEmployeesService,
 } from './employees.service';
 
 export {
+  SandataEmployeesService,
+  getSandataEmployeesService,
+  resetSandataEmployeesService,
+};
+
+import {
   SandataVisitsService,
   getSandataVisitsService,
   resetSandataVisitsService,
 } from './visits.service';
 
 export {
+  SandataVisitsService,
+  getSandataVisitsService,
+  resetSandataVisitsService,
+};
+
+import {
   SandataCorrectionsService,
   getSandataCorrectionsService,
   resetSandataCorrectionsService,
 } from './corrections.service';
+
+export {
+  SandataCorrectionsService,
+  getSandataCorrectionsService,
+  resetSandataCorrectionsService,
+};
 
 // Utilities
 export * as VisitKeyUtils from './visitKey';
 export * as RoundingUtils from './rounding';
 
 // Configuration (re-export for convenience)
-export {
+import {
   getActiveSandataConfig,
   getSandataBusinessRules,
   getSandataFeatureFlags,
@@ -56,6 +82,18 @@ export {
   SANDATA_STATUS,
 } from '../../config/sandata';
 
+export {
+  getActiveSandataConfig,
+  getSandataBusinessRules,
+  getSandataFeatureFlags,
+  isSandataEnabled,
+  isSandataKillSwitchActive,
+  validateSandataConfig,
+  SANDATA_ENDPOINTS,
+  SANDATA_ERROR_CODES,
+  SANDATA_STATUS,
+};
+
 /**
  * Complete Sandata service facade
  * Provides a unified interface to all Sandata functionality
@@ -66,7 +104,7 @@ export class SandataService {
   private constructor(
     public readonly client: ReturnType<typeof getSandataClient>,
     public readonly validator: ReturnType<typeof getSandataValidator>
-  ) {}
+  ) { }
 
   static getInstance(): SandataService {
     if (!SandataService.instance) {

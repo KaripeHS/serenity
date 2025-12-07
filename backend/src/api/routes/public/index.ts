@@ -11,6 +11,7 @@ import { publicRateLimiter } from '../../middleware/rate-limiter';
 import { getDbClient } from '../../../database/client';
 import { createLogger } from '../../../utils/logger';
 import { getEmailService } from '../../../services/notifications/email.service';
+import { UserContext } from '../../../auth/access-control';
 
 const router = Router();
 const logger = createLogger('public-api');
@@ -19,7 +20,10 @@ const logger = createLogger('public-api');
 router.use(publicRateLimiter);
 
 import leadsRouter from '../../public/leads.routes';
+import referralsRouter from '../../public/referrals.routes';
+
 router.use('/leads', leadsRouter);
+router.use('/referrals', referralsRouter);
 
 // Default organization ID (first org in system - Serenity Care Partners)
 const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
@@ -219,14 +223,14 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
           submittedAt: new Date().toISOString(),
           experience: priorExperience || 'Not specified',
           availability: availability || 'Full-time',
-          additionalInfo: {
-            licenseType: licenseType || 'None',
-            preferredCity: preferredCity || 'Any',
-            desiredPayRange: desiredPayRange || 'Not specified',
-            shiftPreference: shiftPreference || 'Flexible',
-            overtimeAvailable: overtimeAvailable || 'Not specified',
-            willingToTravel: willingToTravel || 'Not specified'
-          }
+          // additionalInfo: {
+          //   licenseType: licenseType || 'None',
+          //   preferredCity: preferredCity || 'Any',
+          //   desiredPayRange: desiredPayRange || 'Not specified',
+          //   shiftPreference: shiftPreference || 'Flexible',
+          //   overtimeAvailable: overtimeAvailable || 'Not specified',
+          //   willingToTravel: willingToTravel || 'Not specified'
+          // }
         });
 
         logger.info('Application confirmation emails sent', { applicationId });

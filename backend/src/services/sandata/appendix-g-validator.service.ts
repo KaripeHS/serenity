@@ -93,8 +93,8 @@ export class AppendixGValidatorService {
       if (!entry) {
         errors.push(
           `Invalid payer/program/procedure combination: ` +
-            `Payer="${normalizedPayer}", Program="${normalizedProgram}", Procedure="${normalizedProcedure}". ` +
-            `This combination is not in Ohio Alt-EVV Appendix G and will be rejected by Sandata.`
+          `Payer="${normalizedPayer}", Program="${normalizedProgram}", Procedure="${normalizedProcedure}". ` +
+          `This combination is not in Ohio Alt-EVV Appendix G and will be rejected by Sandata.`
         );
 
         // Provide helpful suggestions
@@ -125,7 +125,7 @@ export class AppendixGValidatorService {
         if (invalidModifiers.length > 0) {
           errors.push(
             `Invalid modifiers for ${normalizedProcedure}: [${invalidModifiers.join(', ')}]. ` +
-              `Valid modifiers for this procedure are: [${entry.validModifiers.join(', ')}]`
+            `Valid modifiers for this procedure are: [${entry.validModifiers.join(', ')}]`
           );
         }
       } else {
@@ -133,7 +133,7 @@ export class AppendixGValidatorService {
         if (entry.validModifiers.length > 0) {
           warnings.push(
             `No modifiers provided for ${normalizedProcedure}. ` +
-              `Valid modifiers are: [${entry.validModifiers.join(', ')}]`
+            `Valid modifiers are: [${entry.validModifiers.join(', ')}]`
           );
         }
       }
@@ -166,7 +166,7 @@ export class AppendixGValidatorService {
         isValid: errors.length === 0,
         errors,
         warnings,
-        matchedCombination: entry,
+        matchedCombination: entry as any,
       };
     } catch (error) {
       errors.push(`Appendix G validation failed: ${this.getErrorMessage(error)}`);

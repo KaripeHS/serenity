@@ -8,7 +8,7 @@ import { EventEmitter } from 'events';
 import { DocumentTemplateService } from './document-templates';
 import { FilingOrchestrator } from './filing-orchestrator';
 import { createLogger, paperworkLogger } from '../utils/logger';
-import { AlertType, PaperworkAgent as IPaperworkAgent, GeneratedDocument } from '../types/automation';
+import { PaperworkAgent as IPaperworkAgent, GeneratedDocument } from '../types/automation';
 
 // ============================================================================
 // Core Types
@@ -1301,7 +1301,7 @@ Return the analysis in a structured format with confidence scores for each extra
         const calculatedValue = await this.evaluateFormula(rule.formula, result);
         this.setNestedValue(result, rule.targetField, calculatedValue);
       } catch (error) {
-        paperworkLogger.warn(`Calculation rule '${rule.name}' failed:`, error instanceof Error ? error.message : String(error));
+        paperworkLogger.warn(`Calculation rule '${rule.name}' failed:`, { error: error instanceof Error ? error.message : String(error) });
       }
     }
 
@@ -1562,7 +1562,8 @@ Return the analysis in a structured format with confidence scores for each extra
           alertThresholds: [],
           notificationChannels: []
         }
-      }
+      },
+      version: '1.0.0'
     });
 
     // Create default document processor agent
@@ -1606,7 +1607,7 @@ Return the analysis in a structured format with confidence scores for each extra
         }],
         monitoringEnabled: true,
         alertSettings: {
-          enabledAlerts: ['processing_failure', 'quality_concern'],
+          enabledAlerts: ['processing_failure', 'quality_degradation'],
           escalationMatrix: [],
           notificationChannels: []
         },
@@ -1678,12 +1679,9 @@ Return the analysis in a structured format with confidence scores for each extra
         enabledEvents: ['document_processed', 'data_extracted', 'validation_performed'],
         logLevel: 'info',
         realTimeMonitoring: true,
-        alerting: {
-          enabled: true,
-          alertThresholds: [],
-          notificationChannels: []
-        }
-      }
+        alerting: { enabled: true, alertThresholds: [], notificationChannels: [] }
+      },
+      version: '1.0.0'
     });
   }
 
@@ -1867,16 +1865,15 @@ Return the analysis in a structured format with confidence scores for each extra
     // production document generation
     return {
       id: this.generateDocumentId(),
+      organizationId: request.metadata.clientContext?.clientId || 'default',
       templateId: template.id,
       templateVersion: template.version,
+      format: request.processingOptions.outputFormat,
+      title: template.name,
       generatedAt: new Date(),
+      createdAt: new Date(),
       generatedBy: request.metadata.requestedBy,
-      content: {
-        format: request.processingOptions.outputFormat as any,
-        data: 'Generated document content',
-        size: 1024,
-        checksum: 'abc123'
-      },
+      content: 'Generated document content',
       metadata: {
         title: `${template.name} - Generated`,
         description: `Generated from template: ${template.name}`,
@@ -1888,9 +1885,14 @@ Return the analysis in a structured format with confidence scores for each extra
         podScope: [],
         dataClassification: 'internal',
         tags: [template.documentType],
-        customFields: {}
+        customFields: {},
+        dataSourcesUsed: [],
+        variablesResolved: [],
+        sectionsGenerated: [],
+        generationTimeMs: 1000,
+        approvalRequired: false
       },
-      status: 'generated',
+      status: 'completed',
       auditLog: [],
       accessLog: [],
       retentionDate: new Date(),
@@ -1939,7 +1941,7 @@ Return the analysis in a structured format with confidence scores for each extra
       fields: [],
       entities: [],
       relationships: [],
-      metadata: { extractionMethod: 'rules', processingTime: 500 }
+      metadata: { extractionMethod: 'structured', processingTime: 500 }
     };
   }
 

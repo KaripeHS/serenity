@@ -43,7 +43,7 @@ export default function AboutPage() {
       </section>
 
       {/* Mission & Vision */}
-      <section className="py-24 bg-mist-white">
+      <section id="mission" className="py-24 bg-mist-white">
         <div className="container mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
             <div className="p-8 bg-white rounded-xl shadow-sm border border-warm-gray-100 hover-lift fade-in-up">
@@ -75,7 +75,7 @@ export default function AboutPage() {
       </section>
 
       {/* Leadership Team */}
-      <section className="py-24 bg-white">
+      <section id="team" className="py-24 bg-white">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16 fade-in-up">
             <div className="inline-flex items-center gap-2 bg-champagne-gold-50 px-4 py-2.5 rounded-full border border-champagne-gold-200 mb-4">
@@ -122,7 +122,7 @@ export default function AboutPage() {
       </section>
 
       {/* Pod Model Explanation */}
-      <section className="py-24 bg-sage-50">
+      <section id="pod-based-care" className="py-24 bg-sage-50 scroll-mt-24">
         <div className="container mx-auto px-6">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16 fade-in-up">
@@ -131,7 +131,7 @@ export default function AboutPage() {
               </div>
               <h2 className="text-4xl lg:text-5xl text-warm-gray-900 mb-4 font-serif tracking-tighter">The Pod Model: Our Competitive Advantage</h2>
               <p className="text-xl text-warm-gray-600 max-w-3xl mx-auto">
-                Unlike traditional home health agencies that assign caregivers randomly, our pod-based model creates small, dedicated teams that work together to serve 35-40 patients.
+                Unlike traditional home health agencies that assign caregivers randomly, our pod-based model ensures your loved one sees the same familiar faces—caregivers who truly know them.
               </p>
             </div>
 
@@ -153,7 +153,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl mb-3 text-warm-gray-900 font-heading">Small Teams</h3>
                 <p className="text-warm-gray-600 leading-relaxed">
-                  35-40 patients per pod ensures personalized attention and consistent care
+                  Intentionally small pods mean caregivers have time to truly know each patient
                 </p>
               </div>
 
@@ -191,7 +191,7 @@ export default function AboutPage() {
                   </div>
                   <div>
                     <strong className="text-warm-gray-900 text-lg">Dedicated Team:</strong>
-                    <p className="mt-1">Each pod has 8-12 caregivers assigned to serve 35-40 patients in a specific geographic area</p>
+                    <p className="mt-1">A small group of caregivers is assigned exclusively to your neighborhood, so you always see familiar faces</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-4">
@@ -257,73 +257,61 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Service Areas Map */}
+      {/* Service Areas */}
       <section className="py-24 bg-sage-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16 fade-in-up">
             <div className="inline-flex items-center gap-2 bg-serenity-green-50 px-4 py-2.5 rounded-full border border-serenity-green-200 mb-4">
               <span className="text-serenity-green-700 font-semibold text-sm">Where We Serve</span>
             </div>
-            <h2 className="text-4xl lg:text-5xl text-warm-gray-900 mb-4 font-serif tracking-tighter">Service Areas Across Ohio</h2>
+            <h2 className="text-4xl lg:text-5xl text-warm-gray-900 mb-4 font-serif tracking-tighter">Southwest Ohio Service Area</h2>
             <p className="text-xl text-warm-gray-600 max-w-3xl mx-auto">
-              Bringing exceptional care to communities throughout the state
+              Proudly serving families across seven counties in Southwest Ohio from our headquarters in Blue Ash
             </p>
           </div>
 
           <div className="max-w-5xl mx-auto">
-            <div className="grid md:grid-cols-3 gap-8 mb-12">
-              <div className="bg-white p-8 rounded-xl shadow-sm text-center hover-lift border border-warm-gray-100 fade-in-up">
-                <div className="w-16 h-16 bg-gradient-to-br from-serenity-green-50 to-serenity-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-8 h-8 text-serenity-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
+            {/* Counties Grid */}
+            <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
+              {[
+                { name: 'Hamilton County', city: 'Cincinnati area' },
+                { name: 'Butler County', city: 'Hamilton area' },
+                { name: 'Warren County', city: 'Lebanon area' },
+                { name: 'Clermont County', city: 'Batavia area' },
+                { name: 'Clinton County', city: 'Wilmington area' },
+                { name: 'Preble County', city: 'Eaton area' },
+                { name: 'Montgomery County', city: 'Dayton area' },
+              ].map((county, index) => (
+                <div
+                  key={county.name}
+                  className="bg-white p-6 rounded-xl shadow-sm text-center hover-lift border border-warm-gray-100 fade-in-up"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="w-12 h-12 bg-gradient-to-br from-serenity-green-50 to-serenity-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-6 h-6 text-serenity-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <div className="text-lg text-warm-gray-900 font-semibold mb-1">{county.name}</div>
+                  <p className="text-warm-gray-500 text-sm">{county.city}</p>
                 </div>
-                <div className="text-3xl text-warm-gray-900 mb-2 font-heading">Dayton</div>
-                <p className="text-warm-gray-600 mb-4">Montgomery County and surrounding areas</p>
-                <div className="inline-flex items-center gap-2 bg-serenity-green-50 px-4 py-2 rounded-full border border-serenity-green-200">
-                  <span className="w-2 h-2 bg-serenity-green-500 rounded-full pulse-subtle"></span>
-                  <span className="text-sm font-semibold text-serenity-green-700">1 Active Pod</span>
-                </div>
-              </div>
-
-              <div className="bg-white p-8 rounded-xl shadow-sm text-center hover-lift border border-warm-gray-100 fade-in-up" style={{ animationDelay: '100ms' }}>
-                <div className="w-16 h-16 bg-gradient-to-br from-serenity-green-50 to-serenity-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-8 h-8 text-serenity-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div className="text-3xl text-warm-gray-900 mb-2 font-heading">Columbus</div>
-                <p className="text-warm-gray-600 mb-4">Franklin County and surrounding areas</p>
-                <div className="inline-flex items-center gap-2 bg-serenity-green-50 px-4 py-2 rounded-full border border-serenity-green-200">
-                  <span className="w-2 h-2 bg-serenity-green-500 rounded-full pulse-subtle"></span>
-                  <span className="text-sm font-semibold text-serenity-green-700">1 Active Pod</span>
-                </div>
-              </div>
-
-              <div className="bg-white p-8 rounded-xl shadow-sm text-center hover-lift border border-warm-gray-100 fade-in-up" style={{ animationDelay: '200ms' }}>
-                <div className="w-16 h-16 bg-gradient-to-br from-serenity-green-50 to-serenity-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-8 h-8 text-serenity-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div className="text-3xl text-warm-gray-900 mb-2 font-heading">Cincinnati</div>
-                <p className="text-warm-gray-600 mb-4">Hamilton County and surrounding areas</p>
-                <div className="inline-flex items-center gap-2 bg-serenity-green-50 px-4 py-2 rounded-full border border-serenity-green-200">
-                  <span className="w-2 h-2 bg-serenity-green-500 rounded-full pulse-subtle"></span>
-                  <span className="text-sm font-semibold text-serenity-green-700">1 Active Pod</span>
-                </div>
-              </div>
+              ))}
             </div>
 
-            <p className="text-center text-warm-gray-600 text-lg">
-              Expanding to serve more communities across Ohio.{' '}
+            {/* Headquarters */}
+            <div className="bg-white rounded-xl shadow-sm p-8 border border-warm-gray-100 text-center fade-in-up">
+              <div className="inline-flex items-center gap-2 bg-champagne-gold-50 px-4 py-2 rounded-full border border-champagne-gold-200 mb-4">
+                <span className="text-champagne-gold-700 font-semibold text-sm">Headquarters</span>
+              </div>
+              <h3 className="text-2xl text-warm-gray-900 font-heading mb-2">Blue Ash, Ohio</h3>
+              <p className="text-warm-gray-600 mb-6">
+                Centrally located to serve all of Southwest Ohio
+              </p>
               <Link to="/contact" className="text-serenity-green-600 font-semibold hover:text-serenity-green-700 transition-colors">
-                Contact us to learn if we serve your area
+                Contact us to learn more about our services in your area →
               </Link>
-            </p>
+            </div>
           </div>
         </div>
       </section>

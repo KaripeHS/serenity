@@ -112,8 +112,8 @@ router.get(
         email: client.email,
         phoneNumber: client.phone_number,
         address: {
-          line1: client.address_line1,
-          line2: client.address_line2,
+          line1: client.address_line_1,
+          line2: client.address_line_2,
           city: client.city,
           state: client.state,
           zipCode: client.zip_code,
@@ -155,11 +155,11 @@ router.get(
         })),
         carePlan: carePlan
           ? {
-              id: carePlan.id,
-              goals: carePlan.goals,
-              specialInstructions: carePlan.special_instructions,
-              updatedAt: carePlan.updated_at,
-            }
+            id: carePlan.id,
+            goals: carePlan.goals,
+            specialInstructions: carePlan.special_instructions,
+            updatedAt: carePlan.updated_at,
+          }
           : null,
         createdAt: client.created_at,
         updatedAt: client.updated_at,
@@ -208,7 +208,7 @@ router.post('/:organizationId', async (req: AuthenticatedRequest, res: Response,
     }
 
     // Check for duplicate Medicaid number
-    const existingClient = await repository.getClientByMedicaidNumber(medicaidNumber);
+    const existingClient = await repository.getClientByMedicaidNumber(medicaidNumber, organizationId);
     if (existingClient) {
       throw ApiErrors.conflict('Client with this Medicaid number already exists');
     }
@@ -222,24 +222,24 @@ router.post('/:organizationId', async (req: AuthenticatedRequest, res: Response,
     }
 
     const clientId = await repository.createClient({
-      organizationId,
-      firstName,
-      lastName,
-      dateOfBirth,
-      medicaidNumber,
+      organization_id: organizationId,
+      first_name: firstName,
+      last_name: lastName,
+      date_of_birth: dateOfBirth,
+      medicaid_number: medicaidNumber,
       email: email || null,
-      phoneNumber: phoneNumber || null,
-      addressLine1: addressLine1 || null,
+      phone_number: phoneNumber || null,
+      address_line_1: addressLine1 || null,
       city: city || null,
       state: state || null,
-      zipCode: zipCode || null,
+      zip_code: zipCode || null,
       status: 'active',
-      podId: podId || null,
-      emergencyContactName: emergencyContactName || null,
-      emergencyContactPhone: emergencyContactPhone || null,
-      emergencyContactRelationship: emergencyContactRelationship || null,
-      evvConsentStatus: 'pending',
-      createdBy: req.user?.id,
+      pod_id: podId || null,
+      emergency_contact_name: emergencyContactName || null,
+      emergency_contact_phone: emergencyContactPhone || null,
+      emergency_contact_relationship: emergencyContactRelationship || null,
+      evv_consent_status: 'pending',
+      created_by: req.user?.userId,
     });
 
     res.status(201).json({
@@ -295,7 +295,7 @@ router.put(
 
       // If Medicaid number is changing, validate uniqueness
       if (medicaidNumber && medicaidNumber !== client.medicaid_number) {
-        const existingClient = await repository.getClientByMedicaidNumber(medicaidNumber);
+        const existingClient = await repository.getClientByMedicaidNumber(medicaidNumber, organizationId);
         if (existingClient) {
           throw ApiErrors.conflict('Client with this Medicaid number already exists');
         }
@@ -315,23 +315,23 @@ router.put(
       }
 
       await repository.updateClient(clientId, {
-        firstName,
-        lastName,
-        dateOfBirth,
-        medicaidNumber,
+        first_name: firstName,
+        last_name: lastName,
+        date_of_birth: dateOfBirth,
+        medicaid_number: medicaidNumber,
         email,
-        phoneNumber,
-        addressLine1,
-        addressLine2,
+        phone_number: phoneNumber,
+        address_line_1: addressLine1,
+        address_line_2: addressLine2,
         city,
         state,
-        zipCode,
+        zip_code: zipCode,
         status,
-        podId,
-        emergencyContactName,
-        emergencyContactPhone,
-        emergencyContactRelationship,
-        updatedBy: req.user?.id,
+        pod_id: podId,
+        emergency_contact_name: emergencyContactName,
+        emergency_contact_phone: emergencyContactPhone,
+        emergency_contact_relationship: emergencyContactRelationship,
+        updated_by: req.user?.userId,
       });
 
       res.json({
@@ -370,10 +370,10 @@ router.post(
       }
 
       await repository.updateClient(clientId, {
-        evvConsentStatus: consentStatus,
-        evvConsentDate: new Date().toISOString(),
-        evvConsentSignedBy: signedBy || req.user?.id,
-        updatedBy: req.user?.id,
+        evv_consent_status: consentStatus,
+        evv_consent_date: new Date(),
+        evv_consent_signed_by: signedBy || req.user?.userId,
+        updated_by: req.user?.userId,
       });
 
       res.json({
@@ -431,7 +431,7 @@ router.post(
         startDate,
         endDate,
         status: 'active',
-        createdBy: req.user?.id,
+        createdBy: req.user?.userId,
       });
 
       res.status(201).json({
@@ -474,7 +474,7 @@ router.put(
         await repository.updateCarePlan(carePlan.id, {
           goals,
           specialInstructions,
-          updatedBy: req.user?.id,
+          updatedBy: req.user?.userId,
         });
       } else {
         // Create new
@@ -483,7 +483,7 @@ router.put(
           organizationId,
           goals: goals || '',
           specialInstructions: specialInstructions || '',
-          createdBy: req.user?.id,
+          createdBy: req.user?.userId,
         });
       }
 

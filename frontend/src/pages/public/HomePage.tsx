@@ -83,7 +83,7 @@ export default function HomePage() {
               </svg>
             ),
             title: "Pod-Based Care Teams",
-            description: "Small teams of 35-40 clients mean your caregiver truly knows your loved one's preferences, routines, and personality."
+            description: "Dedicated caregivers work in small pods, so your loved one sees familiar faces who truly know their preferences, routines, and personality."
           },
           {
             icon: (
@@ -111,8 +111,8 @@ export default function HomePage() {
         eyebrow="Our Caregivers"
         headline="Caregivers Who Truly Care"
         description="Every caregiver on our team is carefully selected, thoroughly trained, and deeply committed to providing compassionate, person-centered care. They're not just professionals—they become trusted companions."
-        image="https://images.unsplash.com/photo-1516733968668-dbdce39c4651?q=80&w=1200&auto=format&fit=crop"
-        imageAlt="Caregiver with senior in warm home environment"
+        image="https://images.unsplash.com/photo-1576765608622-067973a79f53?q=80&w=1200&auto=format&fit=crop"
+        imageAlt="Caregiver walking with senior outdoors"
         imagePosition="left"
         backgroundColor="white"
         stats={[
@@ -150,8 +150,8 @@ export default function HomePage() {
             image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop"
           },
           {
-            quote: "As a nurse, I've worked for several agencies. Serenity's support, competitive pay, and manageable caseload make this the best environment I've experienced.",
-            author: "Sarah K., RN",
+            quote: "As a caregiver, I've worked for several agencies. Serenity's support, competitive pay, and pod model make this the best environment I've experienced.",
+            author: "Sarah K.",
             role: "Caregiver",
             image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop"
           }
@@ -172,29 +172,29 @@ export default function HomePage() {
                 fontWeight: '400'
               }}
             >
-              Serving Ohio Communities
+              Serving Southwest Ohio
             </h2>
             <p className="text-warm-gray-600" style={{ fontSize: '1.0625rem', lineHeight: '1.7', maxWidth: '65ch', margin: '0 auto' }}>
-              Three active care pods across Ohio's major metropolitan areas.
+              Seven counties across Southwest Ohio from our headquarters in Blue Ash.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-10">
             {[
               {
-                city: 'Columbus',
-                county: 'Franklin County',
-                image: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?q=80&w=800&auto=format&fit=crop'
+                region: 'Greater Cincinnati',
+                counties: 'Hamilton, Butler, Warren, Clermont',
+                image: 'https://images.unsplash.com/photo-1447005497901-b3e9ee359928?q=80&w=800&auto=format&fit=crop'
               },
               {
-                city: 'Dayton',
-                county: 'Montgomery County',
-                image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=800&auto=format&fit=crop'
+                region: 'Dayton Area',
+                counties: 'Montgomery, Preble',
+                image: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?q=80&w=800&auto=format&fit=crop'
               },
               {
-                city: 'Cincinnati',
-                county: 'Hamilton County',
-                image: 'https://images.unsplash.com/photo-1521791055366-0d553872125f?q=80&w=800&auto=format&fit=crop'
+                region: 'Surrounding Areas',
+                counties: 'Clinton County & more',
+                image: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?q=80&w=800&auto=format&fit=crop'
               }
             ].map((location, i) => (
               <Link key={i} to="/contact">
@@ -202,21 +202,21 @@ export default function HomePage() {
                   <div className="relative h-80 overflow-hidden">
                     <img
                       src={location.image}
-                      alt={`${location.city} care setting`}
+                      alt={`${location.region} care setting`}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
 
                     <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
                       <h3 className="text-2xl font-semibold mb-2">
-                        {location.city}
+                        {location.region}
                       </h3>
                       <p className="text-white/90 mb-4 text-sm">
-                        {location.county}
+                        {location.counties}
                       </p>
                       <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-serenity-green-500/90">
                         <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                        <span className="text-sm font-semibold">Active Pod</span>
+                        <span className="text-sm font-semibold">Now Serving</span>
                       </div>
                     </div>
                   </div>

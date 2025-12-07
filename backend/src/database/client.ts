@@ -258,6 +258,37 @@ export class DatabaseClient {
     };
 
   }
+  async find<T extends QueryResultRow = any>(
+    tableName: string,
+    conditions: Record<string, any> = {},
+    context?: QueryContext
+  ): Promise<T[]> {
+    const { limit, offset, orderBy, ...where } = conditions;
+
+    const whereKeys = Object.keys(where);
+    const whereValues = Object.values(where);
+    const whereClause = whereKeys.length > 0
+      ? 'WHERE ' + whereKeys.map((key, index) => `${key} = $${index + 1}`).join(" AND ")
+      : '';
+
+    let query = `SELECT * FROM ${tableName} ${whereClause}`;
+
+    if (orderBy) {
+      query += ` ORDER BY ${orderBy}`;
+    }
+
+    if (limit) {
+      query += ` LIMIT ${limit}`;
+    }
+
+    if (offset) {
+      query += ` OFFSET ${offset}`;
+    }
+
+    const result = await this.query<T>(query, whereValues, context);
+    return result.rows;
+  }
+
   async findOne<T extends QueryResultRow = any>(
     tableName: string,
     whereConditions: Record<string, any>,

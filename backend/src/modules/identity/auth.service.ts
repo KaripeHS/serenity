@@ -10,8 +10,10 @@ import QRCode from 'qrcode';
 import { randomBytes, createHash } from 'crypto';
 import { DatabaseClient } from '../../database/client';
 import { AuditLogger } from '../../audit/logger';
-import { UserRole, UserContext } from '../../auth/access-control';
-import { createLogger } from '../utils/logger';
+import { UserRole, UserContext, Permission } from '../../auth/access-control';
+import { createLogger } from '../../utils/logger';
+
+const securityLogger = createLogger('auth-service');
 
 export interface LoginRequest {
   email: string;
@@ -76,13 +78,11 @@ export class AuthService {
         WHERE u.email = $1 AND u.is_active = true
       `;
       const userResult = await this.db.query(userQuery, [request.email.toLowerCase()]);
-      
+
       if (userResult.rows.length === 0) {
-        await this.auditLogger.logSecurity({
-          eventType: 'login_failed',
+        await this.auditLogger.logSecurity('authentication_failure', 'medium', {
           details: { email: request.email, reason: 'user_not_found' },
-          severity: 'medium',
-          clientIp,
+          ipAddress: clientIp,
           userAgent
         });
         throw new Error('Invalid credentials');
@@ -93,12 +93,10 @@ export class AuthService {
       // Check password
       if (!user.password_hash || !await bcrypt.compare(request.password, user.password_hash)) {
         await this.incrementFailedAttempts(user.id, clientIp);
-        await this.auditLogger.logSecurity({
-          eventType: 'login_failed',
+        await this.auditLogger.logSecurity('authentication_failure', 'medium', {
           userId: user.id,
           details: { email: request.email, reason: 'invalid_password' },
-          severity: 'medium',
-          clientIp,
+          ipAddress: clientIp,
           userAgent
         });
         throw new Error('Invalid credentials');
@@ -107,12 +105,10 @@ export class AuthService {
       // Check if account is locked
       const lockStatus = await this.checkAccountLock(user.id);
       if (lockStatus.isLocked) {
-        await this.auditLogger.logSecurity({
-          eventType: 'login_blocked',
+        await this.auditLogger.logSecurity('login_blocked', 'high', {
           userId: user.id,
           details: { reason: 'account_locked', unlockAt: lockStatus.unlockAt },
-          severity: 'high',
-          clientIp,
+          ipAddress: clientIp,
           userAgent
         });
         throw new Error(`Account locked until ${lockStatus.unlockAt}`);
@@ -133,12 +129,10 @@ export class AuthService {
 
         const mfaValid = await this.verifyMFA(user.id, request.mfaToken);
         if (!mfaValid) {
-          await this.auditLogger.logSecurity({
-            eventType: 'mfa_failed',
+          await this.auditLogger.logSecurity('mfa_failed', 'high', {
             userId: user.id,
             details: { email: request.email },
-            severity: 'high',
-            clientIp,
+            ipAddress: clientIp,
             userAgent
           });
           throw new Error('Invalid MFA token');
@@ -169,16 +163,14 @@ export class AuthService {
       );
 
       // Log successful login
-      await this.auditLogger.logSecurity({
-        eventType: 'login_success',
+      await this.auditLogger.logSecurity('login_success', 'low', {
         userId: user.id,
-        details: { 
+        details: {
           email: request.email,
           sessionId,
           mfaUsed: user.mfa_enabled
         },
-        severity: 'low',
-        clientIp,
+        ipAddress: clientIp,
         userAgent
       });
 
@@ -209,11 +201,9 @@ export class AuthService {
       );
 
       // Log logout
-      await this.auditLogger.logSecurity({
-        eventType: 'logout',
+      await this.auditLogger.logSecurity('logout', 'low', {
         userId,
-        details: { sessionId },
-        severity: 'low'
+        details: { sessionId }
       });
 
     } catch (error) {
@@ -229,7 +219,7 @@ export class AuthService {
     try {
       // Verify refresh token
       const decoded = jwt.verify(refreshToken, this.jwtRefreshSecret) as any;
-      
+
       // Check if session is still valid
       const sessionQuery = `
         SELECT us.*, u.id, u.email, u.role, u.organization_id, u.is_active
@@ -238,13 +228,13 @@ export class AuthService {
         WHERE us.session_id = $1 AND us.is_active = true AND us.expires_at > NOW()
       `;
       const sessionResult = await this.db.query(sessionQuery, [decoded.sessionId]);
-      
+
       if (sessionResult.rows.length === 0) {
         throw new Error('Invalid refresh token');
       }
 
       const session = sessionResult.rows[0];
-      
+
       // Generate new access token
       const accessToken = jwt.sign(
         {
@@ -277,13 +267,13 @@ export class AuthService {
         'SELECT email, first_name, last_name FROM users WHERE id = $1',
         [userId]
       );
-      
+
       if (userResult.rows.length === 0) {
         throw new Error('User not found');
       }
 
       const user = userResult.rows[0];
-      
+
       // Generate secret
       const secret = speakeasy.generateSecret({
         name: `Serenity ERP (${user.email})`,
@@ -294,7 +284,7 @@ export class AuthService {
       const qrCode = await QRCode.toDataURL(secret.otpauth_url!);
 
       // Generate backup codes
-      const backupCodes = Array.from({ length: 8 }, () => 
+      const backupCodes = Array.from({ length: 8 }, () =>
         randomBytes(4).toString('hex').toUpperCase()
       );
 
@@ -314,11 +304,9 @@ export class AuthService {
       ]);
 
       // Log MFA setup
-      await this.auditLogger.logSecurity({
-        eventType: 'mfa_setup_initiated',
+      await this.auditLogger.logSecurity('mfa_enabled', 'medium', {
         userId,
-        details: { email: user.email },
-        severity: 'medium'
+        details: { email: user.email }
       });
 
       return {
@@ -328,7 +316,7 @@ export class AuthService {
       };
 
     } catch (error) {
-      securityLogger.error('MFA setup error:', error);
+      securityLogger.error('MFA setup error:', { error });
       throw error;
     }
   }
@@ -351,15 +339,13 @@ export class AuthService {
       );
 
       // Log MFA enabled
-      await this.auditLogger.logSecurity({
-        eventType: 'mfa_enabled',
+      await this.auditLogger.logSecurity('mfa_enabled', 'medium', {
         userId,
-        details: {},
-        severity: 'medium'
+        details: {}
       });
 
     } catch (error) {
-      securityLogger.error('MFA enable error:', error);
+      securityLogger.error('MFA enable error:', { error });
       throw error;
     }
   }
@@ -397,15 +383,13 @@ export class AuthService {
       );
 
       // Log MFA disabled
-      await this.auditLogger.logSecurity({
-        eventType: 'mfa_disabled',
+      await this.auditLogger.logSecurity('mfa_disabled', 'high', {
         userId,
-        details: {},
-        severity: 'high'
+        details: {}
       });
 
     } catch (error) {
-      securityLogger.error('MFA disable error:', error);
+      securityLogger.error('MFA disable error:', { error });
       throw error;
     }
   }
@@ -443,11 +427,9 @@ export class AuthService {
       );
 
       // Log password change
-      await this.auditLogger.logSecurity({
-        eventType: 'password_changed',
+      await this.auditLogger.logSecurity('password_change', 'medium', {
         userId,
-        details: {},
-        severity: 'medium'
+        details: {}
       });
 
       // Invalidate all sessions except current one
@@ -459,7 +441,7 @@ export class AuthService {
       `, [userId]);
 
     } catch (error) {
-      securityLogger.error('Password change error:', error);
+      securityLogger.error('Password change error:', { error });
       throw error;
     }
   }
@@ -503,15 +485,13 @@ export class AuthService {
       securityLogger.info(`Password reset token for ${email}: ${resetToken}`);
 
       // Log password reset initiated
-      await this.auditLogger.logSecurity({
-        eventType: 'password_reset_initiated',
+      await this.auditLogger.logSecurity('password_reset', 'medium', {
         userId: user.id,
-        details: { email },
-        severity: 'medium'
+        details: { email }
       });
 
     } catch (error) {
-      securityLogger.error('Password reset initiation error:', error);
+      securityLogger.error('Password reset initiation error:', { error });
       throw error;
     }
   }
@@ -565,15 +545,13 @@ export class AuthService {
       );
 
       // Log password reset completion
-      await this.auditLogger.logSecurity({
-        eventType: 'password_reset_completed',
+      await this.auditLogger.logSecurity('password_change', 'high', {
         userId,
-        details: { email },
-        severity: 'high'
+        details: { email }
       });
 
     } catch (error) {
-      securityLogger.error('Password reset completion error:', error);
+      securityLogger.error('Password reset completion error:', { error });
       throw error;
     }
   }
@@ -646,7 +624,7 @@ export class AuthService {
 
       const { secret_encrypted, backup_codes_encrypted } = secretResult.rows[0];
       const secret = this.decrypt(secret_encrypted);
-      
+
       // Verify TOTP token
       const verified = speakeasy.totp.verify({
         secret,
@@ -674,7 +652,7 @@ export class AuthService {
       return false;
 
     } catch (error) {
-      securityLogger.error('MFA verification error:', error);
+      securityLogger.error('MFA verification error:', { error });
       return false;
     }
   }
@@ -734,7 +712,7 @@ export class AuthService {
 
   private async buildUserProfile(user: any): Promise<UserProfile> {
     const permissions = await this.getUserPermissions(user.role);
-    
+
     return {
       id: user.id,
       organizationId: user.organization_id,
@@ -750,13 +728,13 @@ export class AuthService {
     };
   }
 
-  private async getUserPermissions(role: UserRole): Promise<string[]> {
+  private async getUserPermissions(role: UserRole): Promise<Permission[]> {
     // This would map to the ROLE_PERMISSIONS from access-control.ts
     // For now, return based on role
-    const rolePermissions: Record<string, string[]> = {
-      'founder': ['*'], // All permissions
-      'caregiver': ['schedule:read', 'evv:create', 'evv:read', 'ai:interact'],
-      'scheduler': ['user:read', 'client:read', 'schedule:*', 'evv:read', 'ai:interact'],
+    const rolePermissions: Record<string, Permission[]> = {
+      'founder': Object.values(Permission), // All permissions
+      'caregiver': [Permission.SCHEDULE_READ, Permission.EVV_CREATE, Permission.EVV_READ, Permission.AI_INTERACT],
+      'scheduler': [Permission.USER_READ, Permission.CLIENT_READ, Permission.SCHEDULE_READ, Permission.EVV_READ, Permission.AI_INTERACT],
       // Add more role mappings as needed
     };
 

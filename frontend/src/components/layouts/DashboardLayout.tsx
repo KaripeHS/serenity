@@ -22,7 +22,8 @@ import {
   BellIcon,
   CogIcon,
   QuestionMarkCircleIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  UserGroupIcon
 } from '@heroicons/react/24/outline';
 import { Badge } from '../ui/Badge';
 
@@ -78,6 +79,12 @@ const navigation: NavigationItem[] = [
     description: 'Patient care and clinical oversight'
   },
   {
+    name: 'Patients',
+    href: '/patients',
+    icon: UserGroupIcon,
+    description: 'Patient directory and management'
+  },
+  {
     name: 'Billing',
     href: '/dashboard/billing',
     icon: CurrencyDollarIcon,
@@ -101,6 +108,12 @@ const navigation: NavigationItem[] = [
     href: '/family-portal',
     icon: BuildingOffice2Icon,
     description: 'Family engagement portal'
+  },
+  {
+    name: 'Communications',
+    href: '/admin/settings/communications',
+    icon: CogIcon,
+    description: 'Configure email & alerts'
   }
 ];
 
@@ -114,7 +127,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -123,9 +136,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:flex-shrink-0`}>
         <div className="flex items-center justify-between h-16 px-6 border-b">
           <div className="flex items-center">
             <HeartIcon className="h-8 w-8 text-blue-600" />
@@ -151,15 +163,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                  active
-                    ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+                className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${active
+                  ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
               >
-                <Icon className={`mr-3 h-5 w-5 ${
-                  active ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
-                }`} />
+                <Icon className={`mr-3 h-5 w-5 ${active ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                  }`} />
                 <span className="flex-1">{item.name}</span>
                 {item.badge && (
                   <Badge variant="secondary" className="ml-2 text-xs">
@@ -214,9 +224,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
 
       {/* Main content area */}
-      <div className="lg:ml-64">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Top navigation */}
-        <header className="bg-white shadow-sm border-b">
+        <header className="bg-white shadow-sm border-b flex-shrink-0">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center">
               <button
@@ -265,7 +275,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1">
+        <main className="flex-1 overflow-auto">
           {children}
         </main>
       </div>

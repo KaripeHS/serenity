@@ -6,7 +6,7 @@
 import { DatabaseClient } from '../../database/client';
 import { AuditLogger } from '../../audit/logger';
 import { UserContext } from '../../auth/access-control';
-import { AIAgentService } from '../ai/agent.service';
+import { AIAgentService } from '../../ai/agent.service';
 
 export interface Applicant {
   id: string;
@@ -228,7 +228,7 @@ export class RecruitingService {
     private db: DatabaseClient,
     private auditLogger: AuditLogger,
     private aiAgent: AIAgentService
-  ) {}
+  ) { }
 
   /**
    * Create new applicant and trigger AI screening
@@ -257,12 +257,12 @@ export class RecruitingService {
       await this.performAIScreening(applicant.id, userContext);
     }
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       action: 'create_applicant',
-      resourceType: 'applicant',
-      resourceId: applicant.id,
-      metadata: {
+      resource: 'applicant',
+      details: {
+        resourceId: applicant.id,
         position: applicant.positionAppliedFor,
         source: applicant.source
       }
@@ -332,7 +332,7 @@ export class RecruitingService {
     );
 
     // Update applicant with screening results
-    await this.db.update('applicants', applicantId, {
+    await this.db.update('applicants', {
       aiScreeningScore: screeningResult.score,
       aiScreeningNotes: screeningResult.notes,
       status: screeningResult.recommendation === 'proceed' ?
@@ -340,19 +340,19 @@ export class RecruitingService {
       currentStage: screeningResult.recommendation === 'proceed' ?
         RecruitingStage.PHONE_SCREEN : RecruitingStage.AI_SCREENING,
       updatedAt: new Date()
-    });
+    }, 'id = $1', [applicantId]);
 
     // Generate interview questions if proceeding
     if (screeningResult.recommendation === 'proceed') {
       await this.generateInterviewQuestions(applicantId, applicant.positionAppliedFor);
     }
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: 'ai_agent',
       action: 'ai_screening',
-      resourceType: 'applicant',
-      resourceId: applicantId,
-      metadata: {
+      resource: 'applicant',
+      details: {
+        resourceId: applicantId,
         score: screeningResult.score,
         recommendation: screeningResult.recommendation
       }
@@ -428,18 +428,21 @@ export class RecruitingService {
     await this.db.insert('interviews', interview);
 
     // Update applicant status
-    await this.db.update('applicants', applicantId, {
+    await this.db.update('applicants', {
       status: ApplicantStatus.INTERVIEWING,
       currentStage: RecruitingStage.INTERVIEWS,
       updatedAt: new Date()
-    });
+    }, 'id = $1', [applicantId]);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       action: 'schedule_interview',
-      resourceType: 'interview',
-      resourceId: interview.id,
-      metadata: { applicantId, interviewDate: interview.scheduledDate }
+      resource: 'interview',
+      details: {
+        resourceId: interview.id,
+        applicantId,
+        interviewDate: interview.scheduledDate
+      }
     });
 
     return interview;
@@ -464,12 +467,15 @@ export class RecruitingService {
 
     await this.db.insert('performance_reviews', review);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       action: 'create_performance_review',
-      resourceType: 'performance_review',
-      resourceId: review.id,
-      metadata: { employeeId, reviewPeriod: review.reviewPeriod }
+      resource: 'performance_review',
+      details: {
+        resourceId: review.id,
+        employeeId,
+        reviewPeriod: review.reviewPeriod
+      }
     });
 
     return review;
@@ -532,12 +538,15 @@ export class RecruitingService {
 
     await this.db.insert('retention_risks', retentionRisk);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       action: 'analyze_retention_risk',
-      resourceType: 'retention_risk',
-      resourceId: retentionRisk.id,
-      metadata: { employeeId, riskLevel: retentionRisk.riskLevel }
+      resource: 'retention_risk',
+      details: {
+        resourceId: retentionRisk.id,
+        employeeId,
+        riskLevel: retentionRisk.riskLevel
+      }
     });
 
     return retentionRisk;

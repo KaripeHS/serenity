@@ -21,10 +21,14 @@ import { consoleRouter } from './routes/console';
 import { adminRouter } from './routes/admin';
 import { mobileRouter } from './routes/mobile';
 import partnersRouter from './partners/partners.routes';
+import caregiverPortalRouter from './routes/caregiver/portal.routes';
 import webhooksRouter from './routes/webhooks';
+import aiRouter from './routes/console/ai.routes';
 import { errorHandler } from './middleware/error-handler';
 import { requestLogger } from './middleware/request-logger';
 import { rateLimiter } from './middleware/rate-limiter';
+import operationsRouter from './routes/operations.routes';
+import complianceRouter from './routes/compliance.routes';
 
 const logger = createLogger('api');
 
@@ -76,6 +80,11 @@ export function createApp(config: ApiConfig): Application {
   app.use('/api/admin', adminRouter);
   app.use('/api/mobile', mobileRouter);
   app.use('/api/partners', partnersRouter);
+  app.use('/api/partners', partnersRouter);
+  app.use('/api/caregiver', caregiverPortalRouter);
+  app.use('/api/console/ai', aiRouter);
+  app.use('/api/operations', operationsRouter);
+  app.use('/api/compliance', complianceRouter);
 
   // 404 handler
   app.use((_req: Request, res: Response) => {

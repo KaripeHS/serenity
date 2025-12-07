@@ -1257,7 +1257,7 @@ export class FilingOrchestrator extends EventEmitter {
       generatedBy: 'system',
       content: {
         format: 'pdf',
-        data: await this.generateDocumentContent(documentId),
+        data: await this.generateDocumentContent(documentId, 'Sample Document'),
         size: 1024,
         checksum: 'abc123'
       },
@@ -1384,9 +1384,9 @@ export class FilingOrchestrator extends EventEmitter {
     // Implementation would start the job scheduler
   }
 
-  private async generateDocumentContent(document: GeneratedDocument): Promise<string> {
+  private async generateDocumentContent(documentId: string, title: string): Promise<string> {
     // Generate actual document content for filing
-    return `Filing content for document ${document.id}: ${document.metadata.title}`;
+    return `Filing content for document ${documentId}: ${title}`;
   }
 
   private generateDestinationId(): string {

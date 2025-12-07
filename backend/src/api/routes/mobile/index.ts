@@ -155,7 +155,7 @@ router.post('/auth/login', async (req: Request, res: Response, next: NextFunctio
  */
 router.get('/shifts/today', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const caregiverId = req.user?.id;
+    const caregiverId = req.user?.userId;
 
     if (!caregiverId) {
       throw ApiErrors.unauthorized('User not authenticated');
@@ -249,7 +249,7 @@ router.get('/shifts/today', requireAuth, async (req: AuthenticatedRequest, res: 
 router.get('/shifts/:shiftId', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { shiftId } = req.params;
-    const caregiverId = req.user?.id;
+    const caregiverId = req.user?.userId;
 
     const shift = await getRepository().getShift(shiftId);
 
@@ -318,7 +318,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
  */
 router.post('/evv/clock-in', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const caregiverId = req.user?.id;
+    const caregiverId = req.user?.userId;
     const organizationId = req.user?.organizationId;
     const { shiftId, timestamp, gps, deviceInfo } = req.body;
 
@@ -420,7 +420,7 @@ router.post('/evv/clock-in', requireAuth, async (req: AuthenticatedRequest, res:
  */
 router.post('/evv/clock-out', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const caregiverId = req.user?.id;
+    const caregiverId = req.user?.userId;
     const { shiftId, timestamp, gps, deviceInfo, tasksCompleted, notes } = req.body;
 
     if (!shiftId || !timestamp || !gps) {
@@ -533,7 +533,7 @@ router.post('/evv/clock-out', requireAuth, async (req: AuthenticatedRequest, res
  */
 router.post('/evv/sync', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const caregiverId = req.user?.id;
+    const caregiverId = req.user?.userId;
     const { records } = req.body;
 
     if (!Array.isArray(records) || records.length === 0) {
@@ -604,7 +604,7 @@ router.post('/evv/sync', requireAuth, async (req: AuthenticatedRequest, res: Res
 router.get('/evv/status/:shiftId', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { shiftId } = req.params;
-    const caregiverId = req.user?.id;
+    const caregiverId = req.user?.userId;
 
     const shift = await getRepository().getShift(shiftId);
     if (!shift) {

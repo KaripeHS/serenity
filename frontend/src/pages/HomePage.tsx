@@ -32,6 +32,15 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Alert, AlertDescription } from '../components/ui/Alert';
 import { useAuth } from '../contexts/AuthContext';
+import { getPortalType, PortalType } from '../App';
+
+// Portal configuration for different subdomains
+const portalConfig: Record<PortalType, { label: string; color: string; description: string }> = {
+  public: { label: '', color: '', description: 'Home Health Management System' },
+  console: { label: 'Admin Console', color: 'text-purple-600', description: 'Administrative Dashboard' },
+  staff: { label: 'Staff Portal', color: 'text-blue-600', description: 'Employee Access' },
+  caregiver: { label: 'Caregiver Portal', color: 'text-green-600', description: 'Caregiver Access' },
+};
 
 interface SystemMetrics {
   activePatients: number;
@@ -63,7 +72,45 @@ interface DashboardLink {
   features: string[];
   color: string;
   priority: 'high' | 'medium' | 'low';
+  // Roles that can see this dashboard (empty = all authenticated users)
+  allowedRoles?: string[];
 }
+
+// Role-based access configuration
+const ROLE_DASHBOARD_ACCESS: Record<string, string[]> = {
+  founder: ['all'], // Founders see everything
+  admin: ['all'], // Admins see everything
+  pod_lead: [
+    '/dashboard/operations',
+    '/dashboard/clinical',
+    '/dashboard/hr',
+    '/dashboard/scheduling',
+    '/dashboard/compliance',
+    '/family-portal',
+    '/dashboard/training',
+    '/patients'
+  ],
+  scheduler: [
+    '/dashboard/operations',
+    '/dashboard/scheduling',
+    '/evv/clock',
+    '/patients'
+  ],
+  caregiver: [
+    '/evv/clock',
+    '/dashboard/scheduling',
+    '/patients'
+  ]
+};
+
+// Quick actions by role
+const ROLE_QUICK_ACTIONS: Record<string, string[]> = {
+  founder: ['all'],
+  admin: ['all'],
+  pod_lead: ['/scheduling/new', '/evv/clock', '/patients', '/hr/applications', '/ai-assistant'],
+  scheduler: ['/scheduling/new', '/evv/clock', '/patients'],
+  caregiver: ['/evv/clock', '/patients']
+};
 
 // Login Form Component
 function LoginForm() {
@@ -72,6 +119,10 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+
+  // Get portal type for styling
+  const portalType = getPortalType();
+  const portal = portalConfig[portalType];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,7 +149,10 @@ function LoginForm() {
         <div className="text-center mb-8">
           <HeartIcon className="h-16 w-16 text-blue-600 mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-gray-900">Serenity ERP</h1>
-          <p className="text-gray-600 mt-2">Home Health Management System</p>
+          {portal.label && (
+            <p className={`text-lg font-semibold mt-1 ${portal.color}`}>{portal.label}</p>
+          )}
+          <p className="text-gray-600 mt-2">{portal.description}</p>
         </div>
 
         {/* Login Card */}
@@ -267,6 +321,22 @@ export default function HomePage() {
     return <LoginForm />;
   }
 
+  // Helper function to check if user can access a specific route
+  const canAccessRoute = (href: string): boolean => {
+    if (!user) return false;
+    const allowedRoutes = ROLE_DASHBOARD_ACCESS[user.role] || [];
+    if (allowedRoutes.includes('all')) return true;
+    return allowedRoutes.some(route => href.startsWith(route));
+  };
+
+  // Helper function to check if user can see a quick action
+  const canAccessQuickAction = (href: string): boolean => {
+    if (!user) return false;
+    const allowedActions = ROLE_QUICK_ACTIONS[user.role] || [];
+    if (allowedActions.includes('all')) return true;
+    return allowedActions.some(action => href.startsWith(action));
+  };
+
   const quickActions: QuickAction[] = [
     {
       title: 'Schedule Visit',
@@ -283,10 +353,10 @@ export default function HomePage() {
       color: 'bg-green-500 hover:bg-green-600'
     },
     {
-      title: 'Add Patient',
-      description: 'New patient intake',
+      title: 'View Patients',
+      description: 'Patient list & details',
       icon: UserGroupIcon,
-      href: '/patients/new',
+      href: '/patients',
       color: 'bg-purple-500 hover:bg-purple-600'
     },
     {
@@ -563,11 +633,11 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Quick Actions */}
+        {/* Quick Actions - filtered by role */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {quickActions.map((action, index) => {
+            {quickActions.filter(action => canAccessQuickAction(action.href)).map((action, index) => {
               const Icon = action.icon;
               return (
                 <Link
@@ -593,15 +663,18 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Main Dashboards */}
+        {/* Main Dashboards - filtered by role */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">System Dashboards</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            {user.role === 'founder' || user.role === 'admin' ? 'System Dashboards' : 'Your Dashboards'}
+          </h2>
 
           {/* High Priority Dashboards */}
+          {dashboardLinks.filter(d => d.priority === 'high' && canAccessRoute(d.href)).length > 0 && (
           <div className="mb-6">
             <h3 className="text-md font-medium text-gray-700 mb-3">Core Operations</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {dashboardLinks.filter(d => d.priority === 'high').map((dashboard, index) => {
+              {dashboardLinks.filter(d => d.priority === 'high' && canAccessRoute(d.href)).map((dashboard, index) => {
                 const Icon = dashboard.icon;
                 return (
                   <Card key={index} className={`border-2 ${dashboard.color} transition-all duration-200 hover:shadow-lg`}>
@@ -656,12 +729,14 @@ export default function HomePage() {
               })}
             </div>
           </div>
+          )}
 
-          {/* Secondary Dashboards */}
+          {/* Secondary Dashboards - filtered by role */}
+          {dashboardLinks.filter(d => (d.priority === 'medium' || d.priority === 'low') && canAccessRoute(d.href)).length > 0 && (
           <div>
             <h3 className="text-md font-medium text-gray-700 mb-3">Specialized Functions</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {dashboardLinks.filter(d => d.priority === 'medium' || d.priority === 'low').map((dashboard, index) => {
+              {dashboardLinks.filter(d => (d.priority === 'medium' || d.priority === 'low') && canAccessRoute(d.href)).map((dashboard, index) => {
                 const Icon = dashboard.icon;
                 return (
                   <Card key={index} className={`${dashboard.color} transition-all duration-200 hover:shadow-md`}>
@@ -688,6 +763,63 @@ export default function HomePage() {
               })}
             </div>
           </div>
+          )}
+
+          {/* Admin & Access Control - Founders Only */}
+          {(user.role === 'founder' || user.role === 'admin') && (
+          <div className="mt-6">
+            <h3 className="text-md font-medium text-gray-700 mb-3">Administration & Access Control</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Link to="/admin/users">
+                <Card hoverable className="border-2 border-gray-300 hover:border-purple-500 transition-all">
+                  <div className="flex items-center space-x-3">
+                    <UsersIcon className="h-6 w-6 text-purple-600" />
+                    <div>
+                      <h4 className="font-medium text-gray-900">User Management</h4>
+                      <p className="text-sm text-gray-500">Manage staff accounts</p>
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+
+              <Link to="/admin/roles">
+                <Card hoverable className="border-2 border-gray-300 hover:border-purple-500 transition-all">
+                  <div className="flex items-center space-x-3">
+                    <ShieldCheckIcon className="h-6 w-6 text-purple-600" />
+                    <div>
+                      <h4 className="font-medium text-gray-900">Roles & Permissions</h4>
+                      <p className="text-sm text-gray-500">Control access levels</p>
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+
+              <Link to="/admin/pods">
+                <Card hoverable className="border-2 border-gray-300 hover:border-purple-500 transition-all">
+                  <div className="flex items-center space-x-3">
+                    <BuildingOffice2Icon className="h-6 w-6 text-purple-600" />
+                    <div>
+                      <h4 className="font-medium text-gray-900">Pod Management</h4>
+                      <p className="text-sm text-gray-500">Organize teams</p>
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+
+              <Link to="/admin/audit">
+                <Card hoverable className="border-2 border-gray-300 hover:border-purple-500 transition-all">
+                  <div className="flex items-center space-x-3">
+                    <DocumentTextIcon className="h-6 w-6 text-purple-600" />
+                    <div>
+                      <h4 className="font-medium text-gray-900">Audit Logs</h4>
+                      <p className="text-sm text-gray-500">View activity history</p>
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            </div>
+          </div>
+          )}
         </div>
 
         {/* System Status Footer */}

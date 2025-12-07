@@ -170,14 +170,18 @@ async function autoSubmitPendingVisits(): Promise<void> {
           updatedAt: new Date()
         };
 
-        const client = {
+        const client: any = {
           id: visit.clientId,
-          sandataClientId: 'SND-CLIENT-001',
-          addressLine1: '123 Main St',
+          sandata_client_id: 'SND-CLIENT-001',
+          address_line_1: '123 Main St',
           city: 'Dayton',
           state: 'OH',
-          zipCode: '45402',
-          evvConsentStatus: 'active'
+          zip_code: '45402',
+          evv_consent_status: 'active',
+          first_name: 'Margaret',
+          last_name: 'Johnson',
+          status: 'active',
+          date_of_birth: '1950-01-01'
         };
 
         const caregiver = {

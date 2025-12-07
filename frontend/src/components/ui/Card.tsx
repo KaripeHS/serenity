@@ -55,6 +55,11 @@ export interface CardProps {
    * Tab index for keyboard navigation
    */
   tabIndex?: number;
+
+  /**
+   * Add default padding to card content (default: true)
+   */
+  padding?: boolean;
 }
 
 interface CardHeaderProps {
@@ -98,15 +103,17 @@ export function Card({
   className = '',
   role,
   tabIndex,
+  padding = true,
 }: CardProps) {
   const isClickable = !!onClick || clickable;
 
-  // Base classes
+  // Base classes - add padding by default
   const baseClasses = [
     'bg-white',
     'rounded-lg',
     'transition-all',
     'duration-150',
+    padding ? 'p-5' : '',
   ];
 
   // Variant classes

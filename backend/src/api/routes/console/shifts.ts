@@ -15,11 +15,12 @@ import { DatabaseClient } from '../../../database/client';
 import { AuditLogger } from '../../../audit/logger';
 
 const router = Router();
-const repository = getSandataRepository(getDbClient());
+import { schedulingService as staffingRecoveryService } from '../../../services/clinical/scheduling.service';
+const repository = getSandataRepository(getDbClient() as any);
 
 // Initialize scheduling service
 const db = getDbClient();
-const auditLogger = new AuditLogger(db);
+const auditLogger = new AuditLogger('scheduling-service');
 const schedulingService = new SchedulingService(db as DatabaseClient, auditLogger);
 
 /**
@@ -122,17 +123,47 @@ router.get('/:organizationId/:shiftId', async (req: AuthenticatedRequest, res: R
       podName: shift.pod_name,
       evvRecord: evvRecord
         ? {
-            id: evvRecord.id,
-            visitKey: evvRecord.visit_key,
-            sandataStatus: evvRecord.sandata_status,
-            sandataVisitId: evvRecord.sandata_visit_id,
-            billableUnits: evvRecord.billable_units,
-          }
+          id: evvRecord.id,
+          visitKey: evvRecord.visit_key,
+          sandataStatus: evvRecord.sandata_status,
+          sandataVisitId: evvRecord.sandata_visit_id,
+          billableUnits: evvRecord.billable_units,
+        }
         : null,
       notes: shift.notes,
       createdAt: shift.created_at,
       updatedAt: shift.updated_at,
       timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/console/shifts/:organizationId/:shiftId/replacements
+ * Find replacement caregivers for a shift
+ */
+router.get('/:organizationId/:shiftId/replacements', async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const { organizationId, shiftId } = req.params;
+    const { limit = '5' } = req.query;
+
+    const shift = await repository.getShift(shiftId);
+    if (!shift) {
+      throw ApiErrors.notFound('Shift');
+    }
+
+    if (shift.organization_id !== organizationId) {
+      throw ApiErrors.forbidden('Shift does not belong to this organization');
+    }
+
+    const replacements = await staffingRecoveryService.findReplacements(shiftId, parseInt(limit as string));
+
+    res.json({
+      shiftId,
+      replacements,
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     next(error);
@@ -192,7 +223,7 @@ router.post('/:organizationId', async (req: AuthenticatedRequest, res: Response,
       authorizationNumber: authorizationNumber || null,
       status: 'scheduled',
       notes: notes || null,
-      createdBy: req.user?.id,
+      createdBy: req.user?.userId,
     });
 
     res.status(201).json({
@@ -264,7 +295,7 @@ router.put('/:organizationId/:shiftId', async (req: AuthenticatedRequest, res: R
       serviceCode,
       authorizationNumber,
       notes,
-      updatedBy: req.user?.id,
+      updatedBy: req.user?.userId,
     });
 
     res.json({
@@ -300,7 +331,7 @@ router.delete(
       if (shift.evv_record_id) {
         await repository.updateShift(shiftId, {
           status: 'cancelled',
-          updatedBy: req.user?.id,
+          updatedBy: req.user?.userId,
         });
 
         res.json({
@@ -415,7 +446,7 @@ router.post(
       await repository.updateShift(shiftId, {
         actualStartTime: startTime.toISOString(),
         status: 'in_progress',
-        updatedBy: req.user?.id,
+        updatedBy: req.user?.userId,
       });
 
       res.json({
@@ -460,7 +491,7 @@ router.post(
       await repository.updateShift(shiftId, {
         actualEndTime: endTime.toISOString(),
         status: 'completed',
-        updatedBy: req.user?.id,
+        updatedBy: req.user?.userId,
       });
 
       res.json({
@@ -500,9 +531,14 @@ router.post(
 
       // Use scheduling service to find caregiver matches
       const userContext = {
-        userId: req.user?.id || '',
+        userId: req.user?.userId || '',
         organizationId,
-        role: req.user?.role || 'admin'
+        role: (req.user?.role || 'admin') as any,
+        permissions: [],
+        attributes: [],
+        sessionId: 'system',
+        ipAddress: '127.0.0.1',
+        userAgent: 'system'
       };
 
       const matches = await schedulingService.findCaregiverMatches(
@@ -513,7 +549,7 @@ router.post(
 
       // Return top N matches
       const topMatches = matches.slice(0, limit).map(match => ({
-        caregiverId: match.caregiverId,
+        caregiverId: match.caregiver.id,
         score: Math.round(match.score * 100), // Convert to percentage
         reasons: match.reasons,
         warnings: match.warnings,
@@ -558,9 +594,14 @@ router.get(
       const end = new Date(endDate as string);
 
       const userContext = {
-        userId: req.user?.id || '',
+        userId: req.user?.userId || '',
         organizationId: organizationId as string,
-        role: req.user?.role || 'admin'
+        role: (req.user?.role || 'admin') as any,
+        permissions: [],
+        attributes: [],
+        sessionId: 'system',
+        ipAddress: '127.0.0.1',
+        userAgent: 'system'
       };
 
       // Use scheduling service to get caregiver schedule
@@ -726,9 +767,14 @@ router.get(
       const end = new Date(endDate as string);
 
       const userContext = {
-        userId: req.user?.id || '',
+        userId: req.user?.userId || '',
         organizationId: organizationId as string,
-        role: req.user?.role || 'admin'
+        role: (req.user?.role || 'admin') as any,
+        permissions: [],
+        attributes: [],
+        sessionId: 'system',
+        ipAddress: '127.0.0.1',
+        userAgent: 'system'
       };
 
       // Use scheduling service to get client schedule

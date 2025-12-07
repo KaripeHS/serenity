@@ -71,7 +71,15 @@ export interface CaregiverMatchCriteria {
 }
 
 export interface CaregiverMatch {
-  caregiverId: string;
+  caregiver: {
+    id: string;
+    name: string;
+    role: string;
+    email: string;
+    phone?: string;
+    skills: string[];
+    location: { lat: number; lng: number };
+  };
   score: number;
   reasons: string[];
   warnings: string[];
@@ -130,9 +138,9 @@ export class SchedulingService {
           start: request.scheduledStart,
           end: request.scheduledEnd
         });
-        
+
         if (matches.length > 0) {
-          caregiverId = matches[0].caregiverId;
+          caregiverId = matches[0].caregiver.id;
         }
       }
 
@@ -213,7 +221,7 @@ export class SchedulingService {
     try {
       // Get current shift
       const currentShift = await this.getShiftById(shiftId, userContext);
-      
+
       // Validate updates
       if (updates.caregiverId && updates.caregiverId !== currentShift.caregiverId) {
         await this.validateCaregiverReassignment(shiftId, updates.caregiverId, userContext);
@@ -302,8 +310,8 @@ export class SchedulingService {
    * Find caregiver matches for a shift
    */
   async findCaregiverMatches(
-    clientId: string, 
-    serviceId: string, 
+    clientId: string,
+    serviceId: string,
     timeWindow: { start: Date; end: Date },
     criteria?: Partial<CaregiverMatchCriteria>
   ): Promise<CaregiverMatch[]> {
@@ -347,8 +355,8 @@ export class SchedulingService {
    * Optimize schedule for a date range
    */
   async optimizeSchedule(
-    startDate: Date, 
-    endDate: Date, 
+    startDate: Date,
+    endDate: Date,
     userContext: UserContext
   ): Promise<ScheduleOptimization> {
     try {
@@ -372,7 +380,7 @@ export class SchedulingService {
       ]);
 
       const shifts = shiftsResult.rows;
-      
+
       // Calculate current metrics
       const totalShifts = shifts.length;
       const assignedShifts = shifts.filter(s => s.caregiver_id).length;
@@ -380,7 +388,7 @@ export class SchedulingService {
 
       // Calculate overtime and travel metrics
       const { overtimeHours, totalTravelTime } = await this.calculateEfficiencyMetrics(shifts, startDate, endDate);
-      
+
       // Calculate continuity score
       const continuityScore = await this.calculateContinuityScore(shifts);
 
@@ -407,9 +415,9 @@ export class SchedulingService {
    * Get caregiver schedule
    */
   async getCaregiverSchedule(
-    caregiverId: string, 
-    startDate: Date, 
-    endDate: Date, 
+    caregiverId: string,
+    startDate: Date,
+    endDate: Date,
     userContext: UserContext
   ): Promise<Shift[]> {
     try {
@@ -445,9 +453,9 @@ export class SchedulingService {
    * Get client schedule
    */
   async getClientSchedule(
-    clientId: string, 
-    startDate: Date, 
-    endDate: Date, 
+    clientId: string,
+    startDate: Date,
+    endDate: Date,
     userContext: UserContext
   ): Promise<Shift[]> {
     try {
@@ -549,7 +557,7 @@ export class SchedulingService {
     `;
 
     const result = await this.db.query(query, [shiftId, userContext.organizationId]);
-    
+
     if (result.rows.length === 0) {
       throw new Error('Shift not found');
     }
@@ -590,7 +598,7 @@ export class SchedulingService {
     `;
 
     const result = await this.db.query(query, [clientId, serviceId, userContext.organizationId]);
-    
+
     if (result.rows.length === 0) {
       throw new Error('Invalid client or service');
     }
@@ -636,7 +644,7 @@ export class SchedulingService {
 
   private async validateCaregiverReassignment(shiftId: string, newCaregiverId: string, userContext: UserContext): Promise<void> {
     const shift = await this.getShiftById(shiftId, userContext);
-    
+
     if (shift.status === ShiftStatus.IN_PROGRESS) {
       throw new Error('Cannot reassign shift that is in progress');
     }
@@ -699,7 +707,7 @@ export class SchedulingService {
 
   private async findAvailableCaregivers(timeWindow: { start: Date; end: Date }, criteria: CaregiverMatchCriteria): Promise<any[]> {
     const query = `
-      SELECT u.id, u.first_name, u.last_name, u.phone, u.preferences
+      SELECT u.id, u.first_name, u.last_name, u.phone, u.preferences, u.specializations, u.latitude, u.longitude
       FROM users u
       WHERE u.role = 'caregiver'
       AND u.is_active = true
@@ -721,9 +729,9 @@ export class SchedulingService {
   }
 
   private async scoreCaregiverMatch(
-    caregiver: any, 
-    clientInfo: any, 
-    criteria: CaregiverMatchCriteria, 
+    caregiver: any,
+    clientInfo: any,
+    criteria: CaregiverMatchCriteria,
     timeWindow: { start: Date; end: Date }
   ): Promise<CaregiverMatch> {
     let score = 0.5; // Base score
@@ -763,7 +771,15 @@ export class SchedulingService {
     if (prefScore > 0.8) reasons.push('Strong preference match');
 
     return {
-      caregiverId: caregiver.id,
+      caregiver: {
+        id: caregiver.id,
+        name: `${caregiver.first_name} ${caregiver.last_name}`,
+        role: caregiver.role,
+        email: caregiver.email || '',
+        phone: caregiver.phone,
+        skills: caregiver.specializations || [],
+        location: { lat: caregiver.latitude, lng: caregiver.longitude }
+      },
       score: Math.min(1, Math.max(0, score)),
       reasons,
       warnings,
@@ -772,12 +788,21 @@ export class SchedulingService {
     };
   }
 
+
   private calculateSkillsMatch(caregiver: any, requiredSkills: string[]): number {
-    // production_value implementation
-    return 0.8;
+    if (!requiredSkills || requiredSkills.length === 0) return 1;
+
+    // Check caregiver specializations/skills
+    // Assuming caregiver.specializations is an array of strings from the join
+    const caregiverSkills = caregiver.specializations || [];
+    const matchCount = requiredSkills.filter(skill => caregiverSkills.includes(skill)).length;
+
+    return matchCount / requiredSkills.length;
   }
 
   private async calculateCertificationMatch(caregiverId: string, requiredCertifications: string[]): Promise<number> {
+    if (!requiredCertifications || requiredCertifications.length === 0) return 1;
+
     const query = `
       SELECT DISTINCT credential_type
       FROM credentials
@@ -786,19 +811,118 @@ export class SchedulingService {
 
     const result = await this.db.query(query, [caregiverId]);
     const activeCerts = result.rows.map(row => row.credential_type);
-    
+
     const matchCount = requiredCertifications.filter(cert => activeCerts.includes(cert)).length;
-    return requiredCertifications.length > 0 ? matchCount / requiredCertifications.length : 1;
+    return matchCount / requiredCertifications.length;
   }
 
   private async calculateTravelDistance(caregiverId: string, clientId: string): Promise<number> {
-    // production_value - would integrate with mapping service
-    return Math.random() * 30; // Random distance between 0-30 miles
+    // Calculate distance using Haversine formula from DB coordinates
+    const query = `
+      WITH locations AS (
+        SELECT 
+          u.latitude as start_lat, u.longitude as start_lng,
+          c.latitude as end_lat, c.longitude as end_lng
+        FROM users u, clients c
+        WHERE u.id = $1 AND c.id = $2
+      )
+      SELECT 
+        start_lat, start_lng, end_lat, end_lng,
+        (
+          3959 * acos(
+            cos(radians(start_lat)) * cos(radians(end_lat)) * 
+            cos(radians(end_lng) - radians(start_lng)) + 
+            sin(radians(start_lat)) * sin(radians(end_lat))
+          )
+        ) AS distance_miles
+      FROM locations
+    `;
+
+    const result = await this.db.query(query, [caregiverId, clientId]);
+
+    if (result.rows.length === 0) return 50; // Default high distance if not found
+
+    const { start_lat, start_lng, end_lat, end_lng, distance_miles } = result.rows[0];
+
+    if (start_lat === null || end_lat === null) return 20; // Default average if coordinates missing
+
+    return parseFloat(distance_miles);
+  }
+
+  /**
+   * Track mileage for a completed shift
+   */
+  async trackMileage(shiftId: string, userContext: UserContext): Promise<void> {
+    try {
+      const shift = await this.getShiftById(shiftId, userContext);
+
+      if (!shift.caregiverId) return;
+
+      const distance = await this.calculateTravelDistance(shift.caregiverId, shift.clientId);
+
+      // Get coordinates for logging
+      const coordsQuery = `
+         SELECT 
+          u.latitude as start_lat, u.longitude as start_lng,
+          c.latitude as end_lat, c.longitude as end_lng
+        FROM users u, clients c
+        WHERE u.id = $1 AND c.id = $2
+      `;
+      const coordsResult = await this.db.query(coordsQuery, [shift.caregiverId, shift.clientId]);
+      const { start_lat, start_lng, end_lat, end_lng } = coordsResult.rows[0];
+
+      await this.db.query(`
+        INSERT INTO mileage_logs (
+          organization_id, shift_id, user_id, date,
+          start_location_lat, start_location_lng,
+          end_location_lat, end_location_lng,
+          distance_miles, status
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `, [
+        userContext.organizationId,
+        shiftId,
+        shift.caregiverId,
+        shift.actualStart || shift.scheduledStart,
+        start_lat, start_lng,
+        end_lat, end_lng,
+        distance,
+        'pending'
+      ]);
+
+      schedulingLogger.info(`Mileage tracked for shift ${shiftId}: ${distance} miles`);
+
+    } catch (error) {
+      schedulingLogger.error('Track mileage error:', error);
+      // Don't modify shift status if mileage tracking fails, just log error
+    }
   }
 
   private async calculateContinuityScore(shifts: any[]): Promise<number> {
-    // production_value implementation for continuity scoring
-    return 0.7;
+    if (shifts.length === 0) return 0;
+
+    // Group by client
+    const clientShifts = shifts.reduce((acc, shift) => {
+      acc[shift.client_id] = acc[shift.client_id] || [];
+      acc[shift.client_id].push(shift);
+      return acc;
+    }, {});
+
+    let totalScore = 0;
+    let clientCount = 0;
+
+    for (const clientId in clientShifts) {
+      const cShifts = clientShifts[clientId];
+      const caregivers = new Set(cShifts.map((s: any) => s.caregiver_id).filter((id: any) => id)).size;
+
+      // Perfect score (1.0) if only 1 caregiver. Score decreases as caregiver count increases relative to shifts.
+      // Formula: 1 / caregivers (Simple continuity metric)
+      if (caregivers > 0) {
+        totalScore += 1 / caregivers;
+        clientCount++;
+      }
+    }
+
+    return clientCount > 0 ? totalScore / clientCount : 0;
   }
 
   private calculatePreferencesMatch(caregiver: any, clientInfo: any): number {
@@ -819,7 +943,7 @@ export class SchedulingService {
 
     // Find unassigned shifts
     const unassigned = shifts.filter(s => !s.caregiver_id);
-    
+
     for (const shift of unassigned) {
       recommendations.push({
         type: 'add_caregiver',

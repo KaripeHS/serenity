@@ -22,7 +22,7 @@
  * @module modules/billing/edi-generator
  */
 
-interface ClaimVisit {
+export interface ClaimVisit {
   id: string;
   visitDate: Date;
   serviceCode: string;
@@ -49,7 +49,7 @@ interface ClaimVisit {
   placeOfService: string; // '12' = home
 }
 
-interface OrganizationInfo {
+export interface OrganizationInfo {
   name: string;
   npi: string;
   taxId: string;
@@ -61,7 +61,7 @@ interface OrganizationInfo {
   contactPhone: string;
 }
 
-interface Clearinghouse {
+export interface Clearinghouse {
   name: string;
   id: string;
   submissionId: string;

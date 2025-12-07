@@ -6,7 +6,9 @@
 import { DatabaseClient } from '../../database/client';
 import { AuditLogger } from '../../audit/logger';
 import { UserContext, UserRole } from '../../auth/access-control';
-import { createLogger } from '../utils/logger';
+import { createLogger } from '../../utils/logger';
+
+const hrLogger = createLogger('HRService');
 
 export interface Employee {
   id: string;
@@ -164,7 +166,7 @@ export class HRService {
     try {
       // Generate employee number
       const employeeNumber = await this.generateEmployeeNumber();
-      
+
       // Check if email already exists
       const existingUser = await this.db.query(
         'SELECT id FROM users WHERE email = $1',
@@ -220,15 +222,13 @@ export class HRService {
       await this.auditLogger.logActivity({
         userId: userContext.userId,
         action: 'employee_created',
-        resourceType: 'user',
-        resourceId: userId,
+        resource: `user:${userId}`,
         details: {
           employeeNumber,
           email: request.email,
           role: request.role,
           hireDate: request.hireDate
-        },
-        dataClassification: 'internal'
+        }
       });
 
       return await this.getEmployeeById(userId, userContext);
@@ -243,8 +243,8 @@ export class HRService {
    * Update employee information
    */
   async updateEmployee(
-    employeeId: string, 
-    updates: Partial<Employee>, 
+    employeeId: string,
+    updates: Partial<Employee>,
     userContext: UserContext
   ): Promise<Employee> {
     try {
@@ -291,7 +291,7 @@ export class HRService {
       if (updates.terminationDate !== undefined) {
         updateFields.push(`termination_date = $${paramIndex++}`);
         updateValues.push(updates.terminationDate);
-        
+
         updateFields.push(`is_active = $${paramIndex++}`);
         updateValues.push(false);
       }
@@ -321,10 +321,8 @@ export class HRService {
       await this.auditLogger.logActivity({
         userId: userContext.userId,
         action: 'employee_updated',
-        resourceType: 'user',
-        resourceId: employeeId,
-        details: { updates },
-        dataClassification: 'internal'
+        resource: `user:${employeeId}`,
+        details: { updates }
       });
 
       return await this.getEmployeeById(employeeId, userContext);
@@ -377,14 +375,12 @@ export class HRService {
       await this.auditLogger.logActivity({
         userId: userContext.userId,
         action: 'credential_added',
-        resourceType: 'credential',
-        resourceId: credentialId,
+        resource: `credential:${credentialId}`,
         details: {
           userId,
           credentialType: credential.credentialType,
           expirationDate: credential.expirationDate
-        },
-        dataClassification: 'internal'
+        }
       });
 
       const result = await this.db.query(
@@ -406,8 +402,8 @@ export class HRService {
   async verifyCredential(
     credentialId: string,
     verificationStatus: 'verified' | 'failed',
-    notes?: string,
-    userContext: UserContext
+    userContext: UserContext,
+    notes?: string
   ): Promise<void> {
     try {
       await this.db.query(`
@@ -429,13 +425,11 @@ export class HRService {
       await this.auditLogger.logActivity({
         userId: userContext.userId,
         action: 'credential_verified',
-        resourceType: 'credential',
-        resourceId: credentialId,
+        resource: `credential:${credentialId}`,
         details: {
           verificationStatus,
           notes
-        },
-        dataClassification: 'internal'
+        }
       });
 
     } catch (error) {
@@ -482,15 +476,13 @@ export class HRService {
       await this.auditLogger.logActivity({
         userId: userContext.userId,
         action: 'training_completed',
-        resourceType: 'training_record',
-        resourceId: trainingId,
+        resource: `training_record:${trainingId}`,
         details: {
           userId,
           trainingName: training.trainingName,
           score: training.score,
           passed: !training.passingScore || (training.score && training.score >= training.passingScore)
-        },
-        dataClassification: 'internal'
+        }
       });
 
       const result = await this.db.query(
@@ -555,7 +547,7 @@ export class HRService {
   async getEmployeeComplianceReport(employeeId: string, userContext: UserContext): Promise<ComplianceReport> {
     try {
       const employee = await this.getEmployeeById(employeeId, userContext);
-      
+
       // Get credential compliance
       const credentialsQuery = `
         SELECT status, expiration_date, credential_type
@@ -563,10 +555,10 @@ export class HRService {
         WHERE user_id = $1 AND organization_id = $2
       `;
       const credentialsResult = await this.db.query(credentialsQuery, [employeeId, userContext.organizationId]);
-      
+
       const now = new Date();
       const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-      
+
       const credentialsStats = {
         total: credentialsResult.rows.length,
         active: 0,
@@ -592,12 +584,12 @@ export class HRService {
         WHERE user_id = $1 AND organization_id = $2
       `;
       const trainingsResult = await this.db.query(trainingsQuery, [employeeId, userContext.organizationId]);
-      
+
       const trainingStats = {
         total: trainingsResult.rows.length,
         current: 0,
         overdue: 0,
-        dueSync: 0
+        dueSoon: 0
       };
 
       for (const training of trainingsResult.rows) {
@@ -605,7 +597,7 @@ export class HRService {
           if (new Date(training.expiration_date) > now) {
             trainingStats.current++;
             if (new Date(training.expiration_date) <= thirtyDaysFromNow) {
-              trainingStats.dueSync++;
+              trainingStats.dueSoon++;
             }
           } else {
             trainingStats.overdue++;
@@ -622,12 +614,12 @@ export class HRService {
       // Check for blocking credentials
       const requiredCredentials = this.getRequiredCredentials(employee.role);
       for (const reqCred of requiredCredentials) {
-        const hasCred = credentialsResult.rows.some(cred => 
-          cred.credential_type === reqCred && 
-          cred.status === 'active' && 
+        const hasCred = credentialsResult.rows.some(cred =>
+          cred.credential_type === reqCred &&
+          cred.status === 'active' &&
           new Date(cred.expiration_date) > now
         );
-        
+
         if (!hasCred) {
           blockingIssues.push(`Missing or expired ${reqCred} certification`);
         }
@@ -636,12 +628,12 @@ export class HRService {
       // Check for mandatory training
       const requiredTrainings = await this.getRequiredTrainings(employee.role);
       for (const reqTraining of requiredTrainings) {
-        const hasTraining = trainingsResult.rows.some(training => 
-          training.training_type === reqTraining.type && 
+        const hasTraining = trainingsResult.rows.some(training =>
+          training.training_type === reqTraining.type &&
           training.is_mandatory &&
           (!training.expiration_date || new Date(training.expiration_date) > now)
         );
-        
+
         if (!hasTraining) {
           if (reqTraining.isMandatory) {
             blockingIssues.push(`Missing mandatory ${reqTraining.name} training`);
@@ -656,8 +648,8 @@ export class HRService {
         warnings.push(`${credentialsStats.expiringSoon} credential(s) expiring within 30 days`);
       }
 
-      if (trainingStats.dueSync > 0) {
-        warnings.push(`${trainingStats.dueSync} training(s) due for renewal within 30 days`);
+      if (trainingStats.dueSoon > 0) {
+        warnings.push(`${trainingStats.dueSoon} training(s) due for renewal within 30 days`);
       }
 
       // Calculate overall compliance score
@@ -703,7 +695,7 @@ export class HRService {
         WHERE u.organization_id = $1
       `;
 
-      const params = [userContext.organizationId];
+      const params: any[] = [userContext.organizationId];
       let paramIndex = 2;
 
       if (filters?.role) {
@@ -726,7 +718,7 @@ export class HRService {
         ${filters?.role ? `AND u.role = '${filters.role}'` : ''}
         ${filters?.isActive !== undefined ? `AND u.is_active = ${filters.isActive}` : ''}
       `;
-      
+
       const countResult = await this.db.query(countQuery, [userContext.organizationId]);
       const total = parseInt(countResult.rows[0].total);
 
@@ -761,7 +753,7 @@ export class HRService {
     `;
 
     const result = await this.db.query(query, [employeeId, userContext.organizationId]);
-    
+
     if (result.rows.length === 0) {
       throw new Error('Employee not found');
     }
@@ -868,7 +860,20 @@ export class HRService {
       [UserRole.CLIENT]: [],
       [UserRole.FAMILY]: [],
       [UserRole.PAYER_AUDITOR]: [],
-      [UserRole.AI_SERVICE]: []
+      [UserRole.AI_SERVICE]: [],
+
+      // Clinical Roles
+      [UserRole.RN_CASE_MANAGER]: ['RN_LICENSE', 'CPR'],
+      [UserRole.LPN_LVN]: ['LPN_LICENSE', 'CPR'],
+      [UserRole.THERAPIST]: ['THERAPY_LICENSE', 'CPR'],
+      [UserRole.CLINICAL_DIRECTOR]: ['RN_LICENSE'],
+      [UserRole.QIDP]: ['QIDP_CERT'],
+      [UserRole.DSP_MED]: ['MED_ADMIN_CERT', 'CPR', 'First_Aid'],
+      [UserRole.DSP_BASIC]: ['CPR', 'First_Aid'],
+
+      // Admin
+      [UserRole.INSURANCE_MANAGER]: [],
+      [UserRole.BILLING_CODER]: []
     };
 
     return blockingCredentials[role]?.includes(credentialType) || false;
@@ -892,7 +897,20 @@ export class HRService {
       [UserRole.CLIENT]: [],
       [UserRole.FAMILY]: [],
       [UserRole.PAYER_AUDITOR]: [],
-      [UserRole.AI_SERVICE]: []
+      [UserRole.AI_SERVICE]: [],
+
+      // Clinical Roles
+      [UserRole.RN_CASE_MANAGER]: ['RN_LICENSE', 'CPR', 'Background_Check'],
+      [UserRole.LPN_LVN]: ['LPN_LICENSE', 'CPR', 'Background_Check'],
+      [UserRole.THERAPIST]: ['THERAPY_LICENSE', 'CPR', 'Background_Check'],
+      [UserRole.CLINICAL_DIRECTOR]: ['RN_LICENSE', 'Background_Check'],
+      [UserRole.QIDP]: ['QIDP_CERT', 'Background_Check'],
+      [UserRole.DSP_MED]: ['MED_ADMIN_CERT', 'CPR', 'First_Aid', 'Background_Check'],
+      [UserRole.DSP_BASIC]: ['CPR', 'First_Aid', 'Background_Check'],
+
+      // Admin
+      [UserRole.INSURANCE_MANAGER]: ['Background_Check'],
+      [UserRole.BILLING_CODER]: ['Background_Check']
     };
 
     return requiredCredentials[role] || [];
@@ -935,7 +953,7 @@ export class HRService {
 
   private async assignMandatoryTrainings(userId: string, role: UserRole): Promise<void> {
     const requiredTrainings = await this.getRequiredTrainings(role);
-    
+
     // Create training assignments (production_value - would integrate with LMS)
     hrLogger.info(`Assigned ${requiredTrainings.length} mandatory trainings to user ${userId}`);
   }

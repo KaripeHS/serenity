@@ -6,7 +6,7 @@
 import { DatabaseClient } from '../../database/client';
 import { AuditLogger } from '../../audit/logger';
 import { UserContext } from '../../auth/access-control';
-import { createLogger } from '../utils/logger';
+import { createLogger } from '../../utils/logger';
 
 // Add missing logger
 const billingLogger = createLogger('billing');
@@ -135,7 +135,7 @@ export class BillingService {
         try {
           // Get EVV record with shift and client data
           const evvResult = await this.db.query(`
-            SELECT er.*, s.service_id, s.scheduled_start, s.scheduled_end,
+            SELECT er.*, s.service_id, s.scheduled_start, s.scheduled_end, s.verification_status,
                    c.medicaid_number, c.first_name, c.last_name,
                    srv.service_code, srv.default_rate, srv.unit_type,
                    u.first_name as caregiver_first_name, u.last_name as caregiver_last_name
@@ -153,6 +153,12 @@ export class BillingService {
           }
 
           const evv = evvResult.rows[0];
+
+          // COMPLIANCE LOCK: Prevent billing if shift is flagged/rejected
+          if (evv.verification_status === 'flagged' || evv.verification_status === 'rejected') {
+            errors.push({ evvRecordId, error: `Compliance Lock: Shift is ${evv.verification_status.toUpperCase()}. Manual review required.` });
+            continue;
+          }
 
           // Check if claim already exists
           const existingClaim = await this.db.query(
@@ -258,14 +264,13 @@ export class BillingService {
         userId: userContext.userId,
         action: 'claim_created',
         resource: 'claim',
-        resourceId: claimId,
         details: {
+          resourceId: claimId,
           claimNumber,
           clientId: claimData.clientId,
           totalAmount: claimData.totalAmount,
           evvCompliant: claimData.evvCompliant
-        },
-        dataClassification: 'phi'
+        }
       });
 
       return await this.getClaimById(claimId, userContext);
@@ -481,14 +486,13 @@ export class BillingService {
         userId: userContext.userId,
         action: 'claims_batch_submitted',
         resource: 'claims_batch',
-        resourceId: batchId,
         details: {
+          resourceId: batchId,
           batchNumber,
           claimCount: claims.length,
           totalAmount,
           payerName
-        },
-        dataClassification: 'phi'
+        }
       });
 
       return {
@@ -542,14 +546,13 @@ export class BillingService {
         userId: userContext.userId,
         action: 'claim_denied',
         resource: 'claim',
-        resourceId: claimId,
         details: {
+          resourceId: claimId,
           denialCode: denialData.denialCode,
           denialReason: denialData.denialReason,
           category: analysis.category,
           isAppealable: analysis.isAppealable
-        },
-        dataClassification: 'phi'
+        }
       });
 
       return analysis;
@@ -594,7 +597,7 @@ export class BillingService {
 
       // Update claim status and payment info
       const newStatus = paymentData.paymentAmount >= claim.totalAmount ? ClaimStatus.PAID : ClaimStatus.SUBMITTED;
-      
+
       await this.db.query(`
         UPDATE claims 
         SET status = $1, paid_amount = $2, payment_date = $3, updated_at = NOW(), updated_by = $4
@@ -612,13 +615,12 @@ export class BillingService {
         userId: userContext.userId,
         action: 'payment_posted',
         resource: 'claim',
-        resourceId: claimId,
         details: {
+          resourceId: claimId,
           paymentAmount: paymentData.paymentAmount,
           claimAmount: claim.totalAmount,
           fullyPaid: newStatus === ClaimStatus.PAID
-        },
-        dataClassification: 'phi'
+        }
       });
 
       return {
@@ -660,7 +662,7 @@ export class BillingService {
         WHERE c.organization_id = $1
       `;
 
-      const params = [userContext.organizationId];
+      const params: any[] = [userContext.organizationId];
       let paramIndex = 2;
 
       if (filters?.status) {
@@ -725,7 +727,7 @@ export class BillingService {
     `;
 
     const result = await this.db.query(query, [claimId, userContext.organizationId]);
-    
+
     if (result.rows.length === 0) {
       throw new Error('Claim not found');
     }
@@ -797,9 +799,9 @@ export class BillingService {
   }
 
   private async checkServiceAuthorization(
-    clientId: string, 
-    serviceCode: string, 
-    serviceDate: Date, 
+    clientId: string,
+    serviceCode: string,
+    serviceDate: Date,
     unitsRequested: number
   ): Promise<{ isAuthorized: boolean; reason?: string; severity?: 'error' | 'warning' }> {
     // production_value - would check service authorizations
@@ -807,8 +809,8 @@ export class BillingService {
   }
 
   private async checkCaregiverCredentials(
-    caregiverId: string, 
-    serviceCode: string, 
+    caregiverId: string,
+    serviceCode: string,
     serviceDate: Date
   ): Promise<{ isValid: boolean; reason?: string }> {
     const query = `
@@ -863,11 +865,11 @@ export class BillingService {
   private validateServiceDate(serviceDate: Date): { isValid: boolean; isTimely: boolean } {
     const now = new Date();
     const daysSinceService = (now.getTime() - serviceDate.getTime()) / (1000 * 60 * 60 * 24);
-    
+
     // Ohio Medicaid typically requires submission within 365 days
     const isTimely = daysSinceService <= 365;
     const isValid = daysSinceService <= 400; // Grace period
-    
+
     return { isValid, isTimely };
   }
 
@@ -875,7 +877,7 @@ export class BillingService {
     // Analyze denial code and generate recommendations
     const category = this.categorizeDenial(denialData.denialCode);
     const isAppealable = this.isDenialAppealable(denialData.denialCode);
-    
+
     const recommendedActions = this.getRecommendedActions(category, denialData.denialCode);
     const requiredDocuments = this.getRequiredDocuments(category, denialData.denialCode);
 

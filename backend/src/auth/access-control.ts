@@ -28,7 +28,24 @@ export enum UserRole {
   CREDENTIALING_SPECIALIST = 'credentialing_specialist',
   IT_ADMIN = 'it_admin',
   SUPPORT_AGENT = 'support_agent',
+  // Clinical Roles
+  RN_CASE_MANAGER = 'rn_case_manager',
+  LPN_LVN = 'lpn_lvn',
+  THERAPIST = 'therapist', // PT, OT, SLP
+  CLINICAL_DIRECTOR = 'clinical_director',
+
+  // ODD/Support Roles
+  QIDP = 'qidp',
+  DSP_MED = 'dsp_med',
+  DSP_BASIC = 'dsp_basic',
+
+  // Administrative
+  INSURANCE_MANAGER = 'insurance_manager',
+  BILLING_CODER = 'billing_coder',
+
+  // Legacy (Deprecated)
   CAREGIVER = 'caregiver',
+
   CLIENT = 'client',
   FAMILY = 'family',
   PAYER_AUDITOR = 'payer_auditor',
@@ -42,51 +59,60 @@ export enum Permission {
   USER_UPDATE = 'user:update',
   USER_DELETE = 'user:delete',
   USER_MANAGE_ROLES = 'user:manage_roles',
-  
+
   // Client management (PHI)
   CLIENT_CREATE = 'client:create',
   CLIENT_READ = 'client:read',
   CLIENT_UPDATE = 'client:update',
   CLIENT_DELETE = 'client:delete',
   CLIENT_PHI_ACCESS = 'client:phi_access',
-  
+  CLIENT_ASSESS = 'client:assess', // OASIS, Evaluation
+
+  // Clinical
+  MED_ADMINISTER = 'med:administer',
+  MED_ORDER = 'med:order',
+  CARE_PLAN_WRITE = 'care_plan:write',
+  CARE_PLAN_READ = 'care_plan:read',
+  BEHAVIOR_PLAN_WRITE = 'behavior_plan:write',
+  BEHAVIOR_LOG_WRITE = 'behavior_log:write',
+
   // Scheduling
   SCHEDULE_CREATE = 'schedule:create',
   SCHEDULE_READ = 'schedule:read',
   SCHEDULE_UPDATE = 'schedule:update',
   SCHEDULE_DELETE = 'schedule:delete',
   SCHEDULE_ASSIGN = 'schedule:assign',
-  
+
   // EVV
   EVV_CREATE = 'evv:create',
   EVV_READ = 'evv:read',
   EVV_UPDATE = 'evv:update',
   EVV_OVERRIDE = 'evv:override',
   EVV_SUBMIT = 'evv:submit',
-  
+
   // Billing
   BILLING_CREATE = 'billing:create',
   BILLING_READ = 'billing:read',
   BILLING_UPDATE = 'billing:update',
   BILLING_SUBMIT = 'billing:submit',
   BILLING_APPROVE = 'billing:approve',
-  
+
   // HR & Credentials
   HR_CREATE = 'hr:create',
   HR_READ = 'hr:read',
   HR_UPDATE = 'hr:update',
   HR_DELETE = 'hr:delete',
   CREDENTIAL_VERIFY = 'credential:verify',
-  
+
   // Security & Audit
   AUDIT_READ = 'audit:read',
   SECURITY_MANAGE = 'security:manage',
   INCIDENT_MANAGE = 'incident:manage',
-  
+
   // AI Agents
   AI_INTERACT = 'ai:interact',
   AI_ADMIN = 'ai:admin',
-  
+
   // System Admin
   SYSTEM_CONFIG = 'system:config',
   SYSTEM_BACKUP = 'system:backup',
@@ -159,7 +185,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     // Full system access
     ...Object.values(Permission)
   ],
-  
+
   [UserRole.SECURITY_OFFICER]: [
     Permission.USER_READ,
     Permission.AUDIT_READ,
@@ -168,7 +194,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.SYSTEM_MONITOR,
     Permission.AI_ADMIN
   ],
-  
+
   [UserRole.COMPLIANCE_OFFICER]: [
     Permission.USER_READ,
     Permission.CLIENT_READ,
@@ -181,7 +207,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.INCIDENT_MANAGE,
     Permission.AI_INTERACT
   ],
-  
+
   [UserRole.FINANCE_DIRECTOR]: [
     Permission.USER_READ,
     Permission.CLIENT_READ,
@@ -194,7 +220,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.HR_READ,
     Permission.AI_INTERACT
   ],
-  
+
   [UserRole.BILLING_MANAGER]: [
     Permission.CLIENT_READ,
     Permission.SCHEDULE_READ,
@@ -205,7 +231,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.BILLING_SUBMIT,
     Permission.AI_INTERACT
   ],
-  
+
   [UserRole.RCM_ANALYST]: [
     Permission.CLIENT_READ,
     Permission.SCHEDULE_READ,
@@ -214,7 +240,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.BILLING_UPDATE,
     Permission.AI_INTERACT
   ],
-  
+
   [UserRole.SCHEDULER]: [
     Permission.USER_READ,
     Permission.CLIENT_READ,
@@ -226,7 +252,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.HR_READ,
     Permission.AI_INTERACT
   ],
-  
+
   [UserRole.FIELD_SUPERVISOR]: [
     Permission.USER_READ,
     Permission.CLIENT_READ,
@@ -237,7 +263,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.HR_READ,
     Permission.AI_INTERACT
   ],
-  
+
   [UserRole.HR_MANAGER]: [
     Permission.USER_CREATE,
     Permission.USER_READ,
@@ -249,7 +275,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.CREDENTIAL_VERIFY,
     Permission.AI_INTERACT
   ],
-  
+
   [UserRole.CREDENTIALING_SPECIALIST]: [
     Permission.USER_READ,
     Permission.HR_READ,
@@ -257,7 +283,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.CREDENTIAL_VERIFY,
     Permission.AI_INTERACT
   ],
-  
+
   [UserRole.IT_ADMIN]: [
     Permission.USER_READ,
     Permission.USER_UPDATE,
@@ -267,14 +293,14 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.SECURITY_MANAGE,
     Permission.AI_ADMIN
   ],
-  
+
   [UserRole.SUPPORT_AGENT]: [
     Permission.USER_READ,
     Permission.CLIENT_READ,
     Permission.SCHEDULE_READ,
     Permission.AI_INTERACT
   ],
-  
+
   [UserRole.CAREGIVER]: [
     Permission.SCHEDULE_READ,
     Permission.EVV_CREATE,
@@ -282,17 +308,102 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.HR_READ,
     Permission.AI_INTERACT
   ],
-  
+
+  // Clinical Roles
+  [UserRole.RN_CASE_MANAGER]: [
+    Permission.USER_READ,
+    Permission.CLIENT_READ,
+    Permission.CLIENT_PHI_ACCESS,
+    Permission.CLIENT_ASSESS,
+    Permission.CARE_PLAN_WRITE,
+    Permission.CARE_PLAN_READ,
+    Permission.MED_ORDER,
+    Permission.MED_ADMINISTER,
+    Permission.SCHEDULE_READ,
+    Permission.EVV_CREATE,
+    Permission.EVV_READ,
+    Permission.HR_READ
+  ],
+
+  [UserRole.LPN_LVN]: [
+    Permission.CLIENT_READ,
+    Permission.CLIENT_PHI_ACCESS,
+    Permission.CARE_PLAN_READ,
+    Permission.MED_ADMINISTER,
+    Permission.SCHEDULE_READ,
+    Permission.EVV_CREATE
+  ],
+
+  [UserRole.DSP_MED]: [
+    Permission.CLIENT_READ,
+    Permission.CARE_PLAN_READ,
+    Permission.MED_ADMINISTER,
+    Permission.BEHAVIOR_LOG_WRITE,
+    Permission.SCHEDULE_READ,
+    Permission.EVV_CREATE
+  ],
+
+  [UserRole.DSP_BASIC]: [
+    Permission.CLIENT_READ,
+    Permission.CARE_PLAN_READ,
+    Permission.BEHAVIOR_LOG_WRITE,
+    Permission.SCHEDULE_READ,
+    Permission.EVV_CREATE
+  ],
+
+  [UserRole.QIDP]: [
+    Permission.CLIENT_READ,
+    Permission.CLIENT_PHI_ACCESS,
+    Permission.CARE_PLAN_WRITE,
+    Permission.CARE_PLAN_READ,
+    Permission.BEHAVIOR_PLAN_WRITE,
+    Permission.BEHAVIOR_LOG_WRITE,
+    Permission.SCHEDULE_UPDATE
+  ],
+
+  [UserRole.THERAPIST]: [
+    Permission.CLIENT_READ,
+    Permission.CLIENT_PHI_ACCESS,
+    Permission.CLIENT_ASSESS, // Evaluations
+    Permission.CARE_PLAN_WRITE, // Therapy goals
+    Permission.SCHEDULE_READ
+  ],
+
+  [UserRole.CLINICAL_DIRECTOR]: [
+    Permission.USER_READ,
+    Permission.CLIENT_READ,
+    Permission.CLIENT_PHI_ACCESS,
+    Permission.CLIENT_ASSESS,
+    Permission.INCIDENT_MANAGE,
+    Permission.AUDIT_READ,
+    Permission.CARE_PLAN_READ,
+    Permission.CARE_PLAN_WRITE
+  ],
+
+  [UserRole.INSURANCE_MANAGER]: [
+    Permission.CLIENT_READ,
+    Permission.BILLING_READ,
+    Permission.BILLING_UPDATE
+  ],
+
+  [UserRole.BILLING_CODER]: [
+    Permission.CLIENT_READ,
+    Permission.BILLING_READ,
+    Permission.BILLING_UPDATE
+  ],
+
+
+
   [UserRole.CLIENT]: [
     Permission.SCHEDULE_READ,
     Permission.AI_INTERACT
   ],
-  
+
   [UserRole.FAMILY]: [
     Permission.SCHEDULE_READ,
     Permission.AI_INTERACT
   ],
-  
+
   [UserRole.PAYER_AUDITOR]: [
     Permission.CLIENT_READ,
     Permission.SCHEDULE_READ,
@@ -300,7 +411,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.BILLING_READ,
     Permission.AUDIT_READ
   ],
-  
+
   [UserRole.AI_SERVICE]: [
     Permission.USER_READ,
     Permission.CLIENT_READ,
@@ -407,6 +518,16 @@ export class ABACEngine {
    * Evaluate ABAC rules based on user attributes
    */
   private async evaluateABACRules(user: UserContext, request: AccessRequest): Promise<AccessDecision> {
+    // Caseload-based access control (Primary for Clinicians)
+    if (request.resource.type === 'client' && request.resource.id) {
+      if (this.isClinician(user.role)) {
+        const caseloadAccess = await this.checkCaseloadAccess(user, request);
+        if (caseloadAccess.allowed) {
+          return caseloadAccess;
+        }
+      }
+    }
+
     // Pod-based access control
     if (request.resource.type === 'client' || request.resource.type === 'shift') {
       const podAccess = await this.checkPodAccess(user, request);
@@ -439,13 +560,79 @@ export class ABACEngine {
     };
   }
 
+  // Helper methods for Caseload logic
+  private async checkCaseloadAccess(user: UserContext, request: AccessRequest): Promise<AccessDecision> {
+    if (!request.resource.id) return { allowed: false, reason: 'No resource ID', auditRequired: false, dataClassification: DataClassification.INTERNAL };
+
+    // Queries new caseloads table
+    const result = await this.db.query(
+      'SELECT status FROM caseloads WHERE clinician_id = $1 AND client_id = $2 AND status = \'active\'',
+      [user.userId, request.resource.id]
+    );
+
+    if (result.rows.length > 0) {
+      return {
+        allowed: true,
+        reason: 'Active caseload assignment',
+        auditRequired: false,
+        dataClassification: DataClassification.PHI
+      };
+    }
+
+    // Check for "Break Glass" emergency permit
+    const breakGlass = await this.db.query(
+      `SELECT id FROM break_glass_requests 
+       WHERE user_id = $1 AND client_id = $2 AND expires_at > NOW()`,
+      [user.userId, request.resource.id]
+    );
+
+    if (breakGlass.rows.length > 0) {
+      // Log critical security event for using break-glass
+      this.auditLogger.logSecurity('phi_access_violation', 'high', {
+        userId: user.userId,
+        organizationId: user.organizationId,
+        details: {
+          action: 'break_glass_access',
+          patientId: request.resource.id,
+          requestId: breakGlass.rows[0].id,
+          description: 'Emergency Break-Glass Access Used'
+        }
+      });
+
+      return {
+        allowed: true,
+        reason: 'Emergency Break-Glass permit active',
+        auditRequired: true,
+        dataClassification: DataClassification.PHI
+      };
+    }
+
+    return {
+      allowed: false,
+      reason: 'Patient not in active caseload',
+      auditRequired: true,
+      dataClassification: DataClassification.PHI
+    };
+  }
+
+  private isClinician(role: UserRole): boolean {
+    return [
+      UserRole.RN_CASE_MANAGER,
+      UserRole.LPN_LVN,
+      UserRole.THERAPIST,
+      UserRole.QIDP,
+      UserRole.DSP_MED,
+      UserRole.DSP_BASIC
+    ].includes(role);
+  }
+
   /**
    * Check pod-based access control
    */
   private async checkPodAccess(user: UserContext, request: AccessRequest): Promise<AccessDecision> {
     // Get user's pod access attributes
-    const podAttributes = user.attributes.filter(attr => 
-      attr.name === 'pod_access' && attr.isActive && 
+    const podAttributes = user.attributes.filter(attr =>
+      attr.name === 'pod_access' && attr.isActive &&
       (!attr.expiresAt || attr.expiresAt > new Date())
     );
 
@@ -462,7 +649,7 @@ export class ABACEngine {
     if (request.resource.id) {
       const resourcePod = await this.getResourcePod(request.resource.type, request.resource.id);
       const userPods = podAttributes.map(attr => attr.value);
-      
+
       if (resourcePod && !userPods.includes(resourcePod) && !this.hasHighLevelRole(user.role)) {
         return {
           allowed: false,
@@ -549,8 +736,8 @@ export class ABACEngine {
     // PHI access requires special permission
     if (classification === DataClassification.PHI) {
       const hasPHIAccess = user.permissions.includes(Permission.CLIENT_PHI_ACCESS) ||
-                          this.hasHighLevelRole(user.role);
-      
+        this.hasHighLevelRole(user.role);
+
       if (!hasPHIAccess) {
         return {
           allowed: false,
@@ -600,7 +787,7 @@ export class ABACEngine {
   private evaluateTimeRestrictions(user: UserContext, request: AccessRequest): AccessDecision {
     const now = new Date();
     const hour = now.getHours();
-    
+
     // Restrict certain operations outside business hours
     const restrictedActions = [
       Permission.BILLING_SUBMIT,
@@ -637,7 +824,7 @@ export class ABACEngine {
   private evaluateLocationRestrictions(user: UserContext, request: AccessRequest): AccessDecision {
     // Check for suspicious geographic access patterns
     // This would integrate with IP geolocation services
-    
+
     return {
       allowed: true,
       reason: 'Location restrictions check passed',
@@ -658,9 +845,9 @@ export class ABACEngine {
   }
 
   private hasEmergencyOverride(user: UserContext): boolean {
-    return user.attributes.some(attr => 
-      attr.name === 'emergency_override' && 
-      attr.isActive && 
+    return user.attributes.some(attr =>
+      attr.name === 'emergency_override' &&
+      attr.isActive &&
       (!attr.expiresAt || attr.expiresAt > new Date())
     );
   }
@@ -692,7 +879,7 @@ export class ABACEngine {
     ];
 
     return auditRequiredActions.includes(request.action) ||
-           request.context.dataClassification === DataClassification.PHI;
+      request.context.dataClassification === DataClassification.PHI;
   }
 }
 
@@ -863,7 +1050,7 @@ export class JITAccessManager {
 
     // Grant emergency permissions
     const emergencyPermissions = this.getEmergencyPermissions(emergency.type);
-    
+
     await this.db.query(`
       INSERT INTO user_attributes (user_id, attribute_name, attribute_value, expires_at)
       VALUES ($1, $2, $3, $4)

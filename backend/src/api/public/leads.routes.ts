@@ -35,7 +35,7 @@ router.post('/', async (req: Request, res: Response) => {
             });
         }
 
-        const lead = await leadsService.createLead(validation.data);
+        const lead = await leadsService.createLead(validation.data as any);
 
         logger.info(`New public lead created: ${lead.id}`);
 

@@ -12,9 +12,10 @@
  * @module services/sandata/visits.service
  */
 
+import { createLogger } from '../../utils/logger';
 import { getSandataClient } from './client';
-import { getSandataValidator } from './validator.service';
-import { getSandataRepository } from './repositories/sandata.repository';
+import { SandataValidatorService, getSandataValidator } from './validator.service';
+import { SandataRepository, getSandataRepository, EVVRecordRow, ClientRow } from './repositories/sandata.repository';
 import { getDbClient } from '../../database/client';
 import * as VisitKeyUtils from './visitKey';
 import * as RoundingUtils from './rounding';
@@ -26,6 +27,7 @@ import type {
   ValidationContext,
   ValidationResult,
   RoundingMode,
+  SandataLocation,
 } from './types';
 
 /**
@@ -56,15 +58,7 @@ interface DatabaseEVVRecord {
   updatedAt: Date;
 }
 
-interface DatabaseClient {
-  id: string;
-  sandataClientId?: string | null;
-  addressLine1?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  evvConsentStatus?: string;
-}
+
 
 interface DatabaseUser {
   id: string;
@@ -94,6 +88,7 @@ interface VisitSubmissionResult {
  * Sandata Visits Service
  */
 export class SandataVisitsService {
+  private readonly logger = createLogger('sandata-visits');
   private readonly client = getSandataClient();
   private readonly validator = getSandataValidator();
   private readonly repository = getSandataRepository(getDbClient());
@@ -104,7 +99,7 @@ export class SandataVisitsService {
    */
   async submitVisit(
     evvRecord: DatabaseEVVRecord,
-    client: DatabaseClient,
+    client: ClientRow,
     caregiver: DatabaseUser,
     options: VisitSubmissionOptions = {}
   ): Promise<VisitSubmissionResult> {
@@ -165,7 +160,7 @@ export class SandataVisitsService {
         const validationContext: ValidationContext = {
           geofenceRadiusMiles: this.businessRules.geofenceRadiusMiles,
           clockInToleranceMinutes: this.businessRules.clockInToleranceMinutes,
-          clientAddress: this.getClientAddress(client),
+          clientLocation: this.getClientLocation(client),
           // Would fetch authorization from database
           // authorization: await this.getAuthorization(evvRecord.authorizationNumber),
         };
@@ -276,7 +271,7 @@ export class SandataVisitsService {
   async submitVisits(
     visits: Array<{
       evvRecord: DatabaseEVVRecord;
-      client: DatabaseClient;
+      client: ClientRow;
       caregiver: DatabaseUser;
     }>,
     options: VisitSubmissionOptions = {}
@@ -343,13 +338,13 @@ export class SandataVisitsService {
    */
   private checkPrerequisites(
     evvRecord: DatabaseEVVRecord,
-    client: DatabaseClient,
+    client: ClientRow,
     caregiver: DatabaseUser
   ): { success: boolean; errors?: string[] } {
     const errors: string[] = [];
 
     // Client must have Sandata ID
-    if (!client.sandataClientId) {
+    if (!client.sandata_client_id) {
       errors.push('Client must be synced to Sandata before submitting visits');
     }
 
@@ -359,7 +354,7 @@ export class SandataVisitsService {
     }
 
     // Client must have EVV consent
-    if (client.evvConsentStatus !== 'signed') {
+    if (client.evv_consent_status !== 'signed') {
       errors.push('Client must have signed EVV consent');
     }
 
@@ -420,7 +415,7 @@ export class SandataVisitsService {
     const billableUnits = RoundingUtils.calculateBillableUnitsFromTimes(
       clockInResult.roundedTime,
       clockOutResult.roundedTime,
-      { roundingMinutes, roundingMode }
+      false
     );
 
     return {
@@ -435,7 +430,7 @@ export class SandataVisitsService {
    */
   private async mapEVVRecordToSandataVisit(
     evvRecord: DatabaseEVVRecord,
-    client: DatabaseClient,
+    client: ClientRow,
     caregiver: DatabaseUser,
     visitKey: string,
     roundedClockIn: Date,
@@ -445,7 +440,7 @@ export class SandataVisitsService {
     return {
       providerId: await this.getProviderId(evvRecord.organizationId),
       serviceCode: evvRecord.serviceCode,
-      individualId: client.sandataClientId!,
+      individualId: client.sandata_client_id!,
       employeeId: caregiver.sandataEmployeeId!,
       serviceDate: evvRecord.serviceDate.toISOString().split('T')[0],
       clockInTime: roundedClockIn.toISOString(),
@@ -474,16 +469,16 @@ export class SandataVisitsService {
   /**
    * Get client address for geofence validation
    */
-  private getClientAddress(client: DatabaseClient): any {
-    if (!client.addressLine1 || !client.city || !client.state) {
+  private getClientAddress(client: ClientRow): any {
+    if (!client.address_line_1 || !client.city || !client.state) {
       return undefined;
     }
 
     return {
-      street1: client.addressLine1,
+      street1: client.address_line_1,
       city: client.city,
       state: client.state,
-      zipCode: client.zipCode || '',
+      zipCode: client.zip_code || '',
     };
   }
 
@@ -579,6 +574,22 @@ export class SandataVisitsService {
    */
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+  /**
+   * Get client location from client record
+   */
+  private getClientLocation(client: ClientRow): SandataLocation {
+    return {
+      latitude: client.latitude || 0,
+      longitude: client.longitude || 0,
+      address: {
+        street1: client.address_line_1 || '',
+        street2: client.address_line_2 || undefined,
+        city: client.city || '',
+        state: client.state || '',
+        zipCode: client.zip_code || '',
+      }
+    };
   }
 }
 

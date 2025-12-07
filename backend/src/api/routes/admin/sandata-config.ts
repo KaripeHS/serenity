@@ -14,6 +14,7 @@ import {
   getSandataFeatureFlags,
   validateSandataConfig,
 } from '../../../config/sandata';
+import { UserContext, UserRole } from '../../../auth/access-control';
 import { SandataClient } from '../../../services/sandata/client';
 import { getSandataRepository } from '../../../services/sandata/repositories/sandata.repository';
 import { getDbClient } from '../../../database/client';
@@ -61,7 +62,7 @@ interface SandataConfigResponse {
 router.get('/config', async (req: AuthenticatedRequest, res: Response, next) => {
   try {
     // Check if user has admin role
-    if (req.user?.role !== 'founder' && req.user?.role !== 'admin') {
+    if (req.user?.role !== UserRole.FOUNDER && req.user?.role !== UserRole.IT_ADMIN) {
       throw ApiErrors.forbidden('Only administrators can view Sandata configuration');
     }
 
@@ -115,7 +116,7 @@ router.get('/config', async (req: AuthenticatedRequest, res: Response, next) => 
 router.post('/config', async (req: AuthenticatedRequest, res: Response, next) => {
   try {
     // Check if user has admin role
-    if (req.user?.role !== 'founder' && req.user?.role !== 'admin') {
+    if (req.user?.role !== UserRole.FOUNDER && req.user?.role !== UserRole.IT_ADMIN) {
       throw ApiErrors.forbidden('Only administrators can update Sandata configuration');
     }
 
@@ -227,14 +228,15 @@ router.post('/config', async (req: AuthenticatedRequest, res: Response, next) =>
       }
 
       // Set updated_by field
-      configUpdates.updated_by = req.user?.id;
+      // Set updated_by field
+      configUpdates.updated_by = req.user?.userId;
 
       // Save to database
       await sandataRepo.updateConfig(organizationId, configUpdates);
 
       console.info('[SandataConfig] Configuration updated successfully', {
         organizationId,
-        updatedBy: req.user?.email,
+        updatedBy: req.user?.userId,
         fieldsUpdated: Object.keys(configUpdates),
       });
 
@@ -243,7 +245,7 @@ router.post('/config', async (req: AuthenticatedRequest, res: Response, next) =>
         message: 'Configuration updated successfully and saved to database.',
         note: 'Some changes may require application restart to take effect (environment variables).',
         updatedAt: new Date().toISOString(),
-        updatedBy: req.user?.email || 'unknown',
+        updatedBy: req.user?.userId || 'unknown',
       });
     } catch (dbError: any) {
       console.error('[SandataConfig] Failed to persist config to database', { error: dbError.message });
@@ -267,7 +269,7 @@ router.post('/config', async (req: AuthenticatedRequest, res: Response, next) =>
 router.post('/test-connection', async (req: AuthenticatedRequest, res: Response, next) => {
   try {
     // Check if user has admin role
-    if (req.user?.role !== 'founder' && req.user?.role !== 'admin') {
+    if (req.user?.role !== UserRole.FOUNDER && req.user?.role !== UserRole.IT_ADMIN) {
       throw ApiErrors.forbidden('Only administrators can test Sandata connection');
     }
 
@@ -384,7 +386,7 @@ router.post('/test-connection', async (req: AuthenticatedRequest, res: Response,
 router.get('/validation-status', async (req: AuthenticatedRequest, res: Response, next) => {
   try {
     // Check if user has admin role
-    if (req.user?.role !== 'founder' && req.user?.role !== 'admin') {
+    if (req.user?.role !== UserRole.FOUNDER && req.user?.role !== UserRole.IT_ADMIN) {
       throw ApiErrors.forbidden('Only administrators can check validation status');
     }
 

@@ -52,8 +52,8 @@ export class SandataValidatorService {
     warnings.push(...requiredFieldsResult.warnings);
 
     // 2. Geofence Validation
-    if (context?.clientAddress) {
-      const geofenceResult = this.validateGeofence(visit, context.clientAddress, context.geofenceRadiusMiles);
+    if (context?.clientLocation) {
+      const geofenceResult = this.validateGeofence(visit, context.clientLocation, context.geofenceRadiusMiles);
       errors.push(...geofenceResult.errors);
       warnings.push(...geofenceResult.warnings);
     }

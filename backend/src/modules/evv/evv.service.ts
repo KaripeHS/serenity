@@ -6,7 +6,9 @@
 import { DatabaseClient } from '../../database/client';
 import { AuditLogger } from '../../audit/logger';
 import { UserContext } from '../../auth/access-control';
-import { createLogger } from '../utils/logger';
+import { createLogger } from '../../utils/logger';
+
+const evvLogger = createLogger('evv-service');
 
 export interface EVVRecord {
   id: string;
@@ -101,7 +103,7 @@ export interface FixVisitTask {
 export class EVVService {
   private db: DatabaseClient;
   private auditLogger: AuditLogger;
-  
+
   // Ohio Medicaid EVV requirements
   private readonly LOCATION_TOLERANCE_METERS = 200;
   private readonly TIME_TOLERANCE_MINUTES = 15;
@@ -119,7 +121,7 @@ export class EVVService {
     try {
       // Validate shift exists and belongs to caregiver
       const shift = await this.validateShiftForEVV(request.shiftId, userContext.userId);
-      
+
       // Check for existing clock-in
       const existingEVV = await this.db.query(
         'SELECT id FROM evv_records WHERE shift_id = $1 AND clock_out_time IS NULL',
@@ -176,7 +178,7 @@ export class EVVService {
 
       // Validate EVV record
       const validationResult = await this.validateEVVRecord(evvRecordId);
-      
+
       // Update validation results
       await this.db.query(
         'UPDATE evv_records SET is_valid = $1, validation_errors = $2 WHERE id = $3',
@@ -192,15 +194,14 @@ export class EVVService {
       await this.auditLogger.logActivity({
         userId: userContext.userId,
         action: 'evv_clock_in',
-        resourceType: 'evv_record',
-        resourceId: evvRecordId,
+        resource: `evv_record:${evvRecordId}`,
         details: {
+          resourceId: evvRecordId,
           shiftId: request.shiftId,
           location: locationIn,
           method: request.verificationMethod,
           isValid: validationResult.isValid
-        },
-        dataClassification: 'phi'
+        }
       });
 
       return await this.getEVVRecordById(evvRecordId, userContext);
@@ -271,7 +272,7 @@ export class EVVService {
 
       // Re-validate EVV record with complete data
       const validationResult = await this.validateEVVRecord(request.evvRecordId);
-      
+
       await this.db.query(
         'UPDATE evv_records SET is_valid = $1, validation_errors = $2 WHERE id = $3',
         [validationResult.isValid, JSON.stringify(validationResult.errors), request.evvRecordId]
@@ -288,14 +289,13 @@ export class EVVService {
       await this.auditLogger.logActivity({
         userId: userContext.userId,
         action: 'evv_clock_out',
-        resourceType: 'evv_record',
-        resourceId: request.evvRecordId,
+        resource: 'evv_record',
         details: {
+          resourceId: request.evvRecordId,
           location: locationOut,
           duration: (now.getTime() - new Date(evvRecord.clock_in_time).getTime()) / 1000 / 60, // minutes
           isValid: validationResult.isValid
-        },
-        dataClassification: 'phi'
+        }
       });
 
       return await this.getEVVRecordById(request.evvRecordId, userContext);
@@ -344,7 +344,7 @@ export class EVVService {
       // 3. Date of Service Validation
       const clockInDate = new Date(evv.clock_in_time);
       const scheduledStart = new Date(evv.scheduled_start);
-      
+
       if (clockInDate.toDateString() !== scheduledStart.toDateString()) {
         warnings.push({
           code: 'DATE_MISMATCH',
@@ -354,14 +354,15 @@ export class EVVService {
         });
       }
 
+      const clientAddress = evv.client_address;
+
       // 4. Location Validation
       if (evv.location_in) {
         const locationIn = JSON.parse(evv.location_in);
-        const clientAddress = evv.client_address;
-        
+
         // Calculate distance from client address
         const distance = await this.calculateDistance(locationIn, clientAddress);
-        
+
         if (distance > this.LOCATION_TOLERANCE_METERS) {
           errors.push({
             code: 'LOCATION_TOO_FAR',
@@ -394,7 +395,7 @@ export class EVVService {
 
       // 6. Time Service Begins and Ends
       const timeDiff = Math.abs(clockInDate.getTime() - scheduledStart.getTime()) / 1000 / 60;
-      
+
       if (timeDiff > this.TIME_TOLERANCE_MINUTES) {
         warnings.push({
           code: 'TIME_VARIANCE',
@@ -408,11 +409,11 @@ export class EVVService {
       if (evv.clock_out_time) {
         const clockOutDate = new Date(evv.clock_out_time);
         const scheduledEnd = new Date(evv.scheduled_end);
-        
+
         // Duration validation
         const actualDuration = (clockOutDate.getTime() - clockInDate.getTime()) / 1000 / 60;
         const scheduledDuration = (scheduledEnd.getTime() - scheduledStart.getTime()) / 1000 / 60;
-        
+
         if (Math.abs(actualDuration - scheduledDuration) > 30) {
           warnings.push({
             code: 'DURATION_VARIANCE',
@@ -426,7 +427,7 @@ export class EVVService {
         if (evv.location_out) {
           const locationOut = JSON.parse(evv.location_out);
           const outDistance = await this.calculateDistance(locationOut, clientAddress);
-          
+
           if (outDistance > this.LOCATION_TOLERANCE_METERS) {
             errors.push({
               code: 'CHECKOUT_LOCATION_TOO_FAR',
@@ -546,13 +547,12 @@ export class EVVService {
         await this.auditLogger.logActivity({
           userId: 'system',
           action: 'evv_submitted_sandata',
-          resourceType: 'evv_record',
-          resourceId: evvRecordId,
+          resource: 'evv_record',
           details: {
+            resourceId: evvRecordId,
             transactionId: sandataResponse.transactionId,
             submissionTime: new Date()
-          },
-          dataClassification: 'phi'
+          }
         });
 
       } catch (error) {
@@ -692,7 +692,7 @@ export class EVVService {
     `;
 
     const result = await this.db.query(query, [evvRecordId, userContext.organizationId]);
-    
+
     if (result.rows.length === 0) {
       throw new Error('EVV record not found');
     }

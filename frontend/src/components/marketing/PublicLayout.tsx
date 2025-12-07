@@ -4,8 +4,28 @@
  * Includes Header and Footer from public-site design.
  */
 
-import React, { useState } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, Outlet, useLocation } from 'react-router-dom';
+
+// Hook to scroll to hash anchors on navigation
+function useHashScroll() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash) {
+      // Small delay to ensure the page has rendered
+      setTimeout(() => {
+        const element = document.querySelector(location.hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else {
+      // Scroll to top on page change without hash
+      window.scrollTo(0, 0);
+    }
+  }, [location]);
+}
 
 function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -51,6 +71,13 @@ function Header() {
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-serenity-green-600 group-hover:w-full transition-all duration-300"></span>
             </Link>
             <Link
+              to="/referral"
+              className="text-warm-gray-700 hover:text-serenity-green-600 font-medium transition-colors relative group"
+            >
+              Refer a Patient
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-serenity-green-600 group-hover:w-full transition-all duration-300"></span>
+            </Link>
+            <Link
               to="/contact"
               className="text-warm-gray-700 hover:text-serenity-green-600 font-medium transition-colors relative group"
             >
@@ -60,6 +87,15 @@ function Header() {
 
             {/* CTA Buttons */}
             <div className="flex items-center gap-3 ml-4">
+              <Link
+                to="/family"
+                className="flex items-center gap-2 px-4 py-2 text-warm-gray-700 hover:text-serenity-green-700 font-medium transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span className="hidden xl:inline">Family Portal</span>
+              </Link>
               <a
                 href="tel:+15134005113"
                 className="flex items-center gap-2 px-4 py-2 text-warm-gray-700 hover:text-serenity-green-700 font-medium transition-colors"
@@ -70,7 +106,7 @@ function Header() {
                 <span className="hidden xl:inline">(513) 400-5113</span>
               </a>
               <Link
-                to="/contact"
+                to="/referral"
                 className="px-6 py-2.5 bg-gradient-to-r from-serenity-green-500 to-serenity-green-600 text-white font-semibold rounded-xl hover:from-serenity-green-600 hover:to-serenity-green-700 shadow-md hover:shadow-lg transition-all active:scale-95"
               >
                 Get Started
@@ -120,11 +156,28 @@ function Header() {
                 Careers
               </Link>
               <Link
+                to="/referral"
+                className="text-warm-gray-700 hover:text-serenity-green-600 font-medium py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Refer a Patient
+              </Link>
+              <Link
                 to="/contact"
                 className="text-warm-gray-700 hover:text-serenity-green-600 font-medium py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Contact
+              </Link>
+              <Link
+                to="/family"
+                className="flex items-center gap-2 text-warm-gray-700 font-medium py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Family Portal
               </Link>
               <a
                 href="tel:+15134005113"
@@ -136,7 +189,7 @@ function Header() {
                 (513) 400-5113
               </a>
               <Link
-                to="/contact"
+                to="/referral"
                 className="mt-2 px-6 py-3 bg-gradient-to-r from-serenity-green-500 to-serenity-green-600 text-white font-semibold rounded-xl text-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -171,6 +224,7 @@ function Footer() {
             <p className="leading-relaxed mb-6" style={{ color: 'rgba(255, 255, 255, 0.85)', lineHeight: '1.7' }}>
               Compassionate home health care across Ohio. Our innovative pod-based model ensures personalized attention and exceptional outcomes.
             </p>
+            {/* Social Media Links - Hidden until valid URLs are available
             <div className="flex gap-4">
               <a href="#" className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} aria-label="Facebook">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
@@ -182,17 +236,18 @@ function Footer() {
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
               </a>
             </div>
+            */}
           </div>
 
           {/* Services Column */}
           <div>
             <h4 className="font-bold text-white mb-4">Services</h4>
             <ul className="space-y-3">
-              <li><Link to="/services" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Personal Care</Link></li>
-              <li><Link to="/services" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Skilled Nursing</Link></li>
-              <li><Link to="/services" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Companionship</Link></li>
-              <li><Link to="/services" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Respite Care</Link></li>
-              <li><Link to="/services" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Pod-Based Care</Link></li>
+              <li><Link to="/services#personal-care" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Personal Care</Link></li>
+              <li><Link to="/services#homemaker" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Homemaker Services</Link></li>
+              <li><Link to="/services#companionship" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Companionship</Link></li>
+              <li><Link to="/services#respite-care" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Respite Care</Link></li>
+              <li><Link to="/about#pod-based-care" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Pod-Based Care</Link></li>
             </ul>
           </div>
 
@@ -203,8 +258,8 @@ function Footer() {
               <li><Link to="/about" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>About Us</Link></li>
               <li><Link to="/careers" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Careers</Link></li>
               <li><Link to="/contact" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Contact</Link></li>
+              <li><Link to="/family" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Family Portal</Link></li>
               <li><Link to="/about#team" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Our Team</Link></li>
-              <li><Link to="/about#mission" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Mission & Values</Link></li>
             </ul>
           </div>
 
@@ -244,10 +299,12 @@ function Footer() {
             <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
               &copy; 2025 Serenity Care Partners. All rights reserved.
             </p>
-            <div className="flex gap-6 text-sm">
+            <div className="flex flex-wrap justify-center md:justify-end gap-4 md:gap-6 text-sm">
               <Link to="/privacy" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Privacy Policy</Link>
               <Link to="/terms" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Terms of Service</Link>
-              <Link to="/hipaa" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>HIPAA Compliance</Link>
+              <Link to="/hipaa" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>HIPAA</Link>
+              <Link to="/non-discrimination" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Non-Discrimination</Link>
+              <Link to="/accessibility" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Accessibility</Link>
             </div>
           </div>
         </div>
@@ -257,6 +314,9 @@ function Footer() {
 }
 
 export default function PublicLayout() {
+  // Enable smooth scrolling to hash anchors
+  useHashScroll();
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

@@ -1,0 +1,68 @@
+﻿src/api/routes/caregiver/portal.routes.ts(25,39): error TS2339: Property 'id' does not exist on type 'UserContext'.
+src/api/routes/caregiver/portal.routes.ts(74,39): error TS2339: Property 'id' does not exist on type 'UserContext'.
+src/api/routes/caregiver/portal.routes.ts(128,39): error TS2339: Property 'id' does not exist on type 'UserContext'.
+src/api/routes/console/access-reviews.ts(200,46): error TS2339: Property 'email' does not exist on type 'UserContext'.
+src/api/routes/console/access-reviews.ts(239,46): error TS2339: Property 'email' does not exist on type 'UserContext'.
+src/api/routes/console/access-reviews.ts(265,46): error TS2339: Property 'email' does not exist on type 'UserContext'.
+src/api/routes/console/bonuses.ts(9,27): error TS2339: Property 'getInstance' does not exist on type 'typeof DatabaseClient'.
+src/api/routes/console/bonuses.ts(18,42): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
+src/api/routes/console/bonuses.ts(46,52): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
+src/api/routes/console/dashboard.ts(50,41): error TS2339: Property 'getEVVRecordsByDateRange' does not exist on type 'SandataRepository'.
+src/api/routes/console/dashboard.ts(128,41): error TS2339: Property 'getEVVRecordsByDateRange' does not exist on type 'SandataRepository'.
+src/api/routes/console/dashboard.ts(152,44): error TS2551: Property 'getExpiringCertifications' does not exist on type 'SandataRepository'. Did you mean 'getUserCertifications'?
+src/api/routes/console/dashboard.ts(187,45): error TS2551: Property 'getRecentTransactions' does not exist on type 'SandataRepository'. Did you mean 'getTransaction'?
+src/api/routes/console/dashboard.ts(253,44): error TS2551: Property 'getExpiringCertifications' does not exist on type 'SandataRepository'. Did you mean 'getUserCertifications'?
+src/api/routes/console/pods.ts(71,25): error TS2339: Property 'pod_lead_user_id' does not exist on type '{ id: string; pod_name: string; code: string; city: string; state: string; organization_id: string; }'.
+src/api/routes/console/pods.ts(72,38): error TS2339: Property 'pod_lead_user_id' does not exist on type '{ id: string; pod_name: string; code: string; city: string; state: string; organization_id: string; }'.
+src/api/routes/console/pods.ts(101,19): error TS2339: Property 'status' does not exist on type '{ id: string; pod_name: string; code: string; city: string; state: string; organization_id: string; }'.
+src/api/routes/console/pods.ts(102,22): error TS2339: Property 'created_at' does not exist on type '{ id: string; pod_name: string; code: string; city: string; state: string; organization_id: string; }'.
+src/api/routes/console/pods.ts(103,22): error TS2339: Property 'updated_at' does not exist on type '{ id: string; pod_name: string; code: string; city: string; state: string; organization_id: string; }'.
+src/api/routes/console/remittance.ts(15,20): error TS2307: Cannot find module 'multer' or its corresponding type declarations.
+src/api/routes/console/sandata.ts(48,26): error TS2339: Property 'middle_name' does not exist on type 'ClientRow'.
+src/api/routes/console/sandata.ts(50,23): error TS2339: Property 'gender' does not exist on type 'ClientRow'.
+src/api/routes/console/sandata.ts(96,24): error TS2339: Property 'middle_name' does not exist on type 'UserRow'.
+src/api/routes/console/sandata.ts(98,21): error TS2339: Property 'gender' does not exist on type 'UserRow'.
+src/api/routes/console/sandata.ts(99,26): error TS2339: Property 'ssn_encrypted' does not exist on type 'UserRow'.
+src/api/routes/console/sandata.ts(114,31): error TS2339: Property 'sandata_staff_pin' does not exist on type 'UserRow'.
+src/api/routes/console/sandata.ts(163,28): error TS2339: Property 'modifiers' does not exist on type 'EVVRecordRow'.
+src/api/routes/console/sandata.ts(166,24): error TS2339: Property 'payer' does not exist on type 'EVVRecordRow'.
+src/api/routes/console/sandata.ts(167,31): error TS2339: Property 'payer_program' does not exist on type 'EVVRecordRow'.
+src/api/routes/console/sandata.ts(168,31): error TS2339: Property 'clock_method' does not exist on type 'EVVRecordRow'.
+src/api/routes/console/sandata.ts(169,32): error TS2339: Property 'location_type' does not exist on type 'EVVRecordRow'.
+src/api/routes/console/sandata.ts(175,30): error TS2339: Property 'sandata_other_id' does not exist on type 'ClientRow'.
+src/api/routes/console/sandata.ts(182,33): error TS2339: Property 'sandata_other_id' does not exist on type 'UserRow'.
+src/api/routes/console/shifts.ts(22,37): error TS2345: Argument of type 'DatabaseClient' is not assignable to parameter of type 'string'.
+src/api/routes/console/system-config.ts(19,39): error TS2345: Argument of type '"system:admin"' is not assignable to parameter of type 'Permission'.
+src/api/routes/console/system-config.ts(19,58): error TS2367: This comparison appears to be unintentional because the types 'UserRole' and '"admin"' have no overlap.
+src/automation/paperwork-agents.ts(11,10): error TS2440: Import declaration conflicts with local declaration of 'AlertType'.
+src/automation/paperwork-agents.ts(1304,73): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Record<string, any>'.
+src/automation/paperwork-agents.ts(1489,27): error TS2322: Type '"processing_failure"' is not assignable to type 'AlertType'.
+src/automation/paperwork-agents.ts(1489,49): error TS2322: Type '"low_confidence"' is not assignable to type 'AlertType'.
+src/automation/paperwork-agents.ts(1609,27): error TS2322: Type '"processing_failure"' is not assignable to type 'AlertType'.
+src/automation/paperwork-agents.ts(1868,12): error TS2352: Conversion of type '{ id: string; templateId: string; templateVersion: string; generatedAt: Date; generatedBy: string; content: { format: any; data: string; size: number; checksum: string; }; metadata: { title: string; ... 5 more ...; customFields: {}; }; ... 4 more ...; complianceFlags: undefined[]; }' to type 'GeneratedDocument' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ id: string; templateId: string; templateVersion: string; generatedAt: Date; generatedBy: string; content: { format: any; data: string; size: number; checksum: string; }; metadata: { title: string; ... 5 more ...; customFields: {}; }; ... 4 more ...; complianceFlags: undefined[]; }' is missing the following properties from type 'GeneratedDocument': organizationId, format, title, createdAt
+src/automation/paperwork-agents.ts(1942,19): error TS2322: Type '"rules"' is not assignable to type '"structured" | "ai" | "ocr" | "hybrid"'.
+src/database/seeds/001_sample_data_generator.ts(444,52): error TS2345: Argument of type 'QueryResult<any>' is not assignable to parameter of type 'readonly unknown[]'.
+  Type 'QueryResult<any>' is missing the following properties from type 'readonly unknown[]': length, concat, join, slice, and 20 more.
+src/database/seeds/001_sample_data_generator.ts(445,54): error TS2345: Argument of type 'QueryResult<any>' is not assignable to parameter of type 'readonly unknown[]'.
+  Type 'QueryResult<any>' is missing the following properties from type 'readonly unknown[]': length, concat, join, slice, and 20 more.
+src/database/seeds/001_sample_data_generator.ts(457,31): error TS2339: Property 'id' does not exist on type 'unknown'.
+src/database/seeds/001_sample_data_generator.ts(458,35): error TS2339: Property 'id' does not exist on type 'unknown'.
+src/database/seeds/001_sample_data_generator.ts(490,33): error TS2339: Property 'id' does not exist on type 'unknown'.
+src/database/seeds/001_sample_data_generator.ts(491,37): error TS2339: Property 'id' does not exist on type 'unknown'.
+src/jobs/bonus-processor.job.ts(22,34): error TS2339: Property 'getInstance' does not exist on type 'typeof DatabaseClient'.
+src/modules/billing/billing.service.ts(9,30): error TS2307: Cannot find module '../utils/logger' or its corresponding type declarations.
+src/modules/billing/billing.service.ts(261,9): error TS2561: Object literal may only specify known properties, but 'resourceId' does not exist in type '{ action: string; resource: string; outcome?: "success" | "failure"; userId?: string; organizationId?: string; details?: Record<string, any>; }'. Did you mean to write 'resource'?
+src/modules/billing/billing.service.ts(484,9): error TS2561: Object literal may only specify known properties, but 'resourceId' does not exist in type '{ action: string; resource: string; outcome?: "success" | "failure"; userId?: string; organizationId?: string; details?: Record<string, any>; }'. Did you mean to write 'resource'?
+src/modules/billing/billing.service.ts(545,9): error TS2561: Object literal may only specify known properties, but 'resourceId' does not exist in type '{ action: string; resource: string; outcome?: "success" | "failure"; userId?: string; organizationId?: string; details?: Record<string, any>; }'. Did you mean to write 'resource'?
+src/modules/billing/billing.service.ts(615,9): error TS2561: Object literal may only specify known properties, but 'resourceId' does not exist in type '{ action: string; resource: string; outcome?: "success" | "failure"; userId?: string; organizationId?: string; details?: Record<string, any>; }'. Did you mean to write 'resource'?
+src/modules/billing/billing.service.ts(678,21): error TS2345: Argument of type 'Date' is not assignable to parameter of type 'string'.
+src/modules/billing/billing.service.ts(702,19): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+src/modules/billing/private-billing.service.ts(59,66): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Claim[]'.
+  Type '{}' is missing the following properties from type 'Claim[]': length, pop, push, concat, and 29 more.
+src/modules/billing/private-billing.service.ts(60,32): error TS2345: Argument of type 'ReadableStream' is not assignable to parameter of type 'string | Readable | Buffer<ArrayBufferLike>'.
+  Type 'ReadableStream' is missing the following properties from type 'Readable': readableAborted, readableDidRead, readableEncoding, readableEnded, and 26 more.
+src/modules/billing/private-billing.service.ts(63,68): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Claim[]'.
+  Type '{}' is missing the following properties from type 'Claim[]': length, pop, push, concat, and 29 more.
+src/modules/billing/private-billing.service.ts(64,32): error TS2345: Argument of type 'ReadableStream' is not assignable to parameter of type 'string | Readable | Buffer<ArrayBufferLike>'.
+  Type 'ReadableStream' is missing the following properties from type 'Readable': readableAborted, readableDidRead, readableEncoding, readableEnded, and 26 more.

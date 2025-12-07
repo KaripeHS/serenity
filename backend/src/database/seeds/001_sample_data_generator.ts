@@ -7,6 +7,8 @@ import { DatabaseClient } from '../client';
 import { faker } from '@faker-js/faker';
 import { createLogger } from '../../utils/logger';
 
+const apiLogger = createLogger('api');
+
 // Ohio-specific data
 const OHIO_CITIES = [
   'Columbus', 'Cleveland', 'Cincinnati', 'Toledo', 'Akron', 'Dayton',
@@ -33,7 +35,7 @@ const CAREGIVER_CERTIFICATIONS = [
 ];
 
 export class SampleDataGenerator {
-  constructor(private db: DatabaseClient) {}
+  constructor(private db: DatabaseClient) { }
 
   async generateAllSampleData(): Promise<void> {
     apiLogger.info('🚀 Starting comprehensive sample data generation...');
@@ -423,9 +425,12 @@ export class SampleDataGenerator {
     apiLogger.info('📅 Generating scheduling and EVV data...');
 
     // Get active patients and caregivers
-    const patients = await this.db.query('SELECT id FROM patients WHERE status = $1 LIMIT 100', ['active']);
-    const caregivers = await this.db.query('SELECT id FROM employees WHERE position IN ($1, $2, $3) AND status = $4',
+    const patientsResult = await this.db.query('SELECT id FROM patients WHERE status = $1 LIMIT 100', ['active']);
+    const caregiversResult = await this.db.query('SELECT id FROM employees WHERE position IN ($1, $2, $3) AND status = $4',
       ['caregiver', 'nurse_rn', 'nurse_lpn', 'active']);
+
+    const patients = patientsResult.rows as { id: string }[];
+    const caregivers = caregiversResult.rows as { id: string }[];
 
     const shifts = [];
     const evvRecords = [];

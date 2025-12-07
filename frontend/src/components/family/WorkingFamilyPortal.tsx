@@ -4,206 +4,175 @@ import { Card, CardHeader, CardContent, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Alert, AlertDescription } from '../ui/Alert';
 import { Badge } from '../ui/Badge';
+import { Skeleton } from '../ui/Skeleton';
+import {
+  familyPortalService,
+  Visit,
+  CareTeamMember,
+  BillingInfo,
+  Message
+} from '../../services/familyPortal.service';
 
-interface FamilyPortalData {
-  patientName: string;
-  nextVisit: {
-    date: string;
-    time: string;
-    caregiver: string;
-    serviceType: string;
-  };
-  recentVisits: Array<{
-    date: string;
-    caregiver: string;
-    serviceType: string;
-    notes: string;
-    rating: number;
-  }>;
-  caregiverTeam: Array<{
-    name: string;
-    role: string;
-    phone: string;
-    email: string;
-    rating: number;
-  }>;
-  billingInfo: {
-    lastPayment: string;
-    nextBilling: string;
-    balance: string;
-  };
+interface PortalData {
+  patientId: string; // Mock context
+  familyId: string; // Mock context
 }
 
 export function WorkingFamilyPortal() {
-  const [data, setData] = useState<FamilyPortalData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<'overview' | 'schedule' | 'caregivers' | 'billing' | 'messages'>('overview');
-  const [messages, setMessages] = useState([
-    { id: 1, from: 'Maria Rodriguez', message: 'Eleanor had a great day today. Her mobility is improving.', time: '2 hours ago', type: 'update' },
-    { id: 2, from: 'Care Coordinator', message: 'Appointment reminder: Physical therapy tomorrow at 2 PM', time: '1 day ago', type: 'reminder' },
-    { id: 3, from: 'Billing Department', message: 'Your January invoice is ready for review', time: '3 days ago', type: 'billing' }
-  ]);
+
+  // Data State
+  const [recentVisits, setRecentVisits] = useState<Visit[]>([]);
+  const [upcomingVisits, setUpcomingVisits] = useState<Visit[]>([]);
+  const [careTeam, setCareTeam] = useState<CareTeamMember[]>([]);
+  const [billing, setBilling] = useState<BillingInfo[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  // Mock Context (Replace with actual auth/context in production)
+  const mockContext: PortalData = { patientId: 'mock-patient-1', familyId: 'mock-family-1' };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setData({
-        patientName: 'Eleanor Johnson',
-        nextVisit: {
-          date: '2024-01-16',
-          time: '09:00 AM',
-          caregiver: 'Maria Rodriguez',
-          serviceType: 'Personal Care'
-        },
-        recentVisits: [
-          {
-            date: '2024-01-15',
-            caregiver: 'Maria Rodriguez',
-            serviceType: 'Personal Care',
-            notes: 'Patient was in good spirits. Assisted with bathing and medication. Vital signs normal.',
-            rating: 5
-          },
-          {
-            date: '2024-01-14',
-            caregiver: 'David Chen',
-            serviceType: 'Physical Therapy',
-            notes: 'Continued range of motion exercises. Patient showing improvement in mobility.',
-            rating: 5
-          },
-          {
-            date: '2024-01-13',
-            caregiver: 'Jennifer Miller',
-            serviceType: 'Medication Management',
-            notes: 'Reviewed medication schedule. All medications taken as prescribed.',
-            rating: 4
-          }
-        ],
-        caregiverTeam: [
-          {
-            name: 'Maria Rodriguez',
-            role: 'Primary Caregiver',
-            phone: '(614) 555-0123',
-            email: 'maria.r@serenityhealth.com',
-            rating: 4.9
-          },
-          {
-            name: 'David Chen',
-            role: 'Physical Therapist',
-            phone: '(614) 555-0456',
-            email: 'david.c@serenityhealth.com',
-            rating: 4.8
-          },
-          {
-            name: 'Jennifer Miller',
-            role: 'Registered Nurse',
-            phone: '(614) 555-0789',
-            email: 'jennifer.m@serenityhealth.com',
-            rating: 4.7
-          }
-        ],
-        billingInfo: {
-          lastPayment: '2024-01-01',
-          nextBilling: '2024-02-01',
-          balance: '$0.00'
-        }
-      });
-    }, 800);
+    async function loadPortalData() {
+      try {
+        setLoading(true);
+        const [recent, upcoming, team, bills, msgs] = await Promise.all([
+          familyPortalService.getRecentVisits(mockContext.patientId),
+          familyPortalService.getUpcomingVisits(mockContext.patientId),
+          familyPortalService.getCareTeam(mockContext.patientId),
+          familyPortalService.getBillingInformation(mockContext.patientId),
+          familyPortalService.getMessages(mockContext.familyId)
+        ]);
 
-    return () => clearTimeout(timer);
+        setRecentVisits(recent);
+        setUpcomingVisits(upcoming);
+        setCareTeam(team);
+        setBilling(bills);
+        setMessages(msgs);
+      } catch (error) {
+        console.error("Failed to load family portal data", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadPortalData();
   }, []);
 
-  const sendMessage = () => {
-    const message = prompt('Type your message to the care team:');
-    if (message) {
-      setMessages(prev => [
-        { id: Date.now(), from: 'You', message, time: 'Just now', type: 'family' },
-        ...prev
-      ]);
-      alert('Message sent to care team!');
+  const handleSendMessage = async () => {
+    const text = prompt('Type your message to the care team:');
+    if (text) {
+      // Optimistic update
+      const tempMsg: Message = {
+        id: Date.now().toString(),
+        from: 'You',
+        to: 'Care Team',
+        subject: 'New Message',
+        content: text,
+        timestamp: new Date().toISOString(),
+        read: true,
+        urgent: false
+      };
+      setMessages(prev => [tempMsg, ...prev]);
+
+      try {
+        await familyPortalService.sendMessage('Care Team', 'New Message', text);
+      } catch (err) {
+        alert('Failed to send message');
+      }
     }
   };
 
-  if (!data) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-10 h-10 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading Family Portal...</p>
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <Skeleton className="h-12 w-64" />
+          <Skeleton className="h-24 w-full" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Skeleton className="h-64 w-full md:col-span-2" />
+            <Skeleton className="h-64 w-full" />
+          </div>
         </div>
       </div>
     );
   }
 
+  const nextVisit = upcomingVisits[0];
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto animate-fade-in">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               👨‍👩‍👧 Family Portal
             </h1>
             <p className="text-gray-600">
-              Care updates for {data.patientName}
+              Care dashboard for your loved one
             </p>
           </div>
           <div className="flex gap-4">
-            <Button onClick={sendMessage}>
+            <Button onClick={handleSendMessage} className="shadow-sm hover:shadow-md transition-shadow">
               💬 Send Message
             </Button>
-            <Link to="/" className="text-blue-600 underline hover:text-blue-700 flex items-center">
+            <Link to="/" className="text-primary-600 hover:text-primary-700 flex items-center font-medium">
               ← Back to Home
             </Link>
           </div>
         </div>
 
         {/* Next Visit Alert */}
-        <Alert className="mb-8 bg-blue-50 border-blue-200">
-          <AlertDescription>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">📅</span>
-                <div>
-                  <p className="font-semibold text-blue-800">
-                    Next Visit: {data.nextVisit.date} at {data.nextVisit.time}
-                  </p>
-                  <p className="text-sm text-blue-700">
-                    {data.nextVisit.serviceType} with {data.nextVisit.caregiver}
-                  </p>
+        {nextVisit && (
+          <Alert className="mb-8 bg-blue-50 border-blue-100 shadow-sm">
+            <AlertDescription>
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl">
+                    📅
+                  </div>
+                  <div>
+                    <p className="font-semibold text-blue-900">
+                      Next Visit: {new Date(nextVisit.date).toLocaleDateString()} at {nextVisit.time}
+                    </p>
+                    <p className="text-sm text-blue-700">
+                      {nextVisit.services.join(', ')} with {nextVisit.caregiverName}
+                    </p>
+                  </div>
                 </div>
+                <Button size="sm" variant="outline" onClick={() => alert('Reminder set!')} className="border-blue-200 text-blue-700 hover:bg-blue-100">
+                  🔔 Set Reminder
+                </Button>
               </div>
-              <Button size="sm" onClick={() => alert('Visit reminder set!')}>
-                Set Reminder
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Navigation Tabs */}
-        <Card className="mb-8">
-          <CardContent className="p-4">
-            <div className="flex gap-4 overflow-x-auto">
+        <Card className="mb-8 shadow-sm">
+          <CardContent className="p-2 md:p-4">
+            <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
               {[
                 { key: 'overview', label: '🏠 Overview' },
                 { key: 'schedule', label: '📅 Schedule' },
                 { key: 'caregivers', label: '👥 Care Team' },
                 { key: 'billing', label: '💳 Billing' },
-                { key: 'messages', label: '💬 Messages', count: messages.length }
+                { key: 'messages', label: '💬 Messages', count: messages.filter(m => !m.read && m.from !== 'You').length }
               ].map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveView(tab.key as any)}
-                  className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap flex items-center gap-2 transition-colors ${
-                    activeView === tab.key
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+                  className={`px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap flex items-center gap-2 transition-all ${activeView === tab.key
+                    ? 'bg-primary-600 text-white shadow-md'
+                    : 'text-gray-600 hover:bg-gray-100'
+                    }`}
                 >
                   {tab.label}
-                  {tab.count && (
-                    <Badge className={`${
-                      activeView === tab.key ? 'bg-white/20 text-white' : 'bg-red-600 text-white'
-                    } text-xs font-bold`}>
+                  {tab.count !== undefined && tab.count > 0 && (
+                    <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
                       {tab.count}
-                    </Badge>
+                    </span>
                   )}
                 </button>
               ))}
@@ -211,218 +180,214 @@ export function WorkingFamilyPortal() {
           </CardContent>
         </Card>
 
-        {/* Overview */}
-        {activeView === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent Care Updates */}
+        {/* Views */}
+        <div className="animate-fade-in">
+          {/* Overview View */}
+          {activeView === 'overview' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle>Recent Care Updates</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {recentVisits.length === 0 ? (
+                      <p className="text-gray-500 text-center py-4">No recent visits recorded.</p>
+                    ) : (
+                      recentVisits.slice(0, 3).map((visit) => (
+                        <div key={visit.id} className="bg-gray-50 p-4 rounded-xl border border-gray-100 hover:border-primary-100 transition-colors">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <p className="font-semibold text-gray-900">
+                                {visit.services.join(', ')}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {new Date(visit.date).toLocaleDateString()} • {visit.caregiverName}
+                              </p>
+                            </div>
+                            <Badge variant="success">Completed</Badge>
+                          </div>
+                          {visit.notes && <p className="text-sm text-gray-700 italic">"{visit.notes}"</p>}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle>My Care Team</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {careTeam.slice(0, 3).map((member) => (
+                      <div key={member.id} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors">
+                        <div className="h-10 w-10 bg-caregiver-100 rounded-full flex items-center justify-center text-caregiver-700 font-bold">
+                          {member.name.charAt(0)}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">{member.name}</p>
+                          <p className="text-sm text-gray-500">{member.role}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => alert(`Calling ${member.phone}`)} className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+                            📞
+                          </button>
+                          <button onClick={() => alert(`Messaging ${member.email}`)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                            💬
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+                    <button onClick={() => setActiveView('caregivers')} className="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                      View Full Team
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Schedule View */}
+          {activeView === 'schedule' && (
             <Card>
               <CardHeader>
-                <CardTitle>Recent Care Updates</CardTitle>
+                <CardTitle>Upcoming Schedule</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {data.recentVisits.slice(0, 3).map((visit, index) => (
-                    <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 mb-1">
-                            {visit.serviceType} with {visit.caregiver}
-                          </p>
-                          <p className="text-xs text-gray-600">{visit.date}</p>
-                        </div>
-                        <div className="flex items-center gap-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <span key={i} className={`text-sm ${i < visit.rating ? 'text-amber-400' : 'text-gray-300'}`}>
-                              ⭐
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-700">{visit.notes}</p>
+                  {upcomingVisits.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-gray-500">No upcoming visits scheduled.</p>
                     </div>
-                  ))}
+                  ) : (
+                    upcomingVisits.map((visit) => (
+                      <div key={visit.id} className="flex items-center p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                        <div className="p-3 bg-blue-50 text-blue-600 rounded-lg mr-4">
+                          <span className="text-xl font-bold">{new Date(visit.date).getDate()}</span>
+                          <span className="block text-xs uppercase font-bold">{new Date(visit.date).toLocaleDateString(undefined, { month: 'short' })}</span>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900">{visit.caregiverName}</h4>
+                          <p className="text-sm text-gray-500">{visit.time} ({visit.duration} mins) • {visit.services.join(', ')}</p>
+                        </div>
+                        <Badge variant="info">Scheduled</Badge>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
+          )}
 
-            {/* Care Team Quick Contact */}
+          {/* Messages View */}
+          {activeView === 'messages' && (
+            <Card className="h-[600px] flex flex-col">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Message Center</CardTitle>
+                  <Button size="sm" onClick={handleSendMessage}>
+                    📝 New Message
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-y-auto space-y-4 p-4">
+                {messages.length === 0 ? (
+                  <p className="text-center text-gray-500 my-auto">No messages yet.</p>
+                ) : (
+                  messages.map((msg) => (
+                    <div key={msg.id} className={`flex ${msg.from === 'You' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[80%] rounded-2xl p-4 ${msg.from === 'You'
+                        ? 'bg-primary-600 text-white rounded-br-none'
+                        : 'bg-gray-100 text-gray-900 rounded-bl-none'
+                        }`}>
+                        <div className="flex justify-between items-baseline mb-1 gap-4">
+                          <span className={`text-xs font-bold ${msg.from === 'You' ? 'text-primary-100' : 'text-gray-500'}`}>
+                            {msg.from}
+                          </span>
+                          <span className={`text-xs ${msg.from === 'You' ? 'text-primary-200' : 'text-gray-400'}`}>
+                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <p className="text-sm">{msg.content}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+              <div className="p-4 border-t bg-gray-50 rounded-b-lg">
+                <Button onClick={handleSendMessage} className="w-full">
+                  Write a Message
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {/* Billing View */}
+          {activeView === 'billing' && (
             <Card>
               <CardHeader>
-                <CardTitle>Care Team</CardTitle>
+                <CardTitle>Billing History</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {data.caregiverTeam.slice(0, 3).map((caregiver, index) => (
-                    <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 mb-1">
-                          {caregiver.name}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          {caregiver.role} • ⭐ {caregiver.rating}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => alert(`Calling ${caregiver.name} at ${caregiver.phone}`)}
-                          className="bg-green-600 hover:bg-green-700 text-xs px-2 py-1"
-                        >
-                          📞
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => alert(`Sending message to ${caregiver.name}`)}
-                          className="text-xs px-2 py-1"
-                        >
-                          💬
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {billing.map((bill) => (
+                        <tr key={bill.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {new Date(bill.serviceDate).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {bill.description}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            ${bill.amount.toFixed(2)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Badge variant={bill.status === 'paid' ? 'success' : bill.status === 'pending' ? 'warning' : 'danger'}>
+                              {bill.status}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </CardContent>
             </Card>
-          </div>
-        )}
+          )}
 
-        {/* Schedule View */}
-        {activeView === 'schedule' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Upcoming Care Schedule</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-                <span className="text-6xl block mb-4">📅</span>
-                <h4 className="text-xl font-semibold text-gray-900 mb-2">
-                  Care Schedule
-                </h4>
-                <p className="text-gray-600 mb-6">
-                  View upcoming visits, appointment times, and caregiver assignments
-                </p>
-                <Button onClick={() => alert('Opening detailed calendar view...')}>
-                  View Full Calendar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Caregivers View */}
-        {activeView === 'caregivers' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Care Team</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {data.caregiverTeam.map((caregiver, index) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h4 className="font-semibold text-gray-900 mb-1">{caregiver.name}</h4>
-                        <p className="text-sm text-gray-600 mb-2">{caregiver.role}</p>
-                        <div className="flex items-center gap-1 mb-2">
-                          <span className="text-amber-400">⭐</span>
-                          <span className="text-sm font-medium text-gray-900">{caregiver.rating}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-1 mb-3">
-                      <p className="text-sm text-gray-700">📞 {caregiver.phone}</p>
-                      <p className="text-sm text-gray-700">📧 {caregiver.email}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => alert(`Calling ${caregiver.name}`)}
-                        className="flex-1 bg-green-600 hover:bg-green-700"
-                      >
-                        📞 Call
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => alert(`Messaging ${caregiver.name}`)}
-                        className="flex-1"
-                      >
-                        💬 Message
-                      </Button>
-                    </div>
+          {/* Caregivers View */}
+          {activeView === 'caregivers' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {careTeam.map((member) => (
+                <Card key={member.id} className="text-center p-6">
+                  <div className="mx-auto h-24 w-24 bg-gray-200 rounded-full mb-4 flex items-center justify-center text-3xl">
+                    {member.avatar ? <img src={member.avatar} alt={member.name} className="h-full w-full rounded-full object-cover" /> : '👤'}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Billing View */}
-        {activeView === 'billing' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Billing Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <p className="text-sm text-green-800 mb-1">Last Payment</p>
-                  <p className="text-2xl font-bold text-green-900">{data.billingInfo.lastPayment}</p>
-                </div>
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-800 mb-1">Next Billing</p>
-                  <p className="text-2xl font-bold text-blue-900">{data.billingInfo.nextBilling}</p>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-sm text-gray-800 mb-1">Current Balance</p>
-                  <p className="text-2xl font-bold text-gray-900">{data.billingInfo.balance}</p>
-                </div>
-              </div>
-              <div className="text-center py-8">
-                <Button onClick={() => alert('Opening payment portal...')}>
-                  💳 View Payment History
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Messages View */}
-        {activeView === 'messages' && (
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Messages & Updates</CardTitle>
-                <Button size="sm" onClick={sendMessage}>
-                  📝 New Message
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`p-4 rounded-lg border ${
-                      message.from === 'You'
-                        ? 'bg-blue-50 border-blue-200'
-                        : 'bg-gray-50 border-gray-200'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="text-sm font-medium text-gray-900">
-                        {message.from}
-                      </p>
-                      <span className="text-xs text-gray-600">
-                        {message.time}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-700">{message.message}</p>
+                  <h3 className="text-lg font-bold text-gray-900">{member.name}</h3>
+                  <p className="text-primary-600 font-medium mb-4">{member.role}</p>
+                  <div className="flex gap-2 justify-center">
+                    <Button size="sm" variant="outline" onClick={() => alert('Call')}>Call</Button>
+                    <Button size="sm" onClick={() => alert('Message')}>Message</Button>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

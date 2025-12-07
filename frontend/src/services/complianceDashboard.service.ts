@@ -2,6 +2,7 @@
  * Compliance Dashboard Service
  * HIPAA compliance, regulatory tracking, and audit preparation
  */
+import { request } from './api';
 
 export interface ComplianceMetric {
   area: string;
@@ -14,10 +15,10 @@ export interface ComplianceMetric {
 
 export interface AuditItem {
   id: string;
-  category: 'HIPAA' | 'Medicare' | 'State' | 'Internal';
+  category: 'HIPAA' | 'Medicare' | 'State' | 'Internal' | 'Certification';
   finding: string;
   severity: 'critical' | 'high' | 'medium' | 'low';
-  status: 'open' | 'in-progress' | 'resolved';
+  status: 'open' | 'in-progress' | 'resolved' | 'overdue' | 'expired';
   dueDate: string;
   assignee: string;
 }
@@ -33,60 +34,51 @@ export interface PolicyDocument {
 }
 
 class ComplianceDashboardService {
-  async getComplianceMetrics(): Promise<ComplianceMetric[]> {
-    await this.delay(500);
-    return [
-      {
-        area: 'HIPAA Privacy',
-        score: 95,
-        target: 90,
-        status: 'compliant',
-        lastAudit: '2023-10-15',
-        nextAudit: '2024-04-15'
-      },
-      {
-        area: 'Medicare Compliance',
-        score: 92,
-        target: 95,
-        status: 'warning',
-        lastAudit: '2023-11-20',
-        nextAudit: '2024-02-20'
-      },
-      {
-        area: 'Ohio State Regulations',
-        score: 98,
-        target: 95,
-        status: 'compliant',
-        lastAudit: '2023-12-01',
-        nextAudit: '2024-06-01'
-      }
-    ];
+  async getComplianceData(organizationId: string): Promise<{ metrics: ComplianceMetric[], items: AuditItem[] }> {
+    try {
+      const response = await request<{ metrics: any, items: any[] }>(`/api/console/dashboard/compliance/${organizationId}`);
+      const { metrics, items } = response;
+
+      // Map backend metrics to frontend format
+      const complianceMetrics: ComplianceMetric[] = [
+        {
+          area: 'HIPAA & Security',
+          score: metrics.hipaaComplianceScore,
+          target: 90,
+          status: metrics.hipaaComplianceScore >= 90 ? 'compliant' : 'warning',
+          lastAudit: '2023-10-15',
+          nextAudit: '2024-04-15'
+        },
+        {
+          area: 'EVV Adherence',
+          score: 100 - (metrics.activeAudits * 5), // Rough proxy logic
+          target: 95,
+          status: metrics.activeAudits === 0 ? 'compliant' : 'non-compliant',
+          lastAudit: new Date().toISOString().split('T')[0],
+          nextAudit: 'Daily'
+        }
+      ];
+
+      // Map items to AuditItems
+      const auditItems: AuditItem[] = items.map((item: any) => ({
+        id: item.id,
+        category: item.type,
+        finding: item.description,
+        severity: item.priority,
+        status: item.status === 'completed' ? 'resolved' : 'open',
+        dueDate: item.dueDate,
+        assignee: 'Unassigned'
+      }));
+
+      return { metrics: complianceMetrics, items: auditItems };
+
+    } catch (error) {
+      console.error('Failed compliance fetch', error);
+      return { metrics: [], items: [] };
+    }
   }
 
-  async getAuditItems(): Promise<AuditItem[]> {
-    await this.delay(400);
-    return [
-      {
-        id: 'AUDIT-001',
-        category: 'HIPAA',
-        finding: 'Update employee access logs documentation',
-        severity: 'medium',
-        status: 'in-progress',
-        dueDate: '2024-02-01',
-        assignee: 'Sarah Williams'
-      },
-      {
-        id: 'AUDIT-002',
-        category: 'Medicare',
-        finding: 'Review EVV documentation procedures',
-        severity: 'high',
-        status: 'open',
-        dueDate: '2024-01-25',
-        assignee: 'Michael Johnson'
-      }
-    ];
-  }
-
+  // Keep these for now if needed, but primary is getComplianceData
   async getPolicyDocuments(): Promise<PolicyDocument[]> {
     await this.delay(600);
     return [

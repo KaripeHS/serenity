@@ -14,24 +14,7 @@ import {
   ExclamationTriangleIcon,
   AcademicCapIcon
 } from '@heroicons/react/24/outline';
-
-interface ComplianceMetrics {
-  hipaaComplianceScore: number;
-  activeAudits: number;
-  expiredCertifications: number;
-  pendingTrainings: number;
-  securityIncidents: number;
-  dataBreaches: number;
-}
-
-interface ComplianceItem {
-  id: string;
-  type: string;
-  description: string;
-  status: 'completed' | 'in_progress' | 'pending' | 'overdue' | 'expired';
-  dueDate: string;
-  priority: 'critical' | 'high' | 'medium' | 'low';
-}
+import { complianceDashboardService, ComplianceMetric, AuditItem } from '../../services/complianceDashboard.service';
 
 interface MetricCardProps {
   title: string;
@@ -61,35 +44,38 @@ function MetricCard({ title, value, subtitle, icon: Icon, iconColor, valueColor 
   );
 }
 
-function StatusBadge({ status }: { status: ComplianceItem['status'] }) {
-  const variants: Record<ComplianceItem['status'], any> = {
-    completed: 'success',
-    in_progress: 'info',
-    pending: 'warning',
-    overdue: 'danger',
-    expired: 'danger'
+function StatusBadge({ status }: { status: string }) {
+  const variants: Record<string, any> = {
+    'completed': 'success',
+    'resolved': 'success',
+    'in-progress': 'info',
+    'open': 'warning',
+    'pending': 'warning',
+    'overdue': 'danger',
+    'expired': 'danger'
   };
 
-  return <Badge variant={variants[status]} size="sm">{status.replace('_', ' ')}</Badge>;
+  return <Badge variant={variants[status] || 'gray'} size="sm">{status ? status.replace('_', ' ') : 'Unknown'}</Badge>;
 }
 
-function PriorityBadge({ priority }: { priority: ComplianceItem['priority'] }) {
-  const variants: Record<ComplianceItem['priority'], any> = {
+function PriorityBadge({ priority }: { priority: string }) {
+  const variants: Record<string, any> = {
     critical: 'danger',
     high: 'warning',
     medium: 'info',
     low: 'gray'
   };
 
-  return <Badge variant={variants[priority]} size="sm">{priority}</Badge>;
+  return <Badge variant={variants[priority] || 'gray'} size="sm">{priority}</Badge>;
 }
 
 export function WorkingComplianceDashboard() {
   const { user } = useAuth();
-  const [metrics, setMetrics] = useState<ComplianceMetrics | null>(null);
+  const [metrics, setMetrics] = useState<any | null>(null); // Simplified typing for now
+  const [complianceItems, setComplianceItems] = useState<AuditItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Mock chart data
+  // Mock chart data (Still kept mock as no endpoint yet for compliance trend chart time series)
   const complianceTrendData = [
     { label: 'Jan', value: 82.5 },
     { label: 'Feb', value: 84.2 },
@@ -106,33 +92,38 @@ export function WorkingComplianceDashboard() {
     { label: 'Week 4', value: 94 }
   ];
 
-  const complianceItems: ComplianceItem[] = [
-    { id: 'HIPAA001', type: 'HIPAA', description: 'Annual HIPAA Risk Assessment', status: 'completed', dueDate: '2024-12-31', priority: 'high' },
-    { id: 'CERT002', type: 'Certification', description: 'CPR Certification - Maria Rodriguez', status: 'expired', dueDate: '2024-01-15', priority: 'critical' },
-    { id: 'TRAIN003', type: 'Training', description: 'HIPAA Privacy Training - New Hires', status: 'pending', dueDate: '2024-01-20', priority: 'medium' },
-    { id: 'AUDIT004', type: 'Audit', description: 'Q1 Internal Compliance Audit', status: 'in_progress', dueDate: '2024-03-31', priority: 'high' },
-    { id: 'SEC005', type: 'Security', description: 'Password Policy Compliance Check', status: 'overdue', dueDate: '2024-01-10', priority: 'critical' }
-  ];
-
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMetrics({
-        hipaaComplianceScore: 87.5,
-        activeAudits: 3,
-        expiredCertifications: 8,
-        pendingTrainings: 12,
-        securityIncidents: 0,
-        dataBreaches: 0
-      });
-      setLoading(false);
-    }, 950);
+    async function loadDashboardData() {
+      if (!user?.organizationId) return;
 
-    return () => clearTimeout(timer);
-  }, []);
+      try {
+        setLoading(true);
+        const data = await complianceDashboardService.getComplianceData(user.organizationId);
+
+        // Transform metrics list to object for the view
+        const metricsObj = {
+          hipaaComplianceScore: data.metrics.find(m => m.area.includes('HIPAA'))?.score || 0,
+          activeAudits: data.metrics.find(m => m.area.includes('EVV'))?.status === 'non-compliant' ? 1 : 0,
+          expiredCertifications: data.items.filter(i => i.category === 'Certification').length,
+          pendingTrainings: 0, // Placeholder
+          securityIncidents: 0,
+          dataBreaches: 0
+        };
+
+        setMetrics(metricsObj);
+        setComplianceItems(data.items);
+      } catch (error) {
+        console.error("Failed to load compliance data", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadDashboardData();
+  }, [user?.organizationId]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="bg-gray-50 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <Skeleton className="h-10 w-96 mb-3" />
@@ -160,7 +151,7 @@ export function WorkingComplianceDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       <div className="max-w-7xl mx-auto p-4 md:p-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
@@ -295,47 +286,36 @@ export function WorkingComplianceDashboard() {
             Compliance Items Requiring Attention
           </h3>
           <div className="space-y-4">
-            {complianceItems.filter(item => item.status !== 'completed').map((item) => (
+            {complianceItems.filter(item => item.status !== 'resolved').map((item) => (
               <div
                 key={item.id}
-                className={`p-4 border rounded-lg transition-all hover:border-primary-300 hover:bg-primary-50 ${
-                  item.status === 'overdue' || item.status === 'expired'
+                className={`p-4 border rounded-lg transition-all hover:border-primary-300 hover:bg-primary-50 ${item.status === 'open' || item.status === 'overdue' // Mapped status from service
                     ? 'border-danger-300 bg-danger-50'
                     : 'border-gray-200 bg-gray-50'
-                }`}
+                  }`}
               >
                 <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <h4 className="text-base font-semibold text-gray-900">{item.description}</h4>
-                      <PriorityBadge priority={item.priority} />
+                      <h4 className="text-base font-semibold text-gray-900">{item.finding}</h4>
+                      <PriorityBadge priority={item.severity} />
                     </div>
                     <p className="text-sm text-gray-600 mb-1">
-                      {item.type} • Due: {item.dueDate}
+                      {item.category} • Due: {item.dueDate}
                     </p>
                     <p className="text-xs text-gray-500">ID: {item.id}</p>
                   </div>
                   <StatusBadge status={item.status} />
                 </div>
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {(item.status === 'pending' || item.status === 'overdue') && (
-                    <button className="px-3 py-1.5 bg-success-600 text-white rounded-lg text-sm font-medium hover:bg-success-700 transition-colors">
-                      ✓ Mark Complete
-                    </button>
-                  )}
-                  {item.status === 'expired' && (
-                    <>
-                      <button className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
-                        📅 Schedule Renewal
-                      </button>
-                      <button className="px-3 py-1.5 bg-warning-600 text-white rounded-lg text-sm font-medium hover:bg-warning-700 transition-colors">
-                        ⏰ Request Extension
-                      </button>
-                    </>
-                  )}
                   <button className="px-3 py-1.5 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors">
                     👁️ View Details
                   </button>
+                  {item.status === 'open' && (
+                    <button className="px-3 py-1.5 bg-success-600 text-white rounded-lg text-sm font-medium hover:bg-success-700 transition-colors">
+                      ✓ Resolve
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

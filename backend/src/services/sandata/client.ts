@@ -83,7 +83,7 @@ export class SandataClient {
           this.authToken = null; // Clear expired token
           const newToken = await this.authenticate();
           if (newToken && error.config) {
-            error.config.headers = error.config.headers || {};
+            error.config.headers = (error.config.headers || {}) as any;
             error.config.headers.Authorization = `Bearer ${newToken.token}`;
             error.config.headers['X-Retry-Count'] = '1';
             return this.axiosInstance.request(error.config);

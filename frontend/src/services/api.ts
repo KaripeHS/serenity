@@ -53,7 +53,10 @@ export class ApiError extends Error {
 /**
  * Make authenticated API request
  */
-async function request<T>(
+/**
+ * Make authenticated API request
+ */
+export async function request<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -277,16 +280,33 @@ export interface Caregiver {
   certifications: string[];
 }
 
+export interface Authorization {
+  id: string;
+  authorizationNumber: string;
+  serviceCode: string;
+  unitsApproved: number;
+  unitsUsed: number;
+  startDate: string;
+  endDate: string;
+  status: string;
+}
+
 export interface Client {
   id: string;
   firstName: string;
   lastName: string;
-  address: string;
-  city: string;
-  phone: string;
+  dateOfBirth?: string;
+  medicaidNumber?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  phone?: string;
   status: string;
-  podId: string;
-  podCode: string;
+  podId?: string;
+  podCode?: string;
+  podName?: string;
+  authorizations?: Authorization[];
 }
 
 export interface Pod {
@@ -317,8 +337,25 @@ export const consoleApi = {
   /**
    * Get all clients
    */
-  async getClients(): Promise<{ clients: Client[] }> {
-    return request<{ clients: Client[] }>('/api/console/clients');
+  async getClients(organizationId: string): Promise<{ clients: Client[] }> {
+    return request<{ clients: Client[] }>(`/api/console/clients/${organizationId}`);
+  },
+
+  /**
+   * Get single client details
+   */
+  async getClient(organizationId: string, clientId: string): Promise<Client> {
+    return request<Client>(`/api/console/clients/${organizationId}/${clientId}`);
+  },
+
+  /**
+   * Get client schedule
+   */
+  async getClientSchedule(organizationId: string, clientId: string, startDate?: string, endDate?: string): Promise<{ shifts: Shift[] }> {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    return request<{ shifts: Shift[] }>(`/api/console/clients/${organizationId}/${clientId}/schedule?${params.toString()}`);
   },
 
   /**

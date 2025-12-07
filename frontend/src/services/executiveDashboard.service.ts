@@ -2,6 +2,7 @@
  * Executive Dashboard Service
  * Provides strategic KPIs, AI insights, and business intelligence
  */
+import { request } from './api';
 
 export interface KPIMetric {
   id: string;
@@ -9,7 +10,7 @@ export interface KPIMetric {
   value: number;
   target: number;
   unit: string;
-  trend: 'up' | 'down' | 'stable';
+  trend: 'up' | 'down' | 'neutral';
   change: number;
   period: string;
 }
@@ -43,53 +44,115 @@ export interface GrowthOpportunity {
 }
 
 class ExecutiveDashboardService {
-  async getKPIMetrics(): Promise<KPIMetric[]> {
-    await this.delay(500);
-    return [
-      {
-        id: '1',
-        name: 'Active Patients',
-        value: 447,
-        target: 450,
-        unit: 'patients',
-        trend: 'up',
-        change: 2.3,
-        period: 'vs last month'
-      },
-      {
-        id: '2',
-        name: 'Revenue (Monthly)',
-        value: 2150000,
-        target: 2200000,
-        unit: 'USD',
-        trend: 'up',
-        change: 8.5,
-        period: 'vs last month'
-      },
-      {
-        id: '3',
-        name: 'Staff Utilization',
-        value: 87.3,
-        target: 85,
-        unit: '%',
-        trend: 'up',
-        change: 3.2,
-        period: 'vs last month'
-      },
-      {
-        id: '4',
-        name: 'EVV Compliance',
-        value: 97.8,
-        target: 95,
-        unit: '%',
-        trend: 'stable',
-        change: 0.2,
-        period: 'vs last month'
-      }
-    ];
+  /**
+   * Fetch real KPIs from the backend
+   */
+  async getKPIMetrics(organizationId: string): Promise<KPIMetric[]> {
+    try {
+      // Fetch high-level KPIs
+      const data = await request<{ kpis: any }>(`/api/console/dashboard/kpis/${organizationId}?period=30`);
+      const { kpis } = data;
+
+      return [
+        {
+          id: '1',
+          name: 'Active Patients',
+          value: kpis.activeClients,
+          target: Math.ceil(kpis.activeClients * 1.1), // Target 10% growth
+          unit: 'patients',
+          trend: 'up', // TODO: Calculate from historical data
+          change: 0, // Placeholder
+          period: 'vs last month'
+        },
+        {
+          id: '2',
+          name: 'Active Staff',
+          value: kpis.activeCaregivers,
+          target: Math.ceil(kpis.activeCaregivers * 1.1),
+          unit: 'staff',
+          trend: 'neutral',
+          change: 0,
+          period: 'vs last month'
+        },
+        {
+          id: '3',
+          name: 'Billable Hours',
+          value: kpis.billableHours,
+          target: kpis.activeClients * 40, // Rough estimate target
+          unit: 'hrs',
+          trend: 'up',
+          change: 0,
+          period: 'last 30 days'
+        },
+        {
+          id: '4',
+          name: 'Sandata Sync Rate',
+          value: kpis.sandataSyncRate,
+          target: 95,
+          unit: '%',
+          trend: kpis.sandataSyncRate >= 95 ? 'neutral' : 'down',
+          change: 0,
+          period: 'last 30 days'
+        }
+      ];
+    } catch (error) {
+      console.error('Failed to fetch KPIs:', error);
+      // Fallback to empty/safe data to prevent crash
+      return [];
+    }
+  }
+
+  /**
+   * Get Alerts/Insights (Real data mapped to insight interface)
+   */
+  async getAIInsights(organizationId: string): Promise<AIInsight[]> {
+    try {
+      const data = await request<{ alerts: any[] }>(`/api/console/dashboard/alerts/${organizationId}`);
+
+      return data.alerts.map((alert: any, index: number) => ({
+        id: `alert-${index}`,
+        type: alert.severity === 'high' ? 'risk' : 'recommendation', // Map 'error'/'warning' -> 'risk'
+        title: alert.title,
+        description: alert.message,
+        impact: alert.severity,
+        confidence: 100, // It's a real alert
+        actionRequired: true,
+        timestamp: new Date().toISOString()
+      }));
+    } catch (error) {
+      console.error('Failed to fetch alerts:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch Chart Data (Real)
+   */
+  async getChartsData(organizationId: string): Promise<{ revenue: any[]; visits: any[] }> {
+    try {
+      const [revenueData, visitsData] = await Promise.all([
+        request<{ chart: any }>(`/api/console/dashboard/charts/${organizationId}?type=revenue&period=6m`),
+        request<{ chart: any }>(`/api/console/dashboard/charts/${organizationId}?type=visits&period=7d`)
+      ]);
+
+      return {
+        revenue: revenueData.chart.data.map((val: number, i: number) => ({
+          label: revenueData.chart.labels[i],
+          value: val
+        })),
+        visits: visitsData.chart.data.map((val: number, i: number) => ({
+          label: visitsData.chart.labels[i],
+          value: val
+        }))
+      };
+    } catch (error) {
+      console.error('Failed to fetch charts', error);
+      return { revenue: [], visits: [] };
+    }
   }
 
   async getCapacityAnalysis(): Promise<CapacityAnalysis> {
+    // TODO: Implement backend endpoint for capacity planning
     await this.delay(600);
     return {
       currentUtilization: 87.3,
@@ -102,42 +165,6 @@ class ExecutiveDashboardService {
         'Partner with local therapy clinics'
       ]
     };
-  }
-
-  async getAIInsights(): Promise<AIInsight[]> {
-    await this.delay(700);
-    return [
-      {
-        id: '1',
-        type: 'opportunity',
-        title: 'Revenue Optimization Opportunity',
-        description: 'AI detected 15% increase in demand for evening visits. Consider premium pricing.',
-        impact: 'high',
-        confidence: 92,
-        actionRequired: true,
-        timestamp: new Date().toISOString()
-      },
-      {
-        id: '2',
-        type: 'anomaly',
-        title: 'Unusual Staffing Pattern',
-        description: 'Higher than normal overtime in Northeast region. Investigate scheduling efficiency.',
-        impact: 'medium',
-        confidence: 88,
-        actionRequired: true,
-        timestamp: new Date().toISOString()
-      },
-      {
-        id: '3',
-        type: 'recommendation',
-        title: 'Predictive Maintenance Alert',
-        description: 'AI recommends preventive action on vehicle fleet based on usage patterns.',
-        impact: 'medium',
-        confidence: 85,
-        actionRequired: false,
-        timestamp: new Date().toISOString()
-      }
-    ];
   }
 
   async getGrowthOpportunities(): Promise<GrowthOpportunity[]> {

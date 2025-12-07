@@ -51,7 +51,7 @@ export class TaxService {
   constructor(
     private db: DatabaseClient,
     private auditLogger: AuditLogger
-  ) {}
+  ) { }
 
   /**
    * Calculate federal tax withholding using 2024 tax tables
@@ -285,12 +285,15 @@ export class TaxService {
 
     await this.db.insert('tax_forms', w2Form);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: 'system',
       action: 'generate_w2',
-      resourceType: 'tax_form',
-      resourceId: w2Form.id,
-      metadata: { employeeId, taxYear }
+      resource: 'tax_form',
+      details: {
+        resourceId: w2Form.id,
+        employeeId,
+        taxYear
+      }
     });
 
     return w2Form;
@@ -461,7 +464,7 @@ export class TaxService {
     }
 
     const totalTaxes = federalWithholding + ohioStateWithholding + localWithholding +
-                      ficaTaxes.socialSecurity + ficaTaxes.medicare + ficaTaxes.additionalMedicare;
+      ficaTaxes.socialSecurity + ficaTaxes.medicare + ficaTaxes.additionalMedicare;
 
     const netPay = grossPay - totalTaxes;
 
@@ -485,12 +488,16 @@ export class TaxService {
 
     await this.db.insert('tax_calculations', taxCalculation);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       action: 'calculate_payroll_taxes',
-      resourceType: 'tax_calculation',
-      resourceId: taxCalculation.id,
-      metadata: { employeeId, grossPay, netPay }
+      resource: 'tax_calculation',
+      details: {
+        resourceId: taxCalculation.id,
+        employeeId,
+        grossPay,
+        netPay
+      }
     });
 
     return taxCalculation;

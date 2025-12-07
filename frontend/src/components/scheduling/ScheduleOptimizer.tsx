@@ -1,7 +1,9 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
+import { schedulingService, OptimizationResult } from '../../services/scheduling.service';
 
 interface OptimizationSuggestion {
   id: string;
@@ -19,60 +21,61 @@ interface ScheduleOptimizerProps {
 
 export function ScheduleOptimizer({ className = '' }: ScheduleOptimizerProps) {
   const [isOptimizing, setIsOptimizing] = useState(false);
-  const [suggestions, setSuggestions] = useState<OptimizationSuggestion[]>([
-    {
-      id: '1',
-      type: 'route',
-      title: 'Optimize Westerville Route',
-      description: 'Reorganize 3 visits in Westerville to reduce travel time by 25 minutes',
-      impact: '25min saved, $18 fuel cost reduction',
-      savings: 18,
-      effort: 'low'
-    },
-    {
-      id: '2',
-      type: 'caregiver',
-      title: 'Caregiver Skill Match',
-      description: 'Assign Maria Rodriguez to specialized wound care visits - better match',
-      impact: 'Improved patient outcomes, reduced visit time',
-      savings: 45,
-      effort: 'medium'
-    },
-    {
-      id: '3',
-      type: 'time',
-      title: 'Peak Hours Optimization',
-      description: 'Move 2 non-urgent visits from peak to off-peak hours',
-      impact: 'Reduced overtime costs, better coverage',
-      savings: 120,
-      effort: 'low'
-    }
-  ]);
+  const [suggestions, setSuggestions] = useState<OptimizationSuggestion[]>([]);
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [metrics, setMetrics] = useState({ distanceSavings: 0, timeSavings: 0 });
+
+  useEffect(() => {
+    // Default to next 7 days
+    const start = new Date();
+    const end = new Date();
+    end.setDate(end.getDate() + 7);
+
+    setStartDate(start.toISOString().slice(0, 10)); // YYYY-MM-DD
+    setEndDate(end.toISOString().slice(0, 10));
+  }, []);
 
   const handleOptimize = async () => {
+    if (!startDate || !endDate) return;
+
     setIsOptimizing(true);
+    setSuggestions([]);
 
-    // Simulate AI optimization
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    try {
+      const result: OptimizationResult = await schedulingService.optimizeSchedule(
+        new Date(startDate),
+        new Date(endDate)
+      );
 
-    // Add new suggestions
-    const newSuggestion: OptimizationSuggestion = {
-      id: '4',
-      type: 'cost',
-      title: 'Equipment Efficiency',
-      description: 'Consolidate medical supply deliveries to reduce duplicate trips',
-      impact: 'Reduced supply costs and travel time',
-      savings: 75,
-      effort: 'medium'
-    };
+      // Map API result to UI suggestions
+      const mappedSuggestions: OptimizationSuggestion[] = result.changes.map((change, index) => ({
+        id: change.shiftId || `opt-${index}`,
+        type: 'route', // Default to route/mileage optimization for MVP
+        title: 'Route Efficiency',
+        description: change.reason,
+        impact: `${change.efficiencyGain.toFixed(1)} miles reduction`,
+        savings: Math.round(change.efficiencyGain * 0.65), // Approx $0.65/mile
+        effort: 'low'
+      }));
 
-    setSuggestions(prev => [newSuggestion, ...prev]);
-    setIsOptimizing(false);
+      setSuggestions(mappedSuggestions);
+      setMetrics({
+        distanceSavings: result.summary.totalDistanceSavings,
+        timeSavings: result.summary.totalTimeSavings
+      });
+
+    } catch (error) {
+      console.error('Optimization failed:', error);
+    } finally {
+      setIsOptimizing(false);
+    }
   };
 
   const handleApplySuggestion = (suggestionId: string) => {
+    // In real app, call API to apply the shift update
+    alert('Optimization applied (simulated)');
     setSuggestions(prev => prev.filter(s => s.id !== suggestionId));
-    // In real app, this would apply the optimization
   };
 
   const getTypeColor = (type: string) => {
@@ -102,7 +105,7 @@ export function ScheduleOptimizer({ className = '' }: ScheduleOptimizerProps) {
         <CardTitle className="flex items-center justify-between">
           <span>Schedule Optimizer</span>
           <Badge className="bg-green-100 text-green-800">
-            ${totalSavings}/day potential
+            ${totalSavings} potential savings
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -113,15 +116,27 @@ export function ScheduleOptimizer({ className = '' }: ScheduleOptimizerProps) {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <h4 className="font-medium text-blue-900">AI Schedule Analysis</h4>
-                <p className="text-sm text-blue-700">
-                  Analyzing 127 visits across 22 Ohio cities
-                </p>
+                <div className="flex space-x-2 mt-2">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="border rounded px-2 py-1 text-sm"
+                  />
+                  <span className="text-blue-700 self-center">to</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="border rounded px-2 py-1 text-sm"
+                  />
+                </div>
               </div>
               <Button
                 onClick={handleOptimize}
                 disabled={isOptimizing}
               >
-                {isOptimizing ? 'Analyzing...' : 'Run Optimization'}
+                {isOptimizing ? 'Analyzing...' : 'Run Analysis'}
               </Button>
             </div>
 
@@ -129,6 +144,13 @@ export function ScheduleOptimizer({ className = '' }: ScheduleOptimizerProps) {
               <div className="flex items-center space-x-2 text-blue-700">
                 <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-sm">AI analyzing routes and schedules...</span>
+              </div>
+            )}
+
+            {/* Quick Stats if Analysis Done */}
+            {!isOptimizing && metrics.distanceSavings > 0 && (
+              <div className="mt-2 text-sm text-blue-800">
+                Found {metrics.distanceSavings.toFixed(1)} miles of travel reduction opportunities.
               </div>
             )}
           </div>
@@ -161,7 +183,7 @@ export function ScheduleOptimizer({ className = '' }: ScheduleOptimizerProps) {
                     <div className="text-lg font-bold text-green-600">
                       ${suggestion.savings}
                     </div>
-                    <div className="text-xs text-gray-500">daily savings</div>
+                    <div className="text-xs text-gray-500">est. savings</div>
                   </div>
                 </div>
 
@@ -171,44 +193,19 @@ export function ScheduleOptimizer({ className = '' }: ScheduleOptimizerProps) {
                     size="sm"
                     onClick={() => handleApplySuggestion(suggestion.id)}
                   >
-                    Apply
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Preview
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Details
+                    Apply Optimization
                   </Button>
                 </div>
               </div>
             ))}
           </div>
 
-          {suggestions.length === 0 && (
+          {suggestions.length === 0 && !isOptimizing && (
             <div className="text-center py-8 text-gray-500">
               <div className="text-2xl mb-2">✅</div>
-              <p>All optimizations applied! Run analysis again to find new opportunities.</p>
+              <p>Ready to analyze. Select date range and click Run Analysis.</p>
             </div>
           )}
-
-          {/* Performance Metrics */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h5 className="font-medium mb-2">Current Performance</h5>
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div>
-                <div className="text-gray-600">Efficiency</div>
-                <div className="font-bold">87.3%</div>
-              </div>
-              <div>
-                <div className="text-gray-600">Avg Travel Time</div>
-                <div className="font-bold">18.5 min</div>
-              </div>
-              <div>
-                <div className="text-gray-600">Cost per Visit</div>
-                <div className="font-bold">$85.50</div>
-              </div>
-            </div>
-          </div>
         </div>
       </CardContent>
     </Card>

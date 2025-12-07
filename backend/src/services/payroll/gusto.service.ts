@@ -41,7 +41,8 @@ export class GustoPayrollProvider implements IPayrollProvider {
     });
 
     if (!this.configured) {
-      console.warn('[GustoPayroll] Not configured. Payroll operations will use mock data.');
+      // In production, this should be a hard error, but for now we warn
+      console.warn('[GustoPayroll] Not configured. Payroll operations will fail in production.');
     }
   }
 
@@ -53,9 +54,13 @@ export class GustoPayrollProvider implements IPayrollProvider {
     return this.configured;
   }
 
+  /**
+   * Sync employees to Gusto
+   * Creates or updates employees in Gusto based on local data
+   */
   async syncEmployees(employees: PayrollEmployee[]): Promise<PayrollSyncResult> {
     if (!this.configured) {
-      return this.mockSyncEmployees(employees);
+      throw new Error('Gusto integration is not configured. Cannot sync employees.');
     }
 
     const errors: Array<{ employeeId: string; error: string }> = [];
@@ -63,29 +68,35 @@ export class GustoPayrollProvider implements IPayrollProvider {
 
     for (const employee of employees) {
       try {
-        // Check if employee exists in Gusto
-        const existingEmployee = await this.getEmployee(employee.id);
+        // Check if employee exists in Gusto by email or external ID
+        let gustoEmployeeId = employee.externalId;
 
-        if (existingEmployee?.externalId) {
+        if (!gustoEmployeeId) {
+          const existing = await this.findEmployeeByEmail(employee.email);
+          if (existing) {
+            gustoEmployeeId = existing.id;
+          }
+        }
+
+        if (gustoEmployeeId) {
           // Update existing employee
-          await this.updateEmployee(employee);
+          await this.updateEmployee({ ...employee, externalId: gustoEmployeeId });
         } else {
           // Create new employee
           const result = await this.createEmployee(employee);
-          if (!result.success) {
-            errors.push({
-              employeeId: employee.id,
-              error: result.error || 'Unknown error',
-            });
-            continue;
+          if (result.success && result.externalId) {
+            gustoEmployeeId = result.externalId;
+          } else {
+            throw new Error(result.error || 'Failed to create employee');
           }
         }
 
         syncedCount++;
       } catch (error: any) {
+        console.error(`[Gusto] Failed to sync employee ${employee.email}:`, error.message);
         errors.push({
           employeeId: employee.id,
-          error: error.message,
+          error: error.message || 'Unknown error',
         });
       }
     }
@@ -99,9 +110,95 @@ export class GustoPayrollProvider implements IPayrollProvider {
     };
   }
 
+  /**
+   * Find employee by email in Gusto
+   */
+  private async findEmployeeByEmail(email: string): Promise<any | null> {
+    try {
+      const response = await this.client.get(`/v1/companies/${this.companyId}/employees`);
+      const employees = response.data;
+      return employees.find((e: any) => e.email === email) || null;
+    } catch (error) {
+      console.error('[Gusto] Error finding employee:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Create employee in Gusto
+   * Public method required by IPayrollProvider
+   */
+  async createEmployee(employee: PayrollEmployee): Promise<{ success: boolean; externalId?: string; error?: string }> {
+    if (!this.configured) {
+      return { success: true, externalId: `GUSTO-${Date.now()}` };
+    }
+
+    try {
+      const payload = {
+        first_name: employee.firstName,
+        last_name: employee.lastName,
+        email: employee.email,
+        phone: employee.phone,
+        date_of_birth: employee.dateOfBirth ? employee.dateOfBirth.toISOString().split('T')[0] : undefined,
+        ssn: employee.ssn,
+        date_of_hire: employee.hireDate.toISOString().split('T')[0],
+        rate: employee.payRate,
+        payment_method: employee.payType === 'salary' ? 'salary' : 'hourly',
+        onboarding_status: 'onboarding_completed'
+      };
+
+      const response = await this.client.post(`/v1/companies/${this.companyId}/employees`, payload);
+
+      return {
+        success: true,
+        externalId: response.data.id,
+      };
+    } catch (error: any) {
+      console.error('[GustoPayroll] Create employee failed:', error.message);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  /**
+   * Update employee in Gusto
+   * Public method required by IPayrollProvider
+   */
+  async updateEmployee(employee: PayrollEmployee): Promise<{ success: boolean; error?: string }> {
+    if (!this.configured) {
+      return { success: true };
+    }
+
+    if (!employee.externalId) {
+      return { success: false, error: 'Employee has no external ID' };
+    }
+
+    try {
+      const payload = {
+        first_name: employee.firstName,
+        last_name: employee.lastName,
+        email: employee.email,
+        phone: employee.phone,
+        date_of_birth: employee.dateOfBirth ? employee.dateOfBirth.toISOString().split('T')[0] : undefined,
+        rate: employee.payRate,
+      };
+
+      await this.client.put(`/v1/employees/${employee.externalId}`, payload);
+      return { success: true };
+    } catch (error: any) {
+      console.error('[GustoPayroll] Update employee failed:', error.message);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
   async submitHours(hours: PayrollHours[]): Promise<PayrollSyncResult> {
     if (!this.configured) {
-      return this.mockSubmitHours(hours);
+      throw new Error('Gusto integration is not configured. Cannot submit hours.');
     }
 
     try {
@@ -136,7 +233,7 @@ export class GustoPayrollProvider implements IPayrollProvider {
 
   async getCurrentPayPeriod(): Promise<{ start: Date; end: Date; payDate: Date }> {
     if (!this.configured) {
-      return this.mockGetCurrentPayPeriod();
+      throw new Error('Gusto integration is not configured.');
     }
 
     try {
@@ -155,7 +252,7 @@ export class GustoPayrollProvider implements IPayrollProvider {
 
   async getPayrollRuns(startDate: Date, endDate: Date): Promise<PayrollRun[]> {
     if (!this.configured) {
-      return this.mockGetPayrollRuns();
+      return [];
     }
 
     try {
@@ -206,59 +303,6 @@ export class GustoPayrollProvider implements IPayrollProvider {
     } catch (error: any) {
       console.error('[GustoPayroll] Get employee failed:', error.message);
       return null;
-    }
-  }
-
-  async createEmployee(employee: PayrollEmployee): Promise<{ success: boolean; externalId?: string; error?: string }> {
-    if (!this.configured) {
-      return { success: true, externalId: `GUSTO-${Date.now()}` };
-    }
-
-    try {
-      const response = await this.client.post(`/companies/${this.companyId}/employees`, {
-        first_name: employee.firstName,
-        last_name: employee.lastName,
-        email: employee.email,
-        phone: employee.phone,
-        date_of_hire: employee.hireDate.toISOString().split('T')[0],
-        rate: employee.payRate,
-        payment_method: employee.payType === 'salary' ? 'salary' : 'hourly',
-      });
-
-      return {
-        success: true,
-        externalId: response.data.id,
-      };
-    } catch (error: any) {
-      console.error('[GustoPayroll] Create employee failed:', error.message);
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
-  }
-
-  async updateEmployee(employee: PayrollEmployee): Promise<{ success: boolean; error?: string }> {
-    if (!this.configured) {
-      return { success: true };
-    }
-
-    try {
-      await this.client.put(`/companies/${this.companyId}/employees/${employee.externalId}`, {
-        first_name: employee.firstName,
-        last_name: employee.lastName,
-        email: employee.email,
-        phone: employee.phone,
-        rate: employee.payRate,
-      });
-
-      return { success: true };
-    } catch (error: any) {
-      console.error('[GustoPayroll] Update employee failed:', error.message);
-      return {
-        success: false,
-        error: error.message,
-      };
     }
   }
 
@@ -327,73 +371,5 @@ export class GustoPayrollProvider implements IPayrollProvider {
     return csv;
   }
 
-  // ========================================
-  // MOCK METHODS (for development)
-  // ========================================
-
-  private mockSyncEmployees(employees: PayrollEmployee[]): PayrollSyncResult {
-    console.log('\n========== GUSTO PAYROLL SYNC (DEV MODE) ==========');
-    console.log(`Syncing ${employees.length} employees to Gusto`);
-    employees.forEach(e => {
-      console.log(`  - ${e.firstName} ${e.lastName} (${e.email})`);
-    });
-    console.log('='.repeat(60) + '\n');
-
-    return {
-      success: true,
-      employeesSynced: employees.length,
-      hoursSubmitted: 0,
-      errors: [],
-      syncedAt: new Date(),
-    };
-  }
-
-  private mockSubmitHours(hours: PayrollHours[]): PayrollSyncResult {
-    console.log('\n========== GUSTO HOURS SUBMISSION (DEV MODE) ==========');
-    console.log(`Submitting hours for ${hours.length} employees`);
-    hours.forEach(h => {
-      console.log(`  - ${h.employeeName}: ${h.regularHours}h regular, ${h.overtimeHours}h OT`);
-    });
-    console.log('='.repeat(60) + '\n');
-
-    return {
-      success: true,
-      employeesSynced: 0,
-      hoursSubmitted: hours.length,
-      errors: [],
-      syncedAt: new Date(),
-    };
-  }
-
-  private mockGetCurrentPayPeriod(): { start: Date; end: Date; payDate: Date } {
-    const now = new Date();
-    const start = new Date(now);
-    start.setDate(1); // First day of month
-
-    const end = new Date(start);
-    end.setMonth(end.getMonth() + 1);
-    end.setDate(0); // Last day of month
-
-    const payDate = new Date(end);
-    payDate.setDate(payDate.getDate() + 5); // Pay 5 days after period end
-
-    return { start, end, payDate };
-  }
-
-  private mockGetPayrollRuns(): PayrollRun[] {
-    const now = new Date();
-
-    return [
-      {
-        id: 'payroll-001',
-        payPeriodStart: new Date(now.getFullYear(), now.getMonth() - 1, 1),
-        payPeriodEnd: new Date(now.getFullYear(), now.getMonth(), 0),
-        payDate: new Date(now.getFullYear(), now.getMonth(), 5),
-        status: 'completed',
-        totalGrossPay: 45000.00,
-        totalNetPay: 32000.00,
-        employeeCount: 30,
-      },
-    ];
-  }
+  // Mocks removed for production readiness
 }

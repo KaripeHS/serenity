@@ -136,6 +136,7 @@ export interface SandataEmployee {
   firstName: string;
   dateOfBirth: string; // YYYY-MM-DD
   ssn?: string; // Encrypted, may be required by some states
+  socialSecurityNumber?: string; // Decrypted 9-digit SSN
 
   // Optional fields
   middleName?: string;
@@ -308,7 +309,7 @@ export interface ValidationContext {
   clockInToleranceMinutes?: number;
   requireAuthorizationMatch?: boolean;
   blockOverAuthorization?: boolean;
-  clientAddress?: SandataAddress;
+  clientLocation?: SandataLocation;
   authorization?: ServiceAuthorization;
 }
 
@@ -421,7 +422,7 @@ export const SANDATA_ERROR_TAXONOMY = {
   // Authentication (4xx)
   AUTH_INVALID_CREDENTIALS: '401_AUTH',
   AUTH_TOKEN_EXPIRED: '401_EXPIRED',
-  AUTH_FORBIDDEN: '403',
+  AUTH_FORBIDDEN: '403_FORBIDDEN',
 
   // Validation (VAL_xxx)
   VAL_MISSING_FIELD: 'VAL_001',

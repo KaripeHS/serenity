@@ -35,6 +35,8 @@ export interface PayrollEmployee {
   lastName: string;
   email: string;
   phone: string;
+  dateOfBirth?: Date; // Required for new employees
+  ssn?: string;      // Required for new employees (handle securely)
   hireDate: Date;
   payRate: number;
   payType: 'hourly' | 'salary';

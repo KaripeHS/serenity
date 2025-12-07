@@ -13,7 +13,7 @@
  */
 
 import { edi835ParserService, EDI835Data, EDI835Claim } from './edi-835-parser.service';
-import { logger } from '../../shared/utils/logger';
+import { logger } from '../../utils/logger';
 
 export interface PostingResult {
   success: boolean;
@@ -278,8 +278,8 @@ export class RemittanceAutoPostingService {
     const status = result.claimsFailed === 0
       ? 'posted'
       : result.claimsMatched === 0
-      ? 'failed'
-      : 'partial';
+        ? 'failed'
+        : 'partial';
 
     logger.info(`Updated remittance ${remittanceId} status to ${status}`);
     await Promise.resolve();
