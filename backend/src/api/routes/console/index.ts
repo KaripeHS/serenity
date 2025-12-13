@@ -54,6 +54,9 @@ import financeRouter from '../finance.routes';
 import jobBoardRouter from './job-board.routes';
 import expensesRouter from './expenses.routes';
 import clientBudgetsRouter from './client-budgets.routes';
+import referralCrmRouter from './referral-crm.routes';
+import shiftDifferentialRouter from './shift-differential.routes';
+import lmsRouter from './lms.routes';
 
 const router = Router();
 
@@ -208,6 +211,18 @@ router.use('/expenses', expensesRouter);
 // BIC Feature: Client Budget & Funds Management
 // Real-time visibility into client budgets with low-balance alerts
 router.use('/client-budgets', clientBudgetsRouter);
+
+// BIC Feature: Referral Source CRM
+// Track leads, referral partners, marketing campaigns, and conversion analytics
+router.use('/referral-crm', referralCrmRouter);
+
+// BIC Feature: Shift Differential Pay Rules
+// Configurable differentials for weekends, holidays, nights, and skill-based premiums
+router.use('/shift-differential', shiftDifferentialRouter);
+
+// BIC Feature: LMS (Learning Management System)
+// Course content, quizzes, learning paths, and certificates
+router.use('/lms', lmsRouter);
 
 // Intelligent Scheduling routes (Phase 6)
 import { createSchedulingRoutes } from './scheduling';
