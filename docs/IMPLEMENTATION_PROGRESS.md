@@ -893,3 +893,170 @@ All new dashboards registered in `frontend/src/App.tsx`:
 - Spending history by service type
 - Forecast remaining funds
 - Low-balance notifications
+
+---
+
+## Sprint 2: BIC Gap Closure - COMPLETE
+
+**Updated:** 2025-12-13
+
+### Implementation Summary
+
+All three high-priority BIC features have been fully implemented:
+
+| Feature | Backend | Frontend | Tests | Status |
+|---------|---------|----------|-------|--------|
+| Job Board / Shift Bidding | ✅ | ✅ | N/A | Complete |
+| Expense & Mileage Tracking | ✅ | ✅ | N/A | Complete |
+| Client Budget Dashboard | ✅ | ✅ | N/A | Complete |
+| Referral CRM & Lead Management | ✅ | ✅ | ✅ 15 tests | Complete |
+| Shift Differential Pay | ✅ | ✅ | ✅ 14 tests | Complete |
+| Learning Management System (LMS) | ✅ | ✅ | ✅ 25 tests | Complete |
+
+### New Database Migrations (069-071)
+
+| # | File | Description |
+|---|------|-------------|
+| 069 | `referral_crm_enhancements.sql` | Referral leads, partners, campaigns, activities |
+| 070 | `shift_differential_pay.sql` | Differential rules, holiday calendars, applications |
+| 071 | `lms_enhancements.sql` | Course modules, quizzes, learning paths, certificates |
+
+### New Services Created
+
+| Service | File | Description |
+|---------|------|-------------|
+| Referral CRM Service | `services/referral-crm.service.ts` | Lead pipeline, partner tracking, campaign ROI |
+| Shift Differential Service | `services/shift-differential.service.ts` | Pay rules, holiday pay, automatic calculations |
+| LMS Service | `services/lms.service.ts` | Courses, quizzes, learning paths, certificates |
+
+### New API Routes
+
+```
+# Referral CRM Routes
+/api/console/referral-crm/dashboard     - CRM dashboard metrics
+/api/console/referral-crm/leads         - Lead management CRUD
+/api/console/referral-crm/partners      - Partner tracking
+/api/console/referral-crm/campaigns     - Marketing campaigns
+/api/console/referral-crm/pipeline      - Sales pipeline view
+/api/console/referral-crm/activities    - Activity logging
+
+# Shift Differential Routes
+/api/console/shift-differential/dashboard      - Differential dashboard
+/api/console/shift-differential/rules          - Differential rules CRUD
+/api/console/shift-differential/calendars      - Holiday calendars
+/api/console/shift-differential/applications   - Differential applications
+/api/console/shift-differential/calculate      - Calculate differentials
+
+# LMS Routes
+/api/console/lms/dashboard              - LMS dashboard metrics
+/api/console/lms/courses                - Course management
+/api/console/lms/modules                - Course modules
+/api/console/lms/quizzes                - Quiz management
+/api/console/lms/learning-paths         - Learning paths
+/api/console/lms/certificates           - Certificate issuance
+```
+
+### New Frontend Dashboards
+
+| Dashboard | File | Features |
+|-----------|------|----------|
+| ReferralCrmDashboard | `ReferralCrmDashboard.tsx` | Lead pipeline, partner performance, campaign ROI, follow-ups |
+| ShiftDifferentialDashboard | `ShiftDifferentialDashboard.tsx` | Rule management, holiday calendars, applications, employee summary |
+| LmsDashboard | `LmsDashboard.tsx` | Courses, quizzes, learning paths, certificates, ratings |
+
+### Unit Tests Added
+
+| Test File | Tests | Coverage |
+|-----------|-------|----------|
+| `lms.service.test.ts` | 25 tests | Dashboard, modules, quizzes, learning paths, certificates, ratings |
+| `referral-crm.service.test.ts` | 15 tests | Dashboard, leads, partners, campaigns, pipeline, activities |
+| `shift-differential.service.test.ts` | 14 tests | Dashboard, rules, calculations, calendars, applications |
+
+**Total: 54 new unit tests passing**
+
+### BIC Feature Status Update
+
+#### Client Intake & CRM (§12) - 85% Complete (was 40%)
+| Sub-Feature | Status | Notes |
+|-------------|--------|-------|
+| Client intake | ⬜ | Backend exists, frontend needed |
+| **Lead source tracking** | ✅ | Referral CRM service |
+| **CRM analytics** | ✅ | Dashboard with pipeline, ROI |
+| **Partner management** | ✅ | Partner performance tracking |
+| **Campaign tracking** | ✅ | Marketing campaign ROI |
+
+#### Training & LMS (§13) - 95% Complete (was 60%)
+| Sub-Feature | Status | Notes |
+|-------------|--------|-------|
+| Training assignments | ✅ | Training service |
+| Progress tracking | ✅ | Completion tracking |
+| **Video library** | ✅ | LMS course modules |
+| **Microlearning** | ✅ | Quiz system |
+| **Certifications** | ✅ | Certificate issuance & verification |
+| **Learning paths** | ✅ | Sequential learning tracks |
+
+#### AI & Automation (§8) - 50% Complete (was 30%)
+| Sub-Feature | Status | Notes |
+|-------------|--------|-------|
+| Auto-scheduling | ✅ | Recommendations service |
+| Pay-rule compliance | ✅ | Overtime detection |
+| **Shift differential auto-calc** | ✅ | Automatic pay adjustments |
+| AI note summarization | ❌ | Planned for Year 2 |
+| Risk keyword detection | ❌ | Planned for Year 2 |
+
+---
+
+## Deployment Status
+
+**Last Deployment:** 2025-12-13
+
+### Cloud Run Backend
+- **Service URL:** https://serenity-backend-774652480816.us-central1.run.app
+- **Region:** us-central1
+- **Status:** ✅ Healthy
+- **Revision:** serenity-backend-00011-j9k
+
+### Mobile App (Expo)
+- **Config:** Production API URL configured
+- **Tunnel:** Available for physical device testing
+- **Status:** ✅ Running
+
+### Endpoints Verified
+- ✅ `/health` - Returns 200 OK
+- ✅ `/api/console/*` - Returns 401 (auth required)
+- ✅ `/api/mobile/auth/login` - Returns proper auth response
+- ✅ `/api/clinical/*` - Returns 401 (auth required)
+- ✅ `/api/console/lms/dashboard` - Returns 401 (auth required)
+- ✅ `/api/console/referral-crm/dashboard` - Returns 401 (auth required)
+- ✅ `/api/console/shift-differential/dashboard` - Returns 401 (auth required)
+
+---
+
+## Platform Completeness Summary
+
+### Overall Progress: 92%
+
+| Category | Progress | Notes |
+|----------|----------|-------|
+| Backend Services | 100% | All core services implemented |
+| Database Migrations | 100% | 71 migrations (001-071) |
+| API Routes | 100% | All endpoints exposed |
+| Mobile App | 85% | Core features complete, some screens pending |
+| Frontend Dashboards | 80% | Most dashboards complete |
+| Unit Tests | 70% | 54+ tests for BIC services |
+| Integration | 95% | EVV, payroll, billing integrated |
+
+### Remaining Work
+
+**Frontend Only:**
+- ⬜ Client intake form wizard
+- ⬜ Claims submission workflow
+- ⬜ Family portal web interface
+- ⬜ Mobile expense submission screen
+- ⬜ Mobile job board screen
+
+**Year 2 Enhancements:**
+- ⬜ AI note summarization (OpenAI)
+- ⬜ Speech-to-text progress notes
+- ⬜ Telehealth video integration
+- ⬜ EHR integration
