@@ -22,6 +22,24 @@ import { WorkingBillingDashboard } from './components/dashboards/WorkingBillingD
 import { WorkingComplianceDashboard } from './components/dashboards/WorkingComplianceDashboard';
 import { WorkingTrainingDashboard } from './components/dashboards/WorkingTrainingDashboard';
 import { WorkingSchedulingDashboard } from './components/dashboards/WorkingSchedulingDashboard';
+
+// Year 2 Enhanced Dashboards
+import { ExecutiveOpportunityDashboard } from './components/dashboards/ExecutiveOpportunityDashboard';
+import { DoddHpcDashboard } from './components/dashboards/DoddHpcDashboard';
+import { PayrollDashboard } from './components/dashboards/PayrollDashboard';
+import { ConsumerDirectedDashboard } from './components/dashboards/ConsumerDirectedDashboard';
+import { SchedulingCalendar } from './components/dashboards/SchedulingCalendar';
+import { BillingARDashboard } from './components/dashboards/BillingARDashboard';
+import { BackgroundCheckDashboard } from './components/dashboards/BackgroundCheckDashboard';
+import { ClientIntakeWizard } from './components/dashboards/ClientIntakeWizard';
+import { ClaimsWorkflow } from './components/dashboards/ClaimsWorkflow';
+import { LicenseManagement } from './components/dashboards/LicenseManagement';
+import { CredentialExpiration } from './components/dashboards/CredentialExpiration';
+import { CaregiverBonusDashboard } from './components/dashboards/CaregiverBonusDashboard';
+import { TrainingManagement } from './components/dashboards/TrainingManagement';
+import { CoverageDispatch } from './components/dashboards/CoverageDispatch';
+import { CarePlanEditor } from './components/dashboards/CarePlanEditor';
+
 import BankAccounts from './pages/finance/BankAccounts';
 import FinancialReports from './pages/finance/FinancialReports';
 import { VendorCenter } from './pages/finance/VendorCenter';
@@ -156,6 +174,23 @@ function App() {
               <Route path="/dashboard/compliance" element={<DashboardLayout><WorkingComplianceDashboard /></DashboardLayout>} />
               <Route path="/dashboard/training" element={<DashboardLayout><WorkingTrainingDashboard /></DashboardLayout>} />
               <Route path="/dashboard/scheduling" element={<DashboardLayout><WorkingSchedulingDashboard /></DashboardLayout>} />
+
+              {/* Year 2 Enhanced Dashboard Routes */}
+              <Route path="/dashboard/executive-v2" element={<DashboardLayout><ExecutiveOpportunityDashboard /></DashboardLayout>} />
+              <Route path="/dashboard/dodd-hpc" element={<DashboardLayout><DoddHpcDashboard /></DashboardLayout>} />
+              <Route path="/dashboard/payroll-v2" element={<DashboardLayout><PayrollDashboard /></DashboardLayout>} />
+              <Route path="/dashboard/consumer-directed" element={<DashboardLayout><ConsumerDirectedDashboard /></DashboardLayout>} />
+              <Route path="/dashboard/scheduling-calendar" element={<DashboardLayout><SchedulingCalendar /></DashboardLayout>} />
+              <Route path="/dashboard/billing-ar" element={<DashboardLayout><BillingARDashboard /></DashboardLayout>} />
+              <Route path="/dashboard/background-checks" element={<DashboardLayout><BackgroundCheckDashboard /></DashboardLayout>} />
+              <Route path="/dashboard/client-intake" element={<DashboardLayout><ClientIntakeWizard /></DashboardLayout>} />
+              <Route path="/dashboard/claims-workflow" element={<DashboardLayout><ClaimsWorkflow /></DashboardLayout>} />
+              <Route path="/dashboard/licenses" element={<DashboardLayout><LicenseManagement /></DashboardLayout>} />
+              <Route path="/dashboard/credentials" element={<DashboardLayout><CredentialExpiration /></DashboardLayout>} />
+              <Route path="/dashboard/caregiver-bonuses" element={<DashboardLayout><CaregiverBonusDashboard /></DashboardLayout>} />
+              <Route path="/dashboard/training" element={<DashboardLayout><TrainingManagement /></DashboardLayout>} />
+              <Route path="/dashboard/dispatch" element={<DashboardLayout><CoverageDispatch /></DashboardLayout>} />
+              <Route path="/dashboard/care-plans" element={<DashboardLayout><CarePlanEditor /></DashboardLayout>} />
 
               {/* Admin Routes */}
               <Route
