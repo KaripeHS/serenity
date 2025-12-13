@@ -9,9 +9,11 @@ import { logger } from './utils/logger';
 // Load environment variables
 dotenv.config();
 
+import { createApp } from './api';
+
 // Set default port
-const PORT = process.env.PORT || 3000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const PORT = parseInt(process.env.PORT || '3001', 10);
+const NODE_ENV = (process.env.NODE_ENV as 'development' | 'production' | 'test') || 'development';
 
 async function startServer() {
   try {
@@ -19,6 +21,16 @@ async function startServer() {
       port: PORT,
       environment: NODE_ENV,
       version: '1.0.0'
+    });
+
+    const app = createApp({
+      port: PORT,
+      corsOrigins: ['*'], // Allow all for dev
+      nodeEnv: NODE_ENV
+    });
+
+    app.listen(PORT, '0.0.0.0', () => {
+      logger.info(`Server is listening on port ${PORT}`);
     });
 
     // Basic health check endpoint for now
