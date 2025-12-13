@@ -10,7 +10,6 @@ const ENV = {
 
 // For Phase 38 Testing: Force Production URL so user can test on Physical Device without Localhost issues
 export const Config = {
-    API_URL: ENV.prod.API_URL,
-    // Revert to this later if you want local dev: 
-    // API_URL: process.env.NODE_ENV === 'development' ? ENV.dev.API_URL : ENV.prod.API_URL,
+    API_URL: 'http://192.168.0.200:3001/api/mobile',
+    // API_URL: ENV.prod.API_URL,
 };

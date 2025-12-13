@@ -2,15 +2,16 @@
 import { View, Text, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState, useCallback } from 'react';
-import axios from 'axios';
+import { useState, useCallback, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { Config } from '../../constants/Config';
+import { CaregiverService } from '../../services/caregiver.service';
+import { AuthService } from '../../services/auth.service';
 
 interface CaregiverMetrics {
-    overallScore: number; // 0-100
-    tier: string; // 'Gold', 'Silver', 'Bronze'
+    overallScore: number;
+    tier: string;
     month: string;
+    // Backend API matches this structure check
 }
 
 interface CaregiverEarnings {
@@ -24,29 +25,22 @@ export default function ProfileScreen() {
     const [refreshing, setRefreshing] = useState(false);
     const [metrics, setMetrics] = useState<CaregiverMetrics | null>(null);
     const [earnings, setEarnings] = useState<CaregiverEarnings | null>(null);
+    const [user, setUser] = useState<any>(null);
 
     const fetchData = async () => {
         try {
-            const token = await SecureStore.getItemAsync('serenity_auth_token');
-            if (!token) return;
+            // Get User Info
+            const currentUser = await AuthService.getUser();
+            setUser(currentUser);
 
-            const api = axios.create({
-                baseURL: Config.API_URL,
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            // Parallel fetching
-            const [metricsRes, earningsRes] = await Promise.all([
-                // Mocking these calls for now as the backend routes exist but might fail auth in dev environment without proper seeding
-                // In production line: api.get('/caregiver/me/metrics'),
-                // In production line: api.get('/caregiver/me/earnings')
-                // Simulating successful response for UI Verification
-                Promise.resolve({ data: { overallScore: 94, tier: 'Gold', month: 'December' } }),
-                Promise.resolve({ data: { estimatedEarnings: 1240.50, totalHours: 62, month: 'December' } })
+            // Parallel fetching of real data
+            const [metricsData, earningsData] = await Promise.all([
+                CaregiverService.getMetrics(),
+                CaregiverService.getEarnings()
             ]);
 
-            setMetrics(metricsRes.data);
-            setEarnings(earningsRes.data);
+            setMetrics(metricsData);
+            setEarnings(earningsData);
 
         } catch (error) {
             console.error('Failed to fetch profile stats', error);
@@ -59,9 +53,9 @@ export default function ProfileScreen() {
     }, []);
 
     // Initial load
-    useState(() => {
+    useEffect(() => {
         fetchData();
-    });
+    }, []);
 
     const handleLogout = async () => {
         await SecureStore.deleteItemAsync('serenity_auth_token');
@@ -75,10 +69,15 @@ export default function ProfileScreen() {
         >
             <View className="bg-white pt-6 pb-6 items-center shadow-sm mb-4">
                 <View className="h-24 w-24 bg-blue-100 rounded-full items-center justify-center mb-4">
-                    <Text className="text-3xl font-bold text-blue-600">SM</Text>
+                    <Text className="text-3xl font-bold text-blue-600">
+                        {user?.firstName?.charAt(0) || user?.first_name?.charAt(0) || 'S'}
+                        {user?.lastName?.charAt(0) || user?.last_name?.charAt(0) || 'M'}
+                    </Text>
                 </View>
-                <Text className="text-xl font-bold text-gray-900">Sarah Miller</Text>
-                <Text className="text-gray-500 mb-4">Registered Nurse (RN)</Text>
+                <Text className="text-xl font-bold text-gray-900">
+                    {user ? `${user.firstName || user.first_name || ''} ${user.lastName || user.last_name || ''}`.trim() : 'Guest Caregiver'}
+                </Text>
+                <Text className="text-gray-500 mb-4">{user?.role || 'Caregiver'} ({user?.email || 'No Email'})</Text>
 
                 {/* Reliability Badge */}
                 {metrics && (
@@ -109,13 +108,19 @@ export default function ProfileScreen() {
             <View className="px-4 space-y-3 pb-8">
                 <Text className="text-gray-500 font-bold ml-1 mb-1">SETTINGS</Text>
 
-                <TouchableOpacity className="bg-white p-4 rounded-lg flex-row items-center shadow-sm">
+                <TouchableOpacity
+                    className="bg-white p-4 rounded-lg flex-row items-center shadow-sm"
+                    onPress={() => router.push('/settings/password')}
+                >
                     <FontAwesome5 name="user-cog" size={20} color="#4B5563" style={{ width: 30 }} />
-                    <Text className="flex-1 text-gray-800 font-medium">Account Settings</Text>
+                    <Text className="flex-1 text-gray-800 font-medium">Account Settings (Change Password)</Text>
                     <FontAwesome5 name="chevron-right" size={16} color="#9CA3AF" />
                 </TouchableOpacity>
 
-                <TouchableOpacity className="bg-white p-4 rounded-lg flex-row items-center shadow-sm">
+                <TouchableOpacity
+                    className="bg-white p-4 rounded-lg flex-row items-center shadow-sm"
+                    onPress={() => router.push('/settings/notifications')}
+                >
                     <FontAwesome5 name="bell" size={20} color="#4B5563" style={{ width: 30 }} />
                     <Text className="flex-1 text-gray-800 font-medium">Notifications</Text>
                     <FontAwesome5 name="chevron-right" size={16} color="#9CA3AF" />

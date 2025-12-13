@@ -24,6 +24,28 @@ api.interceptors.request.use(async (config) => {
     return config;
 });
 
+// Interceptor for 401 Unauthorized (Auto-Logout)
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        if (error.response?.status === 401) {
+            console.log('[AuthService] 401 Detected - Logging out');
+            await AuthService.logout();
+            // Use Expo Router's imperative API for navigation outside components
+            const { router } = require('expo-router');
+            // We use setTimeout to ensure this happens next tick to avoid conflicts
+            setTimeout(() => {
+                try {
+                    router.replace('/login');
+                } catch (e) {
+                    console.error('Navigation failed', e);
+                }
+            }, 100);
+        }
+        return Promise.reject(error);
+    }
+);
+
 export const AuthService = {
     async login(email: string, password: string) {
         try {

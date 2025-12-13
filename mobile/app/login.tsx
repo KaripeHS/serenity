@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthService } from '../services/auth.service';
 import { BiometricService } from '../services/biometric.service';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { getRoleRouteGroup, UserRole } from '../constants/RolePermissions';
 
 export default function LoginScreen() {
     const router = useRouter();
@@ -27,6 +28,11 @@ export default function LoginScreen() {
         }
     }
 
+    function navigateToRoleDashboard(role: string) {
+        const routeGroup = getRoleRouteGroup(role as UserRole);
+        router.replace(`/(${routeGroup})` as any);
+    }
+
     async function handleLogin() {
         if (!email || !password) {
             Alert.alert('Error', 'Please enter email and password');
@@ -35,8 +41,8 @@ export default function LoginScreen() {
 
         setLoading(true);
         try {
-            await AuthService.login(email, password);
-            router.replace('/(tabs)');
+            const user = await AuthService.login(email, password);
+            navigateToRoleDashboard(user?.role || 'caregiver');
         } catch (error: any) {
             Alert.alert('Login Failed', 'Invalid credentials');
         } finally {
@@ -52,7 +58,7 @@ export default function LoginScreen() {
             // We simulate a successful re-auth
             const user = await AuthService.getUser();
             if (user) {
-                router.replace('/(tabs)');
+                navigateToRoleDashboard(user?.role || 'caregiver');
             } else {
                 Alert.alert('Setup Required', 'Please log in with password once to enable FaceID');
             }
@@ -66,7 +72,7 @@ export default function LoginScreen() {
                     <Text className="text-white text-3xl font-bold">S</Text>
                 </View>
                 <Text className="text-2xl font-bold text-gray-900">Serenity Mobile</Text>
-                <Text className="text-gray-500">Caregiver Portal</Text>
+                <Text className="text-gray-500">Employee & Care Portal</Text>
             </View>
 
             <View className="space-y-4">
