@@ -77,28 +77,32 @@ router.post('/auth/login', async (req: Request, res: Response, next: NextFunctio
       res.json({
         success: true,
         token,
-        caregiverId: user.id,
-        caregiverName: `${user.first_name} ${user.last_name}`,
-        role: user.role
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.first_name,
+          lastName: user.last_name,
+          role: user.role,
+          organizationId: user.organization_id
+        }
       });
     } else if (phone && pin) {
-      // Phone/PIN login (for caregivers)
+      // Phone/PIN login for caregivers
       const cleanPhone = phone.replace(/\D/g, '');
-
-      // Query database for caregiver by phone
       const db = getDbClient();
+
       const result = await db.query<{
         id: string;
         first_name: string;
         last_name: string;
         role: string;
-        status: string;
         organization_id: string;
+        status: string;
       }>(
-        `SELECT id, first_name, last_name, role, status, organization_id
-         FROM users
-         WHERE (phone = $1 OR phone = $2 OR phone = $3)
-           AND role = 'caregiver'`,
+        `SELECT u.id, u.first_name, u.last_name, u.role, u.organization_id, u.status
+         FROM users u
+         WHERE (u.phone = $1 OR u.phone = $2 OR u.phone = $3)
+         AND u.role = 'caregiver'`,
         [phone, cleanPhone, `+1${cleanPhone}`]
       );
 
@@ -108,14 +112,14 @@ router.post('/auth/login', async (req: Request, res: Response, next: NextFunctio
 
       const caregiver = result.rows[0];
 
+      if (caregiver.status !== 'active') {
+        throw ApiErrors.forbidden('Account is not active');
+      }
+
       // For demo/development, accept PIN "1234" for any caregiver
       // In production, this would validate against a stored PIN hash
       if (pin !== '1234') {
         throw ApiErrors.unauthorized('Invalid phone number or PIN');
-      }
-
-      if (caregiver.status !== 'active') {
-        throw ApiErrors.forbidden('Account is not active');
       }
 
       // Generate JWT token
@@ -134,8 +138,13 @@ router.post('/auth/login', async (req: Request, res: Response, next: NextFunctio
       res.json({
         success: true,
         token,
-        caregiverId: caregiver.id,
-        caregiverName: `${caregiver.first_name} ${caregiver.last_name}`
+        user: {
+          id: caregiver.id,
+          firstName: caregiver.first_name,
+          lastName: caregiver.last_name,
+          role: caregiver.role,
+          organizationId: caregiver.organization_id
+        }
       });
     } else {
       throw ApiErrors.badRequest('Phone and PIN, or email and password are required');
@@ -156,15 +165,9 @@ router.post('/auth/login', async (req: Request, res: Response, next: NextFunctio
 router.get('/shifts/today', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const caregiverId = req.user?.userId;
-
-    if (!caregiverId) {
-      throw ApiErrors.unauthorized('User not authenticated');
-    }
-
     const today = new Date().toISOString().split('T')[0];
-
-    // Query real shifts from database
     const db = getDbClient();
+
     const result = await db.query<{
       id: string;
       scheduled_start: Date;
@@ -172,6 +175,7 @@ router.get('/shifts/today', requireAuth, async (req: AuthenticatedRequest, res: 
       actual_start: Date | null;
       actual_end: Date | null;
       status: string;
+      service_type: string;
       client_id: string;
       client_first_name: string;
       client_last_name: string;
@@ -185,6 +189,7 @@ router.get('/shifts/today', requireAuth, async (req: AuthenticatedRequest, res: 
         s.actual_start,
         s.actual_end,
         s.status,
+        s.service_type,
         c.id as client_id,
         c.first_name as client_first_name,
         c.last_name as client_last_name,
@@ -192,8 +197,9 @@ router.get('/shifts/today', requireAuth, async (req: AuthenticatedRequest, res: 
         s.evv_record_id
       FROM shifts s
       JOIN clients c ON c.id = s.client_id
-      WHERE s.caregiver_id = $1
-        AND DATE(s.scheduled_start) = $2
+      JOIN caregivers cg ON cg.id = s.caregiver_id
+      WHERE cg.user_id = $1
+      AND DATE(s.scheduled_start) = $2
       ORDER BY s.scheduled_start`,
       [caregiverId, today]
     );
@@ -210,7 +216,7 @@ router.get('/shifts/today', requireAuth, async (req: AuthenticatedRequest, res: 
       }
 
       const addressStr = address
-        ? `${address.street || ''}, ${address.city || ''}, ${address.state || ''} ${address.zip || ''}`.trim()
+        ? `${address.street || ''}, ${address.city || ''}, ${address.state || ''} ${address.zip || ''}`
         : 'Address not available';
 
       return {
@@ -223,6 +229,7 @@ router.get('/shifts/today', requireAuth, async (req: AuthenticatedRequest, res: 
           latitude: 39.1031 + (Math.random() * 0.05 - 0.025),
           longitude: -84.5120 + (Math.random() * 0.05 - 0.025)
         },
+        type: row.service_type || 'Visit',
         scheduledStart: row.scheduled_start,
         scheduledEnd: row.scheduled_end,
         status: row.actual_end ? 'completed' : (row.actual_start ? 'in_progress' : row.status),
@@ -275,8 +282,8 @@ router.get('/shifts/:shiftId', requireAuth, async (req: AuthenticatedRequest, re
       id: shift.id,
       patient: {
         id: shift.client_id,
-        name: `${shift.client_first_name} ${shift.client_last_name}`,
-        address: `${address.street || ''}, ${address.city || ''}, ${address.state || ''} ${address.zip || ''}`,
+        name: `${ shift.client_first_name } ${ shift.client_last_name }`,
+        address: `${ address.street || '' }, ${ address.city || '' }, ${ address.state || '' } ${ address.zip || '' }`,
         latitude: 39.1031,
         longitude: -84.5120
       },
@@ -354,11 +361,11 @@ router.post('/evv/clock-in', requireAuth, async (req: AuthenticatedRequest, res:
     // Create EVV record
     const db = getDbClient();
     const evvResult = await db.query<{ id: string }>(
-      `INSERT INTO evv_records (
-        organization_id, visit_id, caregiver_id, client_id,
-        clock_in_time, clock_in_latitude, clock_in_longitude, clock_in_accuracy,
-        clock_in_source, geofence_status, validation_status, sandata_status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      `INSERT INTO evv_records(
+          organization_id, visit_id, caregiver_id, client_id,
+          clock_in_time, clock_in_latitude, clock_in_longitude, clock_in_accuracy,
+          clock_in_source, geofence_status, validation_status, sandata_status
+        ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING id`,
       [
         organizationId || shift.organization_id,
@@ -390,9 +397,9 @@ router.post('/evv/clock-in', requireAuth, async (req: AuthenticatedRequest, res:
       [evvRecordId, shiftId]
     );
 
-    console.log(`[EVV CLOCK-IN] Caregiver ${caregiverId} clocked in to shift ${shiftId}`);
-    console.log(`  GPS: ${gps.latitude}, ${gps.longitude} (accuracy: ${gps.accuracy}m)`);
-    console.log(`  Distance from client: ${Math.round(distance)}m, Geofence: ${geofenceValid ? 'VALID' : 'WARNING'}`);
+    console.log(`[EVV CLOCK - IN]Caregiver ${ caregiverId } clocked in to shift ${ shiftId }`);
+    console.log(`  GPS: ${ gps.latitude }, ${ gps.longitude }(accuracy: ${ gps.accuracy }m)`);
+    console.log(`  Distance from client: ${ Math.round(distance) }m, Geofence: ${ geofenceValid? 'VALID': 'WARNING' }`);
 
     res.status(201).json({
       success: true,
@@ -407,7 +414,7 @@ router.post('/evv/clock-in', requireAuth, async (req: AuthenticatedRequest, res:
       distanceFromClient: Math.round(distance),
       message: geofenceValid
         ? 'Clocked in successfully'
-        : `Clocked in with warning: ${Math.round(distance)}m from client location`
+        : `Clocked in with warning: ${ Math.round(distance) }m from client location`
     });
   } catch (error) {
     next(error);
@@ -466,7 +473,7 @@ router.post('/evv/clock-out', requireAuth, async (req: AuthenticatedRequest, res
     const db = getDbClient();
     await db.query(
       `UPDATE evv_records SET
-        clock_out_time = $1,
+      clock_out_time = $1,
         clock_out_latitude = $2,
         clock_out_longitude = $3,
         clock_out_accuracy = $4,
@@ -499,9 +506,9 @@ router.post('/evv/clock-out', requireAuth, async (req: AuthenticatedRequest, res
       notes: notes || shift.notes
     });
 
-    console.log(`[EVV CLOCK-OUT] Caregiver ${caregiverId} clocked out from shift ${shiftId}`);
-    console.log(`  Duration: ${Math.round(durationMinutes)} minutes (${billableUnits} units)`);
-    console.log(`  Tasks: ${tasksCompleted?.join(', ') || 'none specified'}`);
+    console.log(`[EVV CLOCK - OUT] Caregiver ${ caregiverId } clocked out from shift ${ shiftId } `);
+    console.log(`  Duration: ${ Math.round(durationMinutes) } minutes(${ billableUnits } units)`);
+    console.log(`  Tasks: ${ tasksCompleted?.join(', ') || 'none specified' } `);
 
     res.json({
       success: true,
@@ -579,18 +586,18 @@ router.post('/evv/sync', requireAuth, async (req: AuthenticatedRequest, res: Res
     const syncedCount = results.filter(r => r.status === 'success').length;
     const failedCount = results.filter(r => r.status === 'failed').length;
 
-    console.log(`[OFFLINE SYNC] Caregiver ${caregiverId}: Synced ${syncedCount}/${records.length} records. ${failedCount} failed.`);
+    console.log(`[OFFLINE SYNC] Caregiver ${ caregiverId }: Synced ${ syncedCount }/${records.length} records. ${failedCount} failed.`);
 
-    res.json({
-      success: true,
-      synced: syncedCount,
-      failed: failedCount,
-      results,
-      message: `Synced ${syncedCount} of ${records.length} offline records`
-    });
+res.json({
+  success: true,
+  synced: syncedCount,
+  failed: failedCount,
+  results,
+  message: `Synced ${syncedCount} of ${records.length} offline records`
+});
   } catch (error) {
-    next(error);
-  }
+  next(error);
+}
 });
 
 // ========================================
@@ -640,5 +647,292 @@ router.get('/evv/status/:shiftId', requireAuth, async (req: AuthenticatedRequest
     next(error);
   }
 });
+
+// ========================================
+// SIGNATURES (Auth required)
+// ========================================
+
+/**
+ * POST /api/mobile/visits/:visitId/signature
+ * Save client/representative signature for visit verification
+ */
+router.post('/visits/:visitId/signature', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { visitId } = req.params;
+    const caregiverId = req.user?.userId;
+    const { signatureBase64, signedBy, signerName, signedAt } = req.body;
+
+    if (!signatureBase64 || !signedBy || !signerName) {
+      throw ApiErrors.badRequest('signatureBase64, signedBy, and signerName are required');
+    }
+
+    // Validate signedBy value
+    if (!['client', 'representative', 'caregiver'].includes(signedBy)) {
+      throw ApiErrors.badRequest('signedBy must be "client", "representative", or "caregiver"');
+    }
+
+    // Verify the visit/shift belongs to this caregiver
+    const shift = await getRepository().getShift(visitId);
+    if (!shift) {
+      throw ApiErrors.notFound('Visit');
+    }
+
+    if (shift.caregiver_id !== caregiverId) {
+      throw ApiErrors.forbidden('This visit is not assigned to you');
+    }
+
+    // Save signature to database
+    const db = getDbClient();
+    await db.query(
+      `INSERT INTO visit_signatures (
+        visit_id,
+        caregiver_id,
+        signature_data,
+        signed_by,
+        signer_name,
+        signed_at,
+        created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      ON CONFLICT (visit_id) DO UPDATE SET
+        signature_data = EXCLUDED.signature_data,
+        signed_by = EXCLUDED.signed_by,
+        signer_name = EXCLUDED.signer_name,
+        signed_at = EXCLUDED.signed_at,
+        updated_at = NOW()`,
+      [visitId, caregiverId, signatureBase64, signedBy, signerName, signedAt || new Date().toISOString()]
+    );
+
+    // Update shift to mark signature captured
+    await db.query(
+      `UPDATE shifts SET signature_captured = true, updated_at = NOW() WHERE id = $1`,
+      [visitId]
+    );
+
+    console.log(`[SIGNATURE] Visit ${visitId}: Signature captured from ${signedBy} (${signerName})`);
+
+    res.status(201).json({
+      success: true,
+      visitId,
+      signedBy,
+      signerName,
+      signedAt: signedAt || new Date().toISOString(),
+      message: 'Signature saved successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/mobile/visits/:visitId/complete
+ * Complete a visit with tasks, notes, and signature
+ */
+router.post('/visits/:visitId/complete', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { visitId } = req.params;
+    const caregiverId = req.user?.userId;
+    const organizationId = req.user?.organizationId;
+    const { tasks, notes, signature, latitude, longitude, gpsAccuracy, completedAt } = req.body;
+
+    // Verify the shift belongs to this caregiver
+    const shift = await getRepository().getShift(visitId);
+    if (!shift) {
+      throw ApiErrors.notFound('Visit');
+    }
+
+    if (shift.caregiver_id !== caregiverId) {
+      throw ApiErrors.forbidden('This visit is not assigned to you');
+    }
+
+    if (!shift.actual_start) {
+      throw ApiErrors.badRequest('Cannot complete visit - not clocked in yet');
+    }
+
+    const db = getDbClient();
+    const timestamp = completedAt || new Date().toISOString();
+
+    // Save task completions
+    if (tasks && Array.isArray(tasks)) {
+      await db.query(
+        `UPDATE shifts SET care_tasks = $1, updated_at = NOW() WHERE id = $2`,
+        [JSON.stringify(tasks), visitId]
+      );
+    }
+
+    // Save signature if provided
+    if (signature && signature.signatureBase64) {
+      await db.query(
+        `INSERT INTO visit_signatures (
+          visit_id, caregiver_id, signature_data, signed_by, signer_name, signed_at, created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+        ON CONFLICT (visit_id) DO UPDATE SET
+          signature_data = EXCLUDED.signature_data,
+          signed_by = EXCLUDED.signed_by,
+          signer_name = EXCLUDED.signer_name,
+          signed_at = EXCLUDED.signed_at,
+          updated_at = NOW()`,
+        [visitId, caregiverId, signature.signatureBase64, signature.signedBy, signature.signerName, signature.signedAt]
+      );
+    }
+
+    // Calculate billable units
+    const clockIn = new Date(shift.actual_start);
+    const clockOut = new Date(timestamp);
+    const durationMinutes = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60);
+    const billableUnits = Math.ceil(durationMinutes / 15);
+
+    // Update EVV record if exists
+    if (shift.evv_record_id) {
+      await db.query(
+        `UPDATE evv_records SET
+          clock_out_time = $1,
+          clock_out_latitude = $2,
+          clock_out_longitude = $3,
+          clock_out_accuracy = $4,
+          tasks_completed = $5,
+          notes = $6,
+          billable_units = $7,
+          signature_captured = $8,
+          validation_status = 'valid',
+          sandata_status = 'ready_to_submit',
+          updated_at = NOW()
+        WHERE id = $9`,
+        [
+          timestamp,
+          latitude,
+          longitude,
+          gpsAccuracy,
+          tasks ? JSON.stringify(tasks.filter((t: any) => t.completed)) : null,
+          notes,
+          billableUnits,
+          !!signature,
+          shift.evv_record_id
+        ]
+      );
+    }
+
+    // Update shift status
+    await getRepository().updateShift(visitId, {
+      actualEndTime: timestamp,
+      status: 'completed',
+      notes: notes || shift.notes
+    });
+
+    console.log(`[VISIT COMPLETE] Visit ${visitId} completed by caregiver ${caregiverId}`);
+    console.log(`  Duration: ${Math.round(durationMinutes)} minutes (${billableUnits} units)`);
+    console.log(`  Tasks: ${tasks?.filter((t: any) => t.completed)?.length || 0} completed`);
+    console.log(`  Signature: ${signature ? 'Yes' : 'No'}`);
+
+    res.json({
+      success: true,
+      visitId,
+      completedAt: timestamp,
+      durationMinutes: Math.round(durationMinutes),
+      billableUnits,
+      tasksCompleted: tasks?.filter((t: any) => t.completed)?.length || 0,
+      signatureCaptured: !!signature,
+      evvStatus: 'ready_to_submit',
+      message: 'Visit completed successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/mobile/visits/history
+ * Get visit history for caregiver
+ */
+router.get('/visits/history', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const caregiverId = req.user?.userId;
+    const { startDate, endDate, limit = '20' } = req.query;
+
+    const db = getDbClient();
+    let query = `
+      SELECT
+        s.id,
+        s.scheduled_start,
+        s.scheduled_end,
+        s.actual_start,
+        s.actual_end,
+        s.status,
+        s.service_type,
+        s.care_tasks,
+        c.id as client_id,
+        c.first_name as client_first_name,
+        c.last_name as client_last_name,
+        e.billable_units,
+        e.validation_status,
+        e.sandata_status
+      FROM shifts s
+      JOIN clients c ON c.id = s.client_id
+      JOIN caregivers cg ON cg.id = s.caregiver_id
+      LEFT JOIN evv_records e ON e.visit_id = s.id
+      WHERE cg.user_id = $1
+        AND s.status = 'completed'
+    `;
+
+    const params: any[] = [caregiverId];
+    let paramIndex = 2;
+
+    if (startDate) {
+      query += ` AND s.scheduled_start >= $${paramIndex++}`;
+      params.push(startDate);
+    }
+    if (endDate) {
+      query += ` AND s.scheduled_start <= $${paramIndex++}`;
+      params.push(endDate);
+    }
+
+    query += ` ORDER BY s.scheduled_start DESC LIMIT $${paramIndex}`;
+    params.push(parseInt(limit as string));
+
+    const result = await db.query(query, params);
+
+    const visits = result.rows.map((row: any) => ({
+      id: row.id,
+      clientName: `${row.client_first_name} ${row.client_last_name}`,
+      clientId: row.client_id,
+      scheduledStart: row.scheduled_start,
+      scheduledEnd: row.scheduled_end,
+      actualStart: row.actual_start,
+      actualEnd: row.actual_end,
+      status: row.status,
+      serviceType: row.service_type,
+      billableUnits: row.billable_units,
+      evvStatus: row.sandata_status,
+      tasksCompleted: row.care_tasks ? JSON.parse(row.care_tasks).filter((t: any) => t.completed).length : 0
+    }));
+
+    res.json({
+      success: true,
+      visits,
+      count: visits.length
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ========================================
+// MESSAGING ROUNDER (Auth required)
+// ========================================
+import { messagingRouter } from './messaging.routes';
+router.use('/messaging', messagingRouter);
+
+// ========================================
+// SETTINGS ROUTER (Auth required)
+// ========================================
+import { settingsRouter } from './settings.routes';
+router.use('/settings', settingsRouter);
+
+
+
+// ========================================
+// NOTIFICATIONS ROUTER (Auth required)
+// ========================================
+import { notificationsRouter } from './notifications.routes';
+router.use('/notifications', notificationsRouter);
 
 export { router as mobileRouter };
