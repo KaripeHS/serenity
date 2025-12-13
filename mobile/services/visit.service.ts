@@ -7,7 +7,8 @@
  */
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import * as FileSystem from 'expo-file-system';
+import { Paths, Directory, File } from 'expo-file-system';
+import { loggerService } from './logger.service';
 import { Config } from '../constants/Config';
 import { LocationService } from './location.service';
 import { OfflineQueue } from './offline.queue';
@@ -184,22 +185,25 @@ export const VisitService = {
       return api.post(`/visits/${visitId}/signature`, payload);
     } else {
       // Store signature locally first, then queue
-      const signaturePath = `${FileSystem.documentDirectory}signatures/`;
+      const signaturesDir = new Directory(Paths.document, 'signatures');
       const fileName = `sig_${visitId}_${Date.now()}.json`;
 
       // Ensure directory exists
-      await FileSystem.makeDirectoryAsync(signaturePath, { intermediates: true }).catch(() => {});
+      try {
+        if (!signaturesDir.exists) {
+          signaturesDir.create();
+        }
+      } catch (e) {
+        // Directory may already exist
+      }
 
       // Save signature file
-      await FileSystem.writeAsStringAsync(
-        signaturePath + fileName,
-        JSON.stringify(payload),
-        { encoding: FileSystem.EncodingType.UTF8 }
-      );
+      const signatureFile = new File(signaturesDir, fileName);
+      signatureFile.write(JSON.stringify(payload));
 
       await OfflineQueue.addToQueue(`/visits/${visitId}/signature`, 'POST', {
         ...payload,
-        localFilePath: signaturePath + fileName,
+        localFilePath: signatureFile.uri,
       });
 
       return { status: 'queued', message: 'Signature saved offline. Will sync when online.' };
@@ -247,11 +251,11 @@ export const VisitService = {
   async getTodaysShifts() {
     try {
       const api = await getApi();
-      console.log(`[VisitService] Fetching shifts...`);
+      loggerService.info('[VisitService] Fetching shifts...');
       const response = await api.get('/mobile/shifts/today');
       return response.data.shifts || [];
     } catch (error) {
-      console.error('[VisitService] Failed to fetch shifts:', error);
+      loggerService.error('[VisitService] Failed to fetch shifts', { error: String(error) });
       // Fallback: Return empty array for now (offline caching to be handled later)
       return [];
     }
@@ -270,7 +274,7 @@ export const VisitService = {
       const response = await api.get('/mobile/visits/history', { params });
       return response.data.visits || [];
     } catch (error) {
-      console.error('[VisitService] Failed to fetch visit history:', error);
+      loggerService.error('[VisitService] Failed to fetch visit history', { error: String(error) });
       return [];
     }
   },
@@ -285,7 +289,7 @@ export const VisitService = {
       const response = await api.get('/clinical/task-templates', { params });
       return response.data;
     } catch (error) {
-      console.error('[VisitService] Failed to fetch task templates:', error);
+      loggerService.error('[VisitService] Failed to fetch task templates', { error: String(error) });
       return { templates: [], categories: [] };
     }
   },
