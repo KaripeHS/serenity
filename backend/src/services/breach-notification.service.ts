@@ -137,8 +137,8 @@ export class BreachNotificationService {
     auditLogger?: AuditLogger
   ) {
     this.db = db || getDbClient();
-    this.notificationsService = notificationsService || new NotificationsService(this.db);
-    this.auditLogger = auditLogger || new AuditLogger(this.db);
+    this.notificationsService = notificationsService || new NotificationsService(this.db, this.auditLogger);
+    this.auditLogger = auditLogger || new AuditLogger('breach-notification');
   }
 
   // ============================================================================
@@ -202,13 +202,13 @@ export class BreachNotificationService {
       await this.sendBreachAlerts(breach, userContext);
     }
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       organizationId: userContext.organizationId,
       action: 'BREACH_REPORTED',
-      resourceType: 'breach_incident',
-      resourceId: breach.id,
+      resource: 'breach_incident',
       details: {
+        resourceId: breach.id,
         breachNumber: breach.breachNumber,
         breachType: data.breachType,
         individualsAffected: data.individualsAffected,
@@ -282,13 +282,12 @@ export class BreachNotificationService {
 
     const breach = this.mapRowToBreach(result.rows[0]);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       organizationId: userContext.organizationId,
       action: 'BREACH_UPDATED',
-      resourceType: 'breach_incident',
-      resourceId: breach.id,
-      details: { updatedFields: Object.keys(data) }
+      resource: 'breach_incident',
+      details: { resourceId: breach.id, updatedFields: Object.keys(data) }
     });
 
     logger.info('Breach incident updated', { breachId: breach.id });
@@ -322,13 +321,12 @@ export class BreachNotificationService {
 
     const breach = this.mapRowToBreach(result.rows[0]);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       organizationId: userContext.organizationId,
       action: 'BREACH_INDIVIDUALS_NOTIFIED',
-      resourceType: 'breach_incident',
-      resourceId: breach.id,
-      details: { notificationMethod }
+      resource: 'breach_incident',
+      details: { resourceId: breach.id, notificationMethod }
     });
 
     logger.info('Breach individual notifications sent', {
@@ -366,13 +364,12 @@ export class BreachNotificationService {
 
     const breach = this.mapRowToBreach(result.rows[0]);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       organizationId: userContext.organizationId,
       action: 'BREACH_REPORTED_TO_HHS',
-      resourceType: 'breach_incident',
-      resourceId: breach.id,
-      details: { confirmationNumber }
+      resource: 'breach_incident',
+      details: { resourceId: breach.id, confirmationNumber }
     });
 
     logger.info('Breach reported to HHS', {
@@ -409,13 +406,12 @@ export class BreachNotificationService {
 
     const breach = this.mapRowToBreach(result.rows[0]);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       organizationId: userContext.organizationId,
       action: 'BREACH_MEDIA_NOTIFIED',
-      resourceType: 'breach_incident',
-      resourceId: breach.id,
-      details: { mediaOutlets: mediaOutlets.length }
+      resource: 'breach_incident',
+      details: { resourceId: breach.id, mediaOutlets: mediaOutlets.length }
     });
 
     logger.info('Media notified of breach', {
@@ -467,12 +463,13 @@ export class BreachNotificationService {
     for (const notification of overdueNotifications) {
       await this.notificationsService.createNotification(
         {
+          organizationId: organizationId,
           type: NotificationType.ALERT,
           category: NotificationCategory.COMPLIANCE,
           priority: 'critical',
           title: 'HIPAA Breach Notification OVERDUE',
           message: `${notification.overdue_notification_type} for breach ${notification.breach_number} is overdue by ${Math.floor(notification.time_overdue / (1000 * 60 * 60 * 24))} days. IMMEDIATE ACTION REQUIRED.`,
-          metadata: {
+          data: {
             breachId: notification.id,
             breachNumber: notification.breach_number,
             notificationType: notification.overdue_notification_type,
@@ -480,7 +477,9 @@ export class BreachNotificationService {
             timeOverdue: notification.time_overdue
           },
           actionUrl: `/compliance/breaches/${notification.id}`,
-          actionText: 'Take Action Now'
+          actionText: 'Take Action Now',
+          sendAt: new Date(),
+          createdBy: userContext.userId
         },
         userContext
       );
@@ -498,12 +497,13 @@ export class BreachNotificationService {
 
       await this.notificationsService.createNotification(
         {
+          organizationId: organizationId,
           type: NotificationType.ALERT,
           category: NotificationCategory.COMPLIANCE,
           priority,
           title: `HIPAA Breach Notification Due: ${daysRemaining} days`,
           message: `${deadline.deadline_type} for breach ${deadline.breach_number} is due in ${daysRemaining} days.`,
-          metadata: {
+          data: {
             breachId: deadline.id,
             breachNumber: deadline.breach_number,
             deadlineType: deadline.deadline_type,
@@ -511,7 +511,9 @@ export class BreachNotificationService {
             daysRemaining
           },
           actionUrl: `/compliance/breaches/${deadline.id}`,
-          actionText: 'Complete Notification'
+          actionText: 'Complete Notification',
+          sendAt: new Date(),
+          createdBy: userContext.userId
         },
         userContext
       );
@@ -537,12 +539,13 @@ export class BreachNotificationService {
 
     await this.notificationsService.createNotification(
       {
+        organizationId: userContext.organizationId,
         type: NotificationType.ALERT,
         category: NotificationCategory.SECURITY,
         priority,
         title: `${breach.riskLevel === 'high' ? 'HIGH RISK ' : ''}HIPAA Breach Reported`,
         message: `Breach ${breach.breachNumber}: ${breach.description}. ${breach.individualsAffected} individuals affected. Risk level: ${breach.riskLevel}. ${breach.individualsAffected >= 500 ? 'IMMEDIATE HHS & MEDIA NOTIFICATION REQUIRED.' : ''}`,
-        metadata: {
+        data: {
           breachId: breach.id,
           breachNumber: breach.breachNumber,
           individualsAffected: breach.individualsAffected,
@@ -550,7 +553,9 @@ export class BreachNotificationService {
           reportableToHhs: breach.reportableToHhs
         },
         actionUrl: `/compliance/breaches/${breach.id}`,
-        actionText: 'Review Breach'
+        actionText: 'Review Breach',
+        sendAt: new Date(),
+        createdBy: userContext.userId
       },
       userContext
     );

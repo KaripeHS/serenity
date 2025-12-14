@@ -83,7 +83,10 @@
       "Bash(psql:*)",
       "Bash(npx jest:*)",
       "Bash(npx tsc:*)",
-      "Bash(python -m json.tool:*)"
+      "Bash(python -m json.tool:*)",
+      "Bash(python3:*)",
+      "Bash(perl:*)",
+      "Bash(baa-tracking.service.ts breach-notification.service.ts client-assessment.service.ts)"
     ],
     "deny": [],
     "ask": []

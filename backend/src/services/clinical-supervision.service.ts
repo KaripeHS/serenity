@@ -118,7 +118,7 @@ export class ClinicalSupervisionService {
 
   constructor(db?: DatabaseClient, auditLogger?: AuditLogger) {
     this.db = db || getDbClient();
-    this.auditLogger = auditLogger || new AuditLogger(this.db);
+    this.auditLogger = auditLogger || new AuditLogger('clinical-supervision');
     this.notificationsService = new NotificationsService(this.db, this.auditLogger);
   }
 
@@ -178,8 +178,8 @@ export class ClinicalSupervisionService {
         priority: 'medium',
         title: 'Supervisory Visit Scheduled',
         message: `You have a supervisory visit scheduled for ${data.visitDate.toLocaleDateString()}`,
-        sendAt: new Date(),
         data: { visitId: visit.id },
+        sendAt: new Date(),
         createdBy: userContext.userId
       }, userContext);
 
@@ -453,9 +453,9 @@ export class ClinicalSupervisionService {
           priority: 'high',
           title: 'Supervisory Visit Overdue',
           message: `Supervisory visit for ${visit.caregiverName} is ${visit.daysOverdue} days overdue.`,
-          sendAt: new Date(),
           data: { caregiverId: visit.caregiverId },
-          createdBy: 'system'
+          sendAt: new Date(),
+          createdBy: userContext.userId
         }, userContext);
         overdueAlertsSent++;
       }
@@ -480,9 +480,9 @@ export class ClinicalSupervisionService {
           priority: 'medium',
           title: 'Supervisory Visit Due Soon',
           message: `Supervisory visit for ${schedule.caregiver_name} is due in 14 days.`,
-          sendAt: new Date(),
           data: { caregiverId: schedule.caregiver_id },
-          createdBy: 'system'
+          sendAt: new Date(),
+          createdBy: userContext.userId
         }, userContext);
 
         await this.db.query(
@@ -638,9 +638,9 @@ export class ClinicalSupervisionService {
       priority: 'high',
       title: 'Competency Remediation Required',
       message: `Your recent supervisory visit identified ${count} competency area(s) requiring additional training.`,
-      sendAt: new Date(),
       data: { visitId },
-      createdBy: 'system'
+      sendAt: new Date(),
+      createdBy: userContext.userId
     }, userContext);
   }
 

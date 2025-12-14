@@ -115,7 +115,7 @@ export class IncidentManagementService {
 
   constructor(db?: DatabaseClient, auditLogger?: AuditLogger) {
     this.db = db || getDbClient();
-    this.auditLogger = auditLogger || new AuditLogger(this.db);
+    this.auditLogger = auditLogger || new AuditLogger('incident-management');
     this.notificationsService = new NotificationsService(this.db, this.auditLogger);
   }
 
@@ -257,8 +257,7 @@ export class IncidentManagementService {
         userId: userContext.userId,
         action: 'incident_reported_to_oda',
         resource: 'incident',
-        resourceId: incidentId,
-        details: { odaCaseNumber, incidentNumber: incident.incidentNumber }
+        details: { incidentId, odaCaseNumber, incidentNumber: incident.incidentNumber }
       });
 
       logger.info('Incident reported to ODA', { incidentId, odaCaseNumber });
@@ -417,8 +416,8 @@ export class IncidentManagementService {
             priority: 'high',
             title: 'Corrective Action Assigned',
             message: `You have been assigned a corrective action: ${action.action}`,
-            sendAt: new Date(),
             data: { investigationId, action },
+            sendAt: new Date(),
             createdBy: userContext.userId
           }, userContext);
         }
@@ -513,9 +512,9 @@ export class IncidentManagementService {
               priority,
               title: `Incident Reporting Deadline: ${hoursRemaining} hours remaining`,
               message: `Incident ${incident.incident_number} must be reported to ODA within ${hoursRemaining} hours.`,
-              sendAt: new Date(),
               data: { incidentId: incident.id, incidentNumber: incident.incident_number },
-              createdBy: 'system'
+              sendAt: new Date(),
+              createdBy: userContext.userId
             }, userContext);
           }
 
@@ -559,9 +558,9 @@ export class IncidentManagementService {
         priority: 'critical',
         title: 'Critical Incident Reported',
         message: `Critical incident ${incident.incidentNumber} reported. Must notify ODA within 24 hours.`,
-        sendAt: new Date(),
         data: { incidentId: incident.id },
-        createdBy: 'system'
+        sendAt: new Date(),
+        createdBy: userContext.userId
       }, userContext);
     }
   }

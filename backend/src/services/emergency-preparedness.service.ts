@@ -110,7 +110,7 @@ export class EmergencyPreparednessService {
 
   constructor(db?: DatabaseClient, auditLogger?: AuditLogger) {
     this.db = db || getDbClient();
-    this.auditLogger = auditLogger || new AuditLogger(this.db);
+    this.auditLogger = auditLogger || new AuditLogger('emergency-preparedness');
     this.notificationsService = new NotificationsService(this.db, this.auditLogger);
   }
 
@@ -335,8 +335,8 @@ export class EmergencyPreparednessService {
           priority: 'high',
           title: 'DR Test Gaps Identified',
           message: `${data.gapsIdentified.length} gap(s) identified in recent DR test. Review and address.`,
-          sendAt: new Date(),
           data: { testId, gaps: data.gapsIdentified },
+          sendAt: new Date(),
           createdBy: userContext.userId
         }, userContext);
       }
@@ -517,9 +517,9 @@ export class EmergencyPreparednessService {
             priority,
             title: 'DRP Review Required',
             message: `Disaster Recovery Plan review is ${drp.review_status}. Please review and update.`,
-            sendAt: new Date(),
             data: { planId: drp.id, reviewStatus: drp.review_status },
-            createdBy: 'system'
+            sendAt: new Date(),
+            createdBy: userContext.userId
           }, userContext);
         }
 

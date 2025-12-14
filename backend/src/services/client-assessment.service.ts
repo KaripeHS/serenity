@@ -218,8 +218,8 @@ export class ClientAssessmentService {
     auditLogger?: AuditLogger
   ) {
     this.db = db || getDbClient();
-    this.notificationsService = notificationsService || new NotificationsService(this.db);
-    this.auditLogger = auditLogger || new AuditLogger(this.db);
+    this.notificationsService = notificationsService || new NotificationsService(this.db, this.auditLogger);
+    this.auditLogger = auditLogger || new AuditLogger('client-assessment');
   }
 
   // ============================================================================
@@ -291,13 +291,12 @@ export class ClientAssessmentService {
 
     const assessment = this.mapRowToAssessment(result.rows[0]);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       organizationId: userContext.organizationId,
       action: 'CLIENT_ASSESSMENT_CREATED',
-      resourceType: 'client_assessment',
-      resourceId: assessment.id,
-      details: { clientId: data.clientId, assessmentType: data.assessmentType }
+      resource: 'client_assessment',
+      details: { resourceId: assessment.id, clientId: data.clientId, assessmentType: data.assessmentType }
     });
 
     logger.info('Client assessment created', {
@@ -334,13 +333,12 @@ export class ClientAssessmentService {
 
     const assessment = this.mapRowToAssessment(result.rows[0]);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       organizationId: userContext.organizationId,
       action: 'CLIENT_ASSESSMENT_APPROVED',
-      resourceType: 'client_assessment',
-      resourceId: assessment.id,
-      details: {}
+      resource: 'client_assessment',
+      details: { resourceId: assessment.id }
     });
 
     logger.info('Client assessment approved', { assessmentId: assessment.id });
@@ -455,13 +453,12 @@ export class ClientAssessmentService {
 
     const order = this.mapRowToPhysicianOrder(result.rows[0]);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       organizationId: userContext.organizationId,
       action: 'PHYSICIAN_ORDER_CREATED',
-      resourceType: 'physician_order',
-      resourceId: order.id,
-      details: { clientId: data.clientId, orderType: data.orderType, orderNumber: order.orderNumber }
+      resource: 'physician_order',
+      details: { resourceId: order.id, clientId: data.clientId, orderType: data.orderType, orderNumber: order.orderNumber }
     });
 
     logger.info('Physician order created', {
@@ -496,12 +493,13 @@ export class ClientAssessmentService {
 
       await this.notificationsService.createNotification(
         {
+          organizationId: organizationId,
           type: NotificationType.ALERT,
           category: NotificationCategory.COMPLIANCE,
           priority,
           title: `Physician Order Expiring Soon`,
           message: `Physician order ${order.order_number} for ${order.client_name} expires in ${order.days_until_expiration} days. Please obtain a new order.`,
-          metadata: {
+          data: {
             orderId: order.id,
             clientId: order.client_id,
             orderNumber: order.order_number,
@@ -509,7 +507,9 @@ export class ClientAssessmentService {
             daysUntilExpiration: order.days_until_expiration
           },
           actionUrl: `/clients/${order.client_id}/orders/${order.id}`,
-          actionText: 'Review Order'
+          actionText: 'Review Order',
+          sendAt: new Date(),
+          createdBy: userContext.userId
         },
         userContext
       );
@@ -561,13 +561,12 @@ export class ClientAssessmentService {
 
     const carePlan = this.mapRowToCarePlan(result.rows[0]);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       organizationId: userContext.organizationId,
       action: 'CARE_PLAN_CREATED',
-      resourceType: 'care_plan',
-      resourceId: carePlan.id,
-      details: { clientId: data.clientId }
+      resource: 'care_plan',
+      details: { resourceId: carePlan.id, clientId: data.clientId }
     });
 
     logger.info('Care plan created', { carePlanId: carePlan.id, clientId: data.clientId });
@@ -600,19 +599,22 @@ export class ClientAssessmentService {
 
       await this.notificationsService.createNotification(
         {
+          organizationId: organizationId,
           type: NotificationType.ALERT,
           category: NotificationCategory.COMPLIANCE,
           priority,
           title: plan.review_status === 'overdue' ? 'Care Plan Review Overdue' : 'Care Plan Review Due Soon',
           message: `Care plan for ${plan.client_name} is ${plan.review_status === 'overdue' ? `${plan.days_overdue} days overdue` : 'due for review within 30 days'}.`,
-          metadata: {
+          data: {
             carePlanId: plan.id,
             clientId: plan.client_id,
             reviewDate: plan.review_date,
             daysOverdue: plan.days_overdue
           },
           actionUrl: `/clients/${plan.client_id}/care-plan/${plan.id}`,
-          actionText: 'Review Care Plan'
+          actionText: 'Review Care Plan',
+          sendAt: new Date(),
+          createdBy: userContext.userId
         },
         userContext
       );

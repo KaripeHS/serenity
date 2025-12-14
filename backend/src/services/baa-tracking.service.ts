@@ -108,8 +108,8 @@ export class BAATrackingService {
     auditLogger?: AuditLogger
   ) {
     this.db = db || getDbClient();
-    this.notificationsService = notificationsService || new NotificationsService(this.db);
-    this.auditLogger = auditLogger || new AuditLogger(this.db);
+    this.auditLogger = auditLogger || new AuditLogger('baa-tracking');
+    this.notificationsService = notificationsService || new NotificationsService(this.db, this.auditLogger);
   }
 
   // ============================================================================
@@ -150,13 +150,12 @@ export class BAATrackingService {
 
     const ba = this.mapRowToBusinessAssociate(result.rows[0]);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       organizationId: userContext.organizationId,
       action: 'BUSINESS_ASSOCIATE_ADDED',
-      resourceType: 'business_associate',
-      resourceId: ba.id,
-      details: { baName: data.baName, criticalService: data.criticalService }
+      resource: 'business_associate',
+      details: { resourceId: ba.id, baName: data.baName, criticalService: data.criticalService }
     });
 
     logger.info('Business associate added', { baId: ba.id, baName: data.baName });
@@ -235,13 +234,12 @@ export class BAATrackingService {
 
     const baa = this.mapRowToBAA(result.rows[0]);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       organizationId: userContext.organizationId,
       action: 'BAA_CREATED',
-      resourceType: 'baa',
-      resourceId: baa.id,
-      details: { baaNumber: baa.baaNumber, businessAssociateId: data.businessAssociateId }
+      resource: 'baa',
+      details: { resourceId: baa.id, baaNumber: baa.baaNumber, businessAssociateId: data.businessAssociateId }
     });
 
     logger.info('BAA created', { baaId: baa.id, baaNumber: baa.baaNumber });
@@ -277,13 +275,12 @@ export class BAATrackingService {
 
     const baa = this.mapRowToBAA(result.rows[0]);
 
-    await this.auditLogger.log({
+    await this.auditLogger.logActivity({
       userId: userContext.userId,
       organizationId: userContext.organizationId,
       action: 'BAA_SIGNED',
-      resourceType: 'baa',
-      resourceId: baa.id,
-      details: { signatoryName, signatoryTitle }
+      resource: 'baa',
+      details: { resourceId: baa.id, signatoryName, signatoryTitle }
     });
 
     logger.info('BAA signed by covered entity', { baaId: baa.id });
@@ -345,12 +342,13 @@ export class BAATrackingService {
 
       await this.notificationsService.createNotification(
         {
+          organizationId,
           type: NotificationType.ALERT,
           category: NotificationCategory.COMPLIANCE,
           priority,
           title: `BAA Renewal Required: ${baa.ba_name}`,
           message: `Business Associate Agreement ${baa.baa_number} expires in ${baa.days_until_expiration} days. ${baa.critical_service ? 'CRITICAL SERVICE - Immediate action required.' : 'Please initiate renewal process.'}`,
-          metadata: {
+          data: {
             baaId: baa.id,
             baaNumber: baa.baa_number,
             baName: baa.ba_name,
@@ -359,7 +357,9 @@ export class BAATrackingService {
             criticalService: baa.critical_service
           },
           actionUrl: `/compliance/baa/${baa.id}`,
-          actionText: 'Renew BAA'
+          actionText: 'Renew BAA',
+          sendAt: new Date(),
+          createdBy: userContext.userId
         },
         userContext
       );
@@ -371,12 +371,13 @@ export class BAATrackingService {
     for (const baa of expiredBAAs) {
       await this.notificationsService.createNotification(
         {
+          organizationId,
           type: NotificationType.ALERT,
           category: NotificationCategory.COMPLIANCE,
           priority: 'critical',
           title: `EXPIRED BAA: ${baa.ba_name}`,
           message: `Business Associate Agreement ${baa.baa_number} EXPIRED ${baa.days_expired} days ago. ${baa.critical_service ? 'CRITICAL SERVICE - PHI exposure risk. Terminate relationship immediately or execute new BAA.' : 'Execute new BAA or terminate relationship.'}`,
-          metadata: {
+          data: {
             baaId: baa.id,
             baaNumber: baa.baa_number,
             baName: baa.ba_name,
@@ -385,7 +386,9 @@ export class BAATrackingService {
             criticalService: baa.critical_service
           },
           actionUrl: `/compliance/baa/${baa.id}`,
-          actionText: 'Take Action Now'
+          actionText: 'Take Action Now',
+          sendAt: new Date(),
+          createdBy: userContext.userId
         },
         userContext
       );
@@ -397,19 +400,22 @@ export class BAATrackingService {
     for (const service of criticalServicesWithoutBAA) {
       await this.notificationsService.createNotification(
         {
+          organizationId,
           type: NotificationType.ALERT,
           category: NotificationCategory.COMPLIANCE,
           priority: 'critical',
           title: `HIPAA VIOLATION: ${service.ba_name} - No Active BAA`,
           message: `Critical service ${service.ba_name} (${service.ba_type}) has PHI access but NO ACTIVE BAA. This is a HIPAA Privacy Rule violation. Execute BAA immediately or terminate PHI access.`,
-          metadata: {
+          data: {
             baId: service.id,
             baName: service.ba_name,
             baType: service.ba_type,
             phiAccessLevel: service.phi_access_level
           },
           actionUrl: `/compliance/business-associates/${service.id}`,
-          actionText: 'Create BAA Now'
+          actionText: 'Create BAA Now',
+          sendAt: new Date(),
+          createdBy: userContext.userId
         },
         userContext
       );
