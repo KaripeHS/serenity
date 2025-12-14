@@ -8,8 +8,10 @@
  * - GET /api/executive/risks
  */
 
-import { db } from '../database/connection';
+import { getDbClient } from '../database/client';
 import { subMonths, startOfMonth, endOfMonth, format } from 'date-fns';
+
+const db = getDbClient();
 
 interface BusinessHealthMetric {
   value: number;

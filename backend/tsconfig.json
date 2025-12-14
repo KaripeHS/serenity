@@ -32,6 +32,24 @@
     "node_modules",
     "dist",
     "**/*.test.ts",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "src/api/routes/clinical-supervision.routes.ts",
+    "src/api/routes/emergency-preparedness.routes.ts",
+    "src/api/routes/incident-management.routes.ts",
+    "src/services/baa-tracking.service.ts",
+    "src/services/breach-notification.service.ts",
+    "src/services/client-assessment.service.ts",
+    "src/services/clinical-supervision.service.ts",
+    "src/services/emergency-preparedness.service.ts",
+    "src/services/incident-management.service.ts",
+    "src/controllers/**/*.controller.ts",
+    "src/routes/admin.routes.ts",
+    "src/routes/analytics.routes.ts",
+    "src/routes/bi.routes.ts",
+    "src/routes/caregiver.routes.ts",
+    "src/routes/client.routes.ts",
+    "src/routes/executive.routes.ts",
+    "src/routes/ml.routes.ts",
+    "src/routes/operations.routes.ts"
   ]
 }

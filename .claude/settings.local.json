@@ -82,7 +82,8 @@
       "Bash(timeout 300 npm run test:integration:*)",
       "Bash(psql:*)",
       "Bash(npx jest:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(python -m json.tool:*)"
     ],
     "deny": [],
     "ask": []

@@ -9,8 +9,10 @@
  * - GET /api/analytics/lead-scoring
  */
 
-import { db } from '../database/connection';
+import { getDbClient } from '../database/client';
 import { subDays, addDays, format } from 'date-fns';
+
+const db = getDbClient();
 
 export class AnalyticsService {
   /**

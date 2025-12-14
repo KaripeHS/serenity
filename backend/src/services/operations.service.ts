@@ -511,7 +511,7 @@ export class OperationsService {
     activeOnly: boolean = true
   ) {
     const [activeVisits, geofenceViolations, locationHistory] = await Promise.all([
-      this.getActiveVisits(organizationId, caregiverId, activeOnly),
+      this.getActiveVisits(organizationId, activeOnly, caregiverId),
       this.getGeofenceViolations(organizationId),
       caregiverId ? this.getLocationHistory(caregiverId) : Promise.resolve([])
     ]);
@@ -528,8 +528,8 @@ export class OperationsService {
    */
   private async getActiveVisits(
     organizationId: string,
-    caregiverId?: string,
-    activeOnly: boolean
+    activeOnly: boolean,
+    caregiverId?: string
   ) {
     const caregiverFilter = caregiverId ? 'AND v.caregiver_id = $2' : '';
     const statusFilter = activeOnly ? "AND v.status IN ('scheduled', 'in_progress')" : '';
@@ -724,13 +724,13 @@ export class OperationsService {
 
     if (startDate) {
       filters.push(`mr.submit_date >= $${paramIndex}`);
-      params.push(startDate);
+      params.push(format(startDate, 'yyyy-MM-dd'));
       paramIndex++;
     }
 
     if (endDate) {
       filters.push(`mr.submit_date <= $${paramIndex}`);
-      params.push(endDate);
+      params.push(format(endDate, 'yyyy-MM-dd'));
       paramIndex++;
     }
 
