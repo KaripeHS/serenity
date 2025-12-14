@@ -11,6 +11,10 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import jwt from 'jsonwebtoken';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('websocket');
 // Simple JWT verification (for real implementation, use proper auth service)
 const verifyToken = async (token: string) => {
   const secret = process.env.JWT_SECRET || 'development-secret-key';
@@ -67,7 +71,7 @@ export class WebSocketService {
       this.handleConnection(socket);
     });
 
-    console.log('[WebSocket] Server initialized');
+    logger.info('[WebSocket] Server initialized');
   }
 
   /**
@@ -77,7 +81,7 @@ export class WebSocketService {
     const userId = socket.user!.id;
     const organizationId = socket.user!.organizationId;
 
-    console.log(`[WebSocket] User ${userId} connected (socket: ${socket.id})`);
+    logger.info(`[WebSocket] User ${userId} connected (socket: ${socket.id})`);
 
     // Track connection
     if (!this.connectedUsers.has(userId)) {
@@ -96,7 +100,7 @@ export class WebSocketService {
 
     // Handle disconnection
     socket.on('disconnect', () => {
-      console.log(`[WebSocket] User ${userId} disconnected (socket: ${socket.id})`);
+      logger.info(`[WebSocket] User ${userId} disconnected (socket: ${socket.id})`);
       const userSockets = this.connectedUsers.get(userId);
       if (userSockets) {
         userSockets.delete(socket.id);
@@ -117,40 +121,40 @@ export class WebSocketService {
     if (['FOUNDER', 'SCHEDULER', 'FIELD_SUPERVISOR'].includes(role)) {
       socket.on('subscribe:gps', () => {
         socket.join(`gps:${socket.user!.organizationId}`);
-        console.log(`[WebSocket] ${socket.user!.id} subscribed to GPS updates`);
+        logger.info(`[WebSocket] ${socket.user!.id} subscribed to GPS updates`);
       });
     }
 
     // Subscribe to schedule updates
     socket.on('subscribe:schedule', () => {
       socket.join(`schedule:${socket.user!.organizationId}`);
-      console.log(`[WebSocket] ${socket.user!.id} subscribed to schedule updates`);
+      logger.info(`[WebSocket] ${socket.user!.id} subscribed to schedule updates`);
     });
 
     // Subscribe to dashboard metrics
     socket.on('subscribe:dashboard', (dashboardName: string) => {
       socket.join(`dashboard:${socket.user!.organizationId}:${dashboardName}`);
-      console.log(`[WebSocket] ${socket.user!.id} subscribed to ${dashboardName} dashboard`);
+      logger.info(`[WebSocket] ${socket.user!.id} subscribed to ${dashboardName} dashboard`);
     });
 
     // Subscribe to notifications
     socket.on('subscribe:notifications', () => {
       socket.join(`notifications:${socket.user!.id}`);
-      console.log(`[WebSocket] ${socket.user!.id} subscribed to notifications`);
+      logger.info(`[WebSocket] ${socket.user!.id} subscribed to notifications`);
     });
 
     // Caregivers subscribe to their own visit updates
     if (['CAREGIVER', 'DSP_BASIC', 'DSP_MED'].includes(role)) {
       socket.on('subscribe:my-visits', () => {
         socket.join(`visits:${socket.user!.id}`);
-        console.log(`[WebSocket] Caregiver ${socket.user!.id} subscribed to visit updates`);
+        logger.info(`[WebSocket] Caregiver ${socket.user!.id} subscribed to visit updates`);
       });
     }
 
     // Handle unsubscribe
     socket.on('unsubscribe', (channel: string) => {
       socket.leave(channel);
-      console.log(`[WebSocket] ${socket.user!.id} unsubscribed from ${channel}`);
+      logger.info(`[WebSocket] ${socket.user!.id} unsubscribed from ${channel}`);
     });
   }
 

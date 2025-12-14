@@ -4,15 +4,19 @@ import { readinessService } from '../executive/readiness.service';
 import { settingsService } from '../admin/settings.service';
 import { emailService } from './email.service';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('scheduler');
 class SchedulerService {
     private tasks: cron.ScheduledTask[] = [];
     private defaultOrgId = "550e8400-e29b-41d4-a716-446655440000";
 
     init() {
-        console.log('--- Initializing Executive Scheduler ---');
+        logger.info('--- Initializing Executive Scheduler ---');
         this.schedule('0 7 * * *', () => this.sendReadinessBrief('Morning'));
         this.schedule('0 15 * * *', () => this.sendReadinessBrief('Afternoon'));
-        console.log(`Scheduled ${this.tasks.length} jobs.`);
+        logger.info(`Scheduled ${this.tasks.length} jobs.`);
     }
 
     private schedule(cronExpression: string, callback: () => void) {
@@ -23,7 +27,7 @@ class SchedulerService {
     }
 
     async sendReadinessBrief(period: 'Morning' | 'Afternoon') {
-        console.log(`[Scheduler] Generating ${period} Brief...`);
+        logger.info(`[Scheduler] Generating ${period} Brief...`);
         try {
             const brief = await readinessService.generateBrief(this.defaultOrgId);
 
@@ -69,10 +73,10 @@ class SchedulerService {
             await emailService.sendEmail(recipients, `Daily Readiness Brief (${brief.period}) - ${brief.summary}`, body);
 
             // Redundancy Log
-            console.log(`\n📨 Brief Sent to: ${recipients.join(', ')}`);
+            logger.info(`\n📨 Brief Sent to: ${recipients.join(', ')}`);
 
         } catch (err) {
-            console.error('[Scheduler] Failed to send brief:', err);
+            logger.error('[Scheduler] Failed to send brief:', err);
         }
     }
 }

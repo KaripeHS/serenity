@@ -17,6 +17,10 @@ import axios, { AxiosInstance } from 'axios';
 import { EdiGeneratorService, EdiClaim, EdiProvider, EdiSubscriber, EdiServiceLine } from './edi/edi-generator.service';
 import { claimValidator } from './edi/claim-validator.service';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('clearinghouse');
 interface ClearinghouseConfig {
   apiUrl: string;
   apiKey: string;
@@ -119,7 +123,7 @@ export class ClearinghouseService {
     });
 
     if (!this.isConfigured) {
-      console.warn('[ClearinghouseService] Not configured. Claims will be logged instead of submitted.');
+      logger.warn('[ClearinghouseService] Not configured. Claims will be logged instead of submitted.');
     }
   }
 
@@ -186,7 +190,7 @@ export class ClearinghouseService {
 
       // 3. Generate EDI 837P
       const fileContent = this.ediGenerator.generate837P(mockClaim);
-      console.log('generated EDI Content:', fileContent);
+      logger.info('Generated EDI Content', { length: fileContent.length });
 
       const fileName = request.fileName || `claims_${Date.now()}.837`;
 
@@ -203,7 +207,7 @@ export class ClearinghouseService {
         submittedAt: new Date(),
       };
     } catch (error: any) {
-      console.error('[ClearinghouseService] Submission failed:', error.message);
+      logger.error('[ClearinghouseService] Submission failed:', error.message);
       throw new Error(`Clearinghouse submission failed: ${error.message}`);
     }
   }
@@ -229,7 +233,7 @@ export class ClearinghouseService {
         processedAt: response.data.processedAt ? new Date(response.data.processedAt) : undefined,
       };
     } catch (error: any) {
-      console.error('[ClearinghouseService] Acknowledgment check failed:', error.message);
+      logger.error('[ClearinghouseService] Acknowledgment check failed:', error.message);
       throw new Error(`Acknowledgment check failed: ${error.message}`);
     }
   }
@@ -264,7 +268,7 @@ export class ClearinghouseService {
         receivedAt: new Date(r.receivedAt),
       }));
     } catch (error: any) {
-      console.error('[ClearinghouseService] Remittance retrieval failed:', error.message);
+      logger.error('[ClearinghouseService] Remittance retrieval failed:', error.message);
       throw new Error(`Remittance retrieval failed: ${error.message}`);
     }
   }
@@ -284,7 +288,7 @@ export class ClearinghouseService {
 
       return response.data;
     } catch (error: any) {
-      console.error('[ClearinghouseService] File download failed:', error.message);
+      logger.error('[ClearinghouseService] File download failed:', error.message);
       throw new Error(`File download failed: ${error.message}`);
     }
   }
@@ -310,7 +314,7 @@ export class ClearinghouseService {
 
       return response.data.submissions || [];
     } catch (error: any) {
-      console.error('[ClearinghouseService] History retrieval failed:', error.message);
+      logger.error('[ClearinghouseService] History retrieval failed:', error.message);
       throw new Error(`History retrieval failed: ${error.message}`);
     }
   }

@@ -1,6 +1,10 @@
 
 import nodemailer from 'nodemailer';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('email');
 export class EmailService {
     private transporter: nodemailer.Transporter;
 
@@ -18,11 +22,11 @@ export class EmailService {
                 },
             });
         } else {
-            console.warn('[EmailService] SMTP credentials missing. Emails will be logged only.');
+            logger.warn('[EmailService] SMTP credentials missing. Emails will be logged only.');
             // Mock transporter that just logs
             this.transporter = {
                 sendMail: async (opts: any) => {
-                    console.log(`[MOCK EMAIL] To: ${opts.to}, Subject: ${opts.subject}`);
+                    logger.info(`[MOCK EMAIL] To: ${opts.to}, Subject: ${opts.subject}`);
                     return { messageId: 'mock-id' };
                 }
             } as any;
@@ -40,10 +44,10 @@ export class EmailService {
                 html: html,
             });
 
-            console.log(`[EmailService] Sent "${subject}" to ${recipient}. ID: ${info.messageId}`);
+            logger.info(`[EmailService] Sent "${subject}" to ${recipient}. ID: ${info.messageId}`);
             return info;
         } catch (error) {
-            console.error('[EmailService] Failed to send email:', error);
+            logger.error('[EmailService] Failed to send email:', error);
             // Don't throw, just log. We don't want to crash the scheduler.
             return null;
         }

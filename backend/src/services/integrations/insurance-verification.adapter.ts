@@ -13,6 +13,10 @@
 import axios from 'axios';
 import { pool } from '../../config/database';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('insurance-verification');
 interface EligibilityRequest {
   memberId: string;
   firstName: string;
@@ -75,7 +79,7 @@ export class InsuranceVerificationAdapter {
     }
 
     if (!this.apiKey || !this.apiSecret) {
-      console.warn(`[InsuranceVerification] ${provider} credentials not configured`);
+      logger.warn(`[InsuranceVerification] ${provider} credentials not configured`);
     }
   }
 
@@ -103,7 +107,7 @@ export class InsuranceVerificationAdapter {
 
       return response;
     } catch (error) {
-      console.error('[InsuranceVerification] Error verifying eligibility:', error);
+      logger.error('[InsuranceVerification] Error verifying eligibility:', error);
       return null;
     }
   }
@@ -441,7 +445,7 @@ export class InsuranceVerificationAdapter {
 
       return await this.verifyEligibility(organizationId, request);
     } catch (error) {
-      console.error('[InsuranceVerification] Error verifying client insurance:', error);
+      logger.error('[InsuranceVerification] Error verifying client insurance:', error);
       return null;
     }
   }

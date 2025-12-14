@@ -15,6 +15,10 @@ import { pool } from '../../config/database';
 import { scheduleOptimizerService } from '../ml/schedule-optimizer.service';
 import { websocketService } from '../realtime/websocket.service';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('smart-scheduler');
 interface ScheduleRequest {
   organizationId: string;
   startDate: Date;
@@ -142,7 +146,7 @@ export class SmartSchedulerService {
             }
           }
         } catch (error) {
-          console.error(`[SmartScheduler] Error assigning visit ${assignment.visitId}:`, error);
+          logger.error(`[SmartScheduler] Error assigning visit ${assignment.visitId}:`, error);
           unassigned++;
         }
       }
@@ -201,7 +205,7 @@ export class SmartSchedulerService {
         results
       };
     } catch (error) {
-      console.error('[SmartScheduler] Error generating schedule:', error);
+      logger.error('[SmartScheduler] Error generating schedule:', error);
       throw error;
     }
   }
@@ -556,7 +560,7 @@ export class SmartSchedulerService {
 
       return { created, errors };
     } catch (error: any) {
-      console.error('[SmartScheduler] Error scheduling recurring visits:', error);
+      logger.error('[SmartScheduler] Error scheduling recurring visits:', error);
       throw error;
     }
   }

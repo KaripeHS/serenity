@@ -13,6 +13,10 @@
 import axios from 'axios';
 import { pool } from '../../config/database';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('background-check');
 interface BackgroundCheckRequest {
   candidateId: string;
   firstName: string;
@@ -78,7 +82,7 @@ export class BackgroundCheckAdapter {
     }
 
     if (!this.apiKey) {
-      console.warn(`[BackgroundCheck] ${provider} API key not configured`);
+      logger.warn(`[BackgroundCheck] ${provider} API key not configured`);
     }
   }
 
@@ -131,7 +135,7 @@ export class BackgroundCheckAdapter {
 
       return { checkId, invitationUrl };
     } catch (error) {
-      console.error('[BackgroundCheck] Error initiating check:', error);
+      logger.error('[BackgroundCheck] Error initiating check:', error);
       return null;
     }
   }
@@ -297,7 +301,7 @@ export class BackgroundCheckAdapter {
 
       return result;
     } catch (error) {
-      console.error('[BackgroundCheck] Error getting status:', error);
+      logger.error('[BackgroundCheck] Error getting status:', error);
       return null;
     }
   }
@@ -425,9 +429,9 @@ export class BackgroundCheckAdapter {
       // Fetch latest status
       await this.getCheckStatus(checkId);
 
-      console.log(`[BackgroundCheck] Webhook processed for ${provider} check ${checkId}`);
+      logger.info(`[BackgroundCheck] Webhook processed for ${provider} check ${checkId}`);
     } catch (error) {
-      console.error('[BackgroundCheck] Error handling webhook:', error);
+      logger.error('[BackgroundCheck] Error handling webhook:', error);
     }
   }
 

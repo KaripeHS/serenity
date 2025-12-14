@@ -13,6 +13,10 @@
 import axios from 'axios';
 import { pool } from '../../config/database';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('voice-to-text');
 interface TranscriptionResult {
   transcript: string;
   confidence: number;
@@ -49,7 +53,7 @@ export class VoiceToTextService {
     this.apiKey = process.env.GOOGLE_CLOUD_SPEECH_API_KEY || '';
 
     if (!this.apiKey) {
-      console.warn('[VoiceToText] Google Cloud Speech API key not configured. Voice features will be disabled.');
+      logger.warn('[VoiceToText] Google Cloud Speech API key not configured. Voice features will be disabled.');
     }
   }
 
@@ -63,7 +67,7 @@ export class VoiceToTextService {
     languageCode: string = 'en-US'
   ): Promise<TranscriptionResult | null> {
     if (!this.apiKey) {
-      console.error('[VoiceToText] API key not configured');
+      logger.error('[VoiceToText] API key not configured');
       return null;
     }
 
@@ -94,7 +98,7 @@ export class VoiceToTextService {
       );
 
       if (!response.data.results || response.data.results.length === 0) {
-        console.error('[VoiceToText] No transcription results');
+        logger.error('[VoiceToText] No transcription results');
         return null;
       }
 
@@ -117,7 +121,7 @@ export class VoiceToTextService {
         words
       };
     } catch (error) {
-      console.error('[VoiceToText] Transcription error:', error);
+      logger.error('[VoiceToText] Transcription error:', error);
       return null;
     }
   }
@@ -166,7 +170,7 @@ export class VoiceToTextService {
         confidence: result.confidence
       };
     } catch (error) {
-      console.error('[VoiceToText] Error transcribing care note:', error);
+      logger.error('[VoiceToText] Error transcribing care note:', error);
       return null;
     }
   }
@@ -207,7 +211,7 @@ export class VoiceToTextService {
         extractedData
       };
     } catch (error) {
-      console.error('[VoiceToText] Error transcribing incident report:', error);
+      logger.error('[VoiceToText] Error transcribing incident report:', error);
       return null;
     }
   }
@@ -307,7 +311,7 @@ export class VoiceToTextService {
         parameters
       };
     } catch (error) {
-      console.error('[VoiceToText] Error recognizing command:', error);
+      logger.error('[VoiceToText] Error recognizing command:', error);
       return null;
     }
   }

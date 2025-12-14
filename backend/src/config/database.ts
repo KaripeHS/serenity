@@ -6,6 +6,10 @@
 import { Pool } from 'pg';
 import { environmentService } from './environment';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('database');
 // Create pool instance
 const dbConfig = environmentService.getDatabaseConfig();
 
@@ -18,5 +22,5 @@ export const pool = new Pool({
 });
 
 pool.on('error', (err) => {
-  console.error('Unexpected error on idle database client:', err);
+  logger.error('Unexpected error on idle database client:', err);
 });

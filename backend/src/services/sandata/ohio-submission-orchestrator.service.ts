@@ -18,7 +18,7 @@
  * const orchestrator = getOhioSubmissionOrchestrator();
  * const result = await orchestrator.submitVisit(visitData, patientData, staffData);
  * if (!result.success) {
- *   console.error('Submission failed:', result.errors);
+ *   logger.error('Submission failed:', result.errors);
  * }
  * ```
  *
@@ -39,6 +39,10 @@ import type { StaffData } from './ohio-staff-builder.service';
 import type { EVVRecordData, PatientData, StaffData as VisitStaffData } from './ohio-visit-builder.service';
 import type { Authorization, VisitForAuthCheck } from './authorization-matcher.service';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('ohio-submission-orchestrator');
 /**
  * Submission result
  */

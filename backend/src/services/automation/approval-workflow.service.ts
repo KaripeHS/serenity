@@ -14,6 +14,10 @@
 import { pool } from '../../config/database';
 import { websocketService } from '../realtime/websocket.service';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('approval-workflow');
 interface WorkflowDefinition {
   id: string;
   name: string;
@@ -120,7 +124,7 @@ export class ApprovalWorkflowService {
 
       return { workflowId, autoApproved: false };
     } catch (error) {
-      console.error('[ApprovalWorkflow] Error starting workflow:', error);
+      logger.error('[ApprovalWorkflow] Error starting workflow:', error);
       return null;
     }
   }
@@ -340,7 +344,7 @@ export class ApprovalWorkflowService {
 
       return { completed: false };
     } catch (error) {
-      console.error('[ApprovalWorkflow] Error processing approval:', error);
+      logger.error('[ApprovalWorkflow] Error processing approval:', error);
       throw error;
     }
   }

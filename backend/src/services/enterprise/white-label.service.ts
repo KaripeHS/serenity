@@ -14,6 +14,10 @@
 import { pool } from '../../config/database';
 import axios from 'axios';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('white-label');
 interface BrandingConfig {
   organizationId: string;
   companyName: string;
@@ -134,7 +138,7 @@ export class WhiteLabelService {
 
       return true;
     } catch (error) {
-      console.error('[WhiteLabel] Error updating branding config:', error);
+      logger.error('[WhiteLabel] Error updating branding config:', error);
       return false;
     }
   }
@@ -195,7 +199,7 @@ export class WhiteLabelService {
         ]
       };
     } catch (error: any) {
-      console.error('[WhiteLabel] Error setting up custom domain:', error);
+      logger.error('[WhiteLabel] Error setting up custom domain:', error);
       return {
         success: false,
         error: error.message
@@ -218,7 +222,7 @@ export class WhiteLabelService {
         record.some(txt => txt.includes('serenity-verify-'))
       );
     } catch (error) {
-      console.error('[WhiteLabel] Error verifying domain:', error);
+      logger.error('[WhiteLabel] Error verifying domain:', error);
       return false;
     }
   }
@@ -269,7 +273,7 @@ export class WhiteLabelService {
 
       return true;
     } catch (error) {
-      console.error('[WhiteLabel] Error updating feature flags:', error);
+      logger.error('[WhiteLabel] Error updating feature flags:', error);
       return false;
     }
   }
@@ -531,7 +535,7 @@ export class WhiteLabelService {
 
       return true;
     } catch (error) {
-      console.error('[WhiteLabel] Error cloning organization config:', error);
+      logger.error('[WhiteLabel] Error cloning organization config:', error);
       return false;
     }
   }

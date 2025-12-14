@@ -17,6 +17,10 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('public-api');
 interface APIKey {
   id: string;
   organizationId: string;
@@ -163,7 +167,7 @@ export class PublicAPIService {
         scopes
       };
     } catch (error) {
-      console.error('[PublicAPI] Authentication error:', error);
+      logger.error('[PublicAPI] Authentication error:', error);
       return null;
     }
   }
@@ -405,7 +409,7 @@ export class PublicAPIService {
         [webhookId, eventType, response.status, attempt]
       );
     } catch (error: any) {
-      console.error('[PublicAPI] Webhook delivery failed:', error.message);
+      logger.error('[PublicAPI] Webhook delivery failed:', error.message);
 
       // Log failed delivery
       await pool.query(
@@ -599,7 +603,7 @@ export class PublicAPIService {
 
       return true;
     } catch (error) {
-      console.error('[PublicAPI] Error revoking API key:', error);
+      logger.error('[PublicAPI] Error revoking API key:', error);
       return false;
     }
   }

@@ -14,6 +14,10 @@
 import axios from 'axios';
 import { pool } from '../../config/database';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('ehr');
 interface CarePlan {
   clientId: string;
   assessmentDate: Date;
@@ -99,7 +103,7 @@ export class EHRAdapter {
     }
 
     if (!this.apiKey || !this.facilityId) {
-      console.warn(`[EHR] ${provider} credentials not configured`);
+      logger.warn(`[EHR] ${provider} credentials not configured`);
     }
   }
 
@@ -127,7 +131,7 @@ export class EHRAdapter {
 
       return carePlan;
     } catch (error) {
-      console.error('[EHR] Error importing care plan:', error);
+      logger.error('[EHR] Error importing care plan:', error);
       return null;
     }
   }
@@ -289,7 +293,7 @@ export class EHRAdapter {
 
       return result;
     } catch (error) {
-      console.error('[EHR] Error exporting progress note:', error);
+      logger.error('[EHR] Error exporting progress note:', error);
       return null;
     }
   }

@@ -16,6 +16,10 @@ import { getSandataValidator } from './validator.service';
 import { getSandataRepository } from './repositories/sandata.repository';
 import { getDbClient } from '../../database/client';
 import { SANDATA_ENDPOINTS } from '../../config/sandata';
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('employees');
 import type {
   SandataEmployee,
   SandataEmployeeResponse,
@@ -407,7 +411,7 @@ export class SandataEmployeesService {
           // Note: We avoid logging this field in any logs
         }
       } catch (error) {
-        console.error('Failed to decrypt SSN for user', user.id);
+        logger.error('Failed to decrypt SSN for user', { userId: user.id });
         // We do not stop the process but validation will fail if SSN is required
       }
     }

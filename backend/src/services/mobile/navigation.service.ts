@@ -13,6 +13,10 @@
 import axios from 'axios';
 import { pool } from '../../config/database';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('navigation');
 interface NavigationRoute {
   distance: {
     text: string;
@@ -81,7 +85,7 @@ export class NavigationService {
     this.apiKey = process.env.GOOGLE_MAPS_API_KEY || '';
 
     if (!this.apiKey) {
-      console.warn('[Navigation] Google Maps API key not configured. Navigation features will be disabled.');
+      logger.warn('[Navigation] Google Maps API key not configured. Navigation features will be disabled.');
     }
   }
 
@@ -96,7 +100,7 @@ export class NavigationService {
     departureTime?: Date
   ): Promise<NavigationRoute | null> {
     if (!this.apiKey) {
-      console.error('[Navigation] API key not configured');
+      logger.error('[Navigation] API key not configured');
       return null;
     }
 
@@ -122,7 +126,7 @@ export class NavigationService {
       });
 
       if (response.data.status !== 'OK') {
-        console.error('[Navigation] API error:', response.data.status);
+        logger.error('[Navigation] API error:', response.data.status);
         return null;
       }
 
@@ -158,7 +162,7 @@ export class NavigationService {
         }))
       };
     } catch (error) {
-      console.error('[Navigation] Error getting route:', error);
+      logger.error('[Navigation] Error getting route:', error);
       return null;
     }
   }
@@ -232,7 +236,7 @@ export class NavigationService {
     durationsInTraffic?: number[][]; // seconds
   } | null> {
     if (!this.apiKey) {
-      console.error('[Navigation] API key not configured');
+      logger.error('[Navigation] API key not configured');
       return null;
     }
 
@@ -259,7 +263,7 @@ export class NavigationService {
       });
 
       if (response.data.status !== 'OK') {
-        console.error('[Navigation] Distance matrix error:', response.data.status);
+        logger.error('[Navigation] Distance matrix error:', response.data.status);
         return null;
       }
 
@@ -297,7 +301,7 @@ export class NavigationService {
         durationsInTraffic: durationsInTraffic.length > 0 ? durationsInTraffic : undefined
       };
     } catch (error) {
-      console.error('[Navigation] Error getting distance matrix:', error);
+      logger.error('[Navigation] Error getting distance matrix:', error);
       return null;
     }
   }
@@ -383,7 +387,7 @@ export class NavigationService {
    */
   async geocodeAddress(address: string): Promise<GeocodedAddress | null> {
     if (!this.apiKey) {
-      console.error('[Navigation] API key not configured');
+      logger.error('[Navigation] API key not configured');
       return null;
     }
 
@@ -396,7 +400,7 @@ export class NavigationService {
       });
 
       if (response.data.status !== 'OK' || response.data.results.length === 0) {
-        console.error('[Navigation] Geocoding error:', response.data.status);
+        logger.error('[Navigation] Geocoding error:', response.data.status);
         return null;
       }
 
@@ -437,7 +441,7 @@ export class NavigationService {
         }
       };
     } catch (error) {
-      console.error('[Navigation] Error geocoding address:', error);
+      logger.error('[Navigation] Error geocoding address:', error);
       return null;
     }
   }
@@ -447,7 +451,7 @@ export class NavigationService {
    */
   async reverseGeocode(lat: number, lng: number): Promise<GeocodedAddress | null> {
     if (!this.apiKey) {
-      console.error('[Navigation] API key not configured');
+      logger.error('[Navigation] API key not configured');
       return null;
     }
 
@@ -460,7 +464,7 @@ export class NavigationService {
       });
 
       if (response.data.status !== 'OK' || response.data.results.length === 0) {
-        console.error('[Navigation] Reverse geocoding error:', response.data.status);
+        logger.error('[Navigation] Reverse geocoding error:', response.data.status);
         return null;
       }
 
@@ -501,7 +505,7 @@ export class NavigationService {
         }
       };
     } catch (error) {
-      console.error('[Navigation] Error reverse geocoding:', error);
+      logger.error('[Navigation] Error reverse geocoding:', error);
       return null;
     }
   }
@@ -558,7 +562,7 @@ export class NavigationService {
 
       return true;
     } catch (error) {
-      console.error('[Navigation] Error saving geocoded address:', error);
+      logger.error('[Navigation] Error saving geocoded address:', error);
       return false;
     }
   }
@@ -579,12 +583,12 @@ export class NavigationService {
     routes: NavigationRoute[];
   } | null> {
     if (!this.apiKey) {
-      console.error('[Navigation] API key not configured');
+      logger.error('[Navigation] API key not configured');
       return null;
     }
 
     if (waypoints.length > 10) {
-      console.error('[Navigation] Maximum 10 waypoints supported');
+      logger.error('[Navigation] Maximum 10 waypoints supported');
       return null;
     }
 
@@ -606,7 +610,7 @@ export class NavigationService {
       });
 
       if (response.data.status !== 'OK') {
-        console.error('[Navigation] Optimized route error:', response.data.status);
+        logger.error('[Navigation] Optimized route error:', response.data.status);
         return null;
       }
 
@@ -661,7 +665,7 @@ export class NavigationService {
         routes
       };
     } catch (error) {
-      console.error('[Navigation] Error getting optimized route:', error);
+      logger.error('[Navigation] Error getting optimized route:', error);
       return null;
     }
   }

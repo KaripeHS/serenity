@@ -7,6 +7,10 @@
 
 import twilio from 'twilio';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('sms');
 interface SMSData {
   to: string; // Phone number in E.164 format (e.g., +19375550100)
   message: string;
@@ -38,7 +42,7 @@ export class SMSService {
       this.client = twilio(accountSid, authToken);
       this.isConfigured = true;
     } else {
-      console.warn('[SMSService] Twilio not configured. SMS will be logged instead of sent.');
+      logger.warn('[SMSService] Twilio not configured. SMS will be logged instead of sent.');
       this.isConfigured = false;
     }
   }
@@ -57,7 +61,7 @@ export class SMSService {
           to: data.to,
         });
 
-        console.log(`[SMSService] SMS sent to ${data.to}: ${message.sid}`);
+        logger.info(`[SMSService] SMS sent to ${data.to}: ${message.sid}`);
 
         return {
           sid: message.sid,
@@ -69,17 +73,17 @@ export class SMSService {
           dateSent: message.dateSent || undefined,
         };
       } catch (error: any) {
-        console.error('[SMSService] Failed to send SMS:', error.message);
+        logger.error('[SMSService] Failed to send SMS:', error.message);
         throw new Error(`SMS delivery failed: ${error.message}`);
       }
     } else {
       // Development mode - log SMS instead of sending
-      console.log('\n========== SMS (DEV MODE) ==========');
-      console.log('To:', data.to);
-      console.log('From:', from);
-      console.log('Message:');
-      console.log(data.message);
-      console.log('=====================================\n');
+      logger.info('\n========== SMS (DEV MODE) ==========');
+      logger.info(`To: ${data.to}`);
+      logger.info(`From: ${from}`);
+      logger.info('Message:');
+      logger.info(data.message);
+      logger.info('=====================================\n');
 
       return {
         sid: `DEV-${Date.now()}`,

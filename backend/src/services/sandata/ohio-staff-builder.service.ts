@@ -31,6 +31,10 @@ import type {
 } from './ohio-types';
 import { formatOhioDate } from './ohio-types';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('ohio-staff-builder');
 /**
  * User/Caregiver/Staff data from our database
  */
@@ -492,7 +496,7 @@ export class OhioStaffBuilderService {
       return decrypted;
     } catch (error) {
       // Log error but DON'T log the encrypted value for security
-      console.error('[StaffBuilder] SSN decryption failed', {
+      logger.error('[StaffBuilder] SSN decryption failed', {
         error: this.getErrorMessage(error),
         note: 'Check that pgcrypto extension is enabled and app.ssn_encryption_key is set',
       });

@@ -25,6 +25,10 @@
 
 import type { AppendixGCombination } from './ohio-types';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('appendix-g-validator');
 /**
  * Validation result for Appendix G check
  */
@@ -275,7 +279,7 @@ export class AppendixGValidatorService {
       await this.loadFromDatabase();
     } catch (error) {
       // Fallback to sample data if database not available
-      console.warn('[AppendixG] Failed to load from database, using sample data:', error);
+      logger.warn('[AppendixG] Failed to load from database, using sample data:', error);
       await this.loadSampleData();
     }
   }
@@ -325,7 +329,7 @@ export class AppendixGValidatorService {
       this.appendixGCache.set(key, entry);
     }
 
-    console.log(`[AppendixG] Loaded ${this.appendixGCache.size} valid combinations from database`);
+    logger.info(`[AppendixG] Loaded ${this.appendixGCache.size} valid combinations from database`);
   }
 
   /**
@@ -451,7 +455,7 @@ export class AppendixGValidatorService {
       this.appendixGCache.set(key, entry);
     }
 
-    console.log(`[AppendixG] Loaded ${this.appendixGCache.size} valid combinations into cache`);
+    logger.info(`[AppendixG] Loaded ${this.appendixGCache.size} valid combinations into cache`);
   }
 
   /**
@@ -535,7 +539,7 @@ export class AppendixGValidatorService {
     }
 
     this.cacheInitialized = true;
-    console.log(`[AppendixG] Imported ${this.appendixGCache.size} combinations`);
+    logger.info(`[AppendixG] Imported ${this.appendixGCache.size} combinations`);
   }
 
   /**

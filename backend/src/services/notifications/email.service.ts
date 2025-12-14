@@ -7,6 +7,10 @@
 
 import sgMail from '@sendgrid/mail';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('email');
 interface ApplicationConfirmationData {
   applicantName: string;
   applicantEmail: string;
@@ -81,7 +85,7 @@ export class EmailService {
       sgMail.setApiKey(apiKey);
       this.isConfigured = true;
     } else {
-      console.warn('[EmailService] SendGrid API key not configured. Emails will be logged instead of sent.');
+      logger.warn('[EmailService] SendGrid API key not configured. Emails will be logged instead of sent.');
       this.isConfigured = false;
     }
 
@@ -104,7 +108,7 @@ export class EmailService {
       text
     });
 
-    console.log(`[EmailService] Application confirmation sent to ${data.applicantEmail}`);
+    logger.info(`[EmailService] Application confirmation sent to ${data.applicantEmail}`);
   }
 
   /**
@@ -122,7 +126,7 @@ export class EmailService {
       text
     });
 
-    console.log(`[EmailService] New application alert sent to ${this.hrEmail}`);
+    logger.info(`[EmailService] New application alert sent to ${this.hrEmail}`);
   }
 
   /**
@@ -144,7 +148,7 @@ export class EmailService {
       text
     });
 
-    console.log(`[EmailService] Credential expiration alert sent to ${data.to}`);
+    logger.info(`[EmailService] Credential expiration alert sent to ${data.to}`);
   }
 
   /**
@@ -166,7 +170,7 @@ export class EmailService {
       text
     });
 
-    console.log(`[EmailService] Credential digest sent to ${data.to}`);
+    logger.info(`[EmailService] Credential digest sent to ${data.to}`);
   }
 
   /**
@@ -193,7 +197,7 @@ export class EmailService {
       text: JSON.stringify(data.gaps, null, 2) // Simplified text version
     });
 
-    console.log(`[EmailService] Compliance alert sent to ${data.to}`);
+    logger.info(`[EmailService] Compliance alert sent to ${data.to}`);
   }
 
   /**
@@ -223,23 +227,23 @@ export class EmailService {
       try {
         await sgMail.send(msg);
       } catch (error: any) {
-        console.error('[EmailService] Failed to send email:', error.message);
+        logger.error('[EmailService] Failed to send email:', error.message);
         if (error.response) {
-          console.error('[EmailService] SendGrid error:', error.response.body);
+          logger.error('[EmailService] SendGrid error:', error.response.body);
         }
         throw error;
       }
     } else {
       // Development mode - log email instead of sending
-      console.log('\n========== EMAIL (DEV MODE) ==========');
-      console.log('To:', params.to);
-      console.log('From:', this.fromEmail);
-      console.log('Subject:', params.subject);
-      console.log('\n--- TEXT VERSION ---');
-      console.log(params.text);
-      console.log('\n--- HTML VERSION ---');
-      console.log(params.html);
-      console.log('======================================\n');
+      logger.info('\n========== EMAIL (DEV MODE) ==========');
+      logger.info(`To: ${params.to}`);
+      logger.info(`From: ${this.fromEmail}`);
+      logger.info(`Subject: ${params.subject}`);
+      logger.info('\n--- TEXT VERSION ---');
+      logger.info(params.text);
+      logger.info('\n--- HTML VERSION ---');
+      logger.info(params.html);
+      logger.info('======================================\n');
     }
   }
 

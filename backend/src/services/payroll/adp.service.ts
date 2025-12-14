@@ -15,6 +15,10 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('adp');
 import {
   IPayrollProvider,
   PayrollEmployee,
@@ -42,7 +46,7 @@ export class ADPPayrollProvider implements IPayrollProvider {
     });
 
     if (!this.configured) {
-      console.warn('[ADPPayroll] Not configured. Using mock data.');
+      logger.warn('[ADPPayroll] Not configured. Using mock data.');
     }
   }
 
@@ -55,8 +59,8 @@ export class ADPPayrollProvider implements IPayrollProvider {
   }
 
   async syncEmployees(employees: PayrollEmployee[]): Promise<PayrollSyncResult> {
-    console.log('[ADPPayroll] syncEmployees() - STUB IMPLEMENTATION');
-    console.log(`Would sync ${employees.length} employees to ADP`);
+    logger.info('[ADPPayroll] syncEmployees() - STUB IMPLEMENTATION');
+    logger.info(`Would sync ${employees.length} employees to ADP`);
 
     // TODO: Implement ADP employee sync
     // 1. Get OAuth token
@@ -75,8 +79,8 @@ export class ADPPayrollProvider implements IPayrollProvider {
   }
 
   async submitHours(hours: PayrollHours[]): Promise<PayrollSyncResult> {
-    console.log('[ADPPayroll] submitHours() - STUB IMPLEMENTATION');
-    console.log(`Would submit hours for ${hours.length} employees to ADP`);
+    logger.info('[ADPPayroll] submitHours() - STUB IMPLEMENTATION');
+    logger.info(`Would submit hours for ${hours.length} employees to ADP`);
 
     // TODO: Implement ADP hours submission
     // 1. Get OAuth token
@@ -94,7 +98,7 @@ export class ADPPayrollProvider implements IPayrollProvider {
   }
 
   async getCurrentPayPeriod(): Promise<{ start: Date; end: Date; payDate: Date }> {
-    console.log('[ADPPayroll] getCurrentPayPeriod() - STUB IMPLEMENTATION');
+    logger.info('[ADPPayroll] getCurrentPayPeriod() - STUB IMPLEMENTATION');
 
     // TODO: Implement ADP pay period retrieval
     // GET /payroll/v2/payroll-run-periods?$filter=current
@@ -108,7 +112,7 @@ export class ADPPayrollProvider implements IPayrollProvider {
   }
 
   async getPayrollRuns(startDate: Date, endDate: Date): Promise<PayrollRun[]> {
-    console.log('[ADPPayroll] getPayrollRuns() - STUB IMPLEMENTATION');
+    logger.info('[ADPPayroll] getPayrollRuns() - STUB IMPLEMENTATION');
 
     // TODO: Implement ADP payroll runs retrieval
     // GET /payroll/v2/payroll-runs?startDate=...&endDate=...
@@ -117,7 +121,7 @@ export class ADPPayrollProvider implements IPayrollProvider {
   }
 
   async getEmployee(employeeId: string): Promise<PayrollEmployee | null> {
-    console.log('[ADPPayroll] getEmployee() - STUB IMPLEMENTATION');
+    logger.info('[ADPPayroll] getEmployee() - STUB IMPLEMENTATION');
 
     // TODO: Implement ADP employee retrieval
     // GET /hr/v2/workers/:id
@@ -126,7 +130,7 @@ export class ADPPayrollProvider implements IPayrollProvider {
   }
 
   async createEmployee(employee: PayrollEmployee): Promise<{ success: boolean; externalId?: string; error?: string }> {
-    console.log('[ADPPayroll] createEmployee() - STUB IMPLEMENTATION');
+    logger.info('[ADPPayroll] createEmployee() - STUB IMPLEMENTATION');
 
     // TODO: Implement ADP employee creation
     // POST /hr/v2/workers
@@ -138,7 +142,7 @@ export class ADPPayrollProvider implements IPayrollProvider {
   }
 
   async updateEmployee(employee: PayrollEmployee): Promise<{ success: boolean; error?: string }> {
-    console.log('[ADPPayroll] updateEmployee() - STUB IMPLEMENTATION');
+    logger.info('[ADPPayroll] updateEmployee() - STUB IMPLEMENTATION');
 
     // TODO: Implement ADP employee update
     // PUT /hr/v2/workers/:id
@@ -147,7 +151,7 @@ export class ADPPayrollProvider implements IPayrollProvider {
   }
 
   async terminateEmployee(employeeId: string, terminationDate: Date): Promise<{ success: boolean; error?: string }> {
-    console.log('[ADPPayroll] terminateEmployee() - STUB IMPLEMENTATION');
+    logger.info('[ADPPayroll] terminateEmployee() - STUB IMPLEMENTATION');
 
     // TODO: Implement ADP employee termination
     // PUT /hr/v2/workers/:id/employment-status
@@ -156,7 +160,7 @@ export class ADPPayrollProvider implements IPayrollProvider {
   }
 
   async getPayStub(employeeId: string, payPeriodEnd: Date): Promise<any> {
-    console.log('[ADPPayroll] getPayStub() - STUB IMPLEMENTATION');
+    logger.info('[ADPPayroll] getPayStub() - STUB IMPLEMENTATION');
 
     // TODO: Implement ADP pay stub retrieval
     // GET /payroll/v2/workers/:id/pay-statements

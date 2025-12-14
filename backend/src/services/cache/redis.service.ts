@@ -11,6 +11,10 @@
 
 import Redis from 'ioredis';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('redis');
 export class RedisCacheService {
   private client: Redis | null = null;
   private isConnected: boolean = false;
@@ -32,17 +36,17 @@ export class RedisCacheService {
       });
 
       this.client.on('connect', () => {
-        console.log('[Redis] Connected successfully');
+        logger.info('[Redis] Connected successfully');
         this.isConnected = true;
       });
 
       this.client.on('error', (error) => {
-        console.error('[Redis] Connection error:', error);
+        logger.error('[Redis] Connection error:', error);
         this.isConnected = false;
       });
 
       this.client.on('close', () => {
-        console.log('[Redis] Connection closed');
+        logger.info('[Redis] Connection closed');
         this.isConnected = false;
       });
 
@@ -50,7 +54,7 @@ export class RedisCacheService {
       await this.client.ping();
 
     } catch (error) {
-      console.error('[Redis] Failed to connect:', error);
+      logger.error('[Redis] Failed to connect:', error);
       this.isConnected = false;
     }
   }
@@ -69,7 +73,7 @@ export class RedisCacheService {
 
       return JSON.parse(value) as T;
     } catch (error) {
-      console.error(`[Redis] Error getting key ${key}:`, error);
+      logger.error(`[Redis] Error getting key ${key}:`, error);
       return null;
     }
   }
@@ -87,7 +91,7 @@ export class RedisCacheService {
       await this.client.setex(key, ttlSeconds, serialized);
       return true;
     } catch (error) {
-      console.error(`[Redis] Error setting key ${key}:`, error);
+      logger.error(`[Redis] Error setting key ${key}:`, error);
       return false;
     }
   }
@@ -104,7 +108,7 @@ export class RedisCacheService {
       await this.client.del(key);
       return true;
     } catch (error) {
-      console.error(`[Redis] Error deleting key ${key}:`, error);
+      logger.error(`[Redis] Error deleting key ${key}:`, error);
       return false;
     }
   }
@@ -124,7 +128,7 @@ export class RedisCacheService {
       await this.client.del(...keys);
       return keys.length;
     } catch (error) {
-      console.error(`[Redis] Error deleting pattern ${pattern}:`, error);
+      logger.error(`[Redis] Error deleting pattern ${pattern}:`, error);
       return 0;
     }
   }
@@ -141,7 +145,7 @@ export class RedisCacheService {
       const result = await this.client.exists(key);
       return result === 1;
     } catch (error) {
-      console.error(`[Redis] Error checking key ${key}:`, error);
+      logger.error(`[Redis] Error checking key ${key}:`, error);
       return false;
     }
   }
@@ -162,7 +166,7 @@ export class RedisCacheService {
       }
       return value;
     } catch (error) {
-      console.error(`[Redis] Error incrementing key ${key}:`, error);
+      logger.error(`[Redis] Error incrementing key ${key}:`, error);
       return 0;
     }
   }
@@ -185,7 +189,7 @@ export class RedisCacheService {
 
       return true;
     } catch (error) {
-      console.error(`[Redis] Error setting GPS location for ${caregiverId}:`, error);
+      logger.error(`[Redis] Error setting GPS location for ${caregiverId}:`, error);
       return false;
     }
   }
@@ -211,7 +215,7 @@ export class RedisCacheService {
 
       return results as string[];
     } catch (error) {
-      console.error('[Redis] Error getting nearby caregivers:', error);
+      logger.error('[Redis] Error getting nearby caregivers:', error);
       return [];
     }
   }
@@ -244,7 +248,7 @@ export class RedisCacheService {
         timestamp: timestamp ? parseInt(timestamp) : Date.now()
       };
     } catch (error) {
-      console.error(`[Redis] Error getting GPS location for ${caregiverId}:`, error);
+      logger.error(`[Redis] Error getting GPS location for ${caregiverId}:`, error);
       return null;
     }
   }
@@ -329,7 +333,7 @@ export class RedisCacheService {
         info: this.parseRedisInfo(info)
       };
     } catch (error) {
-      console.error('[Redis] Error getting stats:', error);
+      logger.error('[Redis] Error getting stats:', error);
       return null;
     }
   }
@@ -365,7 +369,7 @@ export class RedisCacheService {
     if (this.client) {
       await this.client.quit();
       this.isConnected = false;
-      console.log('[Redis] Disconnected');
+      logger.info('[Redis] Disconnected');
     }
   }
 
@@ -379,10 +383,10 @@ export class RedisCacheService {
 
     try {
       await this.client.flushdb();
-      console.log('[Redis] Cache flushed');
+      logger.info('[Redis] Cache flushed');
       return true;
     } catch (error) {
-      console.error('[Redis] Error flushing cache:', error);
+      logger.error('[Redis] Error flushing cache:', error);
       return false;
     }
   }

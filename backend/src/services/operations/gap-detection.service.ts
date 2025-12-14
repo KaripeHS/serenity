@@ -11,6 +11,11 @@
  * @module services/operations/gap-detection
  */
 
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('gap-detection');
+
+
 interface CoverageGap {
   id: string;
   type: 'no_show' | 'early_departure' | 'unscheduled';
@@ -237,7 +242,7 @@ export class GapDetectionService {
     //   WHERE id = $1
     // `, [gapId]);
 
-    console.log(`[GAP DETECTION] Gap ${gapId} marked as notified`);
+    logger.info(`[GAP DETECTION] Gap ${gapId} marked as notified`);
   }
 
   /**
@@ -253,7 +258,7 @@ export class GapDetectionService {
     //   WHERE id = $1
     // `, [gapId, replacementCaregiverId]);
 
-    console.log(`[GAP DETECTION] Gap ${gapId} marked as dispatched with caregiver ${replacementCaregiverId}`);
+    logger.info(`[GAP DETECTION] Gap ${gapId} marked as dispatched with caregiver ${replacementCaregiverId}`);
   }
 
   /**
@@ -277,7 +282,7 @@ export class GapDetectionService {
     //   WHERE id = $1
     // `, [gapId, coveredAt, responseTimeMinutes]);
 
-    console.log(`[GAP DETECTION] Gap ${gapId} marked as covered`);
+    logger.info(`[GAP DETECTION] Gap ${gapId} marked as covered`);
   }
 
   /**
@@ -293,7 +298,7 @@ export class GapDetectionService {
     //   WHERE id = $1
     // `, [gapId, reason]);
 
-    console.log(`[GAP DETECTION] Gap ${gapId} marked as canceled: ${reason}`);
+    logger.info(`[GAP DETECTION] Gap ${gapId} marked as canceled: ${reason}`);
   }
 
   /**

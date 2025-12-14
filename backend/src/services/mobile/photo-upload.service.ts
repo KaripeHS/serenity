@@ -16,6 +16,10 @@ import { pool } from '../../config/database';
 import sharp from 'sharp';
 import crypto from 'crypto';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('photo-upload');
 interface PhotoMetadata {
   originalName: string;
   mimeType: string;
@@ -51,15 +55,15 @@ export class PhotoUploadService {
           projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
           keyFilename: process.env.GOOGLE_CLOUD_KEYFILE_PATH
         });
-        console.log('[PhotoUpload] Google Cloud Storage initialized');
+        logger.info('[PhotoUpload] Google Cloud Storage initialized');
       } catch (error) {
-        console.warn('[PhotoUpload] Cloud Storage initialization failed, using local storage:', error);
+        logger.warn('[PhotoUpload] Cloud Storage initialization failed, using local storage:', error);
         this.useLocalStorage = true;
       }
     }
 
     if (this.useLocalStorage) {
-      console.warn('[PhotoUpload] Using local file storage. Configure GCS for production.');
+      logger.warn('[PhotoUpload] Using local file storage. Configure GCS for production.');
     }
   }
 
@@ -163,7 +167,7 @@ export class PhotoUploadService {
         metadata
       };
     } catch (error) {
-      console.error('[PhotoUpload] Error uploading photo:', error);
+      logger.error('[PhotoUpload] Error uploading photo:', error);
       return null;
     }
   }
@@ -291,7 +295,7 @@ export class PhotoUploadService {
 
       return metadata;
     } catch (error) {
-      console.error('[PhotoUpload] Error extracting metadata:', error);
+      logger.error('[PhotoUpload] Error extracting metadata:', error);
       return {
         originalName,
         mimeType,
@@ -328,7 +332,7 @@ export class PhotoUploadService {
 
       return null;
     } catch (error) {
-      console.error('[PhotoUpload] Error parsing GPS data:', error);
+      logger.error('[PhotoUpload] Error parsing GPS data:', error);
       return null;
     }
   }
@@ -373,7 +377,7 @@ export class PhotoUploadService {
           .toBuffer();
       }
     } catch (error) {
-      console.error('[PhotoUpload] Error optimizing image:', error);
+      logger.error('[PhotoUpload] Error optimizing image:', error);
       return buffer;
     }
   }
@@ -393,7 +397,7 @@ export class PhotoUploadService {
         })
         .toBuffer();
     } catch (error) {
-      console.error('[PhotoUpload] Error generating thumbnail:', error);
+      logger.error('[PhotoUpload] Error generating thumbnail:', error);
       return buffer;
     }
   }
@@ -491,12 +495,12 @@ export class PhotoUploadService {
       if (!this.useLocalStorage && this.storage) {
         const bucket = this.storage.bucket(this.bucketName);
         await bucket.file(photo.file_name).delete().catch(err => {
-          console.warn('[PhotoUpload] Error deleting file from GCS:', err);
+          logger.warn('[PhotoUpload] Error deleting file from GCS:', err);
         });
 
         if (photo.thumbnail_url) {
           await bucket.file(`thumbnails/${photo.file_name}`).delete().catch(err => {
-            console.warn('[PhotoUpload] Error deleting thumbnail from GCS:', err);
+            logger.warn('[PhotoUpload] Error deleting thumbnail from GCS:', err);
           });
         }
       }
@@ -512,7 +516,7 @@ export class PhotoUploadService {
 
       return true;
     } catch (error) {
-      console.error('[PhotoUpload] Error deleting photo:', error);
+      logger.error('[PhotoUpload] Error deleting photo:', error);
       return false;
     }
   }

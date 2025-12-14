@@ -1,6 +1,10 @@
 
 import OpenAI from 'openai';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('ai');
 export class AIService {
     private openai: OpenAI | null = null;
     private readonly MODEL = 'gpt-3.5-turbo';
@@ -61,7 +65,7 @@ CONTEXT:
             return aiReply;
 
         } catch (error) {
-            console.error('[AIService] Error:', error);
+            logger.error('[AIService] Error:', error);
             throw new Error('Failed to generate AI response');
         }
     }

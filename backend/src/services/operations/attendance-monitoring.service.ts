@@ -3,6 +3,10 @@ import { getDbClient } from '../../database/client';
 import { emailService } from '../infrastructure/email.service';
 import { addMinutes, isBefore, isAfter, subMinutes } from 'date-fns';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('attendance-monitoring');
 export class AttendanceMonitoringService {
 
     /**
@@ -11,7 +15,7 @@ export class AttendanceMonitoringService {
      */
     async checkUpcomingShifts() {
         const db = getDbClient();
-        console.log('[AttendanceMonitor] Checking upcoming shifts...');
+        logger.info('[AttendanceMonitor] Checking upcoming shifts...');
 
         // Window: Shifts starting in 15-30 mins from now
         const now = new Date();
@@ -34,7 +38,7 @@ export class AttendanceMonitoringService {
             await this.sendWakeUpNotification(shift);
         }
 
-        console.log(`[AttendanceMonitor] Processed ${shifts.rows.length} upcoming shifts.`);
+        logger.info(`[AttendanceMonitor] Processed ${shifts.rows.length} upcoming shifts.`);
     }
 
     private async sendWakeUpNotification(shift: any) {
@@ -59,7 +63,7 @@ export class AttendanceMonitoringService {
             `
         );
 
-        console.log(`[AttendanceMonitor] Wake-Up sent to ${shift.email} for Shift ${shift.id}`);
+        logger.info(`[AttendanceMonitor] Wake-Up sent to ${shift.email} for Shift ${shift.id}`);
     }
 
     /**

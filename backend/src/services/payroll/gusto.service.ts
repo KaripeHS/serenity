@@ -12,6 +12,10 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('gusto');
 import {
   IPayrollProvider,
   PayrollEmployee,
@@ -42,7 +46,7 @@ export class GustoPayrollProvider implements IPayrollProvider {
 
     if (!this.configured) {
       // In production, this should be a hard error, but for now we warn
-      console.warn('[GustoPayroll] Not configured. Payroll operations will fail in production.');
+      logger.warn('[GustoPayroll] Not configured. Payroll operations will fail in production.');
     }
   }
 
@@ -93,7 +97,7 @@ export class GustoPayrollProvider implements IPayrollProvider {
 
         syncedCount++;
       } catch (error: any) {
-        console.error(`[Gusto] Failed to sync employee ${employee.email}:`, error.message);
+        logger.error(`[Gusto] Failed to sync employee ${employee.email}:`, error.message);
         errors.push({
           employeeId: employee.id,
           error: error.message || 'Unknown error',
@@ -119,7 +123,7 @@ export class GustoPayrollProvider implements IPayrollProvider {
       const employees = response.data;
       return employees.find((e: any) => e.email === email) || null;
     } catch (error) {
-      console.error('[Gusto] Error finding employee:', error);
+      logger.error('[Gusto] Error finding employee:', error);
       return null;
     }
   }
@@ -154,7 +158,7 @@ export class GustoPayrollProvider implements IPayrollProvider {
         externalId: response.data.id,
       };
     } catch (error: any) {
-      console.error('[GustoPayroll] Create employee failed:', error.message);
+      logger.error('[GustoPayroll] Create employee failed:', error.message);
       return {
         success: false,
         error: error.message,
@@ -188,7 +192,7 @@ export class GustoPayrollProvider implements IPayrollProvider {
       await this.client.put(`/v1/employees/${employee.externalId}`, payload);
       return { success: true };
     } catch (error: any) {
-      console.error('[GustoPayroll] Update employee failed:', error.message);
+      logger.error('[GustoPayroll] Update employee failed:', error.message);
       return {
         success: false,
         error: error.message,
@@ -220,7 +224,7 @@ export class GustoPayrollProvider implements IPayrollProvider {
         syncedAt: new Date(),
       };
     } catch (error: any) {
-      console.error('[GustoPayroll] Hours submission failed:', error.message);
+      logger.error('[GustoPayroll] Hours submission failed:', error.message);
       return {
         success: false,
         employeesSynced: 0,
@@ -245,7 +249,7 @@ export class GustoPayrollProvider implements IPayrollProvider {
         payDate: new Date(response.data.pay_date),
       };
     } catch (error: any) {
-      console.error('[GustoPayroll] Get current pay period failed:', error.message);
+      logger.error('[GustoPayroll] Get current pay period failed:', error.message);
       throw error;
     }
   }
@@ -274,7 +278,7 @@ export class GustoPayrollProvider implements IPayrollProvider {
         employeeCount: p.employee_count || 0,
       }));
     } catch (error: any) {
-      console.error('[GustoPayroll] Get payroll runs failed:', error.message);
+      logger.error('[GustoPayroll] Get payroll runs failed:', error.message);
       return [];
     }
   }
@@ -301,7 +305,7 @@ export class GustoPayrollProvider implements IPayrollProvider {
         status: response.data.terminations ? 'terminated' : 'active',
       };
     } catch (error: any) {
-      console.error('[GustoPayroll] Get employee failed:', error.message);
+      logger.error('[GustoPayroll] Get employee failed:', error.message);
       return null;
     }
   }
@@ -319,7 +323,7 @@ export class GustoPayrollProvider implements IPayrollProvider {
 
       return { success: true };
     } catch (error: any) {
-      console.error('[GustoPayroll] Terminate employee failed:', error.message);
+      logger.error('[GustoPayroll] Terminate employee failed:', error.message);
       return {
         success: false,
         error: error.message,
@@ -346,7 +350,7 @@ export class GustoPayrollProvider implements IPayrollProvider {
         taxes: response.data.taxes || [],
       };
     } catch (error: any) {
-      console.error('[GustoPayroll] Get pay stub failed:', error.message);
+      logger.error('[GustoPayroll] Get pay stub failed:', error.message);
       return null;
     }
   }
