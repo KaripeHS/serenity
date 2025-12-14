@@ -30,6 +30,9 @@ import { rateLimiter } from './middleware/rate-limiter';
 import operationsRouter from './routes/operations.routes';
 import complianceRouter from './routes/compliance.routes';
 import { clinicalRouter } from './routes/clinical';
+import { clinicalSupervisionRouter } from './routes/clinical-supervision.routes';
+import { incidentManagementRouter } from './routes/incident-management.routes';
+import { emergencyPreparednessRouter } from './routes/emergency-preparedness.routes';
 import patientPortalRouter from './routes/patient/portal.routes';
 import familyPortalRouter from './routes/family/portal.routes';
 import { familyRouter } from './routes/family';
@@ -90,6 +93,9 @@ export function createApp(config: ApiConfig): Application {
   app.use('/api/operations', operationsRouter);
   app.use('/api/compliance', complianceRouter);
   app.use('/api/clinical', clinicalRouter);
+  app.use('/api/clinical-supervision', clinicalSupervisionRouter);
+  app.use('/api/incidents', incidentManagementRouter);
+  app.use('/api/emergency', emergencyPreparednessRouter);
   app.use('/api/patient', patientPortalRouter);
   app.use('/api/family', familyPortalRouter);
   app.use('/api/family', familyRouter); // New family portal with separate auth

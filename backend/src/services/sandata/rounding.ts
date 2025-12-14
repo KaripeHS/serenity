@@ -45,9 +45,9 @@ export function roundTime(
     throw new Error(`Invalid rounding minutes: ${roundingMinutes}. Must be 6 or 15.`);
   }
 
-  // Get minutes and seconds from original time
-  const minutes = originalTime.getMinutes();
-  const seconds = originalTime.getSeconds();
+  // Get minutes and seconds from original time (using UTC to be timezone-agnostic)
+  const minutes = originalTime.getUTCMinutes();
+  const seconds = originalTime.getUTCSeconds();
   const totalMinutes = minutes + seconds / 60;
 
   // Calculate rounded minutes based on mode
@@ -67,17 +67,20 @@ export function roundTime(
       throw new Error(`Invalid rounding mode: ${roundingMode}`);
   }
 
-  // Create rounded time
+  // Create rounded time (using UTC to be timezone-agnostic)
   const roundedTime = new Date(originalTime);
-  roundedTime.setMinutes(roundedMinutes);
-  roundedTime.setSeconds(0);
-  roundedTime.setMilliseconds(0);
 
-  // Handle midnight boundary (optional)
-  if (preserveMidnight && roundedMinutes >= 60) {
-    roundedTime.setHours(roundedTime.getHours() + Math.floor(roundedMinutes / 60));
-    roundedTime.setMinutes(roundedMinutes % 60);
+  // Handle hour overflow manually before setting minutes
+  // (setUTCMinutes auto-handles overflow, but we need to know the original hours)
+  const hoursToAdd = Math.floor(roundedMinutes / 60);
+  const finalMinutes = roundedMinutes % 60;
+
+  if (hoursToAdd > 0) {
+    roundedTime.setUTCHours(roundedTime.getUTCHours() + hoursToAdd);
   }
+  roundedTime.setUTCMinutes(finalMinutes);
+  roundedTime.setUTCSeconds(0);
+  roundedTime.setUTCMilliseconds(0);
 
   // Calculate difference
   const differenceMs = roundedTime.getTime() - originalTime.getTime();
@@ -224,8 +227,8 @@ function roundDown(minutes: number, interval: number): number {
  */
 export function roundFLSA(time: Date | string): RoundingResult {
   const originalTime = typeof time === 'string' ? new Date(time) : new Date(time);
-  const minutes = originalTime.getMinutes();
-  const seconds = originalTime.getSeconds();
+  const minutes = originalTime.getUTCMinutes();
+  const seconds = originalTime.getUTCSeconds();
 
   let roundedMinutes = minutes;
 
@@ -238,15 +241,17 @@ export function roundFLSA(time: Date | string): RoundingResult {
   }
 
   const roundedTime = new Date(originalTime);
-  roundedTime.setMinutes(roundedMinutes);
-  roundedTime.setSeconds(0);
-  roundedTime.setMilliseconds(0);
 
-  // Handle hour overflow
-  if (roundedMinutes >= 60) {
-    roundedTime.setHours(roundedTime.getHours() + 1);
-    roundedTime.setMinutes(roundedMinutes - 60);
+  // Handle hour overflow manually
+  const hoursToAdd = Math.floor(roundedMinutes / 60);
+  const finalMinutes = roundedMinutes % 60;
+
+  if (hoursToAdd > 0) {
+    roundedTime.setUTCHours(roundedTime.getUTCHours() + hoursToAdd);
   }
+  roundedTime.setUTCMinutes(finalMinutes);
+  roundedTime.setUTCSeconds(0);
+  roundedTime.setUTCMilliseconds(0);
 
   const differenceMs = roundedTime.getTime() - originalTime.getTime();
   const differenceMinutes = Math.round(differenceMs / 60000);
@@ -274,9 +279,9 @@ export function roundFLSA(time: Date | string): RoundingResult {
  */
 export function isSameDay(clockIn: Date, clockOut: Date): boolean {
   return (
-    clockIn.getFullYear() === clockOut.getFullYear() &&
-    clockIn.getMonth() === clockOut.getMonth() &&
-    clockIn.getDate() === clockOut.getDate()
+    clockIn.getUTCFullYear() === clockOut.getUTCFullYear() &&
+    clockIn.getUTCMonth() === clockOut.getUTCMonth() &&
+    clockIn.getUTCDate() === clockOut.getUTCDate()
   );
 }
 

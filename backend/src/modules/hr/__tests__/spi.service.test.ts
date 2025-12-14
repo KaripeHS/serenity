@@ -11,13 +11,72 @@
  * @module modules/hr/__tests__/spi.service.test
  */
 
+import { jest } from '@jest/globals';
+
+// Mock logger
+jest.mock('../../../utils/logger', () => ({
+  createLogger: () => ({
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  }),
+}));
+
+// Mock database client
+const mockQuery = jest.fn() as jest.Mock<any>;
+jest.mock('../../../database/client', () => ({
+  getDbClient: () => ({
+    query: mockQuery,
+  }),
+}));
+
+// Mock email service
+jest.mock('../../../services/notifications/email.service', () => ({
+  EmailService: jest.fn().mockImplementation(() => ({
+    sendEmail: jest.fn(),
+  })),
+}));
+
+// Mock safeguard service
+jest.mock('../../finance/safeguard.service', () => ({
+  FinancialSafeguardService: jest.fn().mockImplementation(() => ({
+    checkOvertimeEligibility: (jest.fn() as jest.Mock<any>).mockResolvedValue(true),
+  })),
+}));
+
 import { SPIService, SPIWeights, SPIComponents } from '../spi.service';
 
 describe('SPIService', () => {
   let service: SPIService;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     service = new SPIService();
+
+    // Default mock responses for database queries
+    mockQuery.mockResolvedValue({
+      rows: [{
+        on_time_visits: 55,
+        total_visits: 60,
+        no_shows: 0,
+        call_outs: 1,
+        avg_rating: 4.5,
+        positive_feedback_count: 2,
+        complaint_count: 0,
+        complete_notes: 58,
+        accepted_visits: 57,
+        submitted_visits: 60,
+        on_time_docs: 59,
+        positive_peer_feedback: 2,
+        negative_peer_feedback: 0,
+        meetings_attended: 2,
+        completed_trainings: 2,
+        required_trainings: 2,
+        optional_trainings: 1,
+        credentials_issue: 0,
+      }],
+    });
   });
 
   describe('calculateMonthlySPI', () => {

@@ -76,7 +76,13 @@
       "Bash(npm run migrate:latest:*)",
       "Bash(npm run:*)",
       "Bash(gcloud run services delete:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(npm test:*)",
+      "Bash(gcloud projects list:*)",
+      "Bash(timeout 300 npm run test:integration:*)",
+      "Bash(psql:*)",
+      "Bash(npx jest:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

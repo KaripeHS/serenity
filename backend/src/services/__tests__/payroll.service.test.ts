@@ -296,7 +296,8 @@ describe('Payroll Service - Tax Calculations', () => {
 
     it('should apply Social Security wage base limit ($160,200)', () => {
       // Already at wage base - no more SS tax
-      const taxes = calculateTaxes(1000, 160200);
+      // ytdGross=161200 means prevYtdGross=160200, which is at the limit
+      const taxes = calculateTaxes(1000, 161200);
       expect(taxes.socialSecurityTax).toBe(0); // Already at limit
     });
 
@@ -327,7 +328,8 @@ describe('Payroll Service - Tax Calculations', () => {
     });
 
     it('should not tax SS beyond wage base', () => {
-      const taxes = calculateTaxes(5000, 165000); // Already over limit
+      // ytdGross=170000 means prevYtdGross=165000, which is over the limit of 160200
+      const taxes = calculateTaxes(5000, 170000); // Already over limit
       expect(taxes.socialSecurityTax).toBe(0);
     });
   });
@@ -433,7 +435,8 @@ describe('Payroll Service - Tax Calculations', () => {
 
     it('should handle high earner with SS wage base limit', () => {
       const grossPay = 10000;
-      const ytdGross = 170000; // Over SS wage base
+      // ytdGross=180000 means prevYtdGross=170000, which is over the wage base of 160200
+      const ytdGross = 180000; // Over SS wage base
 
       const taxes = calculateTaxes(grossPay, ytdGross);
 

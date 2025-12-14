@@ -105,6 +105,21 @@ export function parseVisitKey(visitKey: string): VisitKeyComponents {
     throw new Error(`Invalid date format in visit key. Expected YYYYMMDD, got: ${dateStr}`);
   }
 
+  // Validate that the date is actually valid (e.g., not month 13 or day 99)
+  const year = parseInt(dateStr.substring(0, 4), 10);
+  const month = parseInt(dateStr.substring(4, 6), 10);
+  const day = parseInt(dateStr.substring(6, 8), 10);
+
+  if (month < 1 || month > 12 || day < 1 || day > 31) {
+    throw new Error(`Invalid date format in visit key. Invalid month/day: ${dateStr}`);
+  }
+
+  // Additional validation: check if the date is actually valid
+  const testDate = new Date(Date.UTC(year, month - 1, day));
+  if (testDate.getUTCFullYear() !== year || testDate.getUTCMonth() !== month - 1 || testDate.getUTCDate() !== day) {
+    throw new Error(`Invalid date format in visit key. Date does not exist: ${dateStr}`);
+  }
+
   return {
     clientId,
     caregiverId,
@@ -204,7 +219,9 @@ function normalizeDate(date: string | Date): string {
     dateObj = date;
   } else if (typeof date === 'string') {
     // Remove time component if present
-    const dateOnly = date.split('T')[0];
+    let dateOnly = date.split('T')[0];
+    // Normalize slash format to dash format (2025/11/03 -> 2025-11-03)
+    dateOnly = dateOnly.replace(/\//g, '-');
     dateObj = new Date(dateOnly + 'T00:00:00Z'); // Parse as UTC to avoid timezone issues
   } else {
     throw new Error(`Invalid date type: ${typeof date}`);

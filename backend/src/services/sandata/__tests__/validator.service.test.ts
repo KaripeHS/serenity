@@ -152,7 +152,7 @@ describe('SandataValidatorService', () => {
       });
 
       const context: ValidationContext = {
-        clientAddress: COLUMBUS_COORDINATES.clientAddress,
+        clientLocation: COLUMBUS_COORDINATES.clientAddress,
         geofenceRadiusMiles: 0.25,
       };
 
@@ -168,7 +168,7 @@ describe('SandataValidatorService', () => {
       });
 
       const context: ValidationContext = {
-        clientAddress: COLUMBUS_COORDINATES.clientAddress,
+        clientLocation: COLUMBUS_COORDINATES.clientAddress,
         geofenceRadiusMiles: 0.25,
       };
 
@@ -185,7 +185,7 @@ describe('SandataValidatorService', () => {
       });
 
       const context: ValidationContext = {
-        clientAddress: COLUMBUS_COORDINATES.clientAddress,
+        clientLocation: COLUMBUS_COORDINATES.clientAddress,
         geofenceRadiusMiles: 0.25,
       };
 
@@ -205,7 +205,7 @@ describe('SandataValidatorService', () => {
       });
 
       const context: ValidationContext = {
-        clientAddress: COLUMBUS_COORDINATES.clientAddress,
+        clientLocation: COLUMBUS_COORDINATES.clientAddress,
         geofenceRadiusMiles: 0.25,
       };
 
@@ -567,7 +567,7 @@ describe('SandataValidatorService', () => {
       });
 
       const context: ValidationContext = {
-        clientAddress: COLUMBUS_COORDINATES.clientAddress,
+        clientLocation: COLUMBUS_COORDINATES.clientAddress,
         geofenceRadiusMiles: 0.25,
       };
 

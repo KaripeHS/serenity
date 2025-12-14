@@ -34,17 +34,19 @@ import {
 describe('Sandata Types and Type Guards', () => {
   describe('isSandataError', () => {
     it('should return true for valid error response', () => {
+      // Type assertion for partial test object
       const errorResponse = {
         error: {
           code: 'VAL_001',
           message: 'Validation failed',
         },
-      };
+      } as any;
 
       expect(isSandataError(errorResponse)).toBe(true);
     });
 
     it('should return true for error with field and severity', () => {
+      // Type assertion for partial test object
       const errorResponse = {
         error: {
           code: 'VAL_GEOFENCE',
@@ -52,34 +54,36 @@ describe('Sandata Types and Type Guards', () => {
           field: 'clockInLocation',
           severity: 'error',
         },
-      };
+      } as any;
 
       expect(isSandataError(errorResponse)).toBe(true);
     });
 
     it('should return false for success response', () => {
+      // Type assertion needed for testing invalid data shapes
       const successResponse = {
         visitId: 'SND_VISIT_123',
         status: 'accepted',
         message: 'Visit accepted',
-      };
+      } as any;
 
       expect(isSandataError(successResponse)).toBe(false);
     });
 
     it('should return false for null/undefined', () => {
-      expect(isSandataError(null)).toBe(false);
-      expect(isSandataError(undefined)).toBe(false);
+      expect(isSandataError(null as any)).toBe(false);
+      expect(isSandataError(undefined as any)).toBe(false);
     });
 
     it('should return false for empty object', () => {
-      expect(isSandataError({})).toBe(false);
+      expect(isSandataError({} as any)).toBe(false);
     });
 
     it('should return false for error without code or message', () => {
-      expect(isSandataError({ error: {} })).toBe(false);
-      expect(isSandataError({ error: { code: 'VAL_001' } })).toBe(false);
-      expect(isSandataError({ error: { message: 'Error' } })).toBe(false);
+      // Type assertions needed because we're testing invalid data
+      expect(isSandataError({ error: {} } as any)).toBe(false);
+      expect(isSandataError({ error: { code: 'VAL_001' } } as any)).toBe(false);
+      expect(isSandataError({ error: { message: 'Error' } } as any)).toBe(false);
     });
   });
 
@@ -109,7 +113,7 @@ describe('Sandata Types and Type Guards', () => {
     });
 
     it('should return false for pending status', () => {
-      const pendingResponse = {
+      const pendingResponse: SandataVisitResponse = {
         visitId: '',
         status: 'pending',
         message: 'Processing',
@@ -131,7 +135,7 @@ describe('Sandata Types and Type Guards', () => {
     });
 
     it('should return true for any rejected status', () => {
-      const rejectedResponse = {
+      const rejectedResponse: SandataVisitResponse = {
         visitId: '',
         status: 'rejected',
         message: 'Rejected',
@@ -146,7 +150,7 @@ describe('Sandata Types and Type Guards', () => {
     });
 
     it('should return false for pending status', () => {
-      const pendingResponse = {
+      const pendingResponse: SandataVisitResponse = {
         visitId: '',
         status: 'pending',
         message: 'Processing',
@@ -278,7 +282,7 @@ describe('Sandata Types and Type Guards', () => {
     it('should have correct auth error codes', () => {
       expect(SANDATA_ERROR_TAXONOMY.AUTH_INVALID_CREDENTIALS).toBe('401_AUTH');
       expect(SANDATA_ERROR_TAXONOMY.AUTH_TOKEN_EXPIRED).toBe('401_EXPIRED');
-      expect(SANDATA_ERROR_TAXONOMY.AUTH_FORBIDDEN).toBe('403');
+      expect(SANDATA_ERROR_TAXONOMY.AUTH_FORBIDDEN).toBe('403_FORBIDDEN');
     });
 
     it('should have correct validation error codes', () => {

@@ -339,6 +339,8 @@ export const MOCK_AUTHORIZATION_EXCEEDED = {
   serviceCode: 'T1019',
   authorizedUnits: 100,
   usedUnits: 98, // Only 2 units remaining
+  startDate: '2025-01-01',
+  endDate: '2025-12-31',
 };
 
 // ============================================================================
