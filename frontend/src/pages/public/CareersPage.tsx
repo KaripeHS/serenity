@@ -8,6 +8,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Hero, SectionHeading } from '../../components/marketing';
+import { loggerService } from '../../shared/services/logger.service';
 
 // Always-open positions for continuous pipeline
 const CORE_POSITIONS = [
@@ -214,7 +215,7 @@ export default function CareersPage() {
       setShowForm(false);
 
     } catch (error) {
-      console.error('Application submission error:', error);
+      loggerService.error('Application submission error', { error });
       setSubmitError(error instanceof Error ? error.message : 'Failed to submit application. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -235,7 +236,8 @@ export default function CareersPage() {
         subheadline="We're always hiring compassionate caregivers and home health aides who want to make a real difference in the lives of Southwest Ohio families."
         primaryCTA={{
           text: "Apply Now",
-          href: "#application-form"
+          href: "#application-form",
+          onClick: scrollToForm
         }}
         secondaryCTA={{
           text: "Why Work at Serenity",

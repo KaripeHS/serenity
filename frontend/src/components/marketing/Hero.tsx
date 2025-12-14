@@ -20,10 +20,12 @@ interface HeroProps {
   primaryCTA: {
     text: string;
     href: string;
+    onClick?: () => void;
   };
   secondaryCTA?: {
     text: string;
     href: string;
+    onClick?: () => void;
     icon?: React.ReactNode;
   };
   backgroundImage: string;
@@ -42,8 +44,8 @@ export default function Hero({
   backgroundImage,
   trustIndicators
 }: HeroProps) {
-  // Check if href is external (tel:, mailto:, http)
-  const isExternal = (href: string) => href.startsWith('tel:') || href.startsWith('mailto:') || href.startsWith('http');
+  // Check if href is external (tel:, mailto:, http) or anchor link
+  const isExternalOrAnchor = (href: string) => href.startsWith('tel:') || href.startsWith('mailto:') || href.startsWith('http') || href.startsWith('#');
 
   return (
     <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden">
@@ -101,7 +103,14 @@ export default function Hero({
           <div
             className="flex flex-col sm:flex-row gap-4 justify-center pt-6"
           >
-            {isExternal(primaryCTA.href) ? (
+            {primaryCTA.onClick ? (
+              <button
+                onClick={primaryCTA.onClick}
+                className="px-8 py-4 text-base font-semibold text-white bg-serenity-green-500 rounded-xl hover:bg-serenity-green-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+              >
+                {primaryCTA.text}
+              </button>
+            ) : isExternalOrAnchor(primaryCTA.href) ? (
               <a href={primaryCTA.href}>
                 <button className="px-8 py-4 text-base font-semibold text-white bg-serenity-green-500 rounded-xl hover:bg-serenity-green-600 transition-all duration-300 shadow-lg hover:shadow-xl">
                   {primaryCTA.text}
@@ -115,7 +124,15 @@ export default function Hero({
               </Link>
             )}
             {secondaryCTA && (
-              isExternal(secondaryCTA.href) ? (
+              secondaryCTA.onClick ? (
+                <button
+                  onClick={secondaryCTA.onClick}
+                  className="px-8 py-4 text-base font-semibold text-serenity-green-600 bg-white border-2 border-serenity-green-300 rounded-xl hover:bg-serenity-green-50 transition-all duration-300 shadow-md flex items-center justify-center gap-2"
+                >
+                  {secondaryCTA.icon}
+                  {secondaryCTA.text}
+                </button>
+              ) : isExternalOrAnchor(secondaryCTA.href) ? (
                 <a href={secondaryCTA.href}>
                   <button className="px-8 py-4 text-base font-semibold text-serenity-green-600 bg-white border-2 border-serenity-green-300 rounded-xl hover:bg-serenity-green-50 transition-all duration-300 shadow-md flex items-center justify-center gap-2">
                     {secondaryCTA.icon}
