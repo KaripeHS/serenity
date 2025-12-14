@@ -10,6 +10,13 @@
       ],
       "rewrites": [
         {
+          "source": "/api/**",
+          "run": {
+            "serviceId": "serenity-backend",
+            "region": "us-central1"
+          }
+        },
+        {
           "source": "**",
           "destination": "/index.html"
         }
@@ -53,6 +60,13 @@
         "**/node_modules/**"
       ],
       "rewrites": [
+        {
+          "source": "/api/**",
+          "run": {
+            "serviceId": "serenity-backend",
+            "region": "us-central1"
+          }
+        },
         {
           "source": "**",
           "destination": "/index.html"
