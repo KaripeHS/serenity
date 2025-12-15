@@ -386,7 +386,7 @@ export class EmailService {
           <tr>
             <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
               <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px;">
-                📞 (937) 555-0100 | 📧 hr@serenitycarepartners.com
+                📞 (513) 400-5113 | 📧 hr@serenitycarepartners.com
               </p>
               <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px;">
                 Serving Dayton, Columbus, and Cincinnati
@@ -569,7 +569,7 @@ questions, please don't hesitate to reach out to our HR department.
 Best regards,
 Serenity Care Partners HR Team
 
-Contact: (937) 555-0100 | hr@serenitycarepartners.com
+Contact: (513) 400-5113 | hr@serenitycarepartners.com
 Serving Dayton, Columbus, and Cincinnati
 
 © ${new Date().getFullYear()} Serenity Care Partners. All rights reserved.
@@ -721,7 +721,7 @@ This is an automated notification from Serenity ERP
           <tr>
             <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
               <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px;">
-                📞 (937) 555-0100 | 📧 hr@serenitycarepartners.com
+                📞 (513) 400-5113 | 📧 hr@serenitycarepartners.com
               </p>
               <p style="margin: 0; color: #9ca3af; font-size: 12px;">
                 © ${new Date().getFullYear()} Serenity Care Partners. All rights reserved.
@@ -769,7 +769,7 @@ contact HR at hr@serenitycarepartners.com.
 Thank you for your attention to this matter,
 Serenity Care Partners HR Team
 
-Contact: (937) 555-0100 | hr@serenitycarepartners.com
+Contact: (513) 400-5113 | hr@serenitycarepartners.com
 
 ---
 This is an automated notification from Serenity ERP
@@ -908,7 +908,7 @@ This is an automated notification from Serenity ERP
                 This is your daily automated digest of credential expirations.
               </p>
               <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px;">
-                📞 (937) 555-0100 | 📧 hr@serenitycarepartners.com
+                📞 (513) 400-5113 | 📧 hr@serenitycarepartners.com
               </p>
               <p style="margin: 0; color: #9ca3af; font-size: 12px;">
                 © ${new Date().getFullYear()} Serenity Care Partners. All rights reserved.
@@ -971,7 +971,7 @@ ${'='.repeat(60)}
     text += `
 ---
 This is your daily automated digest of credential expirations.
-Contact: (937) 555-0100 | hr@serenitycarepartners.com
+Contact: (513) 400-5113 | hr@serenitycarepartners.com
 
 © ${new Date().getFullYear()} Serenity Care Partners. All rights reserved.
     `.trim();

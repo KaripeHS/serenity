@@ -12,7 +12,7 @@ import { createLogger } from '../../utils/logger';
 
 const logger = createLogger('sms');
 interface SMSData {
-  to: string; // Phone number in E.164 format (e.g., +19375550100)
+  to: string; // Phone number in E.164 format (e.g., +15134005113)
   message: string;
   from?: string; // Optional sender number (defaults to TWILIO_PHONE_NUMBER)
 }
@@ -36,7 +36,7 @@ export class SMSService {
     // Configure Twilio client
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
-    this.fromNumber = process.env.TWILIO_PHONE_NUMBER || '+19375550100';
+    this.fromNumber = process.env.TWILIO_PHONE_NUMBER || '+15134005113';
 
     if (accountSid && authToken && accountSid !== 'your-twilio-account-sid') {
       this.client = twilio(accountSid, authToken);
@@ -292,7 +292,7 @@ Don't forget to clock in when you arrive!
    */
   isValidPhoneNumber(phone: string): boolean {
     // E.164 format: +[country code][number]
-    // Example: +19375550100
+    // Example: +15134005113
     const e164Regex = /^\+[1-9]\d{1,14}$/;
     return e164Regex.test(phone);
   }
