@@ -1,16 +1,24 @@
 /**
  * Email Service
- * Handles all email sending via SendGrid
+ * Handles all email sending via SMTP (Hostinger) or SendGrid
+ *
+ * Supports two modes:
+ * 1. SMTP (Hostinger) - Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
+ * 2. SendGrid - Set SENDGRID_API_KEY
  *
  * @module services/notifications/email
  */
 
 import sgMail from '@sendgrid/mail';
-
+import nodemailer from 'nodemailer';
+import { Transporter } from 'nodemailer';
 
 import { createLogger } from '../../utils/logger';
 
 const logger = createLogger('email');
+
+type EmailProvider = 'smtp' | 'sendgrid' | 'none';
+
 interface ApplicationConfirmationData {
   applicantName: string;
   applicantEmail: string;
@@ -73,24 +81,44 @@ export interface ComplianceAlertData {
 }
 
 export class EmailService {
-  private isConfigured: boolean = false;
+  private provider: EmailProvider = 'none';
+  private smtpTransporter: Transporter | null = null;
   private fromEmail: string;
   private hrEmail: string;
 
   constructor() {
-    // Configure SendGrid API key
-    const apiKey = process.env.SENDGRID_API_KEY;
+    // Priority: SMTP (Hostinger) > SendGrid > None
+    const smtpHost = process.env.SMTP_HOST;
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+    const sendgridKey = process.env.SENDGRID_API_KEY;
 
-    if (apiKey && apiKey !== 'your-sendgrid-api-key-here') {
-      sgMail.setApiKey(apiKey);
-      this.isConfigured = true;
+    if (smtpHost && smtpUser && smtpPass) {
+      // Configure SMTP (Hostinger or other provider)
+      this.smtpTransporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: parseInt(process.env.SMTP_PORT || '465'),
+        secure: process.env.SMTP_SECURE !== 'false', // true for 465, false for other ports
+        auth: {
+          user: smtpUser,
+          pass: smtpPass,
+        },
+      });
+      this.provider = 'smtp';
+      logger.info('[EmailService] Configured with SMTP provider', { host: smtpHost });
+    } else if (sendgridKey && sendgridKey !== 'your-sendgrid-api-key-here') {
+      // Fallback to SendGrid
+      sgMail.setApiKey(sendgridKey);
+      this.provider = 'sendgrid';
+      logger.info('[EmailService] Configured with SendGrid provider');
     } else {
-      logger.warn('[EmailService] SendGrid API key not configured. Emails will be logged instead of sent.');
-      this.isConfigured = false;
+      logger.warn('[EmailService] No email provider configured. Emails will be logged instead of sent.');
+      logger.warn('[EmailService] Set SMTP_HOST, SMTP_USER, SMTP_PASS for Hostinger, or SENDGRID_API_KEY for SendGrid');
+      this.provider = 'none';
     }
 
-    this.fromEmail = process.env.EMAIL_FROM || 'careers@serenitycarepartners.com';
-    this.hrEmail = process.env.HR_EMAIL || 'hr@serenitycarepartners.com';
+    this.fromEmail = process.env.EMAIL_FROM || 'hello@serenitycarepartners.com';
+    this.hrEmail = process.env.HR_EMAIL || 'hello@serenitycarepartners.com';
   }
 
   /**
@@ -201,10 +229,7 @@ export class EmailService {
   }
 
   /**
-   * Send email via SendGrid or log if not configured
-   */
-  /**
-   * Send email via SendGrid or log if not configured
+   * Send email via SMTP (Hostinger) or SendGrid, or log if not configured
    */
   public async sendEmail(params: {
     to: string;
@@ -212,38 +237,50 @@ export class EmailService {
     html: string;
     text: string;
   }): Promise<void> {
-    const msg = {
-      to: params.to,
-      from: {
-        email: this.fromEmail,
-        name: 'Serenity Care Partners'
-      },
-      subject: params.subject,
-      text: params.text,
-      html: params.html
-    };
+    const fromName = 'Serenity Care Partners';
 
-    if (this.isConfigured) {
+    if (this.provider === 'smtp' && this.smtpTransporter) {
+      // Send via SMTP (Hostinger)
       try {
-        await sgMail.send(msg);
+        await this.smtpTransporter.sendMail({
+          from: `"${fromName}" <${this.fromEmail}>`,
+          to: params.to,
+          subject: params.subject,
+          text: params.text,
+          html: params.html,
+        });
+        logger.info('[EmailService] Email sent via SMTP', { to: params.to, subject: params.subject });
       } catch (error: any) {
-        logger.error('[EmailService] Failed to send email:', error.message);
+        logger.error('[EmailService] SMTP send failed:', error.message);
+        throw error;
+      }
+    } else if (this.provider === 'sendgrid') {
+      // Send via SendGrid
+      try {
+        await sgMail.send({
+          to: params.to,
+          from: { email: this.fromEmail, name: fromName },
+          subject: params.subject,
+          text: params.text,
+          html: params.html,
+        });
+        logger.info('[EmailService] Email sent via SendGrid', { to: params.to, subject: params.subject });
+      } catch (error: any) {
+        logger.error('[EmailService] SendGrid send failed:', error.message);
         if (error.response) {
-          logger.error('[EmailService] SendGrid error:', error.response.body);
+          logger.error('[EmailService] SendGrid error details:', error.response.body);
         }
         throw error;
       }
     } else {
-      // Development mode - log email instead of sending
-      logger.info('\n========== EMAIL (DEV MODE) ==========');
+      // No provider configured - log email instead of sending
+      logger.info('\n========== EMAIL (NOT CONFIGURED - LOGGING ONLY) ==========');
       logger.info(`To: ${params.to}`);
       logger.info(`From: ${this.fromEmail}`);
       logger.info(`Subject: ${params.subject}`);
-      logger.info('\n--- TEXT VERSION ---');
-      logger.info(params.text);
-      logger.info('\n--- HTML VERSION ---');
-      logger.info(params.html);
-      logger.info('======================================\n');
+      logger.info('--- TEXT VERSION ---');
+      logger.info(params.text.substring(0, 500) + '...');
+      logger.info('==========================================================\n');
     }
   }
 
