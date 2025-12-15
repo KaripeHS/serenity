@@ -47,6 +47,7 @@ import { ExpensePortal } from './pages/finance/ExpensePortal';
 import { BankFeed } from './pages/finance/BankFeed';
 import { PayrollManager } from './pages/admin/PayrollManager';
 import CommunicationSettings from './pages/admin/CommunicationSettings';
+import EmailAccountsManager from './pages/admin/EmailAccountsManager';
 
 // Helper to detect subdomain
 const getSubdomain = (): string | null => {
@@ -489,6 +490,14 @@ function App() {
                 element={
                   <DashboardLayout>
                     <CommunicationSettings />
+                  </DashboardLayout>
+                }
+              />
+              <Route
+                path="/admin/settings/email-accounts"
+                element={
+                  <DashboardLayout>
+                    <EmailAccountsManager />
                   </DashboardLayout>
                 }
               />

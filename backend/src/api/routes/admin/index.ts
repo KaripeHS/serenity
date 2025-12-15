@@ -15,6 +15,7 @@ import leadsRouter from '../../admin/leads.routes';
 import proposalsRouter from '../../admin/proposals.routes';
 import settingsRouter from './settings.routes';
 import licensesRouter from './licenses.routes';
+import emailAccountsRouter from './email-accounts.routes';
 
 const router = Router();
 const repository = getSandataRepository(getDbClient());
@@ -706,5 +707,6 @@ router.use('/leads', leadsRouter);
 router.use('/proposals', proposalsRouter);
 router.use('/settings', settingsRouter);
 router.use('/licenses', licensesRouter);
+router.use('/email-accounts', emailAccountsRouter);
 
 export { router as adminRouter };
