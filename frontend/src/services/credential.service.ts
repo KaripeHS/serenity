@@ -6,6 +6,7 @@
 
 import { request } from './api';
 import { loggerService } from '../shared/services/logger.service';
+import { shouldUseMockData } from '../config/environment';
 
 // ==========================================
 // Types
@@ -160,8 +161,11 @@ class CredentialService {
       const data = await request<{ dashboard: CredentialDashboard }>('/api/console/credentials/dashboard');
       return data.dashboard;
     } catch (error) {
-      loggerService.warn('Failed to fetch credential dashboard, using mock data');
-      return this.getMockDashboard();
+      loggerService.warn('Failed to fetch credential dashboard');
+      if (shouldUseMockData()) {
+        return this.getMockDashboard();
+      }
+      throw error;
     }
   }
 
@@ -240,7 +244,10 @@ class CredentialService {
       return data.credentialTypes;
     } catch (error) {
       loggerService.warn('Failed to fetch credential types');
-      return this.getMockCredentialTypes();
+      if (shouldUseMockData()) {
+        return this.getMockCredentialTypes();
+      }
+      return [];
     }
   }
 
@@ -482,105 +489,18 @@ class CredentialService {
 
   private getMockDashboard(): CredentialDashboard {
     return {
-      complianceRate: 78,
-      totalCredentials: 120,
-      validCredentials: 94,
+      complianceRate: 0,
+      totalCredentials: 0,
+      validCredentials: 0,
       alerts: {
-        EXPIRED: {
-          count: 3,
-          credentials: [
-            {
-              id: '1',
-              caregiverId: 'cg1',
-              firstName: 'Maria',
-              lastName: 'Garcia',
-              email: 'maria@example.com',
-              credentialType: 'CPR_FIRST_AID',
-              credentialName: 'CPR/First Aid Certification',
-              expirationDate: '2024-03-15',
-              status: 'expired',
-              daysLeft: -5,
-              renewalRequired: true,
-              renewalInProgress: true,
-            },
-          ],
-        },
-        CRITICAL: {
-          count: 2,
-          credentials: [
-            {
-              id: '2',
-              caregiverId: 'cg2',
-              firstName: 'James',
-              lastName: 'Wilson',
-              email: 'james@example.com',
-              credentialType: 'STNA',
-              credentialName: 'STNA Certification',
-              expirationDate: '2024-12-18',
-              status: 'expiring_soon',
-              daysLeft: 5,
-              renewalRequired: true,
-              renewalInProgress: false,
-            },
-          ],
-        },
-        WARNING: {
-          count: 4,
-          credentials: [
-            {
-              id: '3',
-              caregiverId: 'cg3',
-              firstName: 'Sarah',
-              lastName: 'Davis',
-              email: 'sarah@example.com',
-              credentialType: 'AUTO_INSURANCE',
-              credentialName: 'Auto Insurance',
-              expirationDate: '2025-01-05',
-              status: 'expiring_soon',
-              daysLeft: 23,
-              renewalRequired: true,
-              renewalInProgress: false,
-            },
-          ],
-        },
-        NOTICE: {
-          count: 6,
-          credentials: [],
-        },
-        INFO: {
-          count: 11,
-          credentials: [],
-        },
+        EXPIRED: { count: 0, credentials: [] },
+        CRITICAL: { count: 0, credentials: [] },
+        WARNING: { count: 0, credentials: [] },
+        NOTICE: { count: 0, credentials: [] },
+        INFO: { count: 0, credentials: [] },
       },
-      byCredentialType: [
-        { credentialType: 'CPR_FIRST_AID', total: 45, expired: 2, expiringSoon: 3, valid: 40 },
-        { credentialType: 'BCI_BACKGROUND_CHECK', total: 45, expired: 0, expiringSoon: 0, valid: 45 },
-        { credentialType: 'DRIVERS_LICENSE', total: 40, expired: 1, expiringSoon: 2, valid: 37 },
-        { credentialType: 'AUTO_INSURANCE', total: 38, expired: 0, expiringSoon: 4, valid: 34 },
-      ],
-      caregiversWithIssues: [
-        {
-          caregiverId: 'cg1',
-          firstName: 'Maria',
-          lastName: 'Garcia',
-          email: 'maria@example.com',
-          expiredCredentials: [
-            { type: 'CPR_FIRST_AID', expirationDate: '2024-03-15', daysLeft: -5 },
-          ],
-          expiredCount: 1,
-        },
-        {
-          caregiverId: 'cg5',
-          firstName: 'Linda',
-          lastName: 'Martinez',
-          email: 'linda@example.com',
-          expiredCredentials: [
-            { type: 'BCI_BACKGROUND_CHECK', expirationDate: '2024-02-20', daysLeft: -20 },
-            { type: 'FBI_BACKGROUND_CHECK', expirationDate: '2024-02-20', daysLeft: -20 },
-          ],
-          expiredCount: 2,
-        },
-      ],
+      byCredentialType: [],
+      caregiversWithIssues: [],
       thresholds: {
         CRITICAL: 7,
         WARNING: 30,

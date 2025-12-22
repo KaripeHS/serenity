@@ -93,52 +93,128 @@ export function WorkingHRDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<'dashboard' | 'applications' | 'staff' | 'training'>('dashboard');
 
-  const [applications] = useState<Application[]>([
-    { id: 1, name: 'Sarah Chen', position: 'Registered Nurse', status: 'new', experience: '5 years', location: 'Columbus, OH', applied: '2 hours ago' },
-    { id: 2, name: 'Michael Johnson', position: 'Physical Therapist', status: 'reviewing', experience: '8 years', location: 'Dublin, OH', applied: '4 hours ago' },
-    { id: 3, name: 'Lisa Rodriguez', position: 'Home Health Aide', status: 'interview', experience: '3 years', location: 'Westerville, OH', applied: 'yesterday' },
-    { id: 4, name: 'David Park', position: 'Occupational Therapist', status: 'new', experience: '6 years', location: 'Powell, OH', applied: '2 days ago' }
-  ]);
-
-  const [staffList] = useState<Staff[]>([
-    { id: 1, name: 'Maria Rodriguez', position: 'Senior Caregiver', department: 'Clinical', hireDate: '2021-03-15', certifications: ['CNA', 'CPR'], trainingDue: [] },
-    { id: 2, name: 'David Chen', position: 'Physical Therapist', department: 'Therapy', hireDate: '2020-08-22', certifications: ['PT', 'CPR'], trainingDue: ['CPR Renewal'] },
-    { id: 3, name: 'Jennifer Miller', position: 'Registered Nurse', department: 'Clinical', hireDate: '2019-11-10', certifications: ['RN', 'BLS'], trainingDue: ['HIPAA Update'] },
-    { id: 4, name: 'Robert Thompson', position: 'Home Health Aide', department: 'Care', hireDate: '2022-01-05', certifications: ['HHA'], trainingDue: ['CPR Renewal', 'First Aid'] }
-  ]);
-
-  // Mock chart data
-  const hiringTrendData = [
-    { label: 'Jan', value: 8 },
-    { label: 'Feb', value: 12 },
-    { label: 'Mar', value: 15 },
-    { label: 'Apr', value: 11 },
-    { label: 'May', value: 14 },
-    { label: 'Jun', value: 18 }
-  ];
-
-  const departmentStaffData = [
-    { label: 'Clinical', value: 67 },
-    { label: 'Therapy', value: 34 },
-    { label: 'Care', value: 42 },
-    { label: 'Admin', value: 13 }
-  ];
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [staffList, setStaffList] = useState<Staff[]>([]);
+  const [hiringTrendData, setHiringTrendData] = useState<{ label: string; value: number }[]>([]);
+  const [departmentStaffData, setDepartmentStaffData] = useState<{ label: string; value: number }[]>([]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMetrics({
-        totalStaff: 156,
-        openPositions: 12,
-        pendingApplications: 28,
-        trainingCompliance: 94.5,
-        avgTimeToHire: 18,
-        turnoverRate: 8.2
-      });
-      setLoading(false);
-    }, 800);
+    const loadData = async () => {
+      const token = localStorage.getItem('token');
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
 
-    return () => clearTimeout(timer);
+      try {
+        // Load metrics, applications, and staff in parallel
+        const [metricsRes, applicantsRes, staffRes] = await Promise.all([
+          fetch(`${import.meta.env.VITE_API_URL}/api/console/hr/metrics`, { headers }),
+          fetch(`${import.meta.env.VITE_API_URL}/api/console/hr/applicants`, { headers }),
+          fetch(`${import.meta.env.VITE_API_URL}/api/console/hr/staff`, { headers }).catch(() => null)
+        ]);
+
+        // Process metrics
+        if (metricsRes.ok) {
+          const data = await metricsRes.json();
+          setMetrics({
+            totalStaff: data.totalStaff || 0,
+            openPositions: data.openPositions || 0,
+            pendingApplications: data.pendingApplications || 0,
+            trainingCompliance: data.trainingCompliance || 0,
+            avgTimeToHire: data.avgTimeToHire || 0,
+            turnoverRate: data.turnoverRate || 0
+          });
+        } else {
+          setMetrics({
+            totalStaff: 0,
+            openPositions: 0,
+            pendingApplications: 0,
+            trainingCompliance: 0,
+            avgTimeToHire: 0,
+            turnoverRate: 0
+          });
+        }
+
+        // Process applicants - map to component's Application interface
+        if (applicantsRes.ok) {
+          const data = await applicantsRes.json();
+          const applicants = (data.applicants || []).map((a: any, idx: number) => ({
+            id: idx + 1,
+            name: `${a.firstName || ''} ${a.lastName || ''}`.trim() || 'Unknown',
+            position: a.positionAppliedFor || 'Not specified',
+            status: mapApplicantStatus(a.status || a.currentStage),
+            experience: a.experienceLevel || 'Not specified',
+            location: a.city ? `${a.city}, OH` : 'Ohio',
+            applied: formatTimeAgo(a.applicationDate || a.createdAt)
+          }));
+          setApplications(applicants);
+        }
+
+        // Process staff list
+        if (staffRes && staffRes.ok) {
+          const data = await staffRes.json();
+          const staff = (data.staff || []).map((s: any, idx: number) => ({
+            id: idx + 1,
+            name: `${s.firstName || ''} ${s.lastName || ''}`.trim() || 'Unknown',
+            position: s.role || s.position || 'Staff',
+            department: s.department || 'General',
+            hireDate: s.hireDate || s.createdAt || '',
+            certifications: s.certifications || [],
+            trainingDue: s.trainingDue || []
+          }));
+          setStaffList(staff);
+        }
+
+      } catch (error) {
+        console.error('Failed to load HR data:', error);
+        setMetrics({
+          totalStaff: 0,
+          openPositions: 0,
+          pendingApplications: 0,
+          trainingCompliance: 0,
+          avgTimeToHire: 0,
+          turnoverRate: 0
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
+
+  // Helper to map backend status to component status
+  function mapApplicantStatus(status: string): Application['status'] {
+    const statusMap: Record<string, Application['status']> = {
+      'pending': 'new',
+      'new': 'new',
+      'reviewing': 'reviewing',
+      'review': 'reviewing',
+      'interview': 'interview',
+      'interview_scheduled': 'scheduled',
+      'scheduled': 'scheduled',
+      'rejected': 'rejected',
+      'declined': 'rejected'
+    };
+    return statusMap[status?.toLowerCase()] || 'new';
+  }
+
+  // Helper to format time ago
+  function formatTimeAgo(dateStr: string): string {
+    if (!dateStr) return 'Recently';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays === 1) return 'yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+  }
 
   if (loading) {
     return (

@@ -3,6 +3,7 @@
  * HIPAA compliance, regulatory tracking, and audit preparation
  */
 import { request } from './api';
+import { shouldUseMockData } from '../config/environment';
 
 export interface ComplianceMetric {
   area: string;
@@ -80,31 +81,7 @@ class ComplianceDashboardService {
 
   // Keep these for now if needed, but primary is getComplianceData
   async getPolicyDocuments(): Promise<PolicyDocument[]> {
-    await this.delay(600);
-    return [
-      {
-        id: 'POL-001',
-        title: 'HIPAA Privacy Policy',
-        category: 'Privacy',
-        version: '3.2',
-        lastUpdated: '2023-08-15',
-        nextReview: '2024-08-15',
-        status: 'current'
-      },
-      {
-        id: 'POL-002',
-        title: 'Emergency Procedures',
-        category: 'Safety',
-        version: '2.1',
-        lastUpdated: '2023-06-01',
-        nextReview: '2024-01-01',
-        status: 'needs-review'
-      }
-    ];
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return [];
   }
 }
 

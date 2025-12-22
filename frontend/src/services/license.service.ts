@@ -5,6 +5,7 @@
  */
 import { request } from './api';
 import { loggerService } from '../shared/services/logger.service';
+import { shouldUseMockData } from '../config/environment';
 
 // ==========================================
 // License Types
@@ -126,7 +127,10 @@ class LicenseService {
     } catch (error) {
       loggerService.error('Failed to fetch licenses', { error });
       // Return default license info based on known state
-      return this.getDefaultLicenses();
+      if (shouldUseMockData()) {
+        return this.getDefaultLicenses();
+      }
+      return [];
     }
   }
 
@@ -195,7 +199,10 @@ class LicenseService {
     } catch (error) {
       loggerService.error('Failed to fetch opportunity dashboard', { error });
       // Return calculated opportunities based on known license state
-      return this.calculateOpportunities(await this.getOrganizationLicenses());
+      if (shouldUseMockData()) {
+        return this.calculateOpportunities(await this.getOrganizationLicenses());
+      }
+      throw error;
     }
   }
 
@@ -223,8 +230,11 @@ class LicenseService {
 
       return opportunities;
     } catch {
-      const dashboard = await this.getOpportunityDashboard();
-      return dashboard.opportunities;
+      if (shouldUseMockData()) {
+        const dashboard = await this.getOpportunityDashboard();
+        return dashboard.opportunities;
+      }
+      return [];
     }
   }
 
@@ -244,7 +254,10 @@ class LicenseService {
         blockReason: s.isAuthorized ? undefined : `Requires ${s.required_license_type} license`,
       }));
     } catch {
-      return this.getAllServiceCapabilities(await this.getOrganizationLicenses());
+      if (shouldUseMockData()) {
+        return this.getAllServiceCapabilities(await this.getOrganizationLicenses());
+      }
+      return [];
     }
   }
 
@@ -270,8 +283,11 @@ class LicenseService {
       };
     } catch {
       // Fallback to local check
-      const licenses = await this.getOrganizationLicenses();
-      return this.checkServiceAuthorizationLocal(serviceCode, licenses);
+      if (shouldUseMockData()) {
+        const licenses = await this.getOrganizationLicenses();
+        return this.checkServiceAuthorizationLocal(serviceCode, licenses);
+      }
+      return { authorized: false, reason: 'Service authorization check failed' };
     }
   }
 

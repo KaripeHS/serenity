@@ -59,23 +59,63 @@ export function WorkingTaxDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMetrics({
-        q1Revenue: 2450000,
-        q2Revenue: 2680000,
-        q3Revenue: 2890000,
-        q4Revenue: 3120000,
-        annualRevenue: 11140000,
-        taxLiability: 1892500,
-        payrollTaxes: 478900,
-        salesTax: 0,
-        nextFilingDate: '2025-01-31',
-        pendingDeductions: 81026.50
-      });
-      setLoading(false);
-    }, 900);
+    const loadMetrics = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/tax/metrics`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-    return () => clearTimeout(timer);
+        if (response.ok) {
+          const data = await response.json();
+          setMetrics({
+            q1Revenue: data.q1Revenue || 0,
+            q2Revenue: data.q2Revenue || 0,
+            q3Revenue: data.q3Revenue || 0,
+            q4Revenue: data.q4Revenue || 0,
+            annualRevenue: data.annualRevenue || 0,
+            taxLiability: data.taxLiability || 0,
+            payrollTaxes: data.payrollTaxes || 0,
+            salesTax: data.salesTax || 0,
+            nextFilingDate: data.nextFilingDate || '',
+            pendingDeductions: data.pendingDeductions || 0
+          });
+        } else {
+          setMetrics({
+            q1Revenue: 0,
+            q2Revenue: 0,
+            q3Revenue: 0,
+            q4Revenue: 0,
+            annualRevenue: 0,
+            taxLiability: 0,
+            payrollTaxes: 0,
+            salesTax: 0,
+            nextFilingDate: '',
+            pendingDeductions: 0
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load tax metrics:', error);
+        setMetrics({
+          q1Revenue: 0,
+          q2Revenue: 0,
+          q3Revenue: 0,
+          q4Revenue: 0,
+          annualRevenue: 0,
+          taxLiability: 0,
+          payrollTaxes: 0,
+          salesTax: 0,
+          nextFilingDate: '',
+          pendingDeductions: 0
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMetrics();
   }, []);
 
   if (loading) {

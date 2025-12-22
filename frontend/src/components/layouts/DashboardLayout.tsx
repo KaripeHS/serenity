@@ -1,11 +1,13 @@
 /**
  * Dashboard Layout Component
  * Provides consistent navigation and layout for all dashboard pages
+ * Navigation items are filtered based on user role (RBAC)
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { canAccessRoute } from '../../hooks/useRoleAccess';
 import {
   HomeIcon,
   ChartBarIcon,
@@ -23,7 +25,9 @@ import {
   CogIcon,
   QuestionMarkCircleIcon,
   ArrowRightOnRectangleIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  CalendarIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
 import { Badge } from '../ui/Badge';
 
@@ -39,7 +43,10 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-const navigation: NavigationItem[] = [
+/**
+ * All navigation items - will be filtered by user role
+ */
+const allNavigation: NavigationItem[] = [
   {
     name: 'Home',
     href: '/',
@@ -56,14 +63,12 @@ const navigation: NavigationItem[] = [
     name: 'HR & Talent',
     href: '/dashboard/hr',
     icon: UsersIcon,
-    badge: '8',
     description: 'Workforce management'
   },
   {
     name: 'Tax Compliance',
     href: '/dashboard/tax',
     icon: BanknotesIcon,
-    badge: '3',
     description: 'Tax management and compliance'
   },
   {
@@ -85,10 +90,15 @@ const navigation: NavigationItem[] = [
     description: 'Patient directory and management'
   },
   {
+    name: 'Scheduling',
+    href: '/dashboard/scheduling',
+    icon: CalendarIcon,
+    description: 'Schedule management'
+  },
+  {
     name: 'Billing',
     href: '/dashboard/billing',
     icon: CurrencyDollarIcon,
-    badge: '12',
     description: 'Revenue cycle management'
   },
   {
@@ -102,6 +112,12 @@ const navigation: NavigationItem[] = [
     href: '/dashboard/training',
     icon: AcademicCapIcon,
     description: 'Staff training and development'
+  },
+  {
+    name: 'EVV Clock',
+    href: '/evv/clock',
+    icon: ClockIcon,
+    description: 'Clock in/out for visits'
   },
   {
     name: 'Family Portal',
@@ -121,6 +137,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  // Filter navigation items based on user role
+  const navigation = useMemo(() => {
+    if (!user?.role) return [];
+
+    return allNavigation.filter(item => {
+      // Home is always accessible
+      if (item.href === '/') return true;
+
+      // Check if user can access this route
+      return canAccessRoute(item.href, user.role);
+    });
+  }, [user?.role]);
 
   const isActive = (href: string) => {
     return location.pathname === href || location.pathname.startsWith(href + '/');

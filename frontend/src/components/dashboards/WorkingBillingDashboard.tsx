@@ -43,50 +43,54 @@ export function WorkingBillingDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMetrics({
-        monthlyRevenue: 892450,
-        pendingClaims: 47,
-        deniedClaims: 12,
-        daysInAR: 28.5,
-        collectionRate: 94.2,
-        claimsSubmitted: 342
-      });
+    const loadMetrics = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/billing/metrics`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-      setRecentClaims([
-        {
-          id: '1',
-          patientName: 'John Doe',
-          claimNumber: 'CLM-2024-001',
-          amount: 1250.00,
-          status: 'submitted',
-          submittedDate: '2024-03-10',
-          payer: 'Medicare'
-        },
-        {
-          id: '2',
-          patientName: 'Mary Smith',
-          claimNumber: 'CLM-2024-002',
-          amount: 980.50,
-          status: 'paid',
-          submittedDate: '2024-03-08',
-          payer: 'Medicaid'
-        },
-        {
-          id: '3',
-          patientName: 'Robert Johnson',
-          claimNumber: 'CLM-2024-003',
-          amount: 1500.00,
-          status: 'denied',
-          submittedDate: '2024-03-05',
-          payer: 'Blue Cross'
+        if (response.ok) {
+          const data = await response.json();
+          setMetrics({
+            monthlyRevenue: data.monthlyRevenue || 0,
+            pendingClaims: data.pendingClaims || 0,
+            deniedClaims: data.deniedClaims || 0,
+            daysInAR: data.daysInAR || 0,
+            collectionRate: data.collectionRate || 0,
+            claimsSubmitted: data.claimsSubmitted || 0
+          });
+          setRecentClaims(data.recentClaims || []);
+        } else {
+          setMetrics({
+            monthlyRevenue: 0,
+            pendingClaims: 0,
+            deniedClaims: 0,
+            daysInAR: 0,
+            collectionRate: 0,
+            claimsSubmitted: 0
+          });
+          setRecentClaims([]);
         }
-      ]);
+      } catch (error) {
+        console.error('Failed to load billing metrics:', error);
+        setMetrics({
+          monthlyRevenue: 0,
+          pendingClaims: 0,
+          deniedClaims: 0,
+          daysInAR: 0,
+          collectionRate: 0,
+          claimsSubmitted: 0
+        });
+        setRecentClaims([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      setLoading(false);
-    }, 800);
-
-    return () => clearTimeout(timer);
+    loadMetrics();
   }, []);
 
   if (loading) {

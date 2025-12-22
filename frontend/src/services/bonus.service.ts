@@ -2,6 +2,7 @@
 // 90-Day Quality Bonus, Show Up Bonus (Quarterly), Hours Bonus (Annual)
 
 import { bonusApi, BonusConfig, BonusDashboardResponse, BonusPayout } from './api';
+import { shouldUseMockData } from '../config/environment';
 
 export interface CaregiverBonusEligibility {
   caregiverId: string;
@@ -75,298 +76,19 @@ export interface BonusDashboardSummary {
 }
 
 // Mock data for caregiver bonus eligibility
-export const mockCaregiverBonusData: CaregiverBonusEligibility[] = [
-  {
-    caregiverId: 'cg-001',
-    caregiverName: 'Maria Garcia',
-    hireDate: '2024-09-15',
-    daysEmployed: 455,
-    qualityBonus: {
-      eligible: true,
-      amount: 250,
-      evvCompliance: 98.5,
-      scheduledShiftsCompleted: 97.2,
-      noCallNoShows: 0,
-      substantiatedComplaints: 0,
-      nextEligibleDate: '2025-01-15',
-      status: 'eligible'
-    },
-    showUpBonus: {
-      eligible: true,
-      amount: 500,
-      quarterStartDate: '2024-10-01',
-      quarterEndDate: '2024-12-31',
-      shiftsWorked: 65,
-      shiftsRequired: 65,
-      missedShifts: 0,
-      status: 'eligible'
-    },
-    hoursBonus: {
-      eligible: true,
-      tier: 'gold',
-      amount: 1000,
-      hoursWorked: 2150,
-      yearStartDate: '2024-01-01',
-      yearEndDate: '2024-12-31',
-      status: 'eligible'
-    },
-    totalEarned: 2500,
-    totalPending: 1750
-  },
-  {
-    caregiverId: 'cg-002',
-    caregiverName: 'James Wilson',
-    hireDate: '2024-11-01',
-    daysEmployed: 43,
-    qualityBonus: {
-      eligible: false,
-      amount: 250,
-      evvCompliance: 96.1,
-      scheduledShiftsCompleted: 98.0,
-      noCallNoShows: 0,
-      substantiatedComplaints: 0,
-      nextEligibleDate: '2025-01-30',
-      status: 'pending'
-    },
-    showUpBonus: {
-      eligible: false,
-      amount: 500,
-      quarterStartDate: '2024-10-01',
-      quarterEndDate: '2024-12-31',
-      shiftsWorked: 18,
-      shiftsRequired: 20,
-      missedShifts: 2,
-      status: 'ineligible'
-    },
-    hoursBonus: {
-      eligible: false,
-      tier: 'none',
-      amount: 0,
-      hoursWorked: 180,
-      yearStartDate: '2024-01-01',
-      yearEndDate: '2024-12-31',
-      status: 'pending'
-    },
-    totalEarned: 0,
-    totalPending: 250
-  },
-  {
-    caregiverId: 'cg-003',
-    caregiverName: 'Sarah Johnson',
-    hireDate: '2024-06-01',
-    daysEmployed: 195,
-    qualityBonus: {
-      eligible: true,
-      amount: 250,
-      evvCompliance: 99.2,
-      scheduledShiftsCompleted: 100,
-      noCallNoShows: 0,
-      substantiatedComplaints: 0,
-      nextEligibleDate: '2025-03-01',
-      status: 'paid'
-    },
-    showUpBonus: {
-      eligible: true,
-      amount: 500,
-      quarterStartDate: '2024-10-01',
-      quarterEndDate: '2024-12-31',
-      shiftsWorked: 72,
-      shiftsRequired: 72,
-      missedShifts: 0,
-      status: 'eligible'
-    },
-    hoursBonus: {
-      eligible: true,
-      tier: 'silver',
-      amount: 750,
-      hoursWorked: 1820,
-      yearStartDate: '2024-01-01',
-      yearEndDate: '2024-12-31',
-      status: 'eligible'
-    },
-    totalEarned: 1750,
-    totalPending: 1250
-  },
-  {
-    caregiverId: 'cg-004',
-    caregiverName: 'Michael Brown',
-    hireDate: '2024-03-15',
-    daysEmployed: 273,
-    qualityBonus: {
-      eligible: false,
-      amount: 250,
-      evvCompliance: 91.3,
-      scheduledShiftsCompleted: 88.5,
-      noCallNoShows: 2,
-      substantiatedComplaints: 0,
-      nextEligibleDate: '2025-06-15',
-      status: 'ineligible'
-    },
-    showUpBonus: {
-      eligible: false,
-      amount: 500,
-      quarterStartDate: '2024-10-01',
-      quarterEndDate: '2024-12-31',
-      shiftsWorked: 55,
-      shiftsRequired: 68,
-      missedShifts: 13,
-      status: 'ineligible'
-    },
-    hoursBonus: {
-      eligible: true,
-      tier: 'bronze',
-      amount: 500,
-      hoursWorked: 1550,
-      yearStartDate: '2024-01-01',
-      yearEndDate: '2024-12-31',
-      status: 'eligible'
-    },
-    totalEarned: 250,
-    totalPending: 500
-  },
-  {
-    caregiverId: 'cg-005',
-    caregiverName: 'Emily Davis',
-    hireDate: '2024-08-20',
-    daysEmployed: 115,
-    qualityBonus: {
-      eligible: true,
-      amount: 250,
-      evvCompliance: 97.8,
-      scheduledShiftsCompleted: 96.5,
-      noCallNoShows: 0,
-      substantiatedComplaints: 0,
-      nextEligibleDate: '2025-02-17',
-      status: 'paid'
-    },
-    showUpBonus: {
-      eligible: true,
-      amount: 500,
-      quarterStartDate: '2024-10-01',
-      quarterEndDate: '2024-12-31',
-      shiftsWorked: 45,
-      shiftsRequired: 45,
-      missedShifts: 0,
-      status: 'eligible'
-    },
-    hoursBonus: {
-      eligible: false,
-      tier: 'none',
-      amount: 0,
-      hoursWorked: 720,
-      yearStartDate: '2024-01-01',
-      yearEndDate: '2024-12-31',
-      status: 'pending'
-    },
-    totalEarned: 500,
-    totalPending: 500
-  },
-  {
-    caregiverId: 'cg-006',
-    caregiverName: 'David Martinez',
-    hireDate: '2024-02-01',
-    daysEmployed: 316,
-    qualityBonus: {
-      eligible: true,
-      amount: 250,
-      evvCompliance: 98.9,
-      scheduledShiftsCompleted: 99.1,
-      noCallNoShows: 0,
-      substantiatedComplaints: 0,
-      nextEligibleDate: '2025-05-01',
-      status: 'paid'
-    },
-    showUpBonus: {
-      eligible: true,
-      amount: 500,
-      quarterStartDate: '2024-10-01',
-      quarterEndDate: '2024-12-31',
-      shiftsWorked: 78,
-      shiftsRequired: 78,
-      missedShifts: 0,
-      status: 'paid'
-    },
-    hoursBonus: {
-      eligible: true,
-      tier: 'gold',
-      amount: 1000,
-      hoursWorked: 2280,
-      yearStartDate: '2024-01-01',
-      yearEndDate: '2024-12-31',
-      status: 'eligible'
-    },
-    totalEarned: 3250,
-    totalPending: 1000
-  }
-];
+export const mockCaregiverBonusData: CaregiverBonusEligibility[] = [];
 
-export const mockPaymentHistory: BonusPaymentHistory[] = [
-  {
-    id: 'pay-001',
-    caregiverId: 'cg-001',
-    caregiverName: 'Maria Garcia',
-    bonusType: '90_day_quality',
-    amount: 250,
-    periodStart: '2024-09-15',
-    periodEnd: '2024-12-14',
-    paidDate: '2024-12-20',
-    payrollRunId: 'pr-2024-51'
-  },
-  {
-    id: 'pay-002',
-    caregiverId: 'cg-003',
-    caregiverName: 'Sarah Johnson',
-    bonusType: '90_day_quality',
-    amount: 250,
-    periodStart: '2024-06-01',
-    periodEnd: '2024-08-30',
-    paidDate: '2024-09-15',
-    payrollRunId: 'pr-2024-37'
-  },
-  {
-    id: 'pay-003',
-    caregiverId: 'cg-006',
-    caregiverName: 'David Martinez',
-    bonusType: 'show_up_quarterly',
-    amount: 500,
-    periodStart: '2024-07-01',
-    periodEnd: '2024-09-30',
-    paidDate: '2024-10-15',
-    payrollRunId: 'pr-2024-42'
-  },
-  {
-    id: 'pay-004',
-    caregiverId: 'cg-005',
-    caregiverName: 'Emily Davis',
-    bonusType: '90_day_quality',
-    amount: 250,
-    periodStart: '2024-08-20',
-    periodEnd: '2024-11-18',
-    paidDate: '2024-11-30',
-    payrollRunId: 'pr-2024-48'
-  },
-  {
-    id: 'pay-005',
-    caregiverId: 'cg-006',
-    caregiverName: 'David Martinez',
-    bonusType: '90_day_quality',
-    amount: 250,
-    periodStart: '2024-02-01',
-    periodEnd: '2024-05-01',
-    paidDate: '2024-05-15',
-    payrollRunId: 'pr-2024-20'
-  }
-];
+export const mockPaymentHistory: BonusPaymentHistory[] = [];
 
 export const mockDashboardSummary: BonusDashboardSummary = {
-  totalCaregivers: 6,
-  eligibleForQualityBonus: 3,
-  eligibleForShowUpBonus: 4,
-  eligibleForHoursBonus: 4,
-  totalBonusesPaidYTD: 8250,
-  totalBonusesPending: 5250,
-  averageEVVCompliance: 96.8,
-  averageShiftCompletion: 96.5
+  totalCaregivers: 0,
+  eligibleForQualityBonus: 0,
+  eligibleForShowUpBonus: 0,
+  eligibleForHoursBonus: 0,
+  totalBonusesPaidYTD: 0,
+  totalBonusesPending: 0,
+  averageEVVCompliance: 0,
+  averageShiftCompletion: 0
 };
 
 // Bonus calculation utilities
@@ -402,11 +124,9 @@ export function formatBonusType(type: string): string {
 // API Service Functions (with mock data fallback)
 // ============================================================================
 
-let USE_MOCK_DATA = false; // Set to true to use mock data
-
 export const bonusService = {
   async getConfig(): Promise<BonusConfig> {
-    if (USE_MOCK_DATA) {
+    if (shouldUseMockData()) {
       return {
         ninetyDayBonusAmount: 250,
         ninetyDayBonusEnabled: true,
@@ -428,14 +148,13 @@ export const bonusService = {
       const result = await bonusApi.getConfig();
       return result.config;
     } catch (error) {
-      console.error('Failed to fetch bonus config, using mock data', error);
-      USE_MOCK_DATA = true;
-      return this.getConfig();
+      console.error('Failed to fetch bonus config', error);
+      throw error;
     }
   },
 
   async getDashboard(quarter?: number, year?: number): Promise<BonusDashboardResponse> {
-    if (USE_MOCK_DATA) {
+    if (shouldUseMockData()) {
       return {
         period: {
           quarter: quarter || 4,
@@ -445,89 +164,56 @@ export const bonusService = {
           endDate: '2024-12-31',
         },
         summary: {
-          totalCaregivers: mockDashboardSummary.totalCaregivers,
-          eligibleForShowUp: mockDashboardSummary.eligibleForShowUpBonus,
-          ineligible: mockDashboardSummary.totalCaregivers - mockDashboardSummary.eligibleForShowUpBonus,
-          eligibilityRate: Math.round((mockDashboardSummary.eligibleForShowUpBonus / mockDashboardSummary.totalCaregivers) * 100),
-          totalPotentialPayout: mockDashboardSummary.eligibleForShowUpBonus * 500,
-          newHires: 2,
+          totalCaregivers: 0,
+          eligibleForShowUp: 0,
+          ineligible: 0,
+          eligibilityRate: 0,
+          totalPotentialPayout: 0,
+          newHires: 0,
         },
-        disqualificationBreakdown: {
-          'Low EVV Compliance': 1,
-          'NCNS Incidents': 1,
-        },
-        caregivers: mockCaregiverBonusData.map(cg => ({
-          id: cg.caregiverId,
-          name: cg.caregiverName,
-          hireDate: cg.hireDate,
-          daysEmployed: cg.daysEmployed,
-          showUpEligibility: {
-            isEligible: cg.showUpBonus.eligible,
-            metrics: {
-              evvCompliance: cg.qualityBonus.evvCompliance,
-              shiftAttendance: (cg.showUpBonus.shiftsWorked / cg.showUpBonus.shiftsRequired) * 100,
-              ncnsCount: cg.qualityBonus.noCallNoShows,
-              complaintsCount: cg.qualityBonus.substantiatedComplaints,
-            },
-            disqualificationReasons: !cg.showUpBonus.eligible ? ['Did not meet criteria'] : [],
-          },
-          isNewHire: cg.daysEmployed <= 90,
-        })),
+        disqualificationBreakdown: {},
+        caregivers: [],
         timestamp: new Date().toISOString(),
       };
     }
     try {
       return await bonusApi.getDashboard(quarter, year);
     } catch (error) {
-      console.error('Failed to fetch bonus dashboard, using mock data', error);
-      USE_MOCK_DATA = true;
-      return this.getDashboard(quarter, year);
+      console.error('Failed to fetch bonus dashboard', error);
+      throw error;
     }
   },
 
   async getPayouts(filters?: { caregiverId?: string; bonusType?: string; status?: string; year?: number }): Promise<{ payouts: BonusPayout[]; totals: Record<string, number> }> {
-    if (USE_MOCK_DATA) {
-      const payouts = mockPaymentHistory.map(p => ({
-        id: p.id,
-        caregiver_id: p.caregiverId,
-        caregiver_name: p.caregiverName,
-        bonus_type: p.bonusType,
-        period_label: `${p.periodStart} - ${p.periodEnd}`,
-        amount: p.amount,
-        status: 'paid',
-        scheduled_payout_date: p.paidDate,
-        payroll_reference: p.payrollRunId,
-      }));
+    if (shouldUseMockData()) {
       return {
-        payouts,
-        totals: { total: payouts.reduce((sum, p) => sum + p.amount, 0), paid: payouts.length * 250 },
+        payouts: [],
+        totals: { total: 0, paid: 0 },
       };
     }
     try {
       return await bonusApi.getPayouts(filters);
     } catch (error) {
-      console.error('Failed to fetch payouts, using mock data', error);
-      USE_MOCK_DATA = true;
-      return this.getPayouts(filters);
+      console.error('Failed to fetch payouts', error);
+      throw error;
     }
   },
 
   async getCaregiverBonus(caregiverId: string): Promise<CaregiverBonusEligibility | null> {
-    if (USE_MOCK_DATA) {
-      return mockCaregiverBonusData.find(cg => cg.caregiverId === caregiverId) || null;
+    if (shouldUseMockData()) {
+      return null;
     }
     try {
       const result = await bonusApi.getCaregiverBonus(caregiverId);
       return result.summary;
     } catch (error) {
-      console.error('Failed to fetch caregiver bonus, using mock data', error);
-      USE_MOCK_DATA = true;
-      return this.getCaregiverBonus(caregiverId);
+      console.error('Failed to fetch caregiver bonus', error);
+      throw error;
     }
   },
 
   async approvePayout(payoutId: string): Promise<{ success: boolean }> {
-    if (USE_MOCK_DATA) {
+    if (shouldUseMockData()) {
       return { success: true };
     }
     try {
@@ -540,7 +226,7 @@ export const bonusService = {
   },
 
   async markPaid(payoutId: string, payrollReference: string): Promise<{ success: boolean }> {
-    if (USE_MOCK_DATA) {
+    if (shouldUseMockData()) {
       return { success: true };
     }
     try {
@@ -553,45 +239,51 @@ export const bonusService = {
   },
 
   async getCalendar(year?: number): Promise<any> {
-    if (USE_MOCK_DATA) {
-      const targetYear = year || new Date().getFullYear();
+    if (shouldUseMockData()) {
       return {
-        year: targetYear,
-        scheduledPayouts: [
-          { month: 'January', bonusType: 'show_up', description: 'Show Up Bonus for Q4', periodLabel: `Q4 ${targetYear - 1}` },
-          { month: 'April', bonusType: 'show_up', description: 'Show Up Bonus for Q1', periodLabel: `Q1 ${targetYear}` },
-          { month: 'June', bonusType: 'hours', description: 'Hours Bonus (50%)', periodLabel: `Year ${targetYear - 1}` },
-          { month: 'July', bonusType: 'show_up', description: 'Show Up Bonus for Q2', periodLabel: `Q2 ${targetYear}` },
-          { month: 'October', bonusType: 'show_up', description: 'Show Up Bonus for Q3', periodLabel: `Q3 ${targetYear}` },
-          { month: 'December', bonusType: 'hours', description: 'Hours Bonus (50%)', periodLabel: `Year ${targetYear - 1}` },
-        ],
-        rollingBonuses: [
-          { bonusType: '90-day', description: '90-Day Bonus', timing: 'After 90 days employment' },
-          { bonusType: 'loyalty', description: 'Loyalty Bonus', timing: 'On anniversary date' },
-        ],
+        year: year || new Date().getFullYear(),
+        scheduledPayouts: [],
+        rollingBonuses: [],
       };
     }
     try {
       return await bonusApi.getCalendar(year);
     } catch (error) {
-      console.error('Failed to fetch calendar, using mock data', error);
-      USE_MOCK_DATA = true;
-      return this.getCalendar(year);
+      console.error('Failed to fetch calendar', error);
+      throw error;
     }
   },
 
   // Get summary for dashboard
   getSummary(): BonusDashboardSummary {
+    if (!shouldUseMockData()) {
+      return {
+        totalCaregivers: 0,
+        eligibleForQualityBonus: 0,
+        eligibleForShowUpBonus: 0,
+        eligibleForHoursBonus: 0,
+        totalBonusesPaidYTD: 0,
+        totalBonusesPending: 0,
+        averageEVVCompliance: 0,
+        averageShiftCompletion: 0
+      };
+    }
     return mockDashboardSummary;
   },
 
   // Get all caregivers' bonus data
   getAllCaregivers(): CaregiverBonusEligibility[] {
+    if (!shouldUseMockData()) {
+      return [];
+    }
     return mockCaregiverBonusData;
   },
 
   // Get payment history
   getPaymentHistory(): BonusPaymentHistory[] {
+    if (!shouldUseMockData()) {
+      return [];
+    }
     return mockPaymentHistory;
   },
 };

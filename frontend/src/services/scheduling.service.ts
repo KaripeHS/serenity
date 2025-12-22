@@ -1,5 +1,6 @@
 import { request } from './api';
 import { loggerService } from '../shared/services/logger.service';
+import { shouldUseMockData } from '../config/environment';
 
 // =====================================================
 // Calendar API Types
@@ -200,8 +201,11 @@ class SchedulingService {
                 unassignedCount: data.unassignedCount,
             };
         } catch (error) {
-            loggerService.warn('Failed to fetch calendar events, using mock data', { error });
-            return this.getMockCalendarEvents(start, end);
+            loggerService.warn('Failed to fetch calendar events', { error });
+            if (shouldUseMockData()) {
+                return this.getMockCalendarEvents(start, end);
+            }
+            return { events: [], count: 0, unassignedCount: 0 };
         }
     }
 
@@ -231,6 +235,9 @@ class SchedulingService {
             };
         } catch (error) {
             loggerService.warn('Failed to fetch calendar resources', { error });
+            if (shouldUseMockData()) {
+                return { resources: [], count: 0 };
+            }
             return { resources: [], count: 0 };
         }
     }
@@ -261,6 +268,9 @@ class SchedulingService {
             };
         } catch (error) {
             loggerService.warn('Failed to fetch coverage gaps', { error });
+            if (shouldUseMockData()) {
+                return { gaps: [], summary: {} };
+            }
             return { gaps: [], summary: {} };
         }
     }
@@ -318,6 +328,14 @@ class SchedulingService {
             return data;
         } catch (error) {
             loggerService.warn('Failed to fetch dispatch board', { error });
+            if (shouldUseMockData()) {
+                return {
+                    date: new Date().toISOString().split('T')[0],
+                    openShifts: [],
+                    availableCaregivers: [],
+                    summary: { openShiftCount: 0, availableCaregiverCount: 0, overdueCount: 0 },
+                };
+            }
             return {
                 date: new Date().toISOString().split('T')[0],
                 openShifts: [],
@@ -332,64 +350,10 @@ class SchedulingService {
     // =====================================================
 
     private getMockCalendarEvents(start: Date, end: Date): { events: CalendarEvent[]; count: number; unassignedCount: number } {
-        const clients = [
-            { id: 'c1', name: 'Eleanor Johnson' },
-            { id: 'c2', name: 'Robert Smith' },
-            { id: 'c3', name: 'Mary Williams' },
-        ];
-        const caregivers = [
-            { id: 'cg1', name: 'Sarah Miller' },
-            { id: 'cg2', name: 'David Chen' },
-            { id: 'cg3', name: 'Maria Garcia' },
-        ];
-        const services = [
-            { type: 'Personal Care', code: 'T1019' },
-            { type: 'Homemaker', code: 'S5130' },
-        ];
-
-        const events: CalendarEvent[] = [];
-        const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-
-        for (let d = 0; d < days; d++) {
-            const date = new Date(start);
-            date.setDate(date.getDate() + d);
-
-            for (let i = 0; i < 4; i++) {
-                const client = clients[Math.floor(Math.random() * clients.length)];
-                const hasCaregiver = Math.random() > 0.2;
-                const caregiver = hasCaregiver ? caregivers[Math.floor(Math.random() * caregivers.length)] : null;
-                const service = services[Math.floor(Math.random() * services.length)];
-                const hour = 7 + Math.floor(Math.random() * 10);
-                const duration = [60, 90, 120][Math.floor(Math.random() * 3)];
-
-                const eventStart = new Date(date);
-                eventStart.setHours(hour, 0, 0, 0);
-                const eventEnd = new Date(eventStart);
-                eventEnd.setMinutes(eventEnd.getMinutes() + duration);
-
-                events.push({
-                    id: `event-${d}-${i}`,
-                    title: hasCaregiver ? client.name : `[OPEN] ${client.name}`,
-                    start: eventStart.toISOString(),
-                    end: eventEnd.toISOString(),
-                    clientId: client.id,
-                    clientName: client.name,
-                    caregiverId: caregiver?.id,
-                    caregiverName: caregiver?.name,
-                    serviceType: service.type,
-                    serviceCode: service.code,
-                    status: hasCaregiver ? 'scheduled' : 'scheduled',
-                    color: hasCaregiver ? '#3B82F6' : '#8B5CF6',
-                    isUnassigned: !hasCaregiver,
-                    address: 'Columbus, OH',
-                });
-            }
-        }
-
         return {
-            events,
-            count: events.length,
-            unassignedCount: events.filter(e => e.isUnassigned).length,
+            events: [],
+            count: 0,
+            unassignedCount: 0,
         };
     }
 }

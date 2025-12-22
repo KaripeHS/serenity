@@ -1,6 +1,7 @@
 // Care Plan Service - Client Care Plans and Authorization Tracking
 
 import { clinicalApi } from './api';
+import { shouldUseMockData } from '../config/environment';
 
 export interface CarePlan {
   id: string;
@@ -348,11 +349,9 @@ export function getAuthorizationStatus(auth: CarePlan['authorization']): 'ok' | 
 // API Service Functions (with mock data fallback)
 // ============================================================================
 
-let USE_MOCK_DATA = false;
-
 export const carePlanService = {
   async getCarePlan(clientId: string): Promise<CarePlan | null> {
-    if (USE_MOCK_DATA) {
+    if (shouldUseMockData()) {
       return mockCarePlans.find(cp => cp.clientId === clientId) || null;
     }
     try {
@@ -362,22 +361,21 @@ export const carePlanService = {
       // For now, return mock data since the API structure is different
       return mockCarePlans.find(cp => cp.clientId === clientId) || null;
     } catch (error) {
-      console.error('Failed to fetch care plan, using mock data', error);
-      USE_MOCK_DATA = true;
-      return this.getCarePlan(clientId);
+      console.error('Failed to fetch care plan', error);
+      return null;
     }
   },
 
   async getAllCarePlans(): Promise<CarePlan[]> {
-    if (USE_MOCK_DATA) {
+    if (shouldUseMockData()) {
       return mockCarePlans;
     }
-    // API doesn't have a bulk endpoint, return mock for now
-    return mockCarePlans;
+    // API doesn't have a bulk endpoint, return empty for now
+    return [];
   },
 
   async createCarePlan(clientId: string, data: Partial<CarePlan>): Promise<{ success: boolean; carePlanId?: string }> {
-    if (USE_MOCK_DATA) {
+    if (shouldUseMockData()) {
       return { success: true, carePlanId: 'new-cp-001' };
     }
     try {
@@ -403,7 +401,7 @@ export const carePlanService = {
   },
 
   async updateCarePlan(carePlanId: string, data: Partial<CarePlan>): Promise<{ success: boolean }> {
-    if (USE_MOCK_DATA) {
+    if (shouldUseMockData()) {
       return { success: true };
     }
     try {
@@ -426,7 +424,7 @@ export const carePlanService = {
   },
 
   async getTaskTemplates(category?: string): Promise<any[]> {
-    if (USE_MOCK_DATA) {
+    if (shouldUseMockData()) {
       return [];
     }
     try {
@@ -439,7 +437,7 @@ export const carePlanService = {
   },
 
   async updateMedicalInfo(clientId: string, data: any): Promise<{ success: boolean }> {
-    if (USE_MOCK_DATA) {
+    if (shouldUseMockData()) {
       return { success: true };
     }
     try {
@@ -453,14 +451,23 @@ export const carePlanService = {
 
   // Get mock data directly
   getAll(): CarePlan[] {
+    if (!shouldUseMockData()) {
+      return [];
+    }
     return mockCarePlans;
   },
 
   getServiceCodes(): typeof serviceCodeOptions {
+    if (!shouldUseMockData()) {
+      return [];
+    }
     return serviceCodeOptions;
   },
 
   getGoalCategories(): typeof goalCategories {
+    if (!shouldUseMockData()) {
+      return [];
+    }
     return goalCategories;
   },
 };

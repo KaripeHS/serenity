@@ -1,8 +1,11 @@
 /**
  * Executive Dashboard Service
  * Provides strategic KPIs, AI insights, and business intelligence
+ *
+ * NOTE: Mock data is only used in development with VITE_USE_MOCK_DATA=true
  */
 import { request } from './api';
+import { shouldUseMockData } from '../config/environment';
 
 export interface KPIMetric {
   id: string;
@@ -153,62 +156,26 @@ class ExecutiveDashboardService {
 
   async getCapacityAnalysis(): Promise<CapacityAnalysis> {
     // TODO: Implement backend endpoint for capacity planning
-    await this.delay(600);
     return {
-      currentUtilization: 87.3,
-      maxCapacity: 500,
-      projectedDemand: 465,
-      bottlenecks: ['Weekend coverage', 'Rural areas', 'Specialized therapy'],
-      recommendations: [
-        'Hire 2 additional weekend caregivers',
-        'Expand rural route optimization',
-        'Partner with local therapy clinics'
-      ]
+      currentUtilization: 0,
+      maxCapacity: 0,
+      projectedDemand: 0,
+      bottlenecks: [],
+      recommendations: []
     };
   }
 
   async getGrowthOpportunities(): Promise<GrowthOpportunity[]> {
-    await this.delay(400);
-    return [
-      {
-        id: '1',
-        market: 'Columbus Metropolitan',
-        potential: 25000000,
-        timeline: '12-18 months',
-        requirements: ['Hire 50 additional staff', 'Open satellite office'],
-        riskLevel: 'medium'
-      },
-      {
-        id: '2',
-        market: 'Telehealth Services',
-        potential: 8000000,
-        timeline: '6-9 months',
-        requirements: ['Technology platform', 'Staff training'],
-        riskLevel: 'low'
-      }
-    ];
+    // TODO: Implement real growth analytics
+    return [];
   }
 
   async getFinancialForecast(): Promise<any> {
-    await this.delay(800);
+    // TODO: Implement real financial forecasting
     return {
-      nextQuarter: {
-        revenue: 6600000,
-        expenses: 5280000,
-        profit: 1320000,
-        confidence: 89
-      },
-      nextYear: {
-        revenue: 27500000,
-        expenses: 21450000,
-        profit: 6050000,
-        confidence: 75
-      }
+      nextQuarter: { revenue: 0, expenses: 0, profit: 0, confidence: 0 },
+      nextYear: { revenue: 0, expenses: 0, profit: 0, confidence: 0 }
     };
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 

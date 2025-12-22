@@ -4,6 +4,7 @@
  */
 import { request } from './api';
 import { loggerService } from '../shared/services/logger.service';
+import { shouldUseMockData } from '../config/environment';
 
 // ==========================================
 // Types
@@ -128,7 +129,10 @@ class BackgroundCheckService {
       return data;
     } catch (error) {
       loggerService.error('Failed to fetch dashboard', { error });
-      return this.getMockDashboard();
+      if (shouldUseMockData()) {
+        return this.getMockDashboard();
+      }
+      throw error;
     }
   }
 
@@ -138,7 +142,10 @@ class BackgroundCheckService {
       return data.stats;
     } catch (error) {
       loggerService.error('Failed to fetch stats', { error });
-      return this.getMockDashboard().stats;
+      if (shouldUseMockData()) {
+        return this.getMockDashboard().stats;
+      }
+      throw error;
     }
   }
 
@@ -158,7 +165,10 @@ class BackgroundCheckService {
       return data.caregivers;
     } catch (error) {
       loggerService.error('Failed to fetch caregivers needing checks', { error });
-      return this.getMockDashboard().needingChecks.items;
+      if (shouldUseMockData()) {
+        return this.getMockDashboard().needingChecks.items;
+      }
+      return [];
     }
   }
 
@@ -184,7 +194,10 @@ class BackgroundCheckService {
       return data.checks;
     } catch (error) {
       loggerService.error('Failed to fetch background checks', { error });
-      return this.getMockDashboard().recentChecks.items;
+      if (shouldUseMockData()) {
+        return this.getMockDashboard().recentChecks.items;
+      }
+      return [];
     }
   }
 
@@ -315,7 +328,10 @@ class BackgroundCheckService {
       return data.offenses;
     } catch (error) {
       loggerService.error('Failed to fetch offenses', { error });
-      return this.getMockOffenses();
+      if (shouldUseMockData()) {
+        return this.getMockOffenses();
+      }
+      return [];
     }
   }
 
@@ -335,171 +351,48 @@ class BackgroundCheckService {
   private getMockDashboard(): BackgroundCheckDashboard {
     return {
       stats: {
-        totalCaregivers: 45,
-        compliant: 38,
-        nonCompliant: 7,
-        expiringSoon: 5,
-        neverChecked: 2,
-        complianceRate: 84.4,
-        avgDaysToExpiration: 245,
+        totalCaregivers: 0,
+        compliant: 0,
+        nonCompliant: 0,
+        expiringSoon: 0,
+        neverChecked: 0,
+        complianceRate: 0,
+        avgDaysToExpiration: 0,
         checksByType: {
-          bci: 40,
-          bci_fbi: 35,
-          fbi_only: 5,
-          reference: 45,
-          drug_screen: 42,
-          driving_record: 12
+          bci: 0,
+          bci_fbi: 0,
+          fbi_only: 0,
+          reference: 0,
+          drug_screen: 0,
+          driving_record: 0
         },
         checksByStatus: {
-          pending: 3,
-          submitted: 2,
-          in_progress: 1,
-          completed: 85,
+          pending: 0,
+          submitted: 0,
+          in_progress: 0,
+          completed: 0,
           failed: 0,
-          expired: 5
+          expired: 0
         }
       },
       needingChecks: {
-        items: [
-          {
-            caregiverId: 'cg1',
-            name: 'Maria Rodriguez',
-            email: 'maria@example.com',
-            hireDate: '2024-01-15',
-            checkStatus: 'expiring_soon',
-            daysUntilExpiration: 28,
-            lastCheckDate: '2023-03-20',
-            lastCheckType: 'bci_fbi',
-            livedOutsideOhio5yr: false
-          },
-          {
-            caregiverId: 'cg2',
-            name: 'David Chen',
-            email: 'david@example.com',
-            hireDate: '2024-02-01',
-            checkStatus: 'expired',
-            daysUntilExpiration: -15,
-            lastCheckDate: '2023-02-28',
-            lastCheckType: 'bci',
-            livedOutsideOhio5yr: true
-          },
-          {
-            caregiverId: 'cg3',
-            name: 'Sarah Johnson',
-            email: 'sarah@example.com',
-            hireDate: '2024-11-15',
-            checkStatus: 'never_checked',
-            livedOutsideOhio5yr: false
-          },
-          {
-            caregiverId: 'cg4',
-            name: 'Michael Brown',
-            email: 'michael@example.com',
-            hireDate: '2024-03-01',
-            checkStatus: 'expiring_soon',
-            daysUntilExpiration: 45,
-            lastCheckDate: '2023-04-15',
-            lastCheckType: 'bci_fbi',
-            livedOutsideOhio5yr: true
-          }
-        ],
-        count: 4,
+        items: [],
+        count: 0,
         byStatus: {
-          neverChecked: 1,
-          expired: 1,
-          expiringSoon: 2
+          neverChecked: 0,
+          expired: 0,
+          expiringSoon: 0
         }
       },
       recentChecks: {
-        items: [
-          {
-            id: 'bc1',
-            organizationId: 'org1',
-            caregiverId: 'cg5',
-            caregiverName: 'Jennifer Smith',
-            checkType: 'bci_fbi',
-            status: 'completed',
-            result: 'clear',
-            requestedAt: '2024-03-01T10:00:00Z',
-            requestedBy: 'admin1',
-            submittedAt: '2024-03-02T09:00:00Z',
-            completedAt: '2024-03-10T14:30:00Z',
-            expiresAt: '2025-03-10T14:30:00Z'
-          },
-          {
-            id: 'bc2',
-            organizationId: 'org1',
-            caregiverId: 'cg6',
-            caregiverName: 'Robert Williams',
-            checkType: 'bci',
-            status: 'in_progress',
-            requestedAt: '2024-03-08T11:00:00Z',
-            requestedBy: 'admin1',
-            submittedAt: '2024-03-09T08:00:00Z'
-          },
-          {
-            id: 'bc3',
-            organizationId: 'org1',
-            applicantId: 'app1',
-            applicantName: 'Emily Davis',
-            checkType: 'bci_fbi',
-            status: 'completed',
-            result: 'flagged',
-            requestedAt: '2024-03-05T09:00:00Z',
-            requestedBy: 'admin1',
-            completedAt: '2024-03-12T16:00:00Z',
-            findings: 'Minor traffic violation from 2019'
-          }
-        ],
-        count: 3
+        items: [],
+        count: 0
       }
     };
   }
 
   private getMockOffenses(): DisqualifyingOffense[] {
-    return [
-      {
-        id: '1',
-        offenseCode: '2903.01',
-        offenseName: 'Aggravated Murder',
-        category: 'violent_crime',
-        disqualificationPeriod: 'permanent',
-        ohioRevisedCode: 'ORC 2903.01'
-      },
-      {
-        id: '2',
-        offenseCode: '2903.02',
-        offenseName: 'Murder',
-        category: 'violent_crime',
-        disqualificationPeriod: 'permanent',
-        ohioRevisedCode: 'ORC 2903.02'
-      },
-      {
-        id: '3',
-        offenseCode: '2911.01',
-        offenseName: 'Aggravated Robbery',
-        category: 'violent_crime',
-        disqualificationPeriod: '10_years',
-        ohioRevisedCode: 'ORC 2911.01'
-      },
-      {
-        id: '4',
-        offenseCode: '2913.02',
-        offenseName: 'Theft',
-        category: 'property_crime',
-        disqualificationPeriod: '5_years',
-        ohioRevisedCode: 'ORC 2913.02',
-        notes: 'Felony theft only'
-      },
-      {
-        id: '5',
-        offenseCode: '2925.03',
-        offenseName: 'Trafficking in Drugs',
-        category: 'drug_offense',
-        disqualificationPeriod: '10_years',
-        ohioRevisedCode: 'ORC 2925.03'
-      }
-    ];
+    return [];
   }
 }
 

@@ -2,9 +2,12 @@
  * Billing Dashboard Service
  * Claims processing, denial management, AR aging, and revenue optimization
  * Integrates with backend APIs with mock fallback
+ *
+ * NOTE: Mock data only used in development with VITE_USE_MOCK_DATA=true
  */
 
 import { arAgingApi, denialsApi, claimsApi, ARAgingSummary, ARKPIs, Denial, Claim as ApiClaim } from './api';
+import { shouldUseMockData } from '../config/environment';
 
 export interface Claim {
   id: string;
@@ -124,8 +127,8 @@ class BillingDashboardService {
 
       return {
         metrics: {
-          totalRevenue: claimsDashboard?.revenue || 2150000,
-          collectedRevenue: claimsDashboard?.paid || 1935000,
+          totalRevenue: claimsDashboard?.revenue || 0,
+          collectedRevenue: claimsDashboard?.paid || 0,
           pendingAmount: arDashboard.summary.total.amount,
           deniedAmount: denialsDashboard.totalDeniedAmount,
           daysInAR: arDashboard.kpis.dso,
@@ -150,8 +153,11 @@ class BillingDashboardService {
         recentClaims: [],
       };
     } catch (error) {
-      console.warn('Backend API not available, using mock data');
-      return this.getMockDashboard();
+      if (shouldUseMockData()) {
+        console.warn('Backend API not available, using mock data');
+        return this.getMockDashboard();
+      }
+      return this.getEmptyDashboard();
     }
   }
 
@@ -163,8 +169,11 @@ class BillingDashboardService {
       const response = await claimsApi.getClaims(filters);
       return response.claims.map(mapApiClaim);
     } catch (error) {
-      console.warn('Backend API not available, using mock data for claims');
-      return this.getMockClaims();
+      if (shouldUseMockData()) {
+        console.warn('Backend API not available, using mock data for claims');
+        return this.getMockClaims();
+      }
+      return [];
     }
   }
 
@@ -186,8 +195,11 @@ class BillingDashboardService {
 
       return { summary: response.summary, buckets };
     } catch (error) {
-      console.warn('Backend API not available');
-      return this.getMockARSummary();
+      if (shouldUseMockData()) {
+        console.warn('Backend API not available');
+        return this.getMockARSummary();
+      }
+      return { summary: {} as ARAgingSummary, buckets: [] };
     }
   }
 
@@ -199,14 +211,7 @@ class BillingDashboardService {
       const response = await arAgingApi.getKPIs();
       return response.kpis;
     } catch (error) {
-      console.warn('Backend API not available');
-      return {
-        dso: 28,
-        collectionRate: 94.2,
-        denialRate: 5.8,
-        cleanClaimRate: 92.5,
-        avgPaymentTime: 21,
-      };
+      return { dso: 0, collectionRate: 0, denialRate: 0, cleanClaimRate: 0, avgPaymentTime: 0 };
     }
   }
 
@@ -251,8 +256,11 @@ class BillingDashboardService {
         trend: a.trend || 'stable',
       }));
     } catch (error) {
-      console.warn('Backend API not available, using mock data');
-      return this.getMockDenialAnalysis();
+      if (shouldUseMockData()) {
+        console.warn('Backend API not available, using mock data');
+        return this.getMockDenialAnalysis();
+      }
+      return [];
     }
   }
 
@@ -303,176 +311,58 @@ class BillingDashboardService {
       ]);
 
       return {
-        totalRevenue: 2150000,
-        collectedRevenue: 1935000,
-        pendingAmount: 185000,
+        totalRevenue: 0,
+        collectedRevenue: 0,
+        pendingAmount: 0,
         deniedAmount: denialsDashboard.totalDeniedAmount,
         daysInAR: arKpis.kpis.dso,
         collectionRate: arKpis.kpis.collectionRate,
       };
     } catch (error) {
-      return {
-        totalRevenue: 2150000,
-        collectedRevenue: 1935000,
-        pendingAmount: 185000,
-        deniedAmount: 30000,
-        daysInAR: 28,
-        collectionRate: 90.0
-      };
+      return { totalRevenue: 0, collectedRevenue: 0, pendingAmount: 0, deniedAmount: 0, daysInAR: 0, collectionRate: 0 };
     }
   }
 
-  // Mock data fallbacks
-  private getMockDashboard(): BillingDashboardData {
+  // Empty state for production
+  private getEmptyDashboard(): BillingDashboardData {
     return {
-      metrics: {
-        totalRevenue: 2150000,
-        collectedRevenue: 1935000,
-        pendingAmount: 185000,
-        deniedAmount: 30000,
-        daysInAR: 28,
-        collectionRate: 90.0,
-      },
+      metrics: { totalRevenue: 0, collectedRevenue: 0, pendingAmount: 0, deniedAmount: 0, daysInAR: 0, collectionRate: 0 },
       arAging: {
-        summary: {
-          current: { count: 45, amount: 45000 },
-          days_1_30: { count: 62, amount: 78000 },
-          days_31_60: { count: 28, amount: 35000 },
-          days_61_90: { count: 12, amount: 18000 },
-          days_91_plus: { count: 8, amount: 9000 },
-          total: { count: 155, amount: 185000 },
-        },
-        buckets: [
-          { label: 'Current', count: 45, amount: 45000, percentage: 24.3 },
-          { label: '1-30 Days', count: 62, amount: 78000, percentage: 42.2 },
-          { label: '31-60 Days', count: 28, amount: 35000, percentage: 18.9 },
-          { label: '61-90 Days', count: 12, amount: 18000, percentage: 9.7 },
-          { label: '90+ Days', count: 8, amount: 9000, percentage: 4.9 },
-        ],
-        kpis: {
-          dso: 28,
-          collectionRate: 94.2,
-          denialRate: 5.8,
-          cleanClaimRate: 92.5,
-          avgPaymentTime: 21,
-        },
+        summary: { current: { count: 0, amount: 0 }, days_1_30: { count: 0, amount: 0 }, days_31_60: { count: 0, amount: 0 }, days_61_90: { count: 0, amount: 0 }, days_91_plus: { count: 0, amount: 0 }, total: { count: 0, amount: 0 } },
+        buckets: [],
+        kpis: { dso: 0, collectionRate: 0, denialRate: 0, cleanClaimRate: 0, avgPaymentTime: 0 },
         atRisk: [],
         byPayer: [],
       },
-      denials: {
-        total: 47,
-        open: 23,
-        totalAmount: 30000,
-        recoveredThisMonth: 12500,
-        recoveryRate: 65,
-        byCode: this.getMockDenialAnalysis(),
-        urgent: [],
-      },
-      recentClaims: this.getMockClaims(),
+      denials: { total: 0, open: 0, totalAmount: 0, recoveredThisMonth: 0, recoveryRate: 0, byCode: [], urgent: [] },
+      recentClaims: [],
     };
   }
 
+  // Mock data fallbacks (development only)
+  private getMockDashboard(): BillingDashboardData {
+    return this.getEmptyDashboard();
+  }
+
   private getMockClaims(): Claim[] {
-    return [
-      {
-        id: 'CLM-001',
-        claimNumber: 'CLM-2024-001',
-        patientName: 'Eleanor Johnson',
-        serviceDate: '2024-12-10',
-        provider: 'Maria Rodriguez',
-        amount: 145.50,
-        status: 'approved',
-        payer: 'Medicare',
-        submissionDate: '2024-12-11',
-        daysInCycle: 3
-      },
-      {
-        id: 'CLM-002',
-        claimNumber: 'CLM-2024-002',
-        patientName: 'Robert Smith',
-        serviceDate: '2024-12-09',
-        provider: 'David Chen',
-        amount: 189.00,
-        status: 'pending',
-        payer: 'Medicaid',
-        submissionDate: '2024-12-10',
-        daysInCycle: 4
-      },
-      {
-        id: 'CLM-003',
-        claimNumber: 'CLM-2024-003',
-        patientName: 'Mary Williams',
-        serviceDate: '2024-12-08',
-        provider: 'Lisa Rodriguez',
-        amount: 125.00,
-        status: 'denied',
-        payer: 'Aetna',
-        submissionDate: '2024-12-09',
-        daysInCycle: 5
-      }
-    ];
+    return [];
   }
 
   private getMockDenialAnalysis(): DenialAnalysis[] {
-    return [
-      {
-        denialCode: 'CO-16',
-        description: 'Claim lacks information',
-        count: 15,
-        totalAmount: 2250.00,
-        appealSuccess: 85,
-        trend: 'down'
-      },
-      {
-        denialCode: 'CO-97',
-        description: 'Payment adjusted due to previous payment',
-        count: 8,
-        totalAmount: 1120.00,
-        appealSuccess: 45,
-        trend: 'stable'
-      },
-      {
-        denialCode: 'CO-4',
-        description: 'Service not covered by plan',
-        count: 6,
-        totalAmount: 980.00,
-        appealSuccess: 25,
-        trend: 'up'
-      },
-      {
-        denialCode: 'PR-1',
-        description: 'Deductible amount',
-        count: 12,
-        totalAmount: 1800.00,
-        appealSuccess: 0,
-        trend: 'stable'
-      }
-    ];
+    return [];
   }
 
   private getMockARSummary(): { summary: ARAgingSummary; buckets: ARAgingBucket[] } {
     const summary: ARAgingSummary = {
-      current: { count: 45, amount: 45000 },
-      days_1_30: { count: 62, amount: 78000 },
-      days_31_60: { count: 28, amount: 35000 },
-      days_61_90: { count: 12, amount: 18000 },
-      days_91_plus: { count: 8, amount: 9000 },
-      total: { count: 155, amount: 185000 },
+      current: { count: 0, amount: 0 },
+      days_1_30: { count: 0, amount: 0 },
+      days_31_60: { count: 0, amount: 0 },
+      days_61_90: { count: 0, amount: 0 },
+      days_91_plus: { count: 0, amount: 0 },
+      total: { count: 0, amount: 0 },
     };
 
-    const buckets: ARAgingBucket[] = [
-      { label: 'Current', count: 45, amount: 45000, percentage: 24.3 },
-      { label: '1-30 Days', count: 62, amount: 78000, percentage: 42.2 },
-      { label: '31-60 Days', count: 28, amount: 35000, percentage: 18.9 },
-      { label: '61-90 Days', count: 12, amount: 18000, percentage: 9.7 },
-      { label: '90+ Days', count: 8, amount: 9000, percentage: 4.9 },
-    ];
-
-    return { summary, buckets };
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return { summary, buckets: [] };
   }
 }
 

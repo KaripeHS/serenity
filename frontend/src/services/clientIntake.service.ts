@@ -1,5 +1,7 @@
 // Client Intake Service - Manages client intake workflow
 
+import { shouldUseMockData } from '../config/environment';
+
 export interface ClientIntakeData {
   // Step 1: Basic Information
   basicInfo: {
@@ -165,6 +167,17 @@ class ClientIntakeService {
     endDate?: string;
     search?: string;
   }): Promise<{ intakes: IntakeSummary[]; stats: { total: number; pending: number; approved: number; draft: number } }> {
+    if (!shouldUseMockData()) {
+      return {
+        intakes: [],
+        stats: {
+          total: 0,
+          pending: 0,
+          approved: 0,
+          draft: 0
+        }
+      };
+    }
     // Mock data for development
     return {
       intakes: [
@@ -230,6 +243,9 @@ class ClientIntakeService {
 
   // Get single intake by ID
   async getIntake(id: string): Promise<ClientIntakeData | null> {
+    if (!shouldUseMockData()) {
+      return null;
+    }
     // Mock complete intake data
     return {
       basicInfo: {

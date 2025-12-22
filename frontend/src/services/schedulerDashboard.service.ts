@@ -1,4 +1,5 @@
 import { loggerService } from '../shared/services/logger.service';
+import { shouldUseMockData } from '../config/environment';
 
 /**
  * Scheduler Dashboard Service
@@ -55,164 +56,49 @@ export interface RouteOptimization {
 
 class SchedulerDashboardService {
   async getTodaysSchedule(): Promise<ScheduledVisit[]> {
-    await this.delay(500);
-    return [
-      {
-        id: '1',
-        patientId: '1',
-        patientName: 'Eleanor Johnson',
-        patientAddress: '123 Oak Street, Columbus, OH',
-        caregiverId: '1',
-        caregiverName: 'Maria Rodriguez',
-        startTime: '09:00',
-        endTime: '11:00',
-        serviceType: 'Personal Care',
-        status: 'scheduled',
-        priority: 'high',
-        travelTime: 15,
-        mileage: 8.5
-      },
-      {
-        id: '2',
-        patientId: '2',
-        patientName: 'Robert Smith',
-        patientAddress: '456 Pine Avenue, Dublin, OH',
-        caregiverId: '2',
-        caregiverName: 'David Chen',
-        startTime: '10:30',
-        endTime: '12:00',
-        serviceType: 'Physical Therapy',
-        status: 'in-progress',
-        priority: 'medium',
-        travelTime: 20,
-        mileage: 12.3
-      },
-      {
-        id: '3',
-        patientId: '3',
-        patientName: 'Mary Williams',
-        patientAddress: '789 Elm Drive, Westerville, OH',
-        caregiverId: '1',
-        caregiverName: 'Maria Rodriguez',
-        startTime: '14:00',
-        endTime: '15:30',
-        serviceType: 'Medication Management',
-        status: 'scheduled',
-        priority: 'high',
-        travelTime: 25,
-        mileage: 15.7
-      }
-    ];
+    return [];
   }
 
   async getStaffAvailability(): Promise<StaffAvailability[]> {
-    await this.delay(400);
-    return [
-      {
-        id: '1',
-        name: 'Maria Rodriguez',
-        role: 'Senior Caregiver',
-        status: 'busy',
-        currentLocation: 'Eleanor Johnson residence',
-        nextAvailable: '11:15',
-        skillsMatch: ['Personal Care', 'Medication Management'],
-        utilizationRate: 87
-      },
-      {
-        id: '2',
-        name: 'David Chen',
-        role: 'Physical Therapist',
-        status: 'busy',
-        currentLocation: 'Robert Smith residence',
-        nextAvailable: '12:15',
-        skillsMatch: ['Physical Therapy', 'Mobility Training'],
-        utilizationRate: 92
-      },
-      {
-        id: '3',
-        name: 'Lisa Rodriguez',
-        role: 'Home Health Aide',
-        status: 'available',
-        skillsMatch: ['Personal Care', 'Companionship'],
-        utilizationRate: 75
-      }
-    ];
+    return [];
   }
 
   async getSchedulingMetrics(): Promise<SchedulingMetrics> {
-    await this.delay(600);
     return {
-      totalVisits: 127,
-      completedVisits: 94,
-      cancelledVisits: 5,
-      noShows: 3,
-      utilizationRate: 87.3,
-      averageTravelTime: 18.5,
-      costPerVisit: 85.50
+      totalVisits: 0,
+      completedVisits: 0,
+      cancelledVisits: 0,
+      noShows: 0,
+      utilizationRate: 0,
+      averageTravelTime: 0,
+      costPerVisit: 0
     };
   }
 
   async getRouteOptimizations(): Promise<RouteOptimization[]> {
-    await this.delay(700);
-    return [
-      {
-        caregiverId: '1',
-        caregiverName: 'Maria Rodriguez',
-        totalMiles: 45.2,
-        totalTime: 480,
-        fuelCost: 18.50,
-        efficiency: 92,
-        visits: [
-          {
-            id: '1',
-            patientId: '1',
-            patientName: 'Eleanor Johnson',
-            patientAddress: '123 Oak Street, Columbus, OH',
-            caregiverId: '1',
-            caregiverName: 'Maria Rodriguez',
-            startTime: '09:00',
-            endTime: '11:00',
-            serviceType: 'Personal Care',
-            status: 'scheduled',
-            priority: 'high',
-            travelTime: 15,
-            mileage: 8.5
-          }
-        ],
-        optimizationSuggestions: [
-          'Combine visits in Westerville area',
-          'Consider alternate route via I-270'
-        ]
-      }
-    ];
+    return [];
   }
 
   async scheduleVisit(visit: Partial<ScheduledVisit>): Promise<ScheduledVisit> {
-    await this.delay(800);
     return {
-      id: Date.now().toString(),
-      patientId: visit.patientId!,
-      patientName: visit.patientName!,
-      patientAddress: visit.patientAddress!,
-      caregiverId: visit.caregiverId!,
-      caregiverName: visit.caregiverName!,
-      startTime: visit.startTime!,
-      endTime: visit.endTime!,
-      serviceType: visit.serviceType!,
+      id: '',
+      patientId: '',
+      patientName: '',
+      patientAddress: '',
+      caregiverId: '',
+      caregiverName: '',
+      startTime: '',
+      endTime: '',
+      serviceType: '',
       status: 'scheduled',
-      priority: visit.priority || 'medium',
-      travelTime: 20,
-      mileage: 10
+      priority: 'medium',
+      travelTime: 0,
+      mileage: 0
     };
   }
 
   async updateVisitStatus(visitId: string, status: ScheduledVisit['status']): Promise<void> {
-    await this.delay(300);
     loggerService.info(`Visit ${visitId} status updated to ${status}`);
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 

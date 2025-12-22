@@ -44,68 +44,84 @@ export function WorkingOperationsDashboard() {
   const [metrics, setMetrics] = useState<OperationsMetrics | null>(null);
   const [upcomingVisits, setUpcomingVisits] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [caregiverBreakdown, setCaregiverBreakdown] = useState({ active: 0, available: 0, offDuty: 0 });
 
-  // Mock chart data
-  const weeklyVisitsData = [
-    { label: 'Mon', value: 132 },
-    { label: 'Tue', value: 128 },
-    { label: 'Wed', value: 135 },
-    { label: 'Thu', value: 127 },
-    { label: 'Fri', value: 142 },
-    { label: 'Sat', value: 89 },
-    { label: 'Sun', value: 71 }
-  ];
+  const [weeklyVisitsData, setWeeklyVisitsData] = useState([
+    { label: 'Mon', value: 0 },
+    { label: 'Tue', value: 0 },
+    { label: 'Wed', value: 0 },
+    { label: 'Thu', value: 0 },
+    { label: 'Fri', value: 0 },
+    { label: 'Sat', value: 0 },
+    { label: 'Sun', value: 0 }
+  ]);
 
-  const travelTimeData = [
-    { label: '9 AM', value: 15 },
-    { label: '11 AM', value: 18 },
-    { label: '1 PM', value: 22 },
-    { label: '3 PM', value: 19 },
-    { label: '5 PM', value: 16 }
-  ];
+  const [travelTimeData, setTravelTimeData] = useState([
+    { label: '9 AM', value: 0 },
+    { label: '11 AM', value: 0 },
+    { label: '1 PM', value: 0 },
+    { label: '3 PM', value: 0 },
+    { label: '5 PM', value: 0 }
+  ]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMetrics({
-        dailyVisits: 127,
-        completedVisits: 119,
-        avgTravelTime: 18.5,
-        efficiency: 87.3,
-        lateVisits: 3,
-        caregiverUtilization: 82.1
-      });
+    const loadMetrics = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/operations/metrics`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-      setUpcomingVisits([
-        {
-          id: '1',
-          patientName: 'Mary Johnson',
-          caregiverName: 'Sarah Williams',
-          scheduledTime: '2:00 PM',
-          status: 'on_time',
-          location: 'Columbus, OH'
-        },
-        {
-          id: '2',
-          patientName: 'Robert Smith',
-          caregiverName: 'Jennifer Davis',
-          scheduledTime: '2:30 PM',
-          status: 'late',
-          location: 'Cleveland, OH'
-        },
-        {
-          id: '3',
-          patientName: 'Patricia Brown',
-          caregiverName: 'Michael Wilson',
-          scheduledTime: '3:00 PM',
-          status: 'scheduled',
-          location: 'Cincinnati, OH'
+        if (response.ok) {
+          const data = await response.json();
+          setMetrics({
+            dailyVisits: data.dailyVisits || 0,
+            completedVisits: data.completedVisits || 0,
+            avgTravelTime: data.avgTravelTime || 0,
+            efficiency: data.efficiency || 0,
+            lateVisits: data.lateVisits || 0,
+            caregiverUtilization: data.caregiverUtilization || 0
+          });
+          setUpcomingVisits(data.upcomingVisits || []);
+          if (data.weeklyVisitsData) setWeeklyVisitsData(data.weeklyVisitsData);
+          if (data.travelTimeData) setTravelTimeData(data.travelTimeData);
+          if (data.caregiverBreakdown) {
+            setCaregiverBreakdown({
+              active: data.caregiverBreakdown.active || 0,
+              available: data.caregiverBreakdown.available || 0,
+              offDuty: data.caregiverBreakdown.offDuty || 0
+            });
+          }
+        } else {
+          setMetrics({
+            dailyVisits: 0,
+            completedVisits: 0,
+            avgTravelTime: 0,
+            efficiency: 0,
+            lateVisits: 0,
+            caregiverUtilization: 0
+          });
+          setUpcomingVisits([]);
         }
-      ]);
+      } catch (error) {
+        console.error('Failed to load operations metrics:', error);
+        setMetrics({
+          dailyVisits: 0,
+          completedVisits: 0,
+          avgTravelTime: 0,
+          efficiency: 0,
+          lateVisits: 0,
+          caregiverUtilization: 0
+        });
+        setUpcomingVisits([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      setLoading(false);
-    }, 900);
-
-    return () => clearTimeout(timer);
+    loadMetrics();
   }, []);
 
   if (loading) {
@@ -271,15 +287,15 @@ export function WorkingOperationsDashboard() {
 
             <div className="grid grid-cols-3 gap-4 pt-4 border-t">
               <div className="text-center">
-                <div className="text-2xl font-bold text-success-600">92</div>
+                <div className="text-2xl font-bold text-success-600">{caregiverBreakdown.active}</div>
                 <div className="text-xs text-gray-500 mt-1">Active</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-warning-600">12</div>
+                <div className="text-2xl font-bold text-warning-600">{caregiverBreakdown.available}</div>
                 <div className="text-xs text-gray-500 mt-1">Available</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-600">8</div>
+                <div className="text-2xl font-bold text-gray-600">{caregiverBreakdown.offDuty}</div>
                 <div className="text-xs text-gray-500 mt-1">Off Duty</div>
               </div>
             </div>

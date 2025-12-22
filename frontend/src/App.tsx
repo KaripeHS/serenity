@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import DashboardLayout from './components/layouts/DashboardLayout';
+import { ProtectedRoute } from './hooks/useRoleAccess';
 import { LeadPipeline } from './pages/admin/crm/LeadPipeline';
 import { AssessmentWizard } from './pages/admin/intake/AssessmentWizard';
 import { PartnerPortal } from './pages/partners/PartnerPortal';
@@ -165,40 +166,41 @@ function App() {
                 }
               />
 
-              {/* Dashboard Routes */}
-              <Route path="/dashboard/executive" element={<DashboardLayout><WorkingExecutiveDashboard /></DashboardLayout>} />
-              <Route path="/dashboard/hr" element={<DashboardLayout><WorkingHRDashboard /></DashboardLayout>} />
-              <Route path="/dashboard/tax" element={<DashboardLayout><WorkingTaxDashboard /></DashboardLayout>} />
-              <Route path="/dashboard/operations" element={<DashboardLayout><WorkingOperationsDashboard /></DashboardLayout>} />
-              <Route path="/dashboard/clinical" element={<DashboardLayout><WorkingClinicalDashboard /></DashboardLayout>} />
-              <Route path="/dashboard/billing" element={<DashboardLayout><WorkingBillingDashboard /></DashboardLayout>} />
-              <Route path="/dashboard/compliance" element={<DashboardLayout><WorkingComplianceDashboard /></DashboardLayout>} />
-              <Route path="/dashboard/training" element={<DashboardLayout><WorkingTrainingDashboard /></DashboardLayout>} />
-              <Route path="/dashboard/scheduling" element={<DashboardLayout><WorkingSchedulingDashboard /></DashboardLayout>} />
+              {/* Dashboard Routes - All protected by RBAC */}
+              <Route path="/dashboard/executive" element={<DashboardLayout><ProtectedRoute route="/dashboard/executive"><WorkingExecutiveDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/hr" element={<DashboardLayout><ProtectedRoute route="/dashboard/hr"><WorkingHRDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/tax" element={<DashboardLayout><ProtectedRoute route="/dashboard/tax"><WorkingTaxDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/operations" element={<DashboardLayout><ProtectedRoute route="/dashboard/operations"><WorkingOperationsDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/clinical" element={<DashboardLayout><ProtectedRoute route="/dashboard/clinical"><WorkingClinicalDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/billing" element={<DashboardLayout><ProtectedRoute route="/dashboard/billing"><WorkingBillingDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/compliance" element={<DashboardLayout><ProtectedRoute route="/dashboard/compliance"><WorkingComplianceDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/training" element={<DashboardLayout><ProtectedRoute route="/dashboard/training"><WorkingTrainingDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/scheduling" element={<DashboardLayout><ProtectedRoute route="/dashboard/scheduling"><WorkingSchedulingDashboard /></ProtectedRoute></DashboardLayout>} />
 
-              {/* Year 2 Enhanced Dashboard Routes */}
-              <Route path="/dashboard/executive-v2" element={<DashboardLayout><ExecutiveOpportunityDashboard /></DashboardLayout>} />
-              <Route path="/dashboard/dodd-hpc" element={<DashboardLayout><DoddHpcDashboard /></DashboardLayout>} />
-              <Route path="/dashboard/payroll-v2" element={<DashboardLayout><PayrollDashboard /></DashboardLayout>} />
-              <Route path="/dashboard/consumer-directed" element={<DashboardLayout><ConsumerDirectedDashboard /></DashboardLayout>} />
-              <Route path="/dashboard/scheduling-calendar" element={<DashboardLayout><SchedulingCalendar /></DashboardLayout>} />
-              <Route path="/dashboard/billing-ar" element={<DashboardLayout><BillingARDashboard /></DashboardLayout>} />
-              <Route path="/dashboard/background-checks" element={<DashboardLayout><BackgroundCheckDashboard /></DashboardLayout>} />
-              <Route path="/dashboard/client-intake" element={<DashboardLayout><ClientIntakeWizard /></DashboardLayout>} />
-              <Route path="/dashboard/claims-workflow" element={<DashboardLayout><ClaimsWorkflow /></DashboardLayout>} />
-              <Route path="/dashboard/licenses" element={<DashboardLayout><LicenseManagement /></DashboardLayout>} />
-              <Route path="/dashboard/credentials" element={<DashboardLayout><CredentialExpiration /></DashboardLayout>} />
-              <Route path="/dashboard/caregiver-bonuses" element={<DashboardLayout><CaregiverBonusDashboard /></DashboardLayout>} />
-              <Route path="/dashboard/training" element={<DashboardLayout><TrainingManagement /></DashboardLayout>} />
-              <Route path="/dashboard/dispatch" element={<DashboardLayout><CoverageDispatch /></DashboardLayout>} />
-              <Route path="/dashboard/care-plans" element={<DashboardLayout><CarePlanEditor /></DashboardLayout>} />
+              {/* Year 2 Enhanced Dashboard Routes - All protected by RBAC */}
+              <Route path="/dashboard/executive-v2" element={<DashboardLayout><ProtectedRoute route="/dashboard/executive-v2"><ExecutiveOpportunityDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/dodd-hpc" element={<DashboardLayout><ProtectedRoute route="/dashboard/dodd-hpc"><DoddHpcDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/payroll-v2" element={<DashboardLayout><ProtectedRoute route="/dashboard/payroll-v2"><PayrollDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/consumer-directed" element={<DashboardLayout><ProtectedRoute route="/dashboard/consumer-directed"><ConsumerDirectedDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/scheduling-calendar" element={<DashboardLayout><ProtectedRoute route="/dashboard/scheduling-calendar"><SchedulingCalendar /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/billing-ar" element={<DashboardLayout><ProtectedRoute route="/dashboard/billing-ar"><BillingARDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/background-checks" element={<DashboardLayout><ProtectedRoute route="/dashboard/background-checks"><BackgroundCheckDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/client-intake" element={<DashboardLayout><ProtectedRoute route="/dashboard/client-intake"><ClientIntakeWizard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/claims-workflow" element={<DashboardLayout><ProtectedRoute route="/dashboard/claims-workflow"><ClaimsWorkflow /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/licenses" element={<DashboardLayout><ProtectedRoute route="/dashboard/licenses"><LicenseManagement /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/credentials" element={<DashboardLayout><ProtectedRoute route="/dashboard/credentials"><CredentialExpiration /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/caregiver-bonuses" element={<DashboardLayout><ProtectedRoute route="/dashboard/caregiver-bonuses"><CaregiverBonusDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/dispatch" element={<DashboardLayout><ProtectedRoute route="/dashboard/dispatch"><CoverageDispatch /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/care-plans" element={<DashboardLayout><ProtectedRoute route="/dashboard/care-plans"><CarePlanEditor /></ProtectedRoute></DashboardLayout>} />
 
-              {/* Admin Routes */}
+              {/* Admin Routes - Protected by RBAC */}
               <Route
                 path="/dashboard/crm"
                 element={
                   <DashboardLayout>
-                    <LeadPipeline />
+                    <ProtectedRoute route="/dashboard/crm">
+                      <LeadPipeline />
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
@@ -206,17 +208,21 @@ function App() {
                 path="/dashboard/intake/new"
                 element={
                   <DashboardLayout>
-                    <AssessmentWizard />
+                    <ProtectedRoute route="/dashboard/client-intake">
+                      <AssessmentWizard />
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
 
-              {/* Admin & Access Control Routes */}
+              {/* Admin & Access Control Routes - Protected by RBAC */}
               <Route
                 path="/admin/users"
                 element={
                   <DashboardLayout>
-                    <AdminRoleManager />
+                    <ProtectedRoute route="/admin/users">
+                      <AdminRoleManager />
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
@@ -224,43 +230,45 @@ function App() {
                 path="/admin/roles"
                 element={
                   <DashboardLayout>
-                    <div className="p-6">
-                      <h1 className="text-2xl font-bold mb-4">Roles & Permissions</h1>
-                      <div className="bg-white rounded-lg shadow p-6">
-                        <p className="text-gray-600 mb-4">Configure role-based access control</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          <div className="border rounded-lg p-4">
-                            <h3 className="font-semibold text-purple-600 mb-2">Founder</h3>
-                            <p className="text-sm text-gray-500 mb-2">Full system access</p>
-                            <ul className="text-xs text-gray-600 space-y-1">
-                              <li>• All dashboards</li>
-                              <li>• User management</li>
-                              <li>• Financial data</li>
-                              <li>• System configuration</li>
-                            </ul>
-                          </div>
-                          <div className="border rounded-lg p-4">
-                            <h3 className="font-semibold text-blue-600 mb-2">Pod Lead</h3>
-                            <p className="text-sm text-gray-500 mb-2">Team management access</p>
-                            <ul className="text-xs text-gray-600 space-y-1">
-                              <li>• Operations dashboard</li>
-                              <li>• HR dashboard</li>
-                              <li>• Clinical dashboard</li>
-                              <li>• Scheduling</li>
-                            </ul>
-                          </div>
-                          <div className="border rounded-lg p-4">
-                            <h3 className="font-semibold text-green-600 mb-2">Caregiver</h3>
-                            <p className="text-sm text-gray-500 mb-2">Field staff access</p>
-                            <ul className="text-xs text-gray-600 space-y-1">
-                              <li>• EVV clock in/out</li>
-                              <li>• View schedule</li>
-                              <li>• Patient info (assigned)</li>
-                            </ul>
+                    <ProtectedRoute route="/admin/roles">
+                      <div className="p-6">
+                        <h1 className="text-2xl font-bold mb-4">Roles & Permissions</h1>
+                        <div className="bg-white rounded-lg shadow p-6">
+                          <p className="text-gray-600 mb-4">Configure role-based access control</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="border rounded-lg p-4">
+                              <h3 className="font-semibold text-purple-600 mb-2">Founder</h3>
+                              <p className="text-sm text-gray-500 mb-2">Full system access</p>
+                              <ul className="text-xs text-gray-600 space-y-1">
+                                <li>• All dashboards</li>
+                                <li>• User management</li>
+                                <li>• Financial data</li>
+                                <li>• System configuration</li>
+                              </ul>
+                            </div>
+                            <div className="border rounded-lg p-4">
+                              <h3 className="font-semibold text-blue-600 mb-2">Pod Lead</h3>
+                              <p className="text-sm text-gray-500 mb-2">Team management access</p>
+                              <ul className="text-xs text-gray-600 space-y-1">
+                                <li>• Operations dashboard</li>
+                                <li>• HR dashboard</li>
+                                <li>• Clinical dashboard</li>
+                                <li>• Scheduling</li>
+                              </ul>
+                            </div>
+                            <div className="border rounded-lg p-4">
+                              <h3 className="font-semibold text-green-600 mb-2">Caregiver</h3>
+                              <p className="text-sm text-gray-500 mb-2">Field staff access</p>
+                              <ul className="text-xs text-gray-600 space-y-1">
+                                <li>• EVV clock in/out</li>
+                                <li>• View schedule</li>
+                                <li>• Patient info (assigned)</li>
+                              </ul>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
@@ -268,35 +276,37 @@ function App() {
                 path="/admin/pods"
                 element={
                   <DashboardLayout>
-                    <div className="p-6">
-                      <h1 className="text-2xl font-bold mb-4">Pod Management</h1>
-                      <div className="bg-white rounded-lg shadow p-6">
-                        <p className="text-gray-600 mb-4">Organize teams into care pods</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          <div className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
-                            <h3 className="font-semibold text-blue-800 mb-2">Columbus Central Pod</h3>
-                            <p className="text-sm text-gray-600 mb-2">Primary: Downtown Columbus</p>
-                            <div className="text-xs text-gray-500">
-                              <p>Lead: Pod Lead Test</p>
-                              <p>Caregivers: 12</p>
-                              <p>Active Patients: 45</p>
+                    <ProtectedRoute route="/admin/pods">
+                      <div className="p-6">
+                        <h1 className="text-2xl font-bold mb-4">Pod Management</h1>
+                        <div className="bg-white rounded-lg shadow p-6">
+                          <p className="text-gray-600 mb-4">Organize teams into care pods</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
+                              <h3 className="font-semibold text-blue-800 mb-2">Columbus Central Pod</h3>
+                              <p className="text-sm text-gray-600 mb-2">Primary: Downtown Columbus</p>
+                              <div className="text-xs text-gray-500">
+                                <p>Lead: Pod Lead Test</p>
+                                <p>Caregivers: 12</p>
+                                <p>Active Patients: 45</p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="border-2 border-green-200 rounded-lg p-4 bg-green-50">
-                            <h3 className="font-semibold text-green-800 mb-2">Cleveland East Pod</h3>
-                            <p className="text-sm text-gray-600 mb-2">Primary: East Cleveland</p>
-                            <div className="text-xs text-gray-500">
-                              <p>Lead: Sarah Davis</p>
-                              <p>Caregivers: 8</p>
-                              <p>Active Patients: 32</p>
+                            <div className="border-2 border-green-200 rounded-lg p-4 bg-green-50">
+                              <h3 className="font-semibold text-green-800 mb-2">Cleveland East Pod</h3>
+                              <p className="text-sm text-gray-600 mb-2">Primary: East Cleveland</p>
+                              <div className="text-xs text-gray-500">
+                                <p>Lead: Sarah Davis</p>
+                                <p>Caregivers: 8</p>
+                                <p>Active Patients: 32</p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center">
-                            <button className="text-gray-500 hover:text-gray-700">+ Create New Pod</button>
+                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center">
+                              <button className="text-gray-500 hover:text-gray-700">+ Create New Pod</button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
@@ -304,30 +314,32 @@ function App() {
                 path="/admin/audit"
                 element={
                   <DashboardLayout>
-                    <div className="p-6">
-                      <h1 className="text-2xl font-bold mb-4">Audit Logs</h1>
-                      <div className="bg-white rounded-lg shadow p-6">
-                        <p className="text-gray-600 mb-4">View system activity and access history</p>
-                        <div className="space-y-3">
-                          <div className="border-l-4 border-blue-500 pl-4 py-2">
-                            <p className="text-sm text-gray-900">User login: founder@serenitycarepartners.com</p>
-                            <p className="text-xs text-gray-500">Today at 9:45 AM • IP: 192.168.1.1</p>
-                          </div>
-                          <div className="border-l-4 border-green-500 pl-4 py-2">
-                            <p className="text-sm text-gray-900">Patient record viewed: John Smith</p>
-                            <p className="text-xs text-gray-500">Today at 9:32 AM • User: maria.garcia@serenitycarepartners.com</p>
-                          </div>
-                          <div className="border-l-4 border-yellow-500 pl-4 py-2">
-                            <p className="text-sm text-gray-900">Role modified: Pod Lead permissions updated</p>
-                            <p className="text-xs text-gray-500">Yesterday at 4:15 PM • User: founder@serenitycarepartners.com</p>
-                          </div>
-                          <div className="border-l-4 border-purple-500 pl-4 py-2">
-                            <p className="text-sm text-gray-900">New user created: james.wilson@serenitycarepartners.com</p>
-                            <p className="text-xs text-gray-500">Yesterday at 2:30 PM • User: founder@serenitycarepartners.com</p>
+                    <ProtectedRoute route="/admin/audit">
+                      <div className="p-6">
+                        <h1 className="text-2xl font-bold mb-4">Audit Logs</h1>
+                        <div className="bg-white rounded-lg shadow p-6">
+                          <p className="text-gray-600 mb-4">View system activity and access history</p>
+                          <div className="space-y-3">
+                            <div className="border-l-4 border-blue-500 pl-4 py-2">
+                              <p className="text-sm text-gray-900">User login: founder@serenitycarepartners.com</p>
+                              <p className="text-xs text-gray-500">Today at 9:45 AM • IP: 192.168.1.1</p>
+                            </div>
+                            <div className="border-l-4 border-green-500 pl-4 py-2">
+                              <p className="text-sm text-gray-900">Patient record viewed: John Smith</p>
+                              <p className="text-xs text-gray-500">Today at 9:32 AM • User: maria.garcia@serenitycarepartners.com</p>
+                            </div>
+                            <div className="border-l-4 border-yellow-500 pl-4 py-2">
+                              <p className="text-sm text-gray-900">Role modified: Pod Lead permissions updated</p>
+                              <p className="text-xs text-gray-500">Yesterday at 4:15 PM • User: founder@serenitycarepartners.com</p>
+                            </div>
+                            <div className="border-l-4 border-purple-500 pl-4 py-2">
+                              <p className="text-sm text-gray-900">New user created: james.wilson@serenitycarepartners.com</p>
+                              <p className="text-xs text-gray-500">Yesterday at 2:30 PM • User: founder@serenitycarepartners.com</p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
@@ -436,12 +448,14 @@ function App() {
               />
 
 
-              {/* Finance Routes (Phase 11) */}
+              {/* Finance Routes (Phase 11) - Protected by RBAC */}
               <Route
                 path="/dashboard/finance/bank-accounts"
                 element={
                   <DashboardLayout>
-                    <BankAccounts />
+                    <ProtectedRoute route="/dashboard/finance/bank-accounts">
+                      <BankAccounts />
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
@@ -449,7 +463,9 @@ function App() {
                 path="/dashboard/finance/reports"
                 element={
                   <DashboardLayout>
-                    <FinancialReports />
+                    <ProtectedRoute route="/dashboard/finance/reports">
+                      <FinancialReports />
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
@@ -457,7 +473,9 @@ function App() {
                 path="/dashboard/finance/vendors"
                 element={
                   <DashboardLayout>
-                    <VendorCenter />
+                    <ProtectedRoute route="/dashboard/finance/vendors">
+                      <VendorCenter />
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
@@ -465,7 +483,9 @@ function App() {
                 path="/dashboard/finance/expenses"
                 element={
                   <DashboardLayout>
-                    <ExpensePortal />
+                    <ProtectedRoute route="/dashboard/finance/expenses">
+                      <ExpensePortal />
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
@@ -473,7 +493,9 @@ function App() {
                 path="/dashboard/finance/bank-feeds"
                 element={
                   <DashboardLayout>
-                    <BankFeed />
+                    <ProtectedRoute route="/dashboard/finance/bank-feeds">
+                      <BankFeed />
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
@@ -481,7 +503,9 @@ function App() {
                 path="/dashboard/finance/payroll"
                 element={
                   <DashboardLayout>
-                    <PayrollManager />
+                    <ProtectedRoute route="/dashboard/finance/payroll">
+                      <PayrollManager />
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
@@ -489,7 +513,9 @@ function App() {
                 path="/admin/settings/communications"
                 element={
                   <DashboardLayout>
-                    <CommunicationSettings />
+                    <ProtectedRoute route="/admin/settings/communications">
+                      <CommunicationSettings />
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
@@ -497,7 +523,9 @@ function App() {
                 path="/admin/settings/email-accounts"
                 element={
                   <DashboardLayout>
-                    <EmailAccountsManager />
+                    <ProtectedRoute route="/admin/settings/email-accounts">
+                      <EmailAccountsManager />
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />

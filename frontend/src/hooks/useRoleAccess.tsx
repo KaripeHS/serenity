@@ -1,34 +1,75 @@
 import React, { useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Navigate } from 'react-router-dom';
 
 /**
  * Role-Based Access Control Hook
  * Determines which dashboards and features users can access
+ *
+ * This hook must be used to:
+ * 1. Filter navigation items in sidebar
+ * 2. Protect routes with ProtectedRoute component
+ * 3. Conditionally render features within dashboards
  */
 
 export enum UserRole {
+  // Executive Leadership (C-Suite)
   FOUNDER = 'founder',
+  CEO = 'ceo',
+  CFO = 'cfo',
+  COO = 'coo',
+
+  // Security & Compliance
   SECURITY_OFFICER = 'security_officer',
   COMPLIANCE_OFFICER = 'compliance_officer',
+
+  // Finance Department
   FINANCE_DIRECTOR = 'finance_director',
+  FINANCE_MANAGER = 'finance_manager',
   BILLING_MANAGER = 'billing_manager',
   RCM_ANALYST = 'rcm_analyst',
-  SCHEDULER = 'scheduler',
+  INSURANCE_MANAGER = 'insurance_manager',
+  BILLING_CODER = 'billing_coder',
+
+  // Operations Department
+  OPERATIONS_MANAGER = 'operations_manager',
+  FIELD_OPS_MANAGER = 'field_ops_manager', // Formerly regional_manager - flexible scope
+  POD_LEAD = 'pod_lead',
   FIELD_SUPERVISOR = 'field_supervisor',
+  SCHEDULING_MANAGER = 'scheduling_manager',
+  SCHEDULER = 'scheduler',
+  DISPATCHER = 'dispatcher',
+  QA_MANAGER = 'qa_manager',
+
+  // HR Department
+  HR_DIRECTOR = 'hr_director',
   HR_MANAGER = 'hr_manager',
+  RECRUITER = 'recruiter',
   CREDENTIALING_SPECIALIST = 'credentialing_specialist',
+
+  // IT & Support
   IT_ADMIN = 'it_admin',
   SUPPORT_AGENT = 'support_agent',
+
+  // Clinical Leadership
+  DIRECTOR_OF_NURSING = 'director_of_nursing',
+  CLINICAL_DIRECTOR = 'clinical_director',
+  NURSING_SUPERVISOR = 'nursing_supervisor',
+
+  // Clinical Staff
   RN_CASE_MANAGER = 'rn_case_manager',
   LPN_LVN = 'lpn_lvn',
   THERAPIST = 'therapist',
-  CLINICAL_DIRECTOR = 'clinical_director',
   QIDP = 'qidp',
+
+  // Direct Care Staff
   DSP_MED = 'dsp_med',
   DSP_BASIC = 'dsp_basic',
-  INSURANCE_MANAGER = 'insurance_manager',
-  BILLING_CODER = 'billing_coder',
+  HHA = 'hha',
+  CNA = 'cna',
   CAREGIVER = 'caregiver',
+
+  // External Access
   CLIENT = 'client',
   FAMILY = 'family',
   PAYER_AUDITOR = 'payer_auditor',
@@ -61,32 +102,48 @@ const DASHBOARD_ACCESS: Record<DashboardPermission, UserRole[]> = {
   // Executive Command Center (C-Suite only)
   [DashboardPermission.EXECUTIVE_COMMAND_CENTER]: [
     UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.CFO,
+    UserRole.COO,
     UserRole.FINANCE_DIRECTOR,
   ],
 
   // Clinical Command Center (Clinical staff)
   [DashboardPermission.CLINICAL_COMMAND_CENTER]: [
     UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.DIRECTOR_OF_NURSING,
     UserRole.CLINICAL_DIRECTOR,
+    UserRole.NURSING_SUPERVISOR,
     UserRole.RN_CASE_MANAGER,
     UserRole.LPN_LVN,
     UserRole.THERAPIST,
     UserRole.QIDP,
     UserRole.COMPLIANCE_OFFICER,
+    UserRole.QA_MANAGER,
   ],
 
   // Talent Management Command Center (HR staff)
   [DashboardPermission.TALENT_COMMAND_CENTER]: [
     UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.HR_DIRECTOR,
     UserRole.HR_MANAGER,
+    UserRole.RECRUITER,
     UserRole.CREDENTIALING_SPECIALIST,
+    UserRole.DIRECTOR_OF_NURSING, // View access for clinical hiring
     UserRole.CLINICAL_DIRECTOR, // View access for supervision
   ],
 
   // Revenue Cycle Command Center (Finance/Billing staff)
   [DashboardPermission.REVENUE_COMMAND_CENTER]: [
     UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.CFO,
     UserRole.FINANCE_DIRECTOR,
+    UserRole.FINANCE_MANAGER,
     UserRole.BILLING_MANAGER,
     UserRole.RCM_ANALYST,
     UserRole.BILLING_CODER,
@@ -96,38 +153,62 @@ const DASHBOARD_ACCESS: Record<DashboardPermission, UserRole[]> = {
   // Compliance Command Center (Compliance staff)
   [DashboardPermission.COMPLIANCE_COMMAND_CENTER]: [
     UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
     UserRole.COMPLIANCE_OFFICER,
     UserRole.SECURITY_OFFICER,
+    UserRole.QA_MANAGER,
+    UserRole.DIRECTOR_OF_NURSING, // View access for clinical compliance
     UserRole.CLINICAL_DIRECTOR, // View access for clinical compliance
   ],
 
   // Operations Command Center (Operations staff)
   [DashboardPermission.OPERATIONS_COMMAND_CENTER]: [
     UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.OPERATIONS_MANAGER,
+    UserRole.FIELD_OPS_MANAGER,
+    UserRole.POD_LEAD,
+    UserRole.SCHEDULING_MANAGER,
     UserRole.SCHEDULER,
+    UserRole.DISPATCHER,
     UserRole.FIELD_SUPERVISOR,
+    UserRole.DIRECTOR_OF_NURSING,
     UserRole.CLINICAL_DIRECTOR,
   ],
 
   // Strategic Growth Dashboard (Executive only)
   [DashboardPermission.STRATEGIC_GROWTH]: [
     UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.CFO,
+    UserRole.COO,
     UserRole.FINANCE_DIRECTOR,
   ],
 
   // Business Intelligence (Analysts + Executives)
   [DashboardPermission.BUSINESS_INTELLIGENCE]: [
     UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.CFO,
+    UserRole.COO,
     UserRole.FINANCE_DIRECTOR,
+    UserRole.FINANCE_MANAGER,
     UserRole.BILLING_MANAGER,
     UserRole.RCM_ANALYST,
+    UserRole.HR_DIRECTOR,
     UserRole.HR_MANAGER,
+    UserRole.OPERATIONS_MANAGER,
+    UserRole.DIRECTOR_OF_NURSING,
     UserRole.CLINICAL_DIRECTOR,
+    UserRole.QA_MANAGER,
   ],
 
   // Admin & System Dashboard (IT only)
   [DashboardPermission.ADMIN_SYSTEM]: [
     UserRole.FOUNDER,
+    UserRole.CEO,
     UserRole.IT_ADMIN,
     UserRole.SECURITY_OFFICER,
   ],
@@ -143,6 +224,8 @@ const DASHBOARD_ACCESS: Record<DashboardPermission, UserRole[]> = {
     UserRole.CAREGIVER,
     UserRole.DSP_BASIC,
     UserRole.DSP_MED,
+    UserRole.HHA,
+    UserRole.CNA,
   ],
 };
 
@@ -451,6 +534,8 @@ export function useRoleAccess() {
         isCompliance: false,
         isHR: false,
         isFinance: false,
+        isOperations: false,
+        isCaregiver: false,
       };
     }
 
@@ -482,25 +567,453 @@ export function useRoleAccess() {
        * Role-based flags for conditional rendering
        */
       isFounder: userRole === UserRole.FOUNDER,
-      isExecutive: [UserRole.FOUNDER, UserRole.FINANCE_DIRECTOR].includes(userRole),
+      isExecutive: [
+        UserRole.FOUNDER,
+        UserRole.CEO,
+        UserRole.CFO,
+        UserRole.COO,
+        UserRole.FINANCE_DIRECTOR,
+      ].includes(userRole),
       isClinical: [
+        UserRole.DIRECTOR_OF_NURSING,
         UserRole.CLINICAL_DIRECTOR,
+        UserRole.NURSING_SUPERVISOR,
         UserRole.RN_CASE_MANAGER,
         UserRole.LPN_LVN,
         UserRole.THERAPIST,
         UserRole.QIDP,
       ].includes(userRole),
-      isCompliance: [UserRole.COMPLIANCE_OFFICER, UserRole.SECURITY_OFFICER].includes(userRole),
-      isHR: [UserRole.HR_MANAGER, UserRole.CREDENTIALING_SPECIALIST].includes(userRole),
+      isCompliance: [
+        UserRole.COMPLIANCE_OFFICER,
+        UserRole.SECURITY_OFFICER,
+        UserRole.QA_MANAGER,
+      ].includes(userRole),
+      isHR: [
+        UserRole.HR_DIRECTOR,
+        UserRole.HR_MANAGER,
+        UserRole.RECRUITER,
+        UserRole.CREDENTIALING_SPECIALIST,
+      ].includes(userRole),
       isFinance: [
+        UserRole.CFO,
         UserRole.FINANCE_DIRECTOR,
+        UserRole.FINANCE_MANAGER,
         UserRole.BILLING_MANAGER,
         UserRole.RCM_ANALYST,
+      ].includes(userRole),
+      isOperations: [
+        UserRole.COO,
+        UserRole.OPERATIONS_MANAGER,
+        UserRole.FIELD_OPS_MANAGER,
+        UserRole.POD_LEAD,
+        UserRole.SCHEDULING_MANAGER,
+        UserRole.SCHEDULER,
+        UserRole.DISPATCHER,
+        UserRole.FIELD_SUPERVISOR,
+      ].includes(userRole),
+      isCaregiver: [
+        UserRole.CAREGIVER,
+        UserRole.DSP_BASIC,
+        UserRole.DSP_MED,
+        UserRole.HHA,
+        UserRole.CNA,
       ].includes(userRole),
     };
   }, [userRole]);
 
   return access;
+}
+
+/**
+ * Route-based access control mapping
+ * Maps routes to the roles that can access them
+ */
+export const ROUTE_ACCESS: Record<string, UserRole[]> = {
+  // Executive Command Center (C-Suite only)
+  '/dashboard/executive': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.CFO,
+    UserRole.COO,
+    UserRole.FINANCE_DIRECTOR,
+  ],
+  '/dashboard/executive-v2': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.CFO,
+    UserRole.COO,
+    UserRole.FINANCE_DIRECTOR,
+  ],
+
+  // HR & Talent (HR staff only)
+  '/dashboard/hr': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.HR_DIRECTOR,
+    UserRole.HR_MANAGER,
+    UserRole.RECRUITER,
+    UserRole.CREDENTIALING_SPECIALIST,
+  ],
+  '/dashboard/background-checks': [
+    UserRole.FOUNDER,
+    UserRole.HR_DIRECTOR,
+    UserRole.HR_MANAGER,
+    UserRole.RECRUITER,
+  ],
+
+  // Tax Compliance (Finance only)
+  '/dashboard/tax': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.CFO,
+    UserRole.FINANCE_DIRECTOR,
+    UserRole.FINANCE_MANAGER,
+    UserRole.COMPLIANCE_OFFICER,
+  ],
+
+  // Operations (Operations staff)
+  '/dashboard/operations': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.OPERATIONS_MANAGER,
+    UserRole.FIELD_OPS_MANAGER,
+    UserRole.POD_LEAD,
+    UserRole.SCHEDULING_MANAGER,
+    UserRole.SCHEDULER,
+    UserRole.DISPATCHER,
+    UserRole.FIELD_SUPERVISOR,
+    UserRole.DIRECTOR_OF_NURSING,
+    UserRole.CLINICAL_DIRECTOR,
+  ],
+
+  // Clinical (Clinical staff)
+  '/dashboard/clinical': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.DIRECTOR_OF_NURSING,
+    UserRole.CLINICAL_DIRECTOR,
+    UserRole.NURSING_SUPERVISOR,
+    UserRole.RN_CASE_MANAGER,
+    UserRole.LPN_LVN,
+    UserRole.THERAPIST,
+    UserRole.QIDP,
+    UserRole.COMPLIANCE_OFFICER,
+    UserRole.QA_MANAGER,
+  ],
+  '/dashboard/care-plans': [
+    UserRole.FOUNDER,
+    UserRole.DIRECTOR_OF_NURSING,
+    UserRole.CLINICAL_DIRECTOR,
+    UserRole.NURSING_SUPERVISOR,
+    UserRole.RN_CASE_MANAGER,
+    UserRole.THERAPIST,
+    UserRole.QIDP,
+  ],
+
+  // Billing (Finance/Billing staff)
+  '/dashboard/billing': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.CFO,
+    UserRole.FINANCE_DIRECTOR,
+    UserRole.FINANCE_MANAGER,
+    UserRole.BILLING_MANAGER,
+    UserRole.RCM_ANALYST,
+    UserRole.BILLING_CODER,
+    UserRole.INSURANCE_MANAGER,
+  ],
+  '/dashboard/billing-ar': [
+    UserRole.FOUNDER,
+    UserRole.CFO,
+    UserRole.FINANCE_DIRECTOR,
+    UserRole.BILLING_MANAGER,
+    UserRole.RCM_ANALYST,
+  ],
+  '/dashboard/claims-workflow': [
+    UserRole.FOUNDER,
+    UserRole.BILLING_MANAGER,
+    UserRole.RCM_ANALYST,
+    UserRole.BILLING_CODER,
+  ],
+
+  // Compliance (Compliance staff)
+  '/dashboard/compliance': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.COMPLIANCE_OFFICER,
+    UserRole.SECURITY_OFFICER,
+    UserRole.QA_MANAGER,
+    UserRole.DIRECTOR_OF_NURSING,
+    UserRole.CLINICAL_DIRECTOR,
+  ],
+
+  // Training (HR + Clinical leadership)
+  '/dashboard/training': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.HR_DIRECTOR,
+    UserRole.HR_MANAGER,
+    UserRole.DIRECTOR_OF_NURSING,
+    UserRole.CLINICAL_DIRECTOR,
+    UserRole.COMPLIANCE_OFFICER,
+  ],
+
+  // Scheduling (Operations staff + Clinical)
+  '/dashboard/scheduling': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.OPERATIONS_MANAGER,
+    UserRole.FIELD_OPS_MANAGER,
+    UserRole.POD_LEAD,
+    UserRole.SCHEDULING_MANAGER,
+    UserRole.SCHEDULER,
+    UserRole.DISPATCHER,
+    UserRole.FIELD_SUPERVISOR,
+    UserRole.DIRECTOR_OF_NURSING,
+    UserRole.CLINICAL_DIRECTOR,
+  ],
+  '/dashboard/scheduling-calendar': [
+    UserRole.FOUNDER,
+    UserRole.OPERATIONS_MANAGER,
+    UserRole.SCHEDULING_MANAGER,
+    UserRole.SCHEDULER,
+    UserRole.DISPATCHER,
+    UserRole.POD_LEAD,
+  ],
+  '/dashboard/dispatch': [
+    UserRole.FOUNDER,
+    UserRole.OPERATIONS_MANAGER,
+    UserRole.SCHEDULING_MANAGER,
+    UserRole.DISPATCHER,
+    UserRole.POD_LEAD,
+  ],
+
+  // Credentials & Licenses
+  '/dashboard/credentials': [
+    UserRole.FOUNDER,
+    UserRole.HR_DIRECTOR,
+    UserRole.HR_MANAGER,
+    UserRole.CREDENTIALING_SPECIALIST,
+    UserRole.COMPLIANCE_OFFICER,
+  ],
+  '/dashboard/licenses': [
+    UserRole.FOUNDER,
+    UserRole.COMPLIANCE_OFFICER,
+    UserRole.HR_DIRECTOR,
+    UserRole.HR_MANAGER,
+  ],
+
+  // Payroll & Bonuses (Finance + HR)
+  '/dashboard/payroll-v2': [
+    UserRole.FOUNDER,
+    UserRole.CFO,
+    UserRole.FINANCE_DIRECTOR,
+    UserRole.FINANCE_MANAGER,
+    UserRole.HR_DIRECTOR,
+  ],
+  '/dashboard/caregiver-bonuses': [
+    UserRole.FOUNDER,
+    UserRole.CFO,
+    UserRole.FINANCE_DIRECTOR,
+    UserRole.HR_DIRECTOR,
+    UserRole.OPERATIONS_MANAGER,
+  ],
+
+  // Finance
+  '/dashboard/finance/bank-accounts': [
+    UserRole.FOUNDER,
+    UserRole.CFO,
+    UserRole.FINANCE_DIRECTOR,
+  ],
+  '/dashboard/finance/reports': [
+    UserRole.FOUNDER,
+    UserRole.CFO,
+    UserRole.FINANCE_DIRECTOR,
+    UserRole.FINANCE_MANAGER,
+  ],
+  '/dashboard/finance/vendors': [
+    UserRole.FOUNDER,
+    UserRole.CFO,
+    UserRole.FINANCE_DIRECTOR,
+    UserRole.FINANCE_MANAGER,
+  ],
+  '/dashboard/finance/expenses': [
+    UserRole.FOUNDER,
+    UserRole.CFO,
+    UserRole.FINANCE_DIRECTOR,
+    UserRole.FINANCE_MANAGER,
+  ],
+  '/dashboard/finance/bank-feeds': [
+    UserRole.FOUNDER,
+    UserRole.CFO,
+    UserRole.FINANCE_DIRECTOR,
+  ],
+  '/dashboard/finance/payroll': [
+    UserRole.FOUNDER,
+    UserRole.CFO,
+    UserRole.FINANCE_DIRECTOR,
+    UserRole.HR_DIRECTOR,
+  ],
+
+  // Admin routes (Founders + IT only)
+  '/admin/users': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.IT_ADMIN,
+    UserRole.HR_DIRECTOR,
+  ],
+  '/admin/roles': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.IT_ADMIN,
+  ],
+  '/admin/pods': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.OPERATIONS_MANAGER,
+  ],
+  '/admin/audit': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COMPLIANCE_OFFICER,
+    UserRole.SECURITY_OFFICER,
+    UserRole.IT_ADMIN,
+  ],
+  '/admin/settings/communications': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.IT_ADMIN,
+  ],
+  '/admin/settings/email-accounts': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.IT_ADMIN,
+  ],
+
+  // Patient routes (Clinical + Operations)
+  '/patients': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.DIRECTOR_OF_NURSING,
+    UserRole.CLINICAL_DIRECTOR,
+    UserRole.NURSING_SUPERVISOR,
+    UserRole.RN_CASE_MANAGER,
+    UserRole.LPN_LVN,
+    UserRole.THERAPIST,
+    UserRole.QIDP,
+    UserRole.OPERATIONS_MANAGER,
+    UserRole.FIELD_OPS_MANAGER,
+    UserRole.POD_LEAD,
+    UserRole.SCHEDULER,
+    UserRole.DSP_MED,
+    UserRole.DSP_BASIC,
+    UserRole.HHA,
+    UserRole.CNA,
+    UserRole.CAREGIVER,
+  ],
+  '/dashboard/client-intake': [
+    UserRole.FOUNDER,
+    UserRole.DIRECTOR_OF_NURSING,
+    UserRole.CLINICAL_DIRECTOR,
+    UserRole.RN_CASE_MANAGER,
+    UserRole.OPERATIONS_MANAGER,
+  ],
+
+  // CRM (Sales/Admin)
+  '/dashboard/crm': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.OPERATIONS_MANAGER,
+  ],
+
+  // EVV (Caregivers + Supervisors)
+  '/evv/clock': [
+    UserRole.FOUNDER,
+    UserRole.CAREGIVER,
+    UserRole.DSP_BASIC,
+    UserRole.DSP_MED,
+    UserRole.HHA,
+    UserRole.CNA,
+    UserRole.LPN_LVN,
+    UserRole.RN_CASE_MANAGER,
+    UserRole.THERAPIST,
+    UserRole.FIELD_SUPERVISOR,
+    UserRole.POD_LEAD,
+  ],
+
+  // Family Portal (Families + Admin)
+  '/family-portal': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.FAMILY,
+    UserRole.CLIENT,
+    UserRole.OPERATIONS_MANAGER,
+    UserRole.CLINICAL_DIRECTOR,
+  ],
+
+  // Special programs
+  '/dashboard/dodd-hpc': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.COMPLIANCE_OFFICER,
+    UserRole.CLINICAL_DIRECTOR,
+  ],
+  '/dashboard/consumer-directed': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.OPERATIONS_MANAGER,
+    UserRole.BILLING_MANAGER,
+  ],
+};
+
+/**
+ * Check if a user role can access a specific route
+ */
+export function canAccessRoute(route: string, userRole: string | undefined): boolean {
+  if (!userRole) return false;
+
+  // Founders always have access
+  if (userRole === UserRole.FOUNDER || userRole === 'admin') return true;
+
+  // Check exact match first
+  const allowedRoles = ROUTE_ACCESS[route];
+  if (allowedRoles) {
+    return allowedRoles.includes(userRole as UserRole);
+  }
+
+  // Check prefix matches for nested routes
+  for (const [routePattern, roles] of Object.entries(ROUTE_ACCESS)) {
+    if (route.startsWith(routePattern + '/') || route === routePattern) {
+      return roles.includes(userRole as UserRole);
+    }
+  }
+
+  // Default: allow access to unprotected routes (home, login, etc.)
+  return true;
+}
+
+/**
+ * Get navigation items filtered by user role
+ */
+export function getNavigationForRole(userRole: string | undefined): string[] {
+  if (!userRole) return [];
+
+  return Object.entries(ROUTE_ACCESS)
+    .filter(([_, roles]) => {
+      if (userRole === UserRole.FOUNDER || userRole === 'admin') return true;
+      return roles.includes(userRole as UserRole);
+    })
+    .map(([route]) => route);
 }
 
 /**
@@ -534,4 +1047,51 @@ export function withRoleAccess<P extends object>(
 
     return <Component {...props} />;
   };
+}
+
+/**
+ * Protected Route Component - Wrap routes to enforce RBAC
+ */
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  route: string;
+  fallback?: React.ReactNode;
+}
+
+export function ProtectedRoute({ children, route, fallback }: ProtectedRouteProps) {
+  const { user } = useAuth();
+  const userRole = user?.role;
+
+  if (!canAccessRoute(route, userRole)) {
+    if (fallback) {
+      return <>{fallback}</>;
+    }
+
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center p-8">
+          <div className="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <p className="text-gray-600 mb-4">
+            You do not have permission to access this page.
+          </p>
+          <p className="text-sm text-gray-500 mb-6">
+            Your role: <span className="font-medium capitalize">{userRole || 'Unknown'}</span>
+          </p>
+          <button
+            onClick={() => window.location.href = '/'}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Return to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
 }

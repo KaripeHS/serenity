@@ -94,49 +94,44 @@ export function BillingARDashboard() {
   async function loadDashboardData() {
     setLoading(true);
     try {
-      // Mock data - replace with API calls
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      setMetrics({
-        monthlyRevenue: 892450,
-        mtdCollections: 756230,
-        pendingClaims: 47,
-        pendingClaimsAmount: 156800,
-        deniedClaims: 12,
-        deniedClaimsAmount: 34200,
-        daysInAR: 28.5,
-        collectionRate: 94.2,
-        claimsSubmitted: 342,
-        cleanClaimRate: 96.8
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/billing/dashboard`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
       });
 
-      setArAging([
-        { label: 'Current', dayRange: '0-30 days', claimCount: 89, totalAmount: 178500, percentage: 52, status: 'healthy' },
-        { label: '31-60', dayRange: '31-60 days', claimCount: 45, totalAmount: 92000, percentage: 27, status: 'healthy' },
-        { label: '61-90', dayRange: '61-90 days', claimCount: 23, totalAmount: 48500, percentage: 14, status: 'warning' },
-        { label: '91-120', dayRange: '91-120 days', claimCount: 8, totalAmount: 16200, percentage: 5, status: 'critical' },
-        { label: '120+', dayRange: '120+ days', claimCount: 4, totalAmount: 8600, percentage: 2, status: 'critical' }
-      ]);
-
-      setPayerBreakdown([
-        { payerId: 'medicare', payerName: 'Medicare', claimCount: 156, totalBilled: 312500, totalCollected: 298400, avgDaysToPayment: 21, denialRate: 2.3 },
-        { payerId: 'medicaid', payerName: 'Ohio Medicaid', claimCount: 134, totalBilled: 268000, totalCollected: 254200, avgDaysToPayment: 35, denialRate: 4.1 },
-        { payerId: 'anthem', payerName: 'Anthem BCBS', claimCount: 67, totalBilled: 134000, totalCollected: 121800, avgDaysToPayment: 28, denialRate: 3.2 },
-        { payerId: 'aetna', payerName: 'Aetna', claimCount: 45, totalBilled: 90000, totalCollected: 84600, avgDaysToPayment: 25, denialRate: 2.8 },
-        { payerId: 'private', payerName: 'Private Pay', claimCount: 28, totalBilled: 56000, totalCollected: 52800, avgDaysToPayment: 14, denialRate: 0 }
-      ]);
-
-      setClaims([
-        { id: '1', claimNumber: 'CLM-2024-0342', clientId: 'c1', clientName: 'Eleanor Johnson', serviceDate: '2024-03-01', submitDate: '2024-03-05', amount: 1250, payerName: 'Medicare', status: 'submitted', daysOutstanding: 8 },
-        { id: '2', claimNumber: 'CLM-2024-0341', clientId: 'c2', clientName: 'Robert Smith', serviceDate: '2024-02-28', submitDate: '2024-03-04', amount: 980.50, payerName: 'Ohio Medicaid', status: 'paid', daysOutstanding: 0 },
-        { id: '3', claimNumber: 'CLM-2024-0340', clientId: 'c3', clientName: 'Mary Williams', serviceDate: '2024-02-25', submitDate: '2024-03-01', amount: 1500, payerName: 'Anthem BCBS', status: 'denied', daysOutstanding: 12, denialReason: 'Missing prior authorization' },
-        { id: '4', claimNumber: 'CLM-2024-0339', clientId: 'c4', clientName: 'James Brown', serviceDate: '2024-02-20', submitDate: '2024-02-25', amount: 875, payerName: 'Medicare', status: 'pending', daysOutstanding: 18 },
-        { id: '5', claimNumber: 'CLM-2024-0338', clientId: 'c5', clientName: 'Patricia Davis', serviceDate: '2024-02-15', submitDate: '2024-02-20', amount: 2100, payerName: 'Aetna', status: 'partial', daysOutstanding: 23 },
-        { id: '6', claimNumber: 'CLM-2024-0337', clientId: 'c1', clientName: 'Eleanor Johnson', serviceDate: '2024-02-10', submitDate: '2024-02-15', amount: 1650, payerName: 'Medicare', status: 'appealed', daysOutstanding: 28, denialReason: 'Service not covered' },
-      ]);
-
+      if (response.ok) {
+        const data = await response.json();
+        setMetrics(data.metrics || {
+          monthlyRevenue: 0, mtdCollections: 0, pendingClaims: 0, pendingClaimsAmount: 0,
+          deniedClaims: 0, deniedClaimsAmount: 0, daysInAR: 0, collectionRate: 0,
+          claimsSubmitted: 0, cleanClaimRate: 0
+        });
+        setArAging(data.arAging || []);
+        setPayerBreakdown(data.payerBreakdown || []);
+        setClaims(data.claims || []);
+      } else {
+        // API error - show empty data
+        setMetrics({
+          monthlyRevenue: 0, mtdCollections: 0, pendingClaims: 0, pendingClaimsAmount: 0,
+          deniedClaims: 0, deniedClaimsAmount: 0, daysInAR: 0, collectionRate: 0,
+          claimsSubmitted: 0, cleanClaimRate: 0
+        });
+        setArAging([]);
+        setPayerBreakdown([]);
+        setClaims([]);
+      }
     } catch (error) {
       console.error('Failed to load billing data:', error);
+      setMetrics({
+        monthlyRevenue: 0, mtdCollections: 0, pendingClaims: 0, pendingClaimsAmount: 0,
+        deniedClaims: 0, deniedClaimsAmount: 0, daysInAR: 0, collectionRate: 0,
+        claimsSubmitted: 0, cleanClaimRate: 0
+      });
+      setArAging([]);
+      setPayerBreakdown([]);
+      setClaims([]);
     } finally {
       setLoading(false);
     }

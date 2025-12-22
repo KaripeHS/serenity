@@ -289,18 +289,55 @@ export default function HomePage() {
   }, [user]);
 
   const loadSystemMetrics = async () => {
-    // Simulate loading real metrics - in production this would call your API
-    setMetrics({
-      activePatients: 447,
-      activeStaff: 485,
-      scheduledVisitsToday: 127,
-      completedVisitsToday: 94,
-      evvComplianceRate: 0.978,
-      overdueItems: 3,
-      criticalAlerts: 1,
-      monthlyRevenue: 2150000,
-      systemHealth: 'excellent'
-    });
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/dashboard/metrics`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setMetrics({
+          activePatients: data.activePatients || 0,
+          activeStaff: data.activeStaff || 0,
+          scheduledVisitsToday: data.scheduledVisitsToday || 0,
+          completedVisitsToday: data.completedVisitsToday || 0,
+          evvComplianceRate: data.evvComplianceRate || 0,
+          overdueItems: data.overdueItems || 0,
+          criticalAlerts: data.criticalAlerts || 0,
+          monthlyRevenue: data.monthlyRevenue || 0,
+          systemHealth: data.systemHealth || 'good'
+        });
+      } else {
+        // API error - show zeros
+        setMetrics({
+          activePatients: 0,
+          activeStaff: 0,
+          scheduledVisitsToday: 0,
+          completedVisitsToday: 0,
+          evvComplianceRate: 0,
+          overdueItems: 0,
+          criticalAlerts: 0,
+          monthlyRevenue: 0,
+          systemHealth: 'good'
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load metrics:', error);
+      setMetrics({
+        activePatients: 0,
+        activeStaff: 0,
+        scheduledVisitsToday: 0,
+        completedVisitsToday: 0,
+        evvComplianceRate: 0,
+        overdueItems: 0,
+        criticalAlerts: 0,
+        monthlyRevenue: 0,
+        systemHealth: 'good'
+      });
+    }
   };
 
   // Show loading state

@@ -2,9 +2,13 @@
  * HR & Talent Dashboard Service
  * Workforce management for 500+ staff with AI-powered recruiting
  * Integrates with backend APIs with mock fallback
+ *
+ * IMPORTANT: Mock data is ONLY used in development when VITE_USE_MOCK_DATA=true
+ * Production should NEVER show mock data to users
  */
 
 import { applicantsApi, interviewsApi, onboardingApi, Applicant as ApiApplicant, Interview, OnboardingChecklist, ApplicantPipelineSummary } from './api';
+import { shouldUseMockData } from '../config/environment';
 
 export interface Applicant {
   id: string;
@@ -111,8 +115,14 @@ class HRDashboardService {
         todaysInterviews: todaysInterviews.interviews,
       };
     } catch (error) {
-      console.warn('Backend API not available, using mock data');
-      return this.getMockRecruitingDashboard();
+      // Only use mock data in development with flag enabled
+      if (shouldUseMockData()) {
+        console.warn('Backend API not available, using mock data (development only)');
+        return this.getMockRecruitingDashboard();
+      }
+      // In production, return empty state
+      console.error('Backend API not available');
+      return this.getEmptyRecruitingDashboard();
     }
   }
 
@@ -124,8 +134,13 @@ class HRDashboardService {
       const response = await applicantsApi.getApplicants(filters);
       return response.applicants.map(mapApiApplicant);
     } catch (error) {
-      console.warn('Backend API not available, using mock data for recruiting pipeline');
-      return this.getMockRecruitingPipeline();
+      // Only use mock data in development
+      if (shouldUseMockData()) {
+        console.warn('Backend API not available, using mock data for recruiting pipeline');
+        return this.getMockRecruitingPipeline();
+      }
+      console.error('Backend API not available');
+      return [];
     }
   }
 
@@ -234,124 +249,37 @@ class HRDashboardService {
       const response = await applicantsApi.getSourceAnalytics(period);
       return response.analytics;
     } catch (error) {
-      console.warn('Backend API not available');
-      return this.getMockSourceAnalytics();
+      if (shouldUseMockData()) {
+        console.warn('Backend API not available');
+        return this.getMockSourceAnalytics();
+      }
+      return { sources: [], totalApplications: 0, totalHired: 0, avgCostPerHire: 0 };
     }
   }
 
   async getEmployees(): Promise<Employee[]> {
-    await this.delay(600);
-    return [
-      {
-        id: '1',
-        name: 'Maria Rodriguez',
-        role: 'Senior Caregiver',
-        department: 'Clinical',
-        hireDate: '2021-03-15',
-        performanceScore: 94,
-        retentionRisk: 'low',
-        certifications: ['CNA', 'CPR', 'First Aid'],
-        upcomingRenewals: ['CPR - expires March 2024']
-      },
-      {
-        id: '2',
-        name: 'David Chen',
-        role: 'Physical Therapist',
-        department: 'Therapy',
-        hireDate: '2022-06-10',
-        performanceScore: 91,
-        retentionRisk: 'medium',
-        certifications: ['PT', 'CPR', 'Manual Therapy'],
-        upcomingRenewals: []
-      }
-    ];
+    // TODO: Implement real API call to /api/console/hr/employees
+    return [];
   }
 
   async getPerformanceReviews(): Promise<PerformanceReview[]> {
-    await this.delay(400);
-    return [
-      {
-        id: '1',
-        employeeId: '1',
-        employeeName: 'Maria Rodriguez',
-        reviewPeriod: 'Q4 2024',
-        overallScore: 94,
-        goals: [
-          { description: 'Complete advanced wound care training', status: 'completed' },
-          { description: 'Mentor 2 new caregivers', status: 'in-progress' },
-          { description: 'Maintain 98% patient satisfaction', status: 'completed' }
-        ],
-        strengths: ['Patient advocacy', 'Clinical skills', 'Reliability'],
-        improvements: ['Documentation efficiency', 'Time management'],
-        nextReviewDate: '2025-04-15'
-      }
-    ];
+    // TODO: Implement real API call
+    return [];
   }
 
   async getRetentionAnalysis(): Promise<any> {
-    await this.delay(700);
-    return {
-      currentTurnoverRate: 12.5,
-      industryAverage: 18.2,
-      riskFactors: [
-        { factor: 'Workload', impact: 'high', affectedEmployees: 23 },
-        { factor: 'Compensation', impact: 'medium', affectedEmployees: 15 },
-        { factor: 'Career growth', impact: 'medium', affectedEmployees: 31 }
-      ],
-      recommendations: [
-        'Implement flexible scheduling options',
-        'Review compensation benchmarks',
-        'Expand professional implementation programs'
-      ]
-    };
+    // TODO: Implement real API call
+    return { currentTurnoverRate: 0, industryAverage: 0, riskFactors: [], recommendations: [] };
   }
 
   async getSkillsGapAnalysis(): Promise<SkillsGap[]> {
-    await this.delay(600);
-    return [
-      {
-        skill: 'Specialized Wound Care',
-        currentLevel: 65,
-        requiredLevel: 85,
-        gap: 20,
-        priority: 'high',
-        affectedRoles: ['Registered Nurse', 'Advanced Caregiver']
-      },
-      {
-        skill: 'Mental Health Support',
-        currentLevel: 55,
-        requiredLevel: 75,
-        gap: 20,
-        priority: 'medium',
-        affectedRoles: ['Caregiver', 'Social Worker']
-      },
-      {
-        skill: 'Technology Proficiency',
-        currentLevel: 70,
-        requiredLevel: 90,
-        gap: 20,
-        priority: 'high',
-        affectedRoles: ['All Roles']
-      }
-    ];
+    // TODO: Implement real API call
+    return [];
   }
 
   async getCompensationAnalysis(): Promise<any> {
-    await this.delay(500);
-    return {
-      marketPosition: 'Above Average',
-      equityScore: 92,
-      payRanges: {
-        'Registered Nurse': { min: 65000, max: 78000, average: 71500 },
-        'Physical Therapist': { min: 72000, max: 85000, average: 78500 },
-        'Home Health Aide': { min: 32000, max: 38000, average: 35000 }
-      },
-      recommendations: [
-        'Maintain competitive RN salaries',
-        'Review HHA compensation vs market',
-        'Consider performance-based bonuses'
-      ]
-    };
+    // TODO: Implement real API call
+    return { marketPosition: 'N/A', equityScore: 0, payRanges: {}, recommendations: [] };
   }
 
   async getDashboardMetrics(): Promise<HRDashboardMetrics> {
@@ -359,45 +287,69 @@ class HRDashboardService {
       // Try to get real data from pipeline
       const pipeline = await applicantsApi.getPipeline();
       return {
-        totalStaff: 156,
-        openPositions: 12,
+        totalStaff: 0, // TODO: Get from real users API
+        openPositions: 0, // TODO: Get from job requisitions API
         pendingApplications: pipeline.byStage.applied + pipeline.byStage.screening,
-        trainingCompliance: 94.5,
-        avgTimeToHire: pipeline.avgTimeToHire || 18,
-        turnoverRate: 8.2
+        trainingCompliance: 0, // TODO: Get from training API
+        avgTimeToHire: pipeline.avgTimeToHire || 0,
+        turnoverRate: 0 // TODO: Calculate from real termination data
       };
     } catch (error) {
-      // Fall back to mock data
       return {
-        totalStaff: 156,
-        openPositions: 12,
-        pendingApplications: 28,
-        trainingCompliance: 94.5,
-        avgTimeToHire: 18,
-        turnoverRate: 8.2
+        totalStaff: 0,
+        openPositions: 0,
+        pendingApplications: 0,
+        trainingCompliance: 0,
+        avgTimeToHire: 0,
+        turnoverRate: 0
       };
     }
   }
 
-  // Mock data fallbacks
+  // Empty state for production (when API fails and mock data is disabled)
+  private getEmptyRecruitingDashboard(): RecruitingDashboard {
+    return {
+      pipeline: {
+        total: 0,
+        byStage: {
+          applied: 0,
+          screening: 0,
+          interview: 0,
+          offer: 0,
+          hired: 0,
+          rejected: 0,
+        },
+        thisWeek: 0,
+        avgTimeToHire: 0,
+      },
+      needsAction: {
+        items: [],
+        count: 0,
+      },
+      sourceAnalytics: { sources: [], totalApplications: 0, totalHired: 0, avgCostPerHire: 0 },
+      todaysInterviews: [],
+    };
+  }
+
+  // Mock data fallbacks (only used in development with flag)
   private getMockRecruitingDashboard(): RecruitingDashboard {
     return {
       pipeline: {
-        total: 45,
+        total: 0,
         byStage: {
-          applied: 15,
-          screening: 12,
-          interview: 8,
-          offer: 3,
-          hired: 5,
-          rejected: 2,
+          applied: 0,
+          screening: 0,
+          interview: 0,
+          offer: 0,
+          hired: 0,
+          rejected: 0,
         },
-        thisWeek: 8,
-        avgTimeToHire: 18,
+        thisWeek: 0,
+        avgTimeToHire: 0,
       },
       needsAction: {
-        items: this.getMockRecruitingPipeline().filter(a => a.stage === 'screening' || a.stage === 'interview'),
-        count: 4,
+        items: [],
+        count: 0,
       },
       sourceAnalytics: this.getMockSourceAnalytics(),
       todaysInterviews: [],
@@ -405,79 +357,16 @@ class HRDashboardService {
   }
 
   private getMockRecruitingPipeline(): Applicant[] {
-    return [
-      {
-        id: '1',
-        name: 'Jennifer Miller',
-        position: 'Registered Nurse',
-        stage: 'interview',
-        score: 92,
-        appliedDate: '2024-12-10',
-        lastActivity: '2024-12-15',
-        skills: ['Patient Care', 'Medication Management', 'Wound Care'],
-        experience: 5,
-        certifications: ['RN', 'CPR', 'BLS'],
-        source: 'Indeed',
-      },
-      {
-        id: '2',
-        name: 'Marcus Thompson',
-        position: 'Physical Therapist',
-        stage: 'background',
-        score: 88,
-        appliedDate: '2024-12-08',
-        lastActivity: '2024-12-14',
-        skills: ['Rehabilitation', 'Mobility Training', 'Pain Management'],
-        experience: 3,
-        certifications: ['PT', 'CPR'],
-        source: 'LinkedIn',
-      },
-      {
-        id: '3',
-        name: 'Lisa Rodriguez',
-        position: 'Home Health Aide',
-        stage: 'offer',
-        score: 85,
-        appliedDate: '2024-12-12',
-        lastActivity: '2024-12-16',
-        skills: ['Personal Care', 'Companionship', 'Light Housekeeping'],
-        experience: 2,
-        certifications: ['HHA', 'CPR'],
-        source: 'Employee Referral',
-      },
-      {
-        id: '4',
-        name: 'Sarah Chen',
-        position: 'Registered Nurse',
-        stage: 'screening',
-        score: 90,
-        appliedDate: '2024-12-13',
-        lastActivity: '2024-12-13',
-        skills: ['Patient Assessment', 'OASIS-C', 'Home Health'],
-        experience: 5,
-        certifications: ['RN', 'CPR', 'OASIS-C'],
-        source: 'Indeed',
-      }
-    ];
+    return [];
   }
 
   private getMockSourceAnalytics(): any {
     return {
-      sources: [
-        { source: 'Indeed', applicants: 45, hired: 12, costPerHire: 150 },
-        { source: 'LinkedIn', applicants: 28, hired: 8, costPerHire: 200 },
-        { source: 'Employee Referral', applicants: 22, hired: 15, costPerHire: 100 },
-        { source: 'Company Website', applicants: 18, hired: 5, costPerHire: 50 },
-        { source: 'ZipRecruiter', applicants: 15, hired: 4, costPerHire: 175 },
-      ],
-      totalApplications: 128,
-      totalHired: 44,
-      avgCostPerHire: 135,
+      sources: [],
+      totalApplications: 0,
+      totalHired: 0,
+      avgCostPerHire: 0,
     };
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 

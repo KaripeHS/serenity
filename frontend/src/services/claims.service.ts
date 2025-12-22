@@ -1,5 +1,7 @@
 // Claims Service - Manages claims submission and tracking
 
+import { shouldUseMockData } from '../config/environment';
+
 export type ClaimStatus =
   | 'draft'
   | 'ready_to_submit'
@@ -112,165 +114,28 @@ class ClaimsService {
     endDate?: string;
     search?: string;
   }): Promise<{ claims: Claim[]; stats: ClaimStats }> {
-    // Mock data
-    const claims: Claim[] = [
-      {
-        id: '1',
-        claimNumber: 'CLM-2024-00142',
-        clientId: 'c1',
-        clientName: 'Dorothy Williams',
-        dateOfService: '2024-03-08',
-        serviceType: 'Personal Care',
-        serviceCode: 'T1019',
-        units: 16,
-        unitRate: 7.24,
-        totalAmount: 115.84,
-        payerId: 'p1',
-        payerName: 'Ohio Medicaid - PASSPORT',
-        payerType: 'medicaid',
-        status: 'ready_to_submit',
-        createdAt: '2024-03-09',
-        caregiverId: 'cg1',
-        caregiverName: 'Maria Garcia',
-        evvRecordId: 'evv-123',
-        authorizationNumber: 'AUTH-2024-001'
-      },
-      {
-        id: '2',
-        claimNumber: 'CLM-2024-00141',
-        clientId: 'c2',
-        clientName: 'Robert Thompson',
-        dateOfService: '2024-03-07',
-        serviceType: 'Personal Care',
-        serviceCode: 'T1019',
-        units: 12,
-        unitRate: 7.24,
-        totalAmount: 86.88,
-        payerId: 'p1',
-        payerName: 'Ohio Medicaid - PASSPORT',
-        payerType: 'medicaid',
-        status: 'submitted',
-        createdAt: '2024-03-08',
-        submittedAt: '2024-03-09',
-        caregiverId: 'cg2',
-        caregiverName: 'James Wilson',
-        evvRecordId: 'evv-124',
-        authorizationNumber: 'AUTH-2024-002'
-      },
-      {
-        id: '3',
-        claimNumber: 'CLM-2024-00140',
-        clientId: 'c3',
-        clientName: 'Helen Martinez',
-        dateOfService: '2024-03-05',
-        serviceType: 'Homemaker',
-        serviceCode: 'S5130',
-        units: 8,
-        unitRate: 6.50,
-        totalAmount: 52.00,
-        payerId: 'p1',
-        payerName: 'Ohio Medicaid - PASSPORT',
-        payerType: 'medicaid',
-        status: 'paid',
-        createdAt: '2024-03-06',
-        submittedAt: '2024-03-07',
-        paidAt: '2024-03-12',
-        paidAmount: 52.00,
-        caregiverId: 'cg1',
-        caregiverName: 'Maria Garcia',
-        evvRecordId: 'evv-125'
-      },
-      {
-        id: '4',
-        claimNumber: 'CLM-2024-00139',
-        clientId: 'c1',
-        clientName: 'Dorothy Williams',
-        dateOfService: '2024-03-04',
-        serviceType: 'Personal Care',
-        serviceCode: 'T1019',
-        units: 16,
-        unitRate: 7.24,
-        totalAmount: 115.84,
-        payerId: 'p1',
-        payerName: 'Ohio Medicaid - PASSPORT',
-        payerType: 'medicaid',
-        status: 'denied',
-        createdAt: '2024-03-05',
-        submittedAt: '2024-03-06',
-        denialReason: 'Authorization expired',
-        denialCode: 'CO-197',
-        caregiverId: 'cg1',
-        caregiverName: 'Maria Garcia',
-        evvRecordId: 'evv-126',
-        authorizationNumber: 'AUTH-2023-089'
-      },
-      {
-        id: '5',
-        claimNumber: 'CLM-2024-00138',
-        clientId: 'c4',
-        clientName: 'James Brown',
-        dateOfService: '2024-03-03',
-        serviceType: 'Respite',
-        serviceCode: 'S5150',
-        units: 32,
-        unitRate: 7.15,
-        totalAmount: 228.80,
-        payerId: 'p2',
-        payerName: 'DODD - Individual Options',
-        payerType: 'medicaid',
-        status: 'pending_correction',
-        createdAt: '2024-03-04',
-        validationErrors: ['Missing EVV out-punch', 'Service exceeds authorized hours'],
-        caregiverId: 'cg3',
-        caregiverName: 'Sarah Davis',
-        authorizationNumber: 'DODD-AUTH-123'
-      },
-      {
-        id: '6',
-        claimNumber: 'CLM-2024-00137',
-        clientId: 'c5',
-        clientName: 'Margaret Johnson',
-        dateOfService: '2024-03-01',
-        serviceType: 'Personal Care',
-        serviceCode: 'T1019',
-        units: 20,
-        unitRate: 35.00,
-        totalAmount: 700.00,
-        payerId: 'p3',
-        payerName: 'Private Pay',
-        payerType: 'private_pay',
-        status: 'draft',
-        createdAt: '2024-03-02',
-        caregiverId: 'cg2',
-        caregiverName: 'James Wilson'
+    return {
+      claims: [],
+      stats: {
+        totalClaims: 0,
+        totalAmount: 0,
+        byStatus: {
+          draft: { count: 0, amount: 0 },
+          ready_to_submit: { count: 0, amount: 0 },
+          submitted: { count: 0, amount: 0 },
+          accepted: { count: 0, amount: 0 },
+          rejected: { count: 0, amount: 0 },
+          paid: { count: 0, amount: 0 },
+          denied: { count: 0, amount: 0 },
+          pending_correction: { count: 0, amount: 0 },
+          appealed: { count: 0, amount: 0 }
+        },
+        byPayer: [],
+        denialRate: 0,
+        avgDaysToPayment: 0,
+        cleanClaimRate: 0
       }
-    ];
-
-    const stats: ClaimStats = {
-      totalClaims: claims.length,
-      totalAmount: claims.reduce((sum, c) => sum + c.totalAmount, 0),
-      byStatus: {
-        draft: { count: 1, amount: 700.00 },
-        ready_to_submit: { count: 1, amount: 115.84 },
-        submitted: { count: 1, amount: 86.88 },
-        accepted: { count: 0, amount: 0 },
-        rejected: { count: 0, amount: 0 },
-        paid: { count: 1, amount: 52.00 },
-        denied: { count: 1, amount: 115.84 },
-        pending_correction: { count: 1, amount: 228.80 },
-        appealed: { count: 0, amount: 0 }
-      },
-      byPayer: [
-        { payerName: 'Ohio Medicaid - PASSPORT', count: 4, amount: 370.56, paidAmount: 52.00 },
-        { payerName: 'DODD - Individual Options', count: 1, amount: 228.80, paidAmount: 0 },
-        { payerName: 'Private Pay', count: 1, amount: 700.00, paidAmount: 0 }
-      ],
-      denialRate: 16.7,
-      avgDaysToPayment: 5.5,
-      cleanClaimRate: 83.3
     };
-
-    return { claims, stats };
   }
 
   // Validate claim before submission
@@ -326,11 +191,7 @@ class ClaimsService {
 
   // Batch validate claims
   async validateBatch(claimIds: string[]): Promise<{ claimId: string; result: ValidationResult }[]> {
-    // Mock - would call backend
-    return claimIds.map(id => ({
-      claimId: id,
-      result: { isValid: true, errors: [], warnings: [] }
-    }));
+    return [];
   }
 
   // Submit single claim
@@ -347,46 +208,7 @@ class ClaimsService {
 
   // Get claim batches
   async getBatches(): Promise<ClaimBatch[]> {
-    return [
-      {
-        id: 'b1',
-        batchNumber: 'BATCH-2024-003',
-        payerId: 'p1',
-        payerName: 'Ohio Medicaid - PASSPORT',
-        claimCount: 12,
-        totalAmount: 1450.88,
-        status: 'completed',
-        submittedAt: '2024-03-10',
-        acknowledgedAt: '2024-03-10',
-        claims: [],
-        fileType: '837P'
-      },
-      {
-        id: 'b2',
-        batchNumber: 'BATCH-2024-002',
-        payerId: 'p1',
-        payerName: 'Ohio Medicaid - PASSPORT',
-        claimCount: 8,
-        totalAmount: 892.64,
-        status: 'processing',
-        submittedAt: '2024-03-08',
-        acknowledgedAt: '2024-03-08',
-        claims: [],
-        fileType: '837P'
-      },
-      {
-        id: 'b3',
-        batchNumber: 'BATCH-2024-001',
-        payerId: 'p2',
-        payerName: 'DODD - Individual Options',
-        claimCount: 5,
-        totalAmount: 1125.50,
-        status: 'submitted',
-        submittedAt: '2024-03-12',
-        claims: [],
-        fileType: '837P'
-      }
-    ];
+    return [];
   }
 
   // Get denial reasons

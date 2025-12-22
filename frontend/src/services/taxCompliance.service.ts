@@ -1,7 +1,11 @@
 /**
  * Tax Compliance Service
  * Federal, Ohio state, and municipal tax management with automated compliance
+ *
+ * NOTE: Mock data only used in development with VITE_USE_MOCK_DATA=true
  */
+
+import { shouldUseMockData } from '../config/environment';
 
 export interface TaxDeadline {
   id: string;
@@ -60,6 +64,10 @@ export interface FormGeneration {
 
 class TaxComplianceService {
   async getTaxDeadlines(): Promise<TaxDeadline[]> {
+    // TODO: Implement real API call
+    if (!shouldUseMockData()) {
+      return [];
+    }
     await this.delay(500);
     return [
       {
@@ -104,7 +112,10 @@ class TaxComplianceService {
     ];
   }
 
-  async getTaxCalculations(period: string): Promise<TaxCalculation> {
+  async getTaxCalculations(period: string): Promise<TaxCalculation | null> {
+    if (!shouldUseMockData()) {
+      return null;
+    }
     await this.delay(600);
     return {
       period,
@@ -141,6 +152,9 @@ class TaxComplianceService {
   }
 
   async getComplianceAlerts(): Promise<ComplianceAlert[]> {
+    if (!shouldUseMockData()) {
+      return [];
+    }
     await this.delay(400);
     return [
       {
@@ -172,7 +186,10 @@ class TaxComplianceService {
     ];
   }
 
-  async generateForm(formType: string, period: string): Promise<FormGeneration> {
+  async generateForm(formType: string, period: string): Promise<FormGeneration | null> {
+    if (!shouldUseMockData()) {
+      return null;
+    }
     await this.delay(1200);
     return {
       formType,
@@ -184,6 +201,9 @@ class TaxComplianceService {
   }
 
   async getPayrollSummary(_period: string): Promise<any> {
+    if (!shouldUseMockData()) {
+      return null;
+    }
     await this.delay(700);
     return {
       totalEmployees: 485,
@@ -203,6 +223,9 @@ class TaxComplianceService {
   }
 
   async getPenaltyRiskAssessment(): Promise<any> {
+    if (!shouldUseMockData()) {
+      return null;
+    }
     await this.delay(500);
     return {
       riskLevel: 'low',

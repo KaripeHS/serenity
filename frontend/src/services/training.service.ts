@@ -2,6 +2,7 @@
 // CPR/First Aid, EVV Training, DODD Requirements, Annual In-Services
 
 import { trainingApi } from './api';
+import { shouldUseMockData } from '../config/environment';
 
 export interface TrainingRequirement {
   id: string;
@@ -177,255 +178,22 @@ export const ohioTrainingRequirements: TrainingRequirement[] = [
 ];
 
 // Mock caregiver training data
-export const mockCaregiverTrainings: CaregiverTraining[] = [
-  // Maria Garcia - Fully compliant
-  {
-    id: 'ct-001',
-    caregiverId: 'cg-001',
-    caregiverName: 'Maria Garcia',
-    trainingId: 'tr-001',
-    trainingName: 'CPR Certification',
-    status: 'completed',
-    assignedDate: '2024-01-15',
-    dueDate: '2024-02-15',
-    completedDate: '2024-01-28',
-    expirationDate: '2026-01-28',
-    certificateUrl: '/certs/maria-cpr.pdf',
-    score: null,
-    attempts: 1,
-    completedBy: 'Red Cross Columbus'
-  },
-  {
-    id: 'ct-002',
-    caregiverId: 'cg-001',
-    caregiverName: 'Maria Garcia',
-    trainingId: 'tr-002',
-    trainingName: 'First Aid Certification',
-    status: 'completed',
-    assignedDate: '2024-01-15',
-    dueDate: '2024-02-15',
-    completedDate: '2024-01-28',
-    expirationDate: '2026-01-28',
-    certificateUrl: '/certs/maria-fa.pdf',
-    score: null,
-    attempts: 1,
-    completedBy: 'Red Cross Columbus'
-  },
-  {
-    id: 'ct-003',
-    caregiverId: 'cg-001',
-    caregiverName: 'Maria Garcia',
-    trainingId: 'tr-003',
-    trainingName: 'EVV System Training',
-    status: 'completed',
-    assignedDate: '2024-01-15',
-    dueDate: '2024-01-22',
-    completedDate: '2024-01-18',
-    expirationDate: null,
-    certificateUrl: null,
-    score: 95,
-    attempts: 1,
-    completedBy: null
-  },
-  {
-    id: 'ct-004',
-    caregiverId: 'cg-001',
-    caregiverName: 'Maria Garcia',
-    trainingId: 'tr-004',
-    trainingName: 'HIPAA Privacy & Security',
-    status: 'completed',
-    assignedDate: '2024-01-15',
-    dueDate: '2024-01-29',
-    completedDate: '2024-01-20',
-    expirationDate: '2025-01-20',
-    certificateUrl: null,
-    score: 100,
-    attempts: 1,
-    completedBy: null
-  },
-  // James Wilson - New hire, some pending
-  {
-    id: 'ct-005',
-    caregiverId: 'cg-002',
-    caregiverName: 'James Wilson',
-    trainingId: 'tr-001',
-    trainingName: 'CPR Certification',
-    status: 'in_progress',
-    assignedDate: '2024-11-01',
-    dueDate: '2024-12-15',
-    completedDate: null,
-    expirationDate: null,
-    certificateUrl: null,
-    score: null,
-    attempts: 0,
-    completedBy: null
-  },
-  {
-    id: 'ct-006',
-    caregiverId: 'cg-002',
-    caregiverName: 'James Wilson',
-    trainingId: 'tr-003',
-    trainingName: 'EVV System Training',
-    status: 'completed',
-    assignedDate: '2024-11-01',
-    dueDate: '2024-11-08',
-    completedDate: '2024-11-05',
-    expirationDate: null,
-    certificateUrl: null,
-    score: 88,
-    attempts: 2,
-    completedBy: null
-  },
-  {
-    id: 'ct-007',
-    caregiverId: 'cg-002',
-    caregiverName: 'James Wilson',
-    trainingId: 'tr-004',
-    trainingName: 'HIPAA Privacy & Security',
-    status: 'not_started',
-    assignedDate: '2024-11-01',
-    dueDate: '2024-12-20',
-    completedDate: null,
-    expirationDate: null,
-    certificateUrl: null,
-    score: null,
-    attempts: 0,
-    completedBy: null
-  },
-  // Sarah Johnson - Has expiring soon
-  {
-    id: 'ct-008',
-    caregiverId: 'cg-003',
-    caregiverName: 'Sarah Johnson',
-    trainingId: 'tr-001',
-    trainingName: 'CPR Certification',
-    status: 'due_soon',
-    assignedDate: '2023-01-10',
-    dueDate: '2023-02-10',
-    completedDate: '2023-01-25',
-    expirationDate: '2025-01-25',
-    certificateUrl: '/certs/sarah-cpr.pdf',
-    score: null,
-    attempts: 1,
-    completedBy: 'AHA Columbus'
-  },
-  {
-    id: 'ct-009',
-    caregiverId: 'cg-003',
-    caregiverName: 'Sarah Johnson',
-    trainingId: 'tr-004',
-    trainingName: 'HIPAA Privacy & Security',
-    status: 'due_soon',
-    assignedDate: '2024-01-05',
-    dueDate: '2024-01-19',
-    completedDate: '2024-01-12',
-    expirationDate: '2025-01-12',
-    certificateUrl: null,
-    score: 92,
-    attempts: 1,
-    completedBy: null
-  },
-  // Michael Brown - Has expired/overdue
-  {
-    id: 'ct-010',
-    caregiverId: 'cg-004',
-    caregiverName: 'Michael Brown',
-    trainingId: 'tr-004',
-    trainingName: 'HIPAA Privacy & Security',
-    status: 'expired',
-    assignedDate: '2023-11-01',
-    dueDate: '2023-11-15',
-    completedDate: '2023-11-10',
-    expirationDate: '2024-11-10',
-    certificateUrl: null,
-    score: 85,
-    attempts: 1,
-    completedBy: null
-  },
-  {
-    id: 'ct-011',
-    caregiverId: 'cg-004',
-    caregiverName: 'Michael Brown',
-    trainingId: 'tr-005',
-    trainingName: 'Infection Control & Prevention',
-    status: 'expired',
-    assignedDate: '2023-10-01',
-    dueDate: '2023-10-15',
-    completedDate: '2023-10-08',
-    expirationDate: '2024-10-08',
-    certificateUrl: null,
-    score: 78,
-    attempts: 2,
-    completedBy: null
-  }
-];
+export const mockCaregiverTrainings: CaregiverTraining[] = [];
 
 // Mock training sessions
-export const mockTrainingSessions: TrainingSession[] = [
-  {
-    id: 'ts-001',
-    trainingId: 'tr-001',
-    trainingName: 'CPR Certification',
-    sessionType: 'in_person',
-    scheduledDate: '2024-12-18',
-    scheduledTime: '9:00 AM - 1:00 PM',
-    duration: '4 hours',
-    location: 'Serenity Training Center, Columbus',
-    instructor: 'John Martinez, AHA Instructor',
-    capacity: 12,
-    enrolled: 8,
-    enrolledCaregivers: [
-      { id: 'cg-002', name: 'James Wilson' },
-      { id: 'cg-007', name: 'Lisa Chen' }
-    ],
-    status: 'scheduled'
-  },
-  {
-    id: 'ts-002',
-    trainingId: 'tr-008',
-    trainingName: 'DODD Provider Training',
-    sessionType: 'hybrid',
-    scheduledDate: '2024-12-20',
-    scheduledTime: '10:00 AM - 3:00 PM',
-    duration: '5 hours',
-    location: 'Virtual + Skills Lab',
-    instructor: 'DODD Certified Trainer',
-    capacity: 20,
-    enrolled: 15,
-    enrolledCaregivers: [],
-    status: 'scheduled'
-  },
-  {
-    id: 'ts-003',
-    trainingId: 'tr-004',
-    trainingName: 'HIPAA Privacy & Security',
-    sessionType: 'online',
-    scheduledDate: '2024-12-16',
-    scheduledTime: 'Self-paced',
-    duration: '2 hours',
-    location: null,
-    instructor: null,
-    capacity: 50,
-    enrolled: 12,
-    enrolledCaregivers: [
-      { id: 'cg-002', name: 'James Wilson' },
-      { id: 'cg-004', name: 'Michael Brown' }
-    ],
-    status: 'scheduled'
-  }
-];
+export const mockTrainingSessions: TrainingSession[] = [];
 
 export const mockTrainingStats: TrainingDashboardStats = {
-  totalCaregivers: 6,
-  fullyCompliant: 3,
-  complianceRate: 50,
-  trainingsExpiringSoon: 4,
-  overdueTrainings: 3,
-  upcomingSessions: 3,
+  totalCaregivers: 0,
+  fullyCompliant: 0,
+  complianceRate: 0,
+  trainingsExpiringSoon: 0,
+  overdueTrainings: 0,
+  upcomingSessions: 0,
   byCategory: {
-    mandatory: { total: 36, compliant: 28 },
-    roleSpecific: { total: 8, compliant: 6 },
-    optional: { total: 12, completed: 5 }
+    mandatory: { total: 0, compliant: 0 },
+    roleSpecific: { total: 0, compliant: 0 },
+    optional: { total: 0, completed: 0 }
   }
 };
 
@@ -461,11 +229,9 @@ export function getDaysUntilDue(dueDate: string): number {
 // API Service Functions (with mock data fallback)
 // ============================================================================
 
-let USE_MOCK_DATA = false;
-
 export const trainingService = {
   async getTypes(): Promise<TrainingRequirement[]> {
-    if (USE_MOCK_DATA) {
+    if (shouldUseMockData()) {
       return ohioTrainingRequirements;
     }
     try {
@@ -482,31 +248,20 @@ export const trainingService = {
         source: 'company' as const,
       })) as TrainingRequirement[];
     } catch (error) {
-      console.error('Failed to fetch training types, using mock data', error);
-      USE_MOCK_DATA = true;
-      return this.getTypes();
+      console.error('Failed to fetch training types', error);
+      throw error;
     }
   },
 
   async getAssignments(filters?: { status?: string; category?: string; overdue?: boolean; userId?: string }): Promise<{ assignments: CaregiverTraining[]; summary: any }> {
-    if (USE_MOCK_DATA) {
-      let filtered = [...mockCaregiverTrainings];
-      if (filters?.status) {
-        filtered = filtered.filter(a => a.status === filters.status);
-      }
-      if (filters?.overdue) {
-        filtered = filtered.filter(a => a.status === 'expired');
-      }
-      if (filters?.userId) {
-        filtered = filtered.filter(a => a.caregiverId === filters.userId);
-      }
+    if (shouldUseMockData()) {
       return {
-        assignments: filtered,
+        assignments: [],
         summary: {
-          overdue: filtered.filter(a => a.status === 'expired').length,
-          dueSoon: filtered.filter(a => a.status === 'due_soon').length,
-          compliant: filtered.filter(a => a.status === 'completed').length,
-          pending: filtered.filter(a => a.status === 'not_started' || a.status === 'in_progress').length,
+          overdue: 0,
+          dueSoon: 0,
+          compliant: 0,
+          pending: 0,
         },
       };
     }
@@ -532,14 +287,13 @@ export const trainingService = {
         summary: result.summary,
       };
     } catch (error) {
-      console.error('Failed to fetch assignments, using mock data', error);
-      USE_MOCK_DATA = true;
-      return this.getAssignments(filters);
+      console.error('Failed to fetch assignments', error);
+      throw error;
     }
   },
 
   async getDashboard(): Promise<TrainingDashboardStats> {
-    if (USE_MOCK_DATA) {
+    if (shouldUseMockData()) {
       return mockTrainingStats;
     }
     try {
@@ -558,15 +312,14 @@ export const trainingService = {
         },
       };
     } catch (error) {
-      console.error('Failed to fetch dashboard, using mock data', error);
-      USE_MOCK_DATA = true;
-      return this.getDashboard();
+      console.error('Failed to fetch dashboard', error);
+      throw error;
     }
   },
 
   async getExpiring(days?: number): Promise<CaregiverTraining[]> {
-    if (USE_MOCK_DATA) {
-      return mockCaregiverTrainings.filter(t => t.status === 'due_soon');
+    if (shouldUseMockData()) {
+      return [];
     }
     try {
       const result = await trainingApi.getExpiring(days);
@@ -587,14 +340,13 @@ export const trainingService = {
         completedBy: null,
       }));
     } catch (error) {
-      console.error('Failed to fetch expiring, using mock data', error);
-      USE_MOCK_DATA = true;
-      return this.getExpiring(days);
+      console.error('Failed to fetch expiring', error);
+      throw error;
     }
   },
 
   async assignTraining(data: { userId: string; trainingTypeId: string; dueDate: string; priority?: string; notes?: string }): Promise<{ success: boolean }> {
-    if (USE_MOCK_DATA) {
+    if (shouldUseMockData()) {
       return { success: true };
     }
     try {
@@ -607,7 +359,7 @@ export const trainingService = {
   },
 
   async updateStatus(assignmentId: string, data: { status: string; score?: number; notes?: string }): Promise<{ success: boolean }> {
-    if (USE_MOCK_DATA) {
+    if (shouldUseMockData()) {
       return { success: true };
     }
     try {
@@ -621,18 +373,42 @@ export const trainingService = {
 
   // Get mock data directly
   getRequirements(): TrainingRequirement[] {
+    if (!shouldUseMockData()) {
+      return [];
+    }
     return ohioTrainingRequirements;
   },
 
   getAllTrainings(): CaregiverTraining[] {
+    if (!shouldUseMockData()) {
+      return [];
+    }
     return mockCaregiverTrainings;
   },
 
   getSessions(): TrainingSession[] {
+    if (!shouldUseMockData()) {
+      return [];
+    }
     return mockTrainingSessions;
   },
 
   getStats(): TrainingDashboardStats {
+    if (!shouldUseMockData()) {
+      return {
+        totalCaregivers: 0,
+        fullyCompliant: 0,
+        complianceRate: 0,
+        trainingsExpiringSoon: 0,
+        overdueTrainings: 0,
+        upcomingSessions: 0,
+        byCategory: {
+          mandatory: { total: 0, compliant: 0 },
+          roleSpecific: { total: 0, compliant: 0 },
+          optional: { total: 0, completed: 0 }
+        }
+      };
+    }
     return mockTrainingStats;
   },
 };

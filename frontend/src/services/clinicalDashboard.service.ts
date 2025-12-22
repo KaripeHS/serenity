@@ -1,4 +1,5 @@
 import { request } from './api';
+import { shouldUseMockData } from '../config/environment';
 
 export interface ClinicalMetrics {
     activePatients: number;
@@ -37,11 +38,10 @@ export const clinicalDashboardService = {
             return {
                 activePatients: kpis.activeClients || 0,
                 criticalAlerts: criticalAlertsCount,
-                // Mocked values until backend supports them specifically
-                medicationCompliance: 96.8,
-                vitalSignsUpdated: 42, // Placeholder
-                careplanReviews: kpis.expiringCertifications || 5, // Approximate proxy or mock
-                admissionsToday: 0 // Placeholder
+                medicationCompliance: 0,
+                vitalSignsUpdated: 0,
+                careplanReviews: 0,
+                admissionsToday: 0
             };
         } catch (error) {
             console.error('Failed to fetch clinical metrics:', error);
@@ -80,27 +80,17 @@ export const clinicalDashboardService = {
      * Get Clinical Charts (Vital Signs, Admissions)
      */
     async getChartsData(organizationId: string): Promise<{ vitals: any[]; admissions: any[] }> {
-        // For now, reuse the generic charts endpoint or specific one
-        // Using 'visits' as proxy for vitals activity for this sprint
         try {
             const [vitalsData] = await Promise.all([
                 request<{ chart: any }>(`/api/console/dashboard/charts/${organizationId}?type=visits&period=7d`),
             ]);
 
-            // Mock admissions data until we have an endpoint
-            const admissions = [
-                { label: 'Week 1', value: 12 },
-                { label: 'Week 2', value: 15 },
-                { label: 'Week 3', value: 11 },
-                { label: 'Week 4', value: 18 }
-            ];
-
             return {
                 vitals: vitalsData.chart.data.map((val: number, i: number) => ({
                     label: vitalsData.chart.labels[i],
-                    value: Math.round(val * 4.5) // Scale up to look like vital readings count
+                    value: val
                 })),
-                admissions
+                admissions: []
             };
         } catch (error) {
             console.error('Failed to fetch clinical charts:', error);

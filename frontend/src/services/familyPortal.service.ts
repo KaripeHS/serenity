@@ -1,4 +1,5 @@
 import { loggerService } from '../shared/services/logger.service';
+import { shouldUseMockData } from '../config/environment';
 
 /**
  * Family Portal Service
@@ -48,143 +49,41 @@ export interface BillingInfo {
 }
 
 class FamilyPortalService {
-  // production data for demonstration
-  private visits: Visit[] = [
-    {
-      id: '1',
-      patientName: 'Eleanor Johnson',
-      caregiverName: 'Maria Rodriguez',
-      date: '2024-01-15',
-      time: '09:00',
-      duration: 120,
-      status: 'completed',
-      services: ['Personal Care', 'Medication Management'],
-      notes: 'Patient was in good spirits. Medication taken on schedule.'
-    },
-    {
-      id: '2',
-      patientName: 'Eleanor Johnson',
-      caregiverName: 'David Chen',
-      date: '2024-01-16',
-      time: '14:00',
-      duration: 90,
-      status: 'scheduled',
-      services: ['Physical Therapy', 'Mobility Assistance']
-    }
-  ];
-
-  private careTeam: CareTeamMember[] = [
-    {
-      id: '1',
-      name: 'Dr. Sarah Williams',
-      role: 'Primary Physician',
-      phone: '(555) 123-4567',
-      email: 'sarah.williams@serenitycare.com'
-    },
-    {
-      id: '2',
-      name: 'Maria Rodriguez',
-      role: 'Primary Caregiver',
-      phone: '(555) 234-5678',
-      email: 'maria.rodriguez@serenitycare.com'
-    },
-    {
-      id: '3',
-      name: 'David Chen',
-      role: 'Physical Therapist',
-      phone: '(555) 345-6789',
-      email: 'david.chen@serenitycare.com'
-    }
-  ];
-
-  private messages: Message[] = [
-    {
-      id: '1',
-      from: 'Maria Rodriguez',
-      to: 'Family',
-      subject: 'Weekly Care Update',
-      content: 'Eleanor had a great week. She\'s been very responsive to therapy and her medication schedule is stable.',
-      timestamp: '2024-01-15T10:30:00Z',
-      read: false,
-      urgent: false
-    }
-  ];
-
-  private billingInfo: BillingInfo[] = [
-    {
-      id: '1',
-      patientName: 'Eleanor Johnson',
-      serviceDate: '2024-01-15',
-      description: 'Personal Care Services',
-      amount: 145.00,
-      insurance: 'Medicare',
-      status: 'paid'
-    }
-  ];
+  private visits: Visit[] = [];
+  private careTeam: CareTeamMember[] = [];
+  private messages: Message[] = [];
+  private billingInfo: BillingInfo[] = [];
 
   async getRecentVisits(_patientId: string): Promise<Visit[]> {
-    // Simulate API call
-    await this.delay(500);
-    return this.visits;
+    return [];
   }
 
   async getUpcomingVisits(_patientId: string): Promise<Visit[]> {
-    // Simulate API call
-    await this.delay(500);
-    return this.visits.filter(v => v.status === 'scheduled');
+    return [];
   }
 
   async getCareTeam(_patientId: string): Promise<CareTeamMember[]> {
-    // Simulate API call
-    await this.delay(300);
-    return this.careTeam;
+    return [];
   }
 
   async getMessages(_familyId: string): Promise<Message[]> {
-    // Simulate API call
-    await this.delay(400);
-    return this.messages;
+    return [];
   }
 
   async sendMessage(to: string, subject: string, content: string): Promise<void> {
-    // Simulate API call
-    await this.delay(600);
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      from: 'Family',
-      to,
-      subject,
-      content,
-      timestamp: new Date().toISOString(),
-      read: true,
-      urgent: false
-    };
-    this.messages.push(newMessage);
+    // No-op for production
   }
 
   async markMessageAsRead(messageId: string): Promise<void> {
-    // Simulate API call
-    await this.delay(200);
-    const message = this.messages.find(m => m.id === messageId);
-    if (message) {
-      message.read = true;
-    }
+    // No-op for production
   }
 
   async getBillingInformation(_patientId: string): Promise<BillingInfo[]> {
-    // Simulate API call
-    await this.delay(500);
-    return this.billingInfo;
+    return [];
   }
 
   async requestVisitUpdate(visitId: string, message: string): Promise<void> {
-    // Simulate API call
-    await this.delay(800);
     loggerService.info(`Visit update requested for ${visitId}: ${message}`);
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 

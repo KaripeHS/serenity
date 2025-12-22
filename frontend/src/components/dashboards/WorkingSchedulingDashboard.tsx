@@ -91,61 +91,57 @@ export function WorkingSchedulingDashboard() {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<SchedulingMetrics | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const visits: Visit[] = [
-    {
-      id: 'V001',
-      patientName: 'Eleanor Johnson',
-      serviceType: 'Personal Care',
-      date: '2024-01-16',
-      time: '09:00',
-      duration: 120,
-      location: 'Columbus, OH',
-      requiredSkills: ['Personal Care', 'Medication Management'],
-      status: 'unassigned',
-      priority: 'high'
-    },
-    {
-      id: 'V002',
-      patientName: 'Robert Smith',
-      serviceType: 'Physical Therapy',
-      date: '2024-01-16',
-      time: '14:00',
-      duration: 60,
-      location: 'Dublin, OH',
-      requiredSkills: ['Physical Therapy'],
-      status: 'assigned',
-      assignedCaregiver: 'David Chen',
-      priority: 'medium'
-    },
-    {
-      id: 'V003',
-      patientName: 'Mary Williams',
-      serviceType: 'Medication Management',
-      date: '2024-01-16',
-      time: '11:00',
-      duration: 45,
-      location: 'Westerville, OH',
-      requiredSkills: ['Medication Management'],
-      status: 'unassigned',
-      priority: 'urgent'
-    }
-  ];
+  const [visits, setVisits] = useState<Visit[]>([]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMetrics({
-        totalVisits: 127,
-        unassignedVisits: 23,
-        caregiverUtilization: 82.5,
-        avgTravelTime: 18.5,
-        scheduleCompliance: 94.2,
-        emergencyRequests: 3
-      });
-      setLoading(false);
-    }, 1050);
+    const loadMetrics = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/scheduling/metrics`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-    return () => clearTimeout(timer);
+        if (response.ok) {
+          const data = await response.json();
+          setMetrics({
+            totalVisits: data.totalVisits || 0,
+            unassignedVisits: data.unassignedVisits || 0,
+            caregiverUtilization: data.caregiverUtilization || 0,
+            avgTravelTime: data.avgTravelTime || 0,
+            scheduleCompliance: data.scheduleCompliance || 0,
+            emergencyRequests: data.emergencyRequests || 0
+          });
+          setVisits(data.visits || []);
+        } else {
+          setMetrics({
+            totalVisits: 0,
+            unassignedVisits: 0,
+            caregiverUtilization: 0,
+            avgTravelTime: 0,
+            scheduleCompliance: 0,
+            emergencyRequests: 0
+          });
+          setVisits([]);
+        }
+      } catch (error) {
+        console.error('Failed to load scheduling metrics:', error);
+        setMetrics({
+          totalVisits: 0,
+          unassignedVisits: 0,
+          caregiverUtilization: 0,
+          avgTravelTime: 0,
+          scheduleCompliance: 0,
+          emergencyRequests: 0
+        });
+        setVisits([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMetrics();
   }, []);
 
   if (loading) {

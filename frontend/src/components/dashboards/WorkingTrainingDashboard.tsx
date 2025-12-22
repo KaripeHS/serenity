@@ -94,83 +94,61 @@ export function WorkingTrainingDashboard() {
   const [metrics, setMetrics] = useState<TrainingMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<'dashboard' | 'compliance' | 'courses'>('dashboard');
-
-  const staffTraining: Staff[] = [
-    {
-      id: 1,
-      name: 'Maria Rodriguez',
-      position: 'Senior Caregiver',
-      certifications: [
-        { name: 'CPR', status: 'expires_soon', expiryDate: '2025-02-15', daysLeft: 26 },
-        { name: 'First Aid', status: 'current', expiryDate: '2025-08-20', daysLeft: 186 },
-        { name: 'CNA', status: 'current', expiryDate: '2026-03-10', daysLeft: 384 }
-      ],
-      completedHours: 24,
-      requiredHours: 32
-    },
-    {
-      id: 2,
-      name: 'David Chen',
-      position: 'Physical Therapist',
-      certifications: [
-        { name: 'PT License', status: 'current', expiryDate: '2025-12-31', daysLeft: 345 },
-        { name: 'CPR', status: 'overdue', expiryDate: '2024-12-15', daysLeft: -36 }
-      ],
-      completedHours: 18,
-      requiredHours: 40
-    }
-  ];
-
-  const availableCourses: Course[] = [
-    {
-      id: 1,
-      title: 'CPR/AED Certification Renewal',
-      provider: 'American Red Cross',
-      duration: 4,
-      format: 'In-Person',
-      nextDate: '2025-01-25',
-      spots: 12,
-      enrolled: 8,
-      cost: 65
-    },
-    {
-      id: 2,
-      title: 'Advanced Wound Care Management',
-      provider: 'WoundSource',
-      duration: 8,
-      format: 'Online',
-      nextDate: '2025-02-01',
-      spots: 25,
-      enrolled: 15,
-      cost: 125
-    },
-    {
-      id: 3,
-      title: 'HIPAA Privacy & Security Update 2025',
-      provider: 'HIPAA One',
-      duration: 2,
-      format: 'Online',
-      nextDate: '2025-01-30',
-      spots: 50,
-      enrolled: 32,
-      cost: 35
-    }
-  ];
+  const [staffTraining, setStaffTraining] = useState<Staff[]>([]);
+  const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMetrics({
-        totalStaff: 156,
-        complianceRate: 87.2,
-        expiringSoon: 12,
-        overdue: 8,
-        coursesAvailable: 25,
-        hoursCompleted: 1840
-      });
-      setLoading(false);
-    }, 850);
+    const loadMetrics = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/training/metrics`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-    return () => clearTimeout(timer);
+        if (response.ok) {
+          const data = await response.json();
+          setMetrics({
+            totalStaff: data.totalStaff || 0,
+            complianceRate: data.complianceRate || 0,
+            expiringSoon: data.expiringSoon || 0,
+            overdue: data.overdue || 0,
+            coursesAvailable: data.coursesAvailable || 0,
+            hoursCompleted: data.hoursCompleted || 0
+          });
+          setStaffTraining(data.staffTraining || []);
+          setAvailableCourses(data.availableCourses || []);
+        } else {
+          setMetrics({
+            totalStaff: 0,
+            complianceRate: 0,
+            expiringSoon: 0,
+            overdue: 0,
+            coursesAvailable: 0,
+            hoursCompleted: 0
+          });
+          setStaffTraining([]);
+          setAvailableCourses([]);
+        }
+      } catch (error) {
+        console.error('Failed to load training metrics:', error);
+        setMetrics({
+          totalStaff: 0,
+          complianceRate: 0,
+          expiringSoon: 0,
+          overdue: 0,
+          coursesAvailable: 0,
+          hoursCompleted: 0
+        });
+        setStaffTraining([]);
+        setAvailableCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMetrics();
   }, []);
 
   if (loading) {
