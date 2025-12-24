@@ -5,7 +5,7 @@
 CREATE TABLE tax_calculations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organization_id UUID NOT NULL REFERENCES organizations(id),
-  employee_id UUID NOT NULL REFERENCES employees(id),
+  employee_id UUID NOT NULL REFERENCES users(id),
   pay_period_id UUID NOT NULL,
   gross_pay DECIMAL(12,2) NOT NULL,
   federal_withholding DECIMAL(12,2) NOT NULL DEFAULT 0,
@@ -42,7 +42,7 @@ CREATE TABLE tax_forms (
   form_type VARCHAR(20) NOT NULL,
   tax_year INTEGER NOT NULL,
   quarter INTEGER CHECK (quarter IN (1,2,3,4)),
-  employee_id UUID REFERENCES employees(id), -- NULL for company-wide forms like 941
+  employee_id UUID REFERENCES users(id), -- NULL for company-wide forms like 941
 
   form_data JSONB NOT NULL,
   generated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -124,7 +124,7 @@ CREATE TABLE tax_deposits (
 -- Employee tax setup (withholding allowances, etc.)
 CREATE TABLE employee_tax_setup (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  employee_id UUID NOT NULL REFERENCES employees(id),
+  employee_id UUID NOT NULL REFERENCES users(id),
 
   -- Federal withholding
   federal_filing_status VARCHAR(20) NOT NULL DEFAULT 'single'
@@ -170,7 +170,7 @@ CREATE TABLE tax_compliance_events (
   event_type VARCHAR(50) NOT NULL,
   event_description TEXT NOT NULL,
 
-  related_employee_id UUID REFERENCES employees(id),
+  related_employee_id UUID REFERENCES users(id),
   related_form_id UUID REFERENCES tax_forms(id),
   related_deadline_id UUID REFERENCES tax_deadlines(id),
 
@@ -240,7 +240,7 @@ CREATE POLICY tax_deposits_organization_policy ON tax_deposits
 CREATE POLICY employee_tax_setup_organization_policy ON employee_tax_setup
   FOR ALL TO authenticated_users
   USING (EXISTS (
-    SELECT 1 FROM employees e
+    SELECT 1 FROM users e
     WHERE e.id = employee_tax_setup.employee_id
     AND e.organization_id = current_setting('app.current_organization_id')::UUID
   ));
@@ -319,7 +319,7 @@ SELECT
   SUM(tc.medicare_tax + tc.additional_medicare_tax) as ytd_medicare_tax,
   SUM(tc.net_pay) as ytd_net
 FROM tax_calculations tc
-JOIN employees e ON tc.employee_id = e.id
+JOIN users e ON tc.employee_id = e.id
 WHERE tc.tax_year = EXTRACT(YEAR FROM CURRENT_DATE)
 GROUP BY tc.employee_id, e.first_name, e.last_name, e.ssn, tc.tax_year;
 

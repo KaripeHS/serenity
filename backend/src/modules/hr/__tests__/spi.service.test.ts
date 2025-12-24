@@ -75,6 +75,11 @@ describe('SPIService', () => {
         required_trainings: 2,
         optional_trainings: 1,
         credentials_issue: 0,
+        attendance_weight: '0.30',
+        quality_weight: '0.25',
+        documentation_weight: '0.25',
+        collaboration_weight: '0.10',
+        learning_weight: '0.10',
       }],
     });
   });

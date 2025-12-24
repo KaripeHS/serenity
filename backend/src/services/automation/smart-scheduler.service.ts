@@ -224,7 +224,7 @@ export class SmartSchedulerService {
       SELECT
         v.*,
         c.first_name || ' ' || c.last_name as client_name
-      FROM visits v
+      FROM shifts v
       JOIN clients c ON v.client_id = c.id
       WHERE v.organization_id = $1
         AND v.scheduled_start >= $2
@@ -256,7 +256,7 @@ export class SmartSchedulerService {
   ): Promise<string | null> {
     // Get visit details
     const visitResult = await pool.query(
-      'SELECT * FROM visits WHERE id = $1',
+      'SELECT * FROM shifts WHERE id = $1',
       [visitId]
     );
 
@@ -270,7 +270,7 @@ export class SmartSchedulerService {
     const overlapResult = await pool.query(
       `
       SELECT COUNT(*) as count
-      FROM visits
+      FROM shifts
       WHERE caregiver_id = $1
         AND id != $2
         AND status NOT IN ('cancelled', 'completed')
@@ -344,7 +344,7 @@ export class SmartSchedulerService {
   ): Promise<void> {
     await pool.query(
       `
-      UPDATE visits
+      UPDATE shifts
       SET caregiver_id = $1,
           assigned_at = NOW(),
           updated_at = NOW()
@@ -357,7 +357,7 @@ export class SmartSchedulerService {
     await pool.query(
       `
       INSERT INTO schedule_audit_log (
-        visit_id,
+        shift_id,
         caregiver_id,
         action,
         automated,
@@ -386,7 +386,7 @@ export class SmartSchedulerService {
         AND u.role = 'CAREGIVER'
         AND u.active = true
         AND NOT EXISTS (
-          SELECT 1 FROM visits v
+          SELECT 1 FROM shifts v
           WHERE v.caregiver_id = u.id
             AND v.status NOT IN ('cancelled', 'completed')
             AND (
@@ -433,7 +433,7 @@ export class SmartSchedulerService {
         c.first_name || ' ' || c.last_name as client_name,
         v.scheduled_start,
         v.scheduled_end
-      FROM visits v
+      FROM shifts v
       JOIN clients c ON v.client_id = c.id
       WHERE v.id = $1
       `,
@@ -521,7 +521,7 @@ export class SmartSchedulerService {
             // Check if visit already exists
             const existing = await pool.query(
               `
-              SELECT id FROM visits
+              SELECT id FROM shifts
               WHERE client_id = $1
                 AND scheduled_start = $2
               `,
@@ -531,7 +531,7 @@ export class SmartSchedulerService {
             if (existing.rows.length === 0) {
               await pool.query(
                 `
-                INSERT INTO visits (
+                INSERT INTO shifts (
                   organization_id,
                   client_id,
                   scheduled_start,
@@ -629,7 +629,7 @@ export class SmartSchedulerService {
     // Get current schedule
     const currentVisits = await pool.query(
       `
-      SELECT * FROM visits
+      SELECT * FROM shifts
       WHERE organization_id = $1
         AND scheduled_start >= $2
         AND scheduled_start <= $3

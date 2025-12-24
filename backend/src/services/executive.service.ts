@@ -158,7 +158,7 @@ export class ExecutiveService {
     // Calculate trend (compare to previous period)
     const previousScore = await this.getPreviousBusinessHealthScore(organizationId);
     const trend = score > previousScore + 2 ? 'up' :
-                  score < previousScore - 2 ? 'down' : 'stable';
+      score < previousScore - 2 ? 'down' : 'stable';
 
     return {
       score,
@@ -209,7 +209,7 @@ export class ExecutiveService {
 
     const target = 10; // 10% growth target
     const status = growthRate >= target ? 'green' :
-                   growthRate >= target * 0.7 ? 'yellow' : 'red';
+      growthRate >= target * 0.7 ? 'yellow' : 'red';
 
     return {
       value: Math.round(growthRate * 10) / 10,
@@ -249,7 +249,7 @@ export class ExecutiveService {
 
     const target = 95; // 95% retention target
     const status = retentionRate >= target ? 'green' :
-                   retentionRate >= target * 0.95 ? 'yellow' : 'red';
+      retentionRate >= target * 0.95 ? 'yellow' : 'red';
 
     return {
       value: Math.round(retentionRate * 10) / 10,
@@ -290,7 +290,7 @@ export class ExecutiveService {
 
     const target = 85; // 85% retention target
     const status = retentionRate >= target ? 'green' :
-                   retentionRate >= target * 0.90 ? 'yellow' : 'red';
+      retentionRate >= target * 0.90 ? 'yellow' : 'red';
 
     return {
       value: Math.round(retentionRate * 10) / 10,
@@ -314,8 +314,8 @@ export class ExecutiveService {
           COUNT(*) FILTER (
             WHERE vci.actual_check_in <= v.scheduled_start + INTERVAL '15 minutes'
           ) as on_time_visits
-        FROM visits v
-        LEFT JOIN visit_check_ins vci ON v.id = vci.visit_id
+        FROM shifts v
+        LEFT JOIN visit_check_ins vci ON v.id = vci.shift_id
         WHERE v.organization_id = $1
           AND v.scheduled_start >= $2
           AND v.scheduled_start <= $3
@@ -336,7 +336,7 @@ export class ExecutiveService {
 
     const target = 95; // 95% on-time target
     const status = onTimeRate >= target ? 'green' :
-                   onTimeRate >= target * 0.95 ? 'yellow' : 'red';
+      onTimeRate >= target * 0.95 ? 'yellow' : 'red';
 
     return {
       value: Math.round(onTimeRate * 10) / 10,
@@ -393,7 +393,7 @@ export class ExecutiveService {
 
     const target = 30; // Target: 30 days or less
     const status = dso <= target ? 'green' :
-                   dso <= target * 1.5 ? 'yellow' : 'red';
+      dso <= target * 1.5 ? 'yellow' : 'red';
 
     // Convert to score (lower DSO is better, so invert)
     const score = Math.max(0, 100 - (dso * 2));
@@ -445,7 +445,7 @@ export class ExecutiveService {
 
     const target = 20; // 20% margin target
     const status = margin >= target ? 'green' :
-                   margin >= target * 0.75 ? 'yellow' : 'red';
+      margin >= target * 0.75 ? 'yellow' : 'red';
 
     return {
       value: Math.round(margin * 10) / 10,
@@ -504,7 +504,7 @@ export class ExecutiveService {
         LEFT JOIN users u ON u.organization_id = o.id
           AND u.role IN ('CAREGIVER', 'DSP_BASIC', 'DSP_MED')
           AND u.status = 'active'
-        LEFT JOIN visits v ON v.organization_id = o.id
+        LEFT JOIN shifts v ON v.organization_id = o.id
           AND v.scheduled_start >= $2
         WHERE o.id = $1
       ),
@@ -516,7 +516,7 @@ export class ExecutiveService {
         LEFT JOIN billing_payments bp ON bp.organization_id = o.id
           AND bp.payment_date >= $3
           AND bp.payment_date < $2
-        LEFT JOIN visits v ON v.organization_id = o.id
+        LEFT JOIN shifts v ON v.organization_id = o.id
           AND v.scheduled_start >= $3
           AND v.scheduled_start < $2
         WHERE o.id = $1

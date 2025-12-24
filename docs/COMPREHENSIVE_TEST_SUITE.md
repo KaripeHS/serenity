@@ -1,7 +1,7 @@
 # Serenity Care Partners ERP - Comprehensive Test Suite
 
-**Document Version:** 1.0.0
-**Last Updated:** December 23, 2024
+**Document Version:** 2.0.0
+**Last Updated:** December 24, 2024
 **Author:** Claude Code (AI-Assisted)
 **System:** Serenity Care Partners ERP & Marketing Website
 
@@ -10,23 +10,26 @@
 ## Table of Contents
 
 1. [Overview](#1-overview)
-2. [Test Credentials](#2-test-credentials)
-3. [Test Environment Setup](#3-test-environment-setup)
-4. [Authentication & Authorization Tests](#4-authentication--authorization-tests)
-5. [RBAC & Permission Tests](#5-rbac--permission-tests)
-6. [Dashboard & Navigation Tests](#6-dashboard--navigation-tests)
-7. [API Endpoint Tests](#7-api-endpoint-tests)
-8. [Feature Workflow Tests](#8-feature-workflow-tests)
-9. [Visual Consistency Tests](#9-visual-consistency-tests)
-10. [Mobile & Responsive Tests](#10-mobile--responsive-tests)
-11. [Integration Tests](#11-integration-tests)
-12. [Security Tests](#12-security-tests)
-13. [Performance Tests](#13-performance-tests)
-14. [Accessibility Tests](#14-accessibility-tests)
-15. [Data Validation Tests](#15-data-validation-tests)
-16. [Error Handling Tests](#16-error-handling-tests)
-17. [Cross-Browser Tests](#17-cross-browser-tests)
-18. [Regression Test Checklist](#18-regression-test-checklist)
+2. [Critical Schema Changes](#2-critical-schema-changes)
+3. [Test Credentials](#3-test-credentials)
+4. [Test Environment Setup](#4-test-environment-setup)
+5. [Authentication & Authorization Tests](#5-authentication--authorization-tests)
+6. [RBAC & Permission Tests](#6-rbac--permission-tests)
+7. [Dashboard & Navigation Tests](#7-dashboard--navigation-tests)
+8. [API Endpoint Tests](#8-api-endpoint-tests)
+9. [Database Schema Validation Tests](#9-database-schema-validation-tests)
+10. [Feature Workflow Tests](#10-feature-workflow-tests)
+11. [Visual Consistency Tests](#11-visual-consistency-tests)
+12. [Mobile & Responsive Tests](#12-mobile--responsive-tests)
+13. [Integration Tests](#13-integration-tests)
+14. [Security Tests](#14-security-tests)
+15. [Performance Tests](#15-performance-tests)
+16. [Accessibility Tests](#16-accessibility-tests)
+17. [Data Validation Tests](#17-data-validation-tests)
+18. [Error Handling Tests](#18-error-handling-tests)
+19. [Cross-Browser Tests](#19-cross-browser-tests)
+20. [Regression Test Checklist](#20-regression-test-checklist)
+21. [Known Issues & Workarounds](#21-known-issues--workarounds)
 
 ---
 
@@ -41,8 +44,18 @@ This document provides a comprehensive test suite for the Serenity Care Partners
 - **767+ API endpoints**
 - **100+ UI components**
 - All critical business workflows
+- **Database schema validation** after major refactoring
 
-### 1.2 Test Classification
+### 1.2 Version 2.0 Changes
+
+This version incorporates significant database schema changes:
+- **Visits renamed to Shifts** throughout the system
+- **Caregivers table refactored** - PII now in users table
+- **Multiple table/column renames** (see Section 2)
+- **Background checks schema updates**
+- **Care plans consolidated to single migration**
+
+### 1.3 Test Classification
 
 | Priority | Description | SLA |
 |----------|-------------|-----|
@@ -51,7 +64,7 @@ This document provides a comprehensive test suite for the Serenity Care Partners
 | **P2 - Medium** | Feature degraded but workaround exists | < 24 hours |
 | **P3 - Low** | Minor issue, cosmetic, edge case | < 1 week |
 
-### 1.3 Test Types
+### 1.4 Test Types
 
 | Type | Description |
 |------|-------------|
@@ -59,27 +72,94 @@ This document provides a comprehensive test suite for the Serenity Care Partners
 | **Manual** | Human-executed test cases |
 | **Visual** | UI/UX consistency, layout, styling |
 | **API** | Backend endpoint validation |
+| **Schema** | Database structure validation |
 | **Integration** | End-to-end workflow testing |
 | **Security** | Penetration, access control testing |
 | **Performance** | Load, stress, response time testing |
 
 ---
 
-## 2. Test Credentials
+## 2. Critical Schema Changes
 
-### 2.1 Production Test Domain
+### 2.1 BREAKING CHANGES - Must Update All Tests
+
+#### 2.1.1 Visits → Shifts Rename
+
+| Old Term | New Term | Impact |
+|----------|----------|--------|
+| `visits` table | `shifts` table | All queries must use `shifts` |
+| `visit_id` | `shift_id` | Foreign key references updated |
+| `visit_notes` | `shift_notes` | Table renamed |
+| `visit_status` | `shift_status` | Column renamed |
+| EVV "visit" | EVV "shift" | API endpoints updated |
+
+**Test Action:** Search and replace all `visit` references with `shift` in test files.
+
+#### 2.1.2 Caregiver Identity Model
+
+**OLD (Incorrect):**
+```sql
+SELECT first_name, last_name, email FROM caregivers WHERE id = $1;
+```
+
+**NEW (Correct):**
+```sql
+SELECT u.first_name, u.last_name, u.email
+FROM caregivers c
+JOIN users u ON c.user_id = u.id
+WHERE c.id = $1;
+```
+
+**Test Action:** All caregiver queries must JOIN to users table for PII.
+
+#### 2.1.3 Table/Column Renames
+
+| Old Name | New Name | Notes |
+|----------|----------|-------|
+| `pod_members` | `user_pod_memberships` | Pod governance |
+| `pod_members.role` | `user_pod_memberships.role_in_pod` | Avoids role ambiguity |
+| `caregivers.status` | `caregivers.employment_status` | Employment status |
+| `*.primary_pod_id` | `*.pod_id` | Standardized FK |
+| `background_checks.candidate_id` | `background_checks.applicant_id` | References applicants |
+| `caregiver_availability` | `caregiver_availability_patterns` | Weekly patterns |
+| `users.active` | `users.is_active` | Boolean standard |
+
+#### 2.1.4 Background Checks Schema
+
+| Old Column | New Column |
+|------------|------------|
+| `candidate_id` | `applicant_id` |
+| `provider` | `check_provider` |
+| `provider_check_id` | `submission_reference` |
+| `package_type` | `check_type` |
+| `overall_result` | `result` |
+
+#### 2.1.5 Tables That DO NOT EXIST
+
+Tests must NOT reference these deprecated tables:
+- `insurance_claims` → Use `claims_batches`
+- `invoices` → Not implemented
+- `supervisory_shifts` → Not implemented
+- `caregiver_training` → Use `training_assignments`
+- `recurring_visit_templates` → Not implemented
+
+---
+
+## 3. Test Credentials
+
+### 3.1 Production Test Domain
 - **Console URL:** https://console.serenitycarepartners.com
 - **Marketing Site:** https://serenitycarepartners.com
 - **API Base:** https://serenity-erp-prod-529254538029.us-central1.run.app
 
-### 2.2 How to Seed Test Users
+### 3.2 How to Seed Test Users
 
 ```bash
 cd backend
 npx tsx src/database/seeds/seed-test-roles.ts
 ```
 
-### 2.3 Complete Test Credentials Table
+### 3.3 Complete Test Credentials Table
 
 #### Executive Leadership (Full Access)
 
@@ -167,7 +247,7 @@ npx tsx src/database/seeds/seed-test-roles.ts
 | Family Member | family@test.serenitycare.com | Family1234! | Family portal |
 | Payer Auditor | payer.auditor@test.serenitycare.com | Auditor123! | Audit access |
 
-### 2.4 Quick Login Commands
+### 3.4 Quick Login Commands
 
 ```bash
 # Get auth token for any role
@@ -183,9 +263,9 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 ---
 
-## 3. Test Environment Setup
+## 4. Test Environment Setup
 
-### 3.1 Prerequisites
+### 4.1 Prerequisites
 
 ```bash
 # Frontend testing tools
@@ -198,7 +278,7 @@ npm install -D jest supertest @types/jest ts-jest
 npm install -D @percy/cli @percy/playwright
 ```
 
-### 3.2 Environment Configuration
+### 4.2 Environment Configuration
 
 ```env
 # .env.test
@@ -207,7 +287,7 @@ VITE_USE_MOCK_DATA=false
 DATABASE_URL=<test_database_connection_string>
 ```
 
-### 3.3 Running Tests
+### 4.3 Running Tests
 
 ```bash
 # Run all programmatic tests
@@ -221,11 +301,14 @@ npx jest tests/auth.test.ts
 
 # Run visual regression
 npx percy exec -- npx playwright test
+
+# Run schema validation tests
+npm run test:schema
 ```
 
 ---
 
-## 4. Authentication & Authorization Tests
+## 5. Authentication & Authorization Tests
 
 ### AUTH-001: Valid Login
 
@@ -475,7 +558,7 @@ curl -X GET https://serenity-erp-prod-529254538029.us-central1.run.app/api/conso
 
 ---
 
-## 5. RBAC & Permission Tests
+## 6. RBAC & Permission Tests
 
 ### RBAC-001: Sidebar Navigation Filtering
 
@@ -495,15 +578,15 @@ curl -X GET https://serenity-erp-prod-529254538029.us-central1.run.app/api/conso
 | Role | Expected Navigation Items |
 |------|--------------------------|
 | Founder | Home, Executive, HR & Talent, Tax, Operations, Clinical, Patients, Scheduling, Billing, Compliance, Training, EVV Clock, Family Portal, Communications |
-| CFO | Home, Executive, Tax, Billing, Payroll, Finance |
+| CFO | Home, Executive, Tax, Billing, Finance routes |
 | HR Director | Home, HR & Talent, Training, Credentials, Background Checks |
 | Caregiver | Home, EVV Clock, Patients (assigned only) |
 | Family | Home, Family Portal |
 
 **Test Each Role:**
-- [ ] Login as each of 30 roles
+- [ ] Login as each of 30+ roles
 - [ ] Count sidebar navigation items
-- [ ] Verify each item matches ROUTE_ACCESS configuration
+- [ ] Verify each item matches ROUTE_ACCESS configuration in useRoleAccess.tsx
 
 ---
 
@@ -560,9 +643,9 @@ curl -X GET https://serenity-erp-prod-529254538029.us-central1.run.app/api/conso
 
 **Steps:**
 1. Login as founder@test.serenitycare.com
-2. Navigate to each route in the system:
+2. Navigate to each route in the system
 
-**Routes to Test:**
+**Routes to Test (40+ routes):**
 - [ ] /dashboard/executive
 - [ ] /dashboard/executive-v2
 - [ ] /dashboard/hr
@@ -698,7 +781,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 
 ---
 
-## 6. Dashboard & Navigation Tests
+## 7. Dashboard & Navigation Tests
 
 ### DASH-001: Home Dashboard Loads
 
@@ -706,7 +789,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 |-------|-------|
 | **Test ID** | DASH-001 |
 | **Name** | Home Dashboard Loads Successfully |
-| **Description** | Verify that home dashboard loads with correct metrics |
+| **Description** | Verify that home dashboard loads with correct metrics from database |
 | **Why Important** | Core landing page for all users |
 | **Criticality** | P0 - Critical |
 | **Type** | Manual + Programmatic |
@@ -720,7 +803,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 **Expected Results:**
 - Page loads within 3 seconds
 - Welcome message with user name displayed
-- Dashboard cards show real data (not mock: 447, 485, $2,150,000)
+- Dashboard cards show REAL data (NOT mock values: 447, 485, $2,150,000)
 - Loading states display properly
 - No console errors
 
@@ -729,7 +812,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 curl -H "Authorization: Bearer $TOKEN" \
   .../api/console/dashboard/metrics
 ```
-Response should return actual database counts.
+Response should return actual database counts, zeros if empty.
 
 ---
 
@@ -748,7 +831,7 @@ Response should return actual database counts.
 | **Allowed Roles** | Founder, CEO, CFO, COO, Finance Director |
 
 **Verification Checklist:**
-- [ ] Revenue metrics display
+- [ ] Revenue metrics display (real data, not mock)
 - [ ] Patient census accurate
 - [ ] Staff utilization metrics
 - [ ] Compliance percentages
@@ -764,7 +847,7 @@ Response should return actual database counts.
 |-------|-------|
 | **Test ID** | DASH-003 |
 | **Name** | HR Dashboard Loads with Real Data |
-| **Description** | Verify HR dashboard shows actual applicants, not mock names |
+| **Description** | Verify HR dashboard shows actual applicants from database |
 | **Why Important** | HR workflow depends on accurate applicant data |
 | **Criticality** | P1 - High |
 | **Type** | Manual |
@@ -773,8 +856,8 @@ Response should return actual database counts.
 | **Allowed Roles** | Founder, CEO, COO, HR Director, HR Manager, Recruiter |
 
 **Verification Checklist:**
-- [ ] No mock names (Sarah Chen, Michael Johnson, etc.)
-- [ ] Applicant count from database
+- [ ] NO mock names (Sarah Chen, Michael Johnson, etc.)
+- [ ] Applicant count from database (0 if empty)
 - [ ] Pipeline stages accurate
 - [ ] Metrics calculated from real data
 - [ ] Time-to-hire based on actual dates
@@ -796,7 +879,7 @@ Response should return actual database counts.
 | **Allowed Roles** | Founder, CEO, CFO, Finance Director, Finance Manager, Compliance Officer |
 
 **Verification Checklist:**
-- [ ] No mock data ($11.1M revenue, $1893K liability)
+- [ ] NO mock data ($11.1M revenue, $1893K liability)
 - [ ] Tax calculations from actual billing data
 - [ ] Quarterly deadlines accurate
 - [ ] Compliance status reflects actual filings
@@ -818,7 +901,7 @@ Response should return actual database counts.
 | **Allowed Roles** | Founder, CEO, CFO, Finance Director, Finance Manager, Billing Manager, RCM Analyst, Billing Coder, Insurance Manager |
 
 **Verification Checklist:**
-- [ ] Monthly revenue from actual claims (not $2,150,000 mock)
+- [ ] Monthly revenue from actual claims (NOT $2,150,000 mock)
 - [ ] AR aging buckets calculated correctly
 - [ ] Payer breakdown from real data
 - [ ] Claims count accurate
@@ -827,18 +910,18 @@ Response should return actual database counts.
 
 ### DASH-006 through DASH-015: Additional Dashboards
 
-| Test ID | Dashboard | Allowed Roles |
-|---------|-----------|---------------|
-| DASH-006 | Operations | Founder, CEO, COO, Ops Manager, Field Ops, Pod Lead, Schedulers, Clinical Directors |
-| DASH-007 | Clinical | Founder, CEO, COO, DON, Clinical Director, Nursing Supervisor, RN, LPN, Therapist, QIDP, Compliance, QA |
-| DASH-008 | Scheduling | Founder, CEO, COO, Ops Managers, Schedulers, Dispatchers, Clinical Directors |
-| DASH-009 | Compliance | Founder, CEO, COO, Compliance Officer, Security Officer, QA Manager, DON, Clinical Director |
-| DASH-010 | Training | Founder, CEO, COO, HR Director, HR Manager, DON, Clinical Director, Compliance |
-| DASH-011 | Credentials | Founder, HR Director, HR Manager, Credentialing Specialist, Compliance |
-| DASH-012 | Background Checks | Founder, HR Director, HR Manager, Recruiter |
-| DASH-013 | Payroll | Founder, CFO, Finance Director, Finance Manager, HR Director |
-| DASH-014 | Care Plans | Founder, DON, Clinical Director, Nursing Supervisor, RN, Therapist, QIDP |
-| DASH-015 | Dispatch | Founder, Ops Manager, Scheduling Manager, Dispatcher, Pod Lead |
+| Test ID | Dashboard | Allowed Roles | Key Verifications |
+|---------|-----------|---------------|-------------------|
+| DASH-006 | Operations | Founder, CEO, COO, Ops Manager, Field Ops, Pod Lead, Schedulers, Clinical Directors | Shift counts (not visits), real scheduling data |
+| DASH-007 | Clinical | Founder, CEO, COO, DON, Clinical Director, Nursing Supervisor, RN, LPN, Therapist, QIDP, Compliance, QA | Care plan counts, patient data from joins |
+| DASH-008 | Scheduling | Founder, CEO, COO, Ops Managers, Schedulers, Dispatchers, Clinical Directors | Uses `shifts` table, not `visits` |
+| DASH-009 | Compliance | Founder, CEO, COO, Compliance Officer, Security Officer, QA Manager, DON, Clinical Director | Training assignments, not caregiver_training |
+| DASH-010 | Training | Founder, CEO, COO, HR Director, HR Manager, DON, Clinical Director, Compliance | Uses `training_assignments` table |
+| DASH-011 | Credentials | Founder, HR Director, HR Manager, Credentialing Specialist, Compliance | Credential expiration dates |
+| DASH-012 | Background Checks | Founder, HR Director, HR Manager, Recruiter | Uses `applicant_id`, not `candidate_id` |
+| DASH-013 | Payroll | Founder, CFO, Finance Director, Finance Manager, HR Director | Caregiver data requires user JOIN |
+| DASH-014 | Care Plans | Founder, DON, Clinical Director, Nursing Supervisor, RN, Therapist, QIDP | Uses care_plans from migration 075 |
+| DASH-015 | Dispatch | Founder, Ops Manager, Scheduling Manager, Dispatcher, Pod Lead | Uses `shifts` table |
 
 ---
 
@@ -857,22 +940,33 @@ Response should return actual database counts.
 
 ---
 
-### DASH-017: Sidebar Collapse/Expand
+### DASH-017: Communications Settings (No Double Layout)
 
 | Field | Value |
 |-------|-------|
 | **Test ID** | DASH-017 |
-| **Name** | Sidebar Toggle Functionality |
-| **Description** | Verify sidebar can collapse and expand |
-| **Why Important** | UX - screen real estate management |
-| **Criticality** | P3 - Low |
+| **Name** | Communications Page Renders Correctly |
+| **Description** | Verify Communications settings page shows single layout (not duplicated) |
+| **Why Important** | Bug fix verification - previously had double sidebar |
+| **Criticality** | P2 - Medium |
 | **Type** | Manual |
-| **Dependencies** | DASH-001 |
-| **Feeds Into** | Responsive tests |
+| **Dependencies** | AUTH-001, RBAC-001 |
+| **Feeds Into** | Layout consistency |
+
+**Steps:**
+1. Login as founder@test.serenitycare.com
+2. Navigate to /admin/settings/communications
+3. Verify page layout
+
+**Expected Results:**
+- Single sidebar on left
+- Communication Settings content on right
+- NO duplicate navigation/menu
+- Clean single-level layout
 
 ---
 
-## 7. API Endpoint Tests
+## 8. API Endpoint Tests
 
 ### API-001: Dashboard Metrics Endpoint
 
@@ -912,7 +1006,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 - [ ] Response time < 500ms
 - [ ] All fields present
 - [ ] Values are numbers (not strings)
-- [ ] No mock data values
+- [ ] No mock data values (447, 485, $2,150,000)
 
 ---
 
@@ -928,6 +1022,8 @@ curl -H "Authorization: Bearer $TOKEN" \
 | **Type** | Programmatic |
 | **Dependencies** | AUTH-001 |
 | **Feeds Into** | DASH-003 |
+
+**Schema Note:** Must query users table for caregiver names via JOIN.
 
 ---
 
@@ -958,31 +1054,293 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 ---
 
-### API-004 through API-020: Core API Endpoints
+### API-004: Scheduling/Shifts Endpoint
 
-| Test ID | Endpoint | Method | Description |
-|---------|----------|--------|-------------|
-| API-004 | /api/console/clients | GET | List clients |
-| API-005 | /api/console/clients | POST | Create client |
-| API-006 | /api/console/clients/:id | GET | Get client details |
-| API-007 | /api/console/scheduling | GET | Get schedules |
-| API-008 | /api/console/scheduling | POST | Create shift |
-| API-009 | /api/console/evv/visits | GET | List EVV visits |
-| API-010 | /api/console/evv/visits | POST | Record visit |
-| API-011 | /api/console/billing/dashboard | GET | Billing metrics |
-| API-012 | /api/console/claims | GET | List claims |
-| API-013 | /api/console/claims | POST | Create claim |
-| API-014 | /api/console/credentials | GET | List credentials |
-| API-015 | /api/console/training/assignments | GET | Training data |
-| API-016 | /api/console/compliance/audits | GET | Audit logs |
-| API-017 | /api/console/pods | GET | List pods |
-| API-018 | /api/console/payroll | GET | Payroll data |
-| API-019 | /api/auth/login | POST | User login |
-| API-020 | /api/auth/logout | POST | User logout |
+| Field | Value |
+|-------|-------|
+| **Test ID** | API-004 |
+| **Name** | GET /api/console/scheduling |
+| **Description** | Verify scheduling API uses `shifts` table (not visits) |
+| **Why Important** | Schema change validation |
+| **Criticality** | P0 - Critical |
+| **Type** | Programmatic |
+| **Dependencies** | AUTH-001 |
+| **Feeds Into** | DASH-006, DASH-008, DASH-015 |
+
+**Schema Validation:**
+- [ ] Response uses `shift_id` not `visit_id`
+- [ ] References `shifts` table internally
+- [ ] Caregiver info comes from users JOIN
 
 ---
 
-## 8. Feature Workflow Tests
+### API-005 through API-020: Core API Endpoints
+
+| Test ID | Endpoint | Method | Schema Notes |
+|---------|----------|--------|--------------|
+| API-005 | /api/console/clients | GET | Uses `pod_id` not `primary_pod_id` |
+| API-006 | /api/console/clients | POST | Create client |
+| API-007 | /api/console/clients/:id | GET | Client detail |
+| API-008 | /api/console/caregivers | GET | Must JOIN users for PII |
+| API-009 | /api/console/shifts | POST | Uses `shifts` table |
+| API-010 | /api/console/evv/shifts | GET | Uses `shifts` not `visits` |
+| API-011 | /api/console/evv/shifts | POST | Record shift clock in/out |
+| API-012 | /api/console/billing/dashboard | GET | Uses `claims_batches` not `insurance_claims` |
+| API-013 | /api/console/claims | GET | List claims |
+| API-014 | /api/console/claims | POST | Create claim |
+| API-015 | /api/console/credentials | GET | List credentials |
+| API-016 | /api/console/training/assignments | GET | Uses `training_assignments` not `caregiver_training` |
+| API-017 | /api/console/compliance/audits | GET | Audit logs |
+| API-018 | /api/console/pods | GET | Uses `user_pod_memberships` |
+| API-019 | /api/console/background-checks | GET | Uses `applicant_id` not `candidate_id` |
+| API-020 | /api/auth/login | POST | User login |
+
+---
+
+## 9. Database Schema Validation Tests
+
+### SCHEMA-001: Shifts Table Exists (Not Visits)
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | SCHEMA-001 |
+| **Name** | Verify `shifts` Table Exists |
+| **Description** | Confirm the visits→shifts rename is complete |
+| **Why Important** | Breaking schema change validation |
+| **Criticality** | P0 - Critical |
+| **Type** | Programmatic |
+| **Dependencies** | None |
+| **Feeds Into** | All shift-related tests |
+
+**SQL Test:**
+```sql
+-- This should succeed
+SELECT * FROM shifts LIMIT 1;
+
+-- This should fail
+SELECT * FROM visits LIMIT 1; -- ERROR: relation "visits" does not exist
+```
+
+---
+
+### SCHEMA-002: Caregivers Table Structure
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | SCHEMA-002 |
+| **Name** | Caregivers Table Has Correct Structure |
+| **Description** | Verify caregivers is profile extension only (no PII) |
+| **Why Important** | Identity model change validation |
+| **Criticality** | P0 - Critical |
+| **Type** | Programmatic |
+| **Dependencies** | None |
+| **Feeds Into** | Caregiver data queries |
+
+**SQL Test:**
+```sql
+-- These columns should NOT exist in caregivers
+SELECT first_name FROM caregivers; -- ERROR
+SELECT last_name FROM caregivers; -- ERROR
+SELECT email FROM caregivers; -- ERROR
+
+-- This should work
+SELECT c.id, c.user_id, c.employment_status, u.first_name, u.last_name
+FROM caregivers c
+JOIN users u ON c.user_id = u.id;
+```
+
+---
+
+### SCHEMA-003: User Pod Memberships Table
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | SCHEMA-003 |
+| **Name** | Verify `user_pod_memberships` Table |
+| **Description** | Confirm pod_members→user_pod_memberships rename |
+| **Why Important** | Pod governance schema change |
+| **Criticality** | P1 - High |
+| **Type** | Programmatic |
+| **Dependencies** | None |
+| **Feeds Into** | Pod access tests |
+
+**SQL Test:**
+```sql
+-- This should succeed
+SELECT user_id, pod_id, role_in_pod FROM user_pod_memberships LIMIT 1;
+
+-- This should fail
+SELECT * FROM pod_members; -- ERROR
+```
+
+---
+
+### SCHEMA-004: Background Checks Columns
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | SCHEMA-004 |
+| **Name** | Background Checks Table Schema |
+| **Description** | Verify column renames in background_checks |
+| **Why Important** | Migration 058 schema validation |
+| **Criticality** | P1 - High |
+| **Type** | Programmatic |
+| **Dependencies** | None |
+| **Feeds Into** | Background check workflow |
+
+**SQL Test:**
+```sql
+-- These column names should work
+SELECT applicant_id, check_provider, submission_reference, check_type, result
+FROM background_checks LIMIT 1;
+
+-- These old names should fail
+SELECT candidate_id FROM background_checks; -- ERROR
+SELECT provider FROM background_checks; -- ERROR
+SELECT provider_check_id FROM background_checks; -- ERROR
+```
+
+---
+
+### SCHEMA-005: Care Plans Table
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | SCHEMA-005 |
+| **Name** | Care Plans Table Structure |
+| **Description** | Verify care_plans from migration 075 |
+| **Why Important** | Care plan functionality |
+| **Criticality** | P1 - High |
+| **Type** | Programmatic |
+| **Dependencies** | None |
+| **Feeds Into** | Clinical workflows |
+
+**SQL Test:**
+```sql
+SELECT client_id, assessment_id, goals, interventions, service_schedule
+FROM care_plans LIMIT 1;
+```
+
+---
+
+### SCHEMA-006: Training Assignments Table
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | SCHEMA-006 |
+| **Name** | Training Assignments Table Exists |
+| **Description** | Verify training_assignments (not caregiver_training) |
+| **Why Important** | Training module schema |
+| **Criticality** | P1 - High |
+| **Type** | Programmatic |
+| **Dependencies** | None |
+| **Feeds Into** | Training workflows |
+
+**SQL Test:**
+```sql
+-- This should succeed
+SELECT * FROM training_assignments LIMIT 1;
+
+-- This should fail
+SELECT * FROM caregiver_training; -- ERROR: does not exist
+```
+
+---
+
+### SCHEMA-007: Caregiver Availability Patterns
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | SCHEMA-007 |
+| **Name** | Availability Patterns Table |
+| **Description** | Verify caregiver_availability_patterns table |
+| **Why Important** | Scheduling functionality |
+| **Criticality** | P2 - Medium |
+| **Type** | Programmatic |
+| **Dependencies** | None |
+| **Feeds Into** | Scheduling workflows |
+
+**SQL Test:**
+```sql
+-- This should succeed
+SELECT * FROM caregiver_availability_patterns LIMIT 1;
+
+-- This should fail
+SELECT * FROM caregiver_availability; -- ERROR
+```
+
+---
+
+### SCHEMA-008: Users is_active Column
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | SCHEMA-008 |
+| **Name** | Users is_active Boolean Column |
+| **Description** | Verify users.active→is_active rename |
+| **Why Important** | Boolean standard compliance |
+| **Criticality** | P2 - Medium |
+| **Type** | Programmatic |
+| **Dependencies** | None |
+| **Feeds Into** | User queries |
+
+**SQL Test:**
+```sql
+SELECT is_active FROM users LIMIT 1; -- Should work
+SELECT active FROM users LIMIT 1; -- Should fail
+```
+
+---
+
+### SCHEMA-009: Claims Batches (Not Insurance Claims)
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | SCHEMA-009 |
+| **Name** | Claims Batches Table |
+| **Description** | Verify claims_batches exists (not insurance_claims) |
+| **Why Important** | Billing schema |
+| **Criticality** | P1 - High |
+| **Type** | Programmatic |
+| **Dependencies** | None |
+| **Feeds Into** | Billing workflows |
+
+**SQL Test:**
+```sql
+SELECT * FROM claims_batches LIMIT 1; -- Should work
+SELECT * FROM insurance_claims LIMIT 1; -- Should fail
+```
+
+---
+
+### SCHEMA-010: Deprecated Tables Do Not Exist
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | SCHEMA-010 |
+| **Name** | Verify Deprecated Tables Removed |
+| **Description** | Confirm removed tables do not exist |
+| **Why Important** | Prevent test failures on old schema |
+| **Criticality** | P1 - High |
+| **Type** | Programmatic |
+| **Dependencies** | None |
+| **Feeds Into** | Test suite maintenance |
+
+**Tables That Should NOT Exist:**
+```sql
+SELECT * FROM insurance_claims; -- ERROR
+SELECT * FROM invoices; -- ERROR
+SELECT * FROM supervisory_shifts; -- ERROR
+SELECT * FROM caregiver_training; -- ERROR
+SELECT * FROM recurring_visit_templates; -- ERROR
+SELECT * FROM visits; -- ERROR (renamed to shifts)
+SELECT * FROM pod_members; -- ERROR (renamed)
+SELECT * FROM caregiver_availability; -- ERROR (renamed)
+```
+
+---
+
+## 10. Feature Workflow Tests
 
 ### WF-001: Billing Flow - Create to Payment
 
@@ -996,6 +1354,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 | **Type** | Manual |
 | **Dependencies** | AUTH-001, API endpoints |
 | **Feeds Into** | Financial reporting |
+| **Schema Note** | Uses `claims_batches` table |
 
 **Workflow Steps:**
 1. Login as billing.coder@test.serenitycare.com
@@ -1015,7 +1374,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 ---
 
-### WF-002: Scheduling Flow
+### WF-002: Scheduling Flow (Using Shifts)
 
 | Field | Value |
 |-------|-------|
@@ -1027,17 +1386,18 @@ curl -H "Authorization: Bearer $TOKEN" \
 | **Type** | Manual |
 | **Dependencies** | AUTH-001 |
 | **Feeds Into** | EVV, Billing |
+| **Schema Note** | Uses `shifts` table (NOT visits) |
 
 **Workflow Steps:**
 1. Login as scheduler@test.serenitycare.com
-2. Create new shift
-3. Assign caregiver
+2. Create new **shift** (not visit)
+3. Assign caregiver (via user JOIN)
 4. Login as caregiver@test.serenitycare.com
-5. View assigned shift
+5. View assigned **shift**
 6. Clock in via EVV
-7. Complete visit
+7. Complete service
 8. Clock out via EVV
-9. Verify visit recorded
+9. Verify **shift** recorded
 
 ---
 
@@ -1053,10 +1413,11 @@ curl -H "Authorization: Bearer $TOKEN" \
 | **Type** | Manual |
 | **Dependencies** | AUTH-001 |
 | **Feeds Into** | Clinical documentation |
+| **Schema Note** | Uses care_plans from migration 075 |
 
 **Workflow Steps:**
 1. Login as rn.case.manager@test.serenitycare.com
-2. Create new care plan
+2. Create new care plan (goals, interventions as JSONB)
 3. Add goals and interventions
 4. Submit for review
 5. Login as nursing.supervisor@test.serenitycare.com
@@ -1078,18 +1439,21 @@ curl -H "Authorization: Bearer $TOKEN" \
 | **Type** | Manual |
 | **Dependencies** | AUTH-001 |
 | **Feeds Into** | Onboarding, Payroll |
+| **Schema Note** | Background checks use `applicant_id` |
 
 **Workflow Steps:**
 1. Applicant submits via careers page
 2. Login as recruiter@test.serenitycare.com
 3. Review application, move to screening
-4. Schedule interview
-5. Conduct interview, update status
-6. Login as hr.manager@test.serenitycare.com
-7. Extend offer
-8. Convert to employee
-9. Assign role and pod
-10. Initiate onboarding
+4. Initiate background check (uses `applicant_id`)
+5. Schedule interview
+6. Conduct interview, update status
+7. Login as hr.manager@test.serenitycare.com
+8. Extend offer
+9. Convert to employee (creates user record)
+10. Create caregiver profile (links to user_id)
+11. Assign to pod via `user_pod_memberships`
+12. Initiate onboarding
 
 ---
 
@@ -1108,33 +1472,85 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 ---
 
-### WF-006: EVV Workflow
+### WF-006: EVV Workflow (Shifts)
 
 | Field | Value |
 |-------|-------|
 | **Test ID** | WF-006 |
 | **Name** | EVV Clock In/Out Workflow |
-| **Description** | Test electronic visit verification process |
+| **Description** | Test electronic visit verification for shifts |
 | **Why Important** | Sandata compliance |
 | **Criticality** | P0 - Critical |
 | **Type** | Manual |
 | **Dependencies** | WF-002 |
 | **Feeds Into** | Billing, Sandata |
+| **Schema Note** | Uses `shifts` table, references `shift_id` |
 
 **Workflow Steps:**
 1. Login as caregiver@test.serenitycare.com
 2. Navigate to /evv/clock
-3. View today's assigned visits
-4. Select visit to start
+3. View today's assigned **shifts**
+4. Select shift to start
 5. Clock in with GPS verification
 6. Complete service
-7. Document visit notes
+7. Document shift notes (stored in `shift_notes`)
 8. Clock out
-9. Submit visit
+9. Submit shift
 
 ---
 
-## 9. Visual Consistency Tests
+### WF-007: Training Assignment Workflow
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | WF-007 |
+| **Name** | Training Assignment and Completion |
+| **Description** | Test training assignment through completion |
+| **Why Important** | Compliance tracking |
+| **Criticality** | P1 - High |
+| **Type** | Manual |
+| **Dependencies** | AUTH-001 |
+| **Feeds Into** | Credential verification |
+| **Schema Note** | Uses `training_assignments` (NOT caregiver_training) |
+
+**Workflow Steps:**
+1. Login as hr.manager@test.serenitycare.com
+2. Create training assignment
+3. Assign to caregiver (via user_id)
+4. Login as caregiver@test.serenitycare.com
+5. View training assignment
+6. Complete training modules
+7. Mark as complete
+8. Verify training_assignments record updated
+
+---
+
+### WF-008: Caregiver Onboarding Workflow
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | WF-008 |
+| **Name** | New Caregiver Onboarding |
+| **Description** | Test complete onboarding flow with new schema |
+| **Why Important** | Proper staff setup |
+| **Criticality** | P1 - High |
+| **Type** | Manual |
+| **Dependencies** | WF-004 |
+| **Feeds Into** | Scheduling, EVV |
+| **Schema Notes** | Creates user, caregivers profile, user_pod_memberships, caregiver_availability_patterns |
+
+**Workflow Steps:**
+1. HR creates user account (users table)
+2. Create caregiver profile (caregivers table with user_id FK)
+3. Set employment_status = 'active'
+4. Assign to pod via user_pod_memberships (role_in_pod)
+5. Set availability patterns (caregiver_availability_patterns)
+6. Assign initial training (training_assignments)
+7. Verify all relationships properly created
+
+---
+
+## 11. Visual Consistency Tests
 
 ### VIS-001: Typography Consistency
 
@@ -1151,7 +1567,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 **Checklist:**
 - [ ] Primary font: Inter or system sans-serif
-- [ ] Heading sizes: h1=2xl, h2=xl, h3=lg
+- [ ] Heading sizes: h1=2xl (24px), h2=xl (20px), h3=lg (18px)
 - [ ] Body text: base (16px)
 - [ ] Small text: sm (14px)
 - [ ] Consistent line heights
@@ -1178,7 +1594,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 - [ ] Warning yellow/orange: #f59e0b
 - [ ] Error red: #dc2626
 - [ ] Background gray: #f9fafb
-- [ ] Card background: white
+- [ ] Card background: white (#ffffff)
 - [ ] Text primary: #111827
 - [ ] Text secondary: #6b7280
 
@@ -1199,11 +1615,11 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 **Checklist:**
 - [ ] Page padding: p-6 (24px)
-- [ ] Card padding: p-4 to p-6
-- [ ] Button padding: px-4 py-2
-- [ ] Form field spacing: space-y-4
-- [ ] Section spacing: mb-6 to mb-8
-- [ ] Consistent grid gaps: gap-4 to gap-6
+- [ ] Card padding: p-4 to p-6 (16-24px)
+- [ ] Button padding: px-4 py-2 (16px horizontal, 8px vertical)
+- [ ] Form field spacing: space-y-4 (16px vertical gap)
+- [ ] Section spacing: mb-6 to mb-8 (24-32px)
+- [ ] Consistent grid gaps: gap-4 to gap-6 (16-24px)
 
 ---
 
@@ -1221,12 +1637,12 @@ curl -H "Authorization: Bearer $TOKEN" \
 | **Feeds Into** | Component library |
 
 **Button Types:**
-- [ ] Primary: blue background, white text
-- [ ] Secondary: gray/outline
-- [ ] Danger: red background
-- [ ] Disabled: opacity-50, not-allowed cursor
+- [ ] Primary: blue-600 background, white text
+- [ ] Secondary: gray/outline styling
+- [ ] Danger: red-600 background
+- [ ] Disabled: opacity-50, cursor-not-allowed
 - [ ] Consistent border-radius (rounded-md or rounded-lg)
-- [ ] Hover states visible
+- [ ] Hover states visible and responsive
 
 ---
 
@@ -1247,7 +1663,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 - [ ] White background
 - [ ] Consistent shadow (shadow-sm or shadow)
 - [ ] Rounded corners (rounded-lg)
-- [ ] Consistent padding
+- [ ] Consistent padding (p-4 or p-6)
 - [ ] Border: none or border-gray-200
 
 ---
@@ -1268,10 +1684,10 @@ curl -H "Authorization: Bearer $TOKEN" \
 **Checklist:**
 - [ ] Input borders: gray-300
 - [ ] Focus ring: blue-500
-- [ ] Labels above inputs
-- [ ] Error states: red border, error message
-- [ ] Disabled states: gray background
-- [ ] Consistent heights
+- [ ] Labels positioned above inputs
+- [ ] Error states: red border, error message below
+- [ ] Disabled states: gray background, reduced opacity
+- [ ] Consistent input heights
 
 ---
 
@@ -1294,7 +1710,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 - [ ] Alternating row colors (if applicable)
 - [ ] Consistent cell padding
 - [ ] Sortable column indicators
-- [ ] Pagination styling
+- [ ] Pagination styling consistent
 
 ---
 
@@ -1315,7 +1731,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 - [ ] Using Heroicons consistently
 - [ ] Icon sizes: w-4 h-4, w-5 h-5, w-6 h-6
 - [ ] Badge colors match severity
-- [ ] Status badges consistent
+- [ ] Status badges consistent across views
 
 ---
 
@@ -1335,8 +1751,8 @@ curl -H "Authorization: Bearer $TOKEN" \
 **Checklist:**
 - [ ] Spinner displays during API calls
 - [ ] Skeleton loaders for content areas
-- [ ] Button loading states
-- [ ] Page-level loading overlays
+- [ ] Button loading states (spinner inside button)
+- [ ] Page-level loading overlays when appropriate
 
 ---
 
@@ -1354,14 +1770,15 @@ curl -H "Authorization: Bearer $TOKEN" \
 | **Feeds Into** | UX polish |
 
 **Checklist:**
-- [ ] Friendly message when no data
+- [ ] Friendly message when no data (not blank screen)
 - [ ] Illustration or icon
 - [ ] Call-to-action button if applicable
-- [ ] No broken layouts
+- [ ] No broken layouts with empty data
+- [ ] Shows zeros, not mock data
 
 ---
 
-## 10. Mobile & Responsive Tests
+## 12. Mobile & Responsive Tests
 
 ### MOB-001: Mobile Login
 
@@ -1377,11 +1794,11 @@ curl -H "Authorization: Bearer $TOKEN" \
 | **Feeds Into** | Mobile workflows |
 
 **Test On:**
-- [ ] iPhone SE (375px)
-- [ ] iPhone 14 (390px)
-- [ ] Android (360px)
-- [ ] iPad (768px)
-- [ ] iPad Pro (1024px)
+- [ ] iPhone SE (375px width)
+- [ ] iPhone 14 (390px width)
+- [ ] Android typical (360px width)
+- [ ] iPad (768px width)
+- [ ] iPad Pro (1024px width)
 
 ---
 
@@ -1399,11 +1816,12 @@ curl -H "Authorization: Bearer $TOKEN" \
 | **Feeds Into** | Mobile UX |
 
 **Checklist:**
-- [ ] Sidebar hidden by default on mobile
-- [ ] Hamburger menu visible
+- [ ] Sidebar hidden by default on mobile (<768px)
+- [ ] Hamburger menu icon visible
 - [ ] Sidebar slides in when opened
 - [ ] Overlay behind sidebar
-- [ ] Close on navigation or outside click
+- [ ] Close on navigation item click
+- [ ] Close on outside click
 
 ---
 
@@ -1413,8 +1831,8 @@ curl -H "Authorization: Bearer $TOKEN" \
 |-------|-------|
 | **Test ID** | MOB-003 |
 | **Name** | Dashboard Cards Responsive |
-| **Description** | Verify dashboard cards stack on mobile |
-| **Why Important** | Content visibility |
+| **Description** | Verify dashboard cards stack vertically on mobile |
+| **Why Important** | Content visibility on small screens |
 | **Criticality** | P2 - Medium |
 | **Type** | Manual |
 | **Dependencies** | DASH-001 |
@@ -1428,7 +1846,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 |-------|-------|
 | **Test ID** | MOB-004 |
 | **Name** | EVV Clock on Mobile |
-| **Description** | Verify EVV clock in/out works on mobile |
+| **Description** | Verify EVV clock in/out works on mobile devices |
 | **Why Important** | Primary use case for field staff |
 | **Criticality** | P0 - Critical |
 | **Type** | Manual |
@@ -1444,7 +1862,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 | **Test ID** | MOB-005 |
 | **Name** | Data Tables Mobile Behavior |
 | **Description** | Verify tables scroll or adapt on mobile |
-| **Why Important** | Data accessibility |
+| **Why Important** | Data accessibility on small screens |
 | **Criticality** | P2 - Medium |
 | **Type** | Manual |
 | **Dependencies** | None |
@@ -1452,23 +1870,24 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 ---
 
-## 11. Integration Tests
+## 13. Integration Tests
 
 ### INT-001: Sandata EVV Integration
 
 | Field | Value |
 |-------|-------|
 | **Test ID** | INT-001 |
-| **Name** | Sandata Visit Submission |
-| **Description** | Verify visits submit to Sandata correctly |
+| **Name** | Sandata Shift Submission |
+| **Description** | Verify shifts submit to Sandata correctly |
 | **Why Important** | EVV compliance |
 | **Criticality** | P0 - Critical |
 | **Type** | Manual + Programmatic |
 | **Dependencies** | WF-006 |
 | **Feeds Into** | Billing |
+| **Schema Note** | Uses `shifts` table, shift_id references |
 
 **Checklist:**
-- [ ] Visit data formatted correctly
+- [ ] Shift data formatted correctly (not "visit")
 - [ ] Ohio ALTEVV format compliance
 - [ ] SSN handling per requirements
 - [ ] Authorization matching
@@ -1489,6 +1908,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 | **Type** | Manual |
 | **Dependencies** | WF-001 |
 | **Feeds Into** | AR management |
+| **Schema Note** | Uses claims_batches table |
 
 ---
 
@@ -1507,13 +1927,13 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 ---
 
-### INT-004: Email Integration
+### INT-004: Email Integration (SMTP)
 
 | Field | Value |
 |-------|-------|
 | **Test ID** | INT-004 |
-| **Name** | Email Delivery |
-| **Description** | Verify emails send via SMTP |
+| **Name** | Email Delivery via SMTP |
+| **Description** | Verify emails send via configured SMTP |
 | **Why Important** | Staff and client communication |
 | **Criticality** | P1 - High |
 | **Type** | Manual |
@@ -1522,7 +1942,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 ---
 
-## 12. Security Tests
+## 14. Security Tests
 
 ### SEC-001: SQL Injection Prevention
 
@@ -1613,8 +2033,8 @@ javascript:alert('XSS')
 
 **Requirements:**
 - [ ] Minimum 8 characters
-- [ ] At least one uppercase
-- [ ] At least one lowercase
+- [ ] At least one uppercase letter
+- [ ] At least one lowercase letter
 - [ ] At least one number
 - [ ] At least one special character
 
@@ -1635,7 +2055,7 @@ javascript:alert('XSS')
 
 ---
 
-## 13. Performance Tests
+## 15. Performance Tests
 
 ### PERF-001: Dashboard Load Time
 
@@ -1688,11 +2108,11 @@ javascript:alert('XSS')
 **Target:**
 - 100 concurrent users
 - 1000 requests/minute
-- No degradation
+- No performance degradation
 
 ---
 
-## 14. Accessibility Tests
+## 16. Accessibility Tests
 
 ### A11Y-001: Keyboard Navigation
 
@@ -1708,11 +2128,11 @@ javascript:alert('XSS')
 | **Feeds Into** | ADA compliance |
 
 **Checklist:**
-- [ ] Tab order logical
-- [ ] Focus visible
-- [ ] Enter activates buttons
-- [ ] Escape closes modals
-- [ ] Arrow keys in menus
+- [ ] Tab order is logical
+- [ ] Focus indicator is visible
+- [ ] Enter key activates buttons
+- [ ] Escape key closes modals
+- [ ] Arrow keys work in dropdown menus
 
 ---
 
@@ -1723,7 +2143,7 @@ javascript:alert('XSS')
 | **Test ID** | A11Y-002 |
 | **Name** | Screen Reader Support |
 | **Description** | Verify content readable by screen readers |
-| **Why Important** | Accessibility |
+| **Why Important** | Accessibility for visually impaired |
 | **Criticality** | P2 - Medium |
 | **Type** | Manual |
 | **Dependencies** | None |
@@ -1745,12 +2165,12 @@ javascript:alert('XSS')
 | **Feeds Into** | ADA compliance |
 
 **Requirement:**
-- Normal text: 4.5:1
-- Large text: 3:1
+- Normal text: 4.5:1 contrast ratio
+- Large text: 3:1 contrast ratio
 
 ---
 
-## 15. Data Validation Tests
+## 17. Data Validation Tests
 
 ### VAL-001: Required Fields
 
@@ -1789,7 +2209,7 @@ javascript:alert('XSS')
 | **Test ID** | VAL-003 |
 | **Name** | Phone Number Validation |
 | **Description** | Verify phone fields accept valid formats |
-| **Why Important** | Communication data |
+| **Why Important** | Communication data quality |
 | **Criticality** | P2 - Medium |
 | **Type** | Manual |
 | **Dependencies** | None |
@@ -1819,15 +2239,15 @@ javascript:alert('XSS')
 | **Test ID** | VAL-005 |
 | **Name** | SSN Format Validation |
 | **Description** | Verify SSN fields validate XXX-XX-XXXX format |
-| **Why Important** | Compliance data |
+| **Why Important** | Compliance data accuracy |
 | **Criticality** | P1 - High |
 | **Type** | Manual |
 | **Dependencies** | None |
-| **Feeds Into** | HR, Sandata |
+| **Feeds Into** | HR, Sandata integration |
 
 ---
 
-## 16. Error Handling Tests
+## 18. Error Handling Tests
 
 ### ERR-001: Network Timeout
 
@@ -1836,7 +2256,7 @@ javascript:alert('XSS')
 | **Test ID** | ERR-001 |
 | **Name** | Network Timeout Handling |
 | **Description** | Verify graceful handling of API timeouts |
-| **Why Important** | User experience |
+| **Why Important** | User experience during connectivity issues |
 | **Criticality** | P2 - Medium |
 | **Type** | Manual |
 | **Dependencies** | None |
@@ -1866,7 +2286,7 @@ javascript:alert('XSS')
 | **Test ID** | ERR-003 |
 | **Name** | 500 Error Handling |
 | **Description** | Verify server errors display user-friendly message |
-| **Why Important** | User experience |
+| **Why Important** | User experience during errors |
 | **Criticality** | P2 - Medium |
 | **Type** | Manual |
 | **Dependencies** | None |
@@ -1889,7 +2309,7 @@ javascript:alert('XSS')
 
 ---
 
-## 17. Cross-Browser Tests
+## 19. Cross-Browser Tests
 
 ### BROWSER-001: Chrome Latest
 
@@ -1898,7 +2318,7 @@ javascript:alert('XSS')
 | **Test ID** | BROWSER-001 |
 | **Name** | Chrome Compatibility |
 | **Description** | Verify full functionality in Chrome |
-| **Why Important** | Primary browser |
+| **Why Important** | Primary browser for most users |
 | **Criticality** | P0 - Critical |
 | **Type** | Manual |
 | **Dependencies** | None |
@@ -1951,7 +2371,7 @@ javascript:alert('XSS')
 
 ---
 
-## 18. Regression Test Checklist
+## 20. Regression Test Checklist
 
 ### Pre-Deployment Regression Suite
 
@@ -1965,38 +2385,73 @@ Run before each production deployment:
 - [ ] AUTH-008: API auth required
 
 #### RBAC (5 tests)
-- [ ] RBAC-001: Sidebar filtering
-- [ ] RBAC-002: Access denied displays
-- [ ] RBAC-003: Founder full access
-- [ ] RBAC-004: API permission check
+- [ ] RBAC-001: Sidebar filtering works
+- [ ] RBAC-002: Access denied displays correctly
+- [ ] RBAC-003: Founder has full access
+- [ ] RBAC-004: API permission enforcement
 - [ ] RBAC-005: Pod-based filtering
 
-#### Core Dashboards (5 tests)
-- [ ] DASH-001: Home loads
-- [ ] DASH-002: Executive loads
-- [ ] DASH-003: HR no mock data
-- [ ] DASH-004: Tax no mock data
-- [ ] DASH-005: Billing no mock data
+#### Schema Validation (5 tests)
+- [ ] SCHEMA-001: Shifts table exists
+- [ ] SCHEMA-002: Caregivers uses user JOIN
+- [ ] SCHEMA-003: user_pod_memberships exists
+- [ ] SCHEMA-004: Background checks schema correct
+- [ ] SCHEMA-010: Deprecated tables don't exist
 
-#### Core Workflows (4 tests)
-- [ ] WF-001: Billing flow
-- [ ] WF-002: Scheduling flow
-- [ ] WF-004: HR hiring flow
-- [ ] WF-006: EVV clock in/out
+#### Core Dashboards (5 tests)
+- [ ] DASH-001: Home loads with real data
+- [ ] DASH-002: Executive loads (no mock data)
+- [ ] DASH-003: HR shows database applicants
+- [ ] DASH-004: Tax shows real calculations
+- [ ] DASH-005: Billing shows actual revenue
+
+#### Core Workflows (5 tests)
+- [ ] WF-001: Billing flow works
+- [ ] WF-002: Scheduling uses shifts (not visits)
+- [ ] WF-004: HR hiring creates proper records
+- [ ] WF-006: EVV clock in/out works
+- [ ] WF-008: Caregiver onboarding creates all relationships
 
 #### Visual (3 tests)
-- [ ] VIS-001: Typography
-- [ ] VIS-002: Colors
-- [ ] VIS-009: Loading states
+- [ ] VIS-001: Typography consistent
+- [ ] VIS-002: Colors correct
+- [ ] VIS-009: Loading states work
 
 #### Mobile (2 tests)
-- [ ] MOB-001: Mobile login
-- [ ] MOB-004: EVV mobile
+- [ ] MOB-001: Mobile login works
+- [ ] MOB-004: EVV works on mobile
 
 #### Security (3 tests)
-- [ ] SEC-001: SQL injection
-- [ ] SEC-002: XSS prevention
-- [ ] SEC-004: PHI logging
+- [ ] SEC-001: SQL injection blocked
+- [ ] SEC-002: XSS prevented
+- [ ] SEC-004: PHI access logged
+
+---
+
+## 21. Known Issues & Workarounds
+
+### 21.1 Schema-Related Issues
+
+| Issue | Workaround |
+|-------|------------|
+| Tests using `visits` table fail | Replace with `shifts` table references |
+| Caregiver name queries fail | Always JOIN caregivers to users table |
+| `pod_members` table not found | Use `user_pod_memberships` instead |
+| Background check `candidate_id` | Use `applicant_id` column |
+| `caregiver_training` not found | Use `training_assignments` table |
+
+### 21.2 UI Issues
+
+| Issue | Workaround |
+|-------|------------|
+| Double sidebar on Communications | Fixed in latest deployment |
+| Mock data appearing in production | Ensure `__PROD__` constant is true in build |
+
+### 21.3 Integration Issues
+
+| Issue | Workaround |
+|-------|------------|
+| Sandata uses "visit" terminology | Internal system uses "shift", API translates |
 
 ---
 
@@ -2009,6 +2464,10 @@ Run before each production deployment:
 **Tester:** ____________
 **Environment:** [ ] Production [ ] Staging [ ] Local
 **Build/Version:** ____________
+**Database Schema Version:** ____________
+
+## Schema Validation
+- [ ] SCHEMA-001 through SCHEMA-010 passed
 
 ## Tests Executed
 
@@ -2016,14 +2475,15 @@ Run before each production deployment:
 |---------|--------|-------|
 | AUTH-001 | [ ] Pass [ ] Fail | |
 | AUTH-002 | [ ] Pass [ ] Fail | |
+| RBAC-001 | [ ] Pass [ ] Fail | |
 | ... | | |
 
 ## Issues Found
 
-| Issue # | Test ID | Severity | Description |
-|---------|---------|----------|-------------|
-| 1 | | | |
-| 2 | | | |
+| Issue # | Test ID | Severity | Description | Schema Related? |
+|---------|---------|----------|-------------|-----------------|
+| 1 | | | | [ ] Yes [ ] No |
+| 2 | | | | [ ] Yes [ ] No |
 
 ## Sign-off
 
@@ -2047,6 +2507,11 @@ Reviewed by: ____________ Date: ____________
 │   ├── dashboard.test.ts
 │   ├── hr.test.ts
 │   └── billing.test.ts
+├── /schema
+│   ├── shifts.test.ts
+│   ├── caregivers.test.ts
+│   ├── background-checks.test.ts
+│   └── deprecated-tables.test.ts
 ├── /visual
 │   ├── snapshots/
 │   └── visual.spec.ts
@@ -2056,11 +2521,35 @@ Reviewed by: ____________ Date: ____________
 
 ---
 
+## Appendix C: Database Schema Quick Reference
+
+### Current Table Names (Use These)
+- `shifts` (not visits)
+- `shift_notes` (not visit_notes)
+- `user_pod_memberships` (not pod_members)
+- `training_assignments` (not caregiver_training)
+- `caregiver_availability_patterns` (not caregiver_availability)
+- `claims_batches` (not insurance_claims)
+
+### Current Column Names (Use These)
+- `caregivers.employment_status` (not status)
+- `caregivers.user_id` → JOIN to `users` for PII
+- `user_pod_memberships.role_in_pod` (not role)
+- `background_checks.applicant_id` (not candidate_id)
+- `background_checks.check_provider` (not provider)
+- `background_checks.check_type` (not package_type)
+- `background_checks.result` (not overall_result)
+- `users.is_active` (not active)
+- `*.pod_id` (not primary_pod_id)
+
+---
+
 ## Document History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2024-12-23 | Claude Code | Initial comprehensive test suite |
+| 2.0.0 | 2024-12-24 | Claude Code | Added schema validation tests, updated for visits→shifts rename, caregiver identity model change, table/column renames |
 
 ---
 

@@ -41,11 +41,7 @@ CREATE TABLE IF NOT EXISTS oncall_rosters (
 
   -- Status
   status VARCHAR(50) DEFAULT 'active', -- 'active', 'completed', 'cancelled'
-  is_active BOOLEAN GENERATED ALWAYS AS (
-    status = 'active' AND
-    start_datetime <= NOW() AND
-    end_datetime >= NOW()
-  ) STORED,
+  /* is_active calculation moved to view/logic due to NOW() volatility */
 
   -- Notes
   notes TEXT,
@@ -77,7 +73,7 @@ CREATE INDEX idx_oncall_rosters_org ON oncall_rosters(organization_id);
 CREATE INDEX idx_oncall_rosters_pod ON oncall_rosters(pod_id) WHERE pod_id IS NOT NULL;
 CREATE INDEX idx_oncall_rosters_primary_user ON oncall_rosters(primary_user_id);
 CREATE INDEX idx_oncall_rosters_active ON oncall_rosters(status, start_datetime, end_datetime) WHERE status = 'active';
-CREATE INDEX idx_oncall_rosters_current ON oncall_rosters(organization_id, is_active) WHERE is_active = TRUE;
+CREATE INDEX idx_oncall_rosters_current ON oncall_rosters(organization_id) WHERE status = 'active';
 CREATE INDEX idx_oncall_rosters_schedule ON oncall_rosters(start_datetime, end_datetime);
 
 -- ============================================================================
@@ -381,7 +377,8 @@ BEGIN
     r.end_datetime
   FROM oncall_rosters r
   WHERE r.organization_id = p_organization_id
-    AND r.is_active = TRUE
+    AND r.status = 'active'
+    AND NOW() >= r.start_datetime AND NOW() <= r.end_datetime
     AND (p_pod_id IS NULL OR r.pod_id = p_pod_id)
   ORDER BY
     CASE WHEN r.pod_id = p_pod_id THEN 0 ELSE 1 END, -- Prioritize pod-specific rosters
@@ -444,7 +441,7 @@ FROM oncall_rosters r
 LEFT JOIN users up ON r.primary_user_id = up.id
 LEFT JOIN users ub ON r.backup_user_id = ub.id
 LEFT JOIN oncall_incidents i ON r.id = i.roster_id AND i.status NOT IN ('resolved', 'closed')
-WHERE r.is_active = TRUE
+WHERE r.status = 'active' AND NOW() >= r.start_datetime AND NOW() <= r.end_datetime
 GROUP BY r.id, up.first_name, up.last_name, ub.first_name, ub.last_name;
 
 COMMENT ON VIEW oncall_current_coverage IS 'Real-time view of active on-call coverage with incident counts';
@@ -458,7 +455,6 @@ COMMENT ON TABLE oncall_incidents IS 'Incidents that trigger on-call alerts (cov
 COMMENT ON TABLE oncall_notifications IS 'Audit trail of all on-call notifications sent (SMS, calls, emails, etc.)';
 COMMENT ON TABLE oncall_config IS 'Organization-wide on-call configuration (SLAs, escalation, rotation settings)';
 
-COMMENT ON COLUMN oncall_rosters.is_active IS 'Computed column: TRUE if roster is active and current time is within schedule';
 COMMENT ON COLUMN oncall_incidents.ack_sla_met IS 'Whether incident was acknowledged within target SLA time';
 COMMENT ON COLUMN oncall_incidents.escalation_level IS '0=primary, 1=backup, 2=escalation_1, etc.';
 

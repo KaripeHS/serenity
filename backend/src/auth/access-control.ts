@@ -16,36 +16,63 @@ import { createLogger } from '../utils/logger';
 // ============================================================================
 
 export enum UserRole {
+  // Executive Leadership (C-Suite)
   FOUNDER = 'founder',
+  CEO = 'ceo',
+  CFO = 'cfo',
+  COO = 'coo',
+
+  // Security & Compliance
   SECURITY_OFFICER = 'security_officer',
   COMPLIANCE_OFFICER = 'compliance_officer',
+
+  // Finance Department
   FINANCE_DIRECTOR = 'finance_director',
+  FINANCE_MANAGER = 'finance_manager',
   BILLING_MANAGER = 'billing_manager',
   RCM_ANALYST = 'rcm_analyst',
-  SCHEDULER = 'scheduler',
-  FIELD_SUPERVISOR = 'field_supervisor',
-  HR_MANAGER = 'hr_manager',
-  CREDENTIALING_SPECIALIST = 'credentialing_specialist',
-  IT_ADMIN = 'it_admin',
-  SUPPORT_AGENT = 'support_agent',
-  // Clinical Roles
-  RN_CASE_MANAGER = 'rn_case_manager',
-  LPN_LVN = 'lpn_lvn',
-  THERAPIST = 'therapist', // PT, OT, SLP
-  CLINICAL_DIRECTOR = 'clinical_director',
-
-  // ODD/Support Roles
-  QIDP = 'qidp',
-  DSP_MED = 'dsp_med',
-  DSP_BASIC = 'dsp_basic',
-
-  // Administrative
   INSURANCE_MANAGER = 'insurance_manager',
   BILLING_CODER = 'billing_coder',
 
-  // Legacy (Deprecated)
-  CAREGIVER = 'caregiver',
+  // Operations Department
+  OPERATIONS_MANAGER = 'operations_manager',
+  FIELD_OPS_MANAGER = 'field_ops_manager', // Formerly regional_manager - flexible scope (geography, portfolio, service line)
+  POD_LEAD = 'pod_lead',
+  FIELD_SUPERVISOR = 'field_supervisor',
+  SCHEDULING_MANAGER = 'scheduling_manager',
+  SCHEDULER = 'scheduler',
+  DISPATCHER = 'dispatcher',
+  QA_MANAGER = 'qa_manager',
 
+  // HR Department
+  HR_DIRECTOR = 'hr_director',
+  HR_MANAGER = 'hr_manager',
+  RECRUITER = 'recruiter',
+  CREDENTIALING_SPECIALIST = 'credentialing_specialist',
+
+  // IT & Support
+  IT_ADMIN = 'it_admin',
+  SUPPORT_AGENT = 'support_agent',
+
+  // Clinical Leadership
+  DIRECTOR_OF_NURSING = 'director_of_nursing',
+  CLINICAL_DIRECTOR = 'clinical_director',
+  NURSING_SUPERVISOR = 'nursing_supervisor',
+
+  // Clinical Staff
+  RN_CASE_MANAGER = 'rn_case_manager',
+  LPN_LVN = 'lpn_lvn',
+  THERAPIST = 'therapist', // PT, OT, SLP
+  QIDP = 'qidp',
+
+  // Direct Care Staff
+  DSP_MED = 'dsp_med',
+  DSP_BASIC = 'dsp_basic',
+  HHA = 'hha', // Home Health Aide
+  CNA = 'cna', // Certified Nursing Assistant
+  CAREGIVER = 'caregiver', // Legacy
+
+  // External Access
   CLIENT = 'client',
   FAMILY = 'family',
   PAYER_AUDITOR = 'payer_auditor',
@@ -181,11 +208,68 @@ export interface AccessDecision {
 // ============================================================================
 
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  // ============================================================================
+  // Executive Leadership (C-Suite) - Full or near-full access
+  // ============================================================================
   [UserRole.FOUNDER]: [
     // Full system access
     ...Object.values(Permission)
   ],
 
+  [UserRole.CEO]: [
+    // Full system access (same as founder)
+    ...Object.values(Permission)
+  ],
+
+  [UserRole.CFO]: [
+    // Full finance access + executive oversight
+    Permission.USER_READ,
+    Permission.USER_CREATE,
+    Permission.USER_UPDATE,
+    Permission.CLIENT_READ,
+    Permission.SCHEDULE_READ,
+    Permission.EVV_READ,
+    Permission.BILLING_CREATE,
+    Permission.BILLING_READ,
+    Permission.BILLING_UPDATE,
+    Permission.BILLING_SUBMIT,
+    Permission.BILLING_APPROVE,
+    Permission.HR_READ,
+    Permission.AUDIT_READ,
+    Permission.AI_INTERACT,
+    Permission.SYSTEM_MONITOR
+  ],
+
+  [UserRole.COO]: [
+    // Full operations access + executive oversight
+    Permission.USER_READ,
+    Permission.USER_CREATE,
+    Permission.USER_UPDATE,
+    Permission.USER_MANAGE_ROLES,
+    Permission.CLIENT_READ,
+    Permission.CLIENT_CREATE,
+    Permission.CLIENT_UPDATE,
+    Permission.SCHEDULE_CREATE,
+    Permission.SCHEDULE_READ,
+    Permission.SCHEDULE_UPDATE,
+    Permission.SCHEDULE_DELETE,
+    Permission.SCHEDULE_ASSIGN,
+    Permission.EVV_READ,
+    Permission.EVV_UPDATE,
+    Permission.EVV_OVERRIDE,
+    Permission.BILLING_READ,
+    Permission.HR_CREATE,
+    Permission.HR_READ,
+    Permission.HR_UPDATE,
+    Permission.AUDIT_READ,
+    Permission.INCIDENT_MANAGE,
+    Permission.AI_INTERACT,
+    Permission.SYSTEM_MONITOR
+  ],
+
+  // ============================================================================
+  // Security & Compliance
+  // ============================================================================
   [UserRole.SECURITY_OFFICER]: [
     Permission.USER_READ,
     Permission.AUDIT_READ,
@@ -221,6 +305,20 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.AI_INTERACT
   ],
 
+  [UserRole.FINANCE_MANAGER]: [
+    // Mid-level finance role (Payroll, Billing/AR, AP)
+    Permission.USER_READ,
+    Permission.CLIENT_READ,
+    Permission.SCHEDULE_READ,
+    Permission.EVV_READ,
+    Permission.BILLING_CREATE,
+    Permission.BILLING_READ,
+    Permission.BILLING_UPDATE,
+    Permission.BILLING_SUBMIT,
+    Permission.HR_READ,
+    Permission.AI_INTERACT
+  ],
+
   [UserRole.BILLING_MANAGER]: [
     Permission.CLIENT_READ,
     Permission.SCHEDULE_READ,
@@ -241,6 +339,71 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.AI_INTERACT
   ],
 
+  [UserRole.OPERATIONS_MANAGER]: [
+    // Director of Operations - oversees all operations
+    Permission.USER_READ,
+    Permission.USER_CREATE,
+    Permission.USER_UPDATE,
+    Permission.CLIENT_READ,
+    Permission.CLIENT_CREATE,
+    Permission.CLIENT_UPDATE,
+    Permission.SCHEDULE_CREATE,
+    Permission.SCHEDULE_READ,
+    Permission.SCHEDULE_UPDATE,
+    Permission.SCHEDULE_DELETE,
+    Permission.SCHEDULE_ASSIGN,
+    Permission.EVV_READ,
+    Permission.EVV_UPDATE,
+    Permission.EVV_OVERRIDE,
+    Permission.HR_READ,
+    Permission.HR_UPDATE,
+    Permission.AUDIT_READ,
+    Permission.INCIDENT_MANAGE,
+    Permission.AI_INTERACT
+  ],
+
+  [UserRole.FIELD_OPS_MANAGER]: [
+    // Field Operations Manager - oversees multiple pods (flexible scope: geography, portfolio, service line)
+    Permission.USER_READ,
+    Permission.CLIENT_READ,
+    Permission.CLIENT_UPDATE,
+    Permission.SCHEDULE_CREATE,
+    Permission.SCHEDULE_READ,
+    Permission.SCHEDULE_UPDATE,
+    Permission.SCHEDULE_ASSIGN,
+    Permission.EVV_READ,
+    Permission.EVV_UPDATE,
+    Permission.HR_READ,
+    Permission.AI_INTERACT
+  ],
+
+  [UserRole.POD_LEAD]: [
+    // Pod leader - manages a single pod of caregivers
+    Permission.USER_READ,
+    Permission.CLIENT_READ,
+    Permission.SCHEDULE_READ,
+    Permission.SCHEDULE_UPDATE,
+    Permission.SCHEDULE_ASSIGN,
+    Permission.EVV_READ,
+    Permission.EVV_UPDATE,
+    Permission.HR_READ,
+    Permission.AI_INTERACT
+  ],
+
+  [UserRole.SCHEDULING_MANAGER]: [
+    // Oversees scheduling team
+    Permission.USER_READ,
+    Permission.CLIENT_READ,
+    Permission.SCHEDULE_CREATE,
+    Permission.SCHEDULE_READ,
+    Permission.SCHEDULE_UPDATE,
+    Permission.SCHEDULE_DELETE,
+    Permission.SCHEDULE_ASSIGN,
+    Permission.EVV_READ,
+    Permission.HR_READ,
+    Permission.AI_INTERACT
+  ],
+
   [UserRole.SCHEDULER]: [
     Permission.USER_READ,
     Permission.CLIENT_READ,
@@ -250,6 +413,30 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.SCHEDULE_ASSIGN,
     Permission.EVV_READ,
     Permission.HR_READ,
+    Permission.AI_INTERACT
+  ],
+
+  [UserRole.DISPATCHER]: [
+    // Real-time shift coordination
+    Permission.USER_READ,
+    Permission.CLIENT_READ,
+    Permission.SCHEDULE_READ,
+    Permission.SCHEDULE_UPDATE,
+    Permission.EVV_READ,
+    Permission.AI_INTERACT
+  ],
+
+  [UserRole.QA_MANAGER]: [
+    // Quality Assurance Manager
+    Permission.USER_READ,
+    Permission.CLIENT_READ,
+    Permission.CLIENT_PHI_ACCESS,
+    Permission.SCHEDULE_READ,
+    Permission.EVV_READ,
+    Permission.BILLING_READ,
+    Permission.HR_READ,
+    Permission.AUDIT_READ,
+    Permission.INCIDENT_MANAGE,
     Permission.AI_INTERACT
   ],
 
@@ -264,6 +451,22 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.AI_INTERACT
   ],
 
+  [UserRole.HR_DIRECTOR]: [
+    // HR Director - oversees all HR functions
+    Permission.USER_CREATE,
+    Permission.USER_READ,
+    Permission.USER_UPDATE,
+    Permission.USER_DELETE,
+    Permission.USER_MANAGE_ROLES,
+    Permission.HR_CREATE,
+    Permission.HR_READ,
+    Permission.HR_UPDATE,
+    Permission.HR_DELETE,
+    Permission.CREDENTIAL_VERIFY,
+    Permission.AUDIT_READ,
+    Permission.AI_INTERACT
+  ],
+
   [UserRole.HR_MANAGER]: [
     Permission.USER_CREATE,
     Permission.USER_READ,
@@ -273,6 +476,16 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.HR_UPDATE,
     Permission.HR_DELETE,
     Permission.CREDENTIAL_VERIFY,
+    Permission.AI_INTERACT
+  ],
+
+  [UserRole.RECRUITER]: [
+    // Dedicated recruiting staff
+    Permission.USER_CREATE,
+    Permission.USER_READ,
+    Permission.HR_CREATE,
+    Permission.HR_READ,
+    Permission.HR_UPDATE,
     Permission.AI_INTERACT
   ],
 
@@ -351,6 +564,29 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.EVV_CREATE
   ],
 
+  [UserRole.HHA]: [
+    // Home Health Aide
+    Permission.CLIENT_READ,
+    Permission.CARE_PLAN_READ,
+    Permission.SCHEDULE_READ,
+    Permission.EVV_CREATE,
+    Permission.EVV_READ,
+    Permission.HR_READ,
+    Permission.AI_INTERACT
+  ],
+
+  [UserRole.CNA]: [
+    // Certified Nursing Assistant
+    Permission.CLIENT_READ,
+    Permission.CARE_PLAN_READ,
+    Permission.MED_ADMINISTER,
+    Permission.SCHEDULE_READ,
+    Permission.EVV_CREATE,
+    Permission.EVV_READ,
+    Permission.HR_READ,
+    Permission.AI_INTERACT
+  ],
+
   [UserRole.QIDP]: [
     Permission.CLIENT_READ,
     Permission.CLIENT_PHI_ACCESS,
@@ -369,6 +605,26 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.SCHEDULE_READ
   ],
 
+  [UserRole.DIRECTOR_OF_NURSING]: [
+    // Director of Nursing - clinical leadership (separate from operations)
+    Permission.USER_READ,
+    Permission.USER_CREATE,
+    Permission.CLIENT_READ,
+    Permission.CLIENT_PHI_ACCESS,
+    Permission.CLIENT_ASSESS,
+    Permission.CARE_PLAN_READ,
+    Permission.CARE_PLAN_WRITE,
+    Permission.MED_ORDER,
+    Permission.SCHEDULE_READ,
+    Permission.EVV_READ,
+    Permission.HR_READ,
+    Permission.HR_UPDATE,
+    Permission.CREDENTIAL_VERIFY,
+    Permission.INCIDENT_MANAGE,
+    Permission.AUDIT_READ,
+    Permission.AI_INTERACT
+  ],
+
   [UserRole.CLINICAL_DIRECTOR]: [
     Permission.USER_READ,
     Permission.CLIENT_READ,
@@ -378,6 +634,21 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.AUDIT_READ,
     Permission.CARE_PLAN_READ,
     Permission.CARE_PLAN_WRITE
+  ],
+
+  [UserRole.NURSING_SUPERVISOR]: [
+    // Regional nursing supervisor
+    Permission.USER_READ,
+    Permission.CLIENT_READ,
+    Permission.CLIENT_PHI_ACCESS,
+    Permission.CLIENT_ASSESS,
+    Permission.CARE_PLAN_READ,
+    Permission.CARE_PLAN_WRITE,
+    Permission.MED_ORDER,
+    Permission.SCHEDULE_READ,
+    Permission.EVV_READ,
+    Permission.HR_READ,
+    Permission.AI_INTERACT
   ],
 
   [UserRole.INSURANCE_MANAGER]: [
@@ -839,8 +1110,15 @@ export class ABACEngine {
   private hasHighLevelRole(role: UserRole): boolean {
     return [
       UserRole.FOUNDER,
+      UserRole.CEO,
+      UserRole.CFO,
+      UserRole.COO,
       UserRole.SECURITY_OFFICER,
-      UserRole.COMPLIANCE_OFFICER
+      UserRole.COMPLIANCE_OFFICER,
+      UserRole.OPERATIONS_MANAGER,
+      UserRole.DIRECTOR_OF_NURSING,
+      UserRole.HR_DIRECTOR,
+      UserRole.FINANCE_DIRECTOR
     ].includes(role);
   }
 

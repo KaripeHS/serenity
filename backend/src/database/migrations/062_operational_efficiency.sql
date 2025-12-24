@@ -360,7 +360,7 @@ ON client_satisfaction_scores(organization_id) WHERE at_risk = TRUE;
 CREATE OR REPLACE VIEW scheduling_efficiency AS
 SELECT
   s.organization_id,
-  DATE_TRUNC('week', s.start_time) AS week_start,
+  DATE_TRUNC('week', s.scheduled_start) AS week_start,
   COUNT(*) AS total_shifts,
   COUNT(*) FILTER (WHERE s.status = 'completed') AS completed_shifts,
   COUNT(*) FILTER (WHERE s.status = 'missed') AS missed_shifts,
@@ -369,32 +369,33 @@ SELECT
     (COUNT(*) FILTER (WHERE s.status = 'completed')::DECIMAL / NULLIF(COUNT(*), 0)) * 100,
     1
   ) AS completion_rate,
-  SUM(EXTRACT(EPOCH FROM (s.end_time - s.start_time)) / 3600) AS scheduled_hours,
+  SUM(EXTRACT(EPOCH FROM (s.scheduled_end - s.scheduled_start)) / 3600) AS scheduled_hours,
   COUNT(DISTINCT s.caregiver_id) AS active_caregivers,
   COUNT(DISTINCT s.client_id) AS active_clients
 FROM shifts s
-WHERE s.start_time >= CURRENT_DATE - INTERVAL '90 days'
-GROUP BY s.organization_id, DATE_TRUNC('week', s.start_time);
+WHERE s.scheduled_start >= CURRENT_DATE - INTERVAL '90 days'
+GROUP BY s.organization_id, DATE_TRUNC('week', s.scheduled_start);
 
 -- Caregiver utilization view
 CREATE OR REPLACE VIEW caregiver_utilization AS
 SELECT
   c.id AS caregiver_id,
   c.organization_id,
-  c.first_name || ' ' || c.last_name AS caregiver_name,
-  COUNT(s.id) FILTER (WHERE s.start_time >= CURRENT_DATE - INTERVAL '7 days') AS shifts_this_week,
+  u.first_name || ' ' || u.last_name AS caregiver_name,
+  COUNT(s.id) FILTER (WHERE s.scheduled_start >= CURRENT_DATE - INTERVAL '7 days') AS shifts_this_week,
   SUM(
-    EXTRACT(EPOCH FROM (s.end_time - s.start_time)) / 3600
-  ) FILTER (WHERE s.start_time >= CURRENT_DATE - INTERVAL '7 days') AS hours_this_week,
-  COUNT(DISTINCT s.client_id) FILTER (WHERE s.start_time >= CURRENT_DATE - INTERVAL '7 days') AS clients_this_week,
+    EXTRACT(EPOCH FROM (s.scheduled_end - s.scheduled_start)) / 3600
+  ) FILTER (WHERE s.scheduled_start >= CURRENT_DATE - INTERVAL '7 days') AS hours_this_week,
+  COUNT(DISTINCT s.client_id) FILTER (WHERE s.scheduled_start >= CURRENT_DATE - INTERVAL '7 days') AS clients_this_week,
   cp.avg_documentation_score AS latest_documentation_score,
   cp.evv_compliance_rate AS latest_evv_compliance
 FROM caregivers c
+JOIN users u ON c.user_id = u.id
 LEFT JOIN shifts s ON s.caregiver_id = c.id
 LEFT JOIN caregiver_performance_monthly cp ON cp.caregiver_id = c.id
   AND cp.performance_month = DATE_TRUNC('month', CURRENT_DATE)
-WHERE c.status = 'active'
-GROUP BY c.id, c.organization_id, c.first_name, c.last_name,
+WHERE c.employment_status = 'active'
+GROUP BY c.id, c.organization_id, u.first_name, u.last_name,
   cp.avg_documentation_score, cp.evv_compliance_rate;
 
 -- Client satisfaction summary view

@@ -511,15 +511,15 @@ export interface SandataSLO {
 // ============================================================================
 
 export function isSandataError(response: SandataApiResponse): response is SandataApiResponse & { error: SandataApiError } {
-  return !response.success && response.error !== undefined;
+  return !!response && !response.success && response.error !== undefined && !!response.error.code && !!response.error.message;
 }
 
 export function isVisitAccepted(response: SandataVisitResponse): boolean {
-  return response.status === 'accepted';
+  return !!response && response.status === 'accepted';
 }
 
 export function isVisitRejected(response: SandataVisitResponse): boolean {
-  return response.status === 'rejected' && (response.errors?.length ?? 0) > 0;
+  return !!response && response.status === 'rejected';
 }
 
 // ============================================================================

@@ -54,7 +54,9 @@ export type DocumentType =
   | 'client_statement'
   | 'caregiver_report'
   | 'incident_report'
-  | 'regulatory_filing';
+  | 'regulatory_filing'
+  | 'client_record'
+  | 'hr_document';
 
 export type DocumentCategory =
   | 'ohio_medicaid'
@@ -64,7 +66,8 @@ export type DocumentCategory =
   | 'quality_assurance'
   | 'hr_compliance'
   | 'client_communication'
-  | 'regulatory_submission';
+  | 'regulatory_submission'
+  | 'pod_performance';
 
 export interface DocumentSection {
   id: string;

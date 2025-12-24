@@ -68,25 +68,41 @@ export default function WorkingHomePage() {
   const loadSystemMetrics = async () => {
     try {
       setMetricsLoading(true);
-      // In a real implementation, this would call actual API endpoints
-      // For demo purposes, simulating API call with realistic data
-      const response = await new Promise<SystemMetrics>((resolve) => {
-        setTimeout(() => {
-          resolve({
-            activePatients: 447,
-            activeStaff: 485,
-            scheduledVisitsToday: 127,
-            completedVisitsToday: 94,
-            evvComplianceRate: 0.978,
-            monthlyRevenue: 2150000,
-            systemHealth: 'excellent'
-          });
-        }, 500); // Simulate network delay
+
+      // Try to fetch real metrics from API
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/dashboard/metrics`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
       });
-      setMetrics(response);
+
+      if (response.ok) {
+        const data = await response.json();
+        setMetrics({
+          activePatients: data.activePatients || 0,
+          activeStaff: data.activeStaff || 0,
+          scheduledVisitsToday: data.scheduledVisitsToday || 0,
+          completedVisitsToday: data.completedVisitsToday || 0,
+          evvComplianceRate: data.evvComplianceRate || 0,
+          monthlyRevenue: data.monthlyRevenue || 0,
+          systemHealth: data.systemHealth || 'good'
+        });
+      } else {
+        // API returned error - show zeros (no mock data)
+        setMetrics({
+          activePatients: 0,
+          activeStaff: 0,
+          scheduledVisitsToday: 0,
+          completedVisitsToday: 0,
+          evvComplianceRate: 0,
+          monthlyRevenue: 0,
+          systemHealth: 'good'
+        });
+      }
     } catch (error) {
       loggerService.error('Failed to load system metrics:', error);
-      // Set fallback metrics on error
+      // API call failed - show zeros (no mock data)
       setMetrics({
         activePatients: 0,
         activeStaff: 0,
@@ -94,7 +110,7 @@ export default function WorkingHomePage() {
         completedVisitsToday: 0,
         evvComplianceRate: 0,
         monthlyRevenue: 0,
-        systemHealth: 'warning'
+        systemHealth: 'good'
       });
     } finally {
       setMetricsLoading(false);

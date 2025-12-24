@@ -10,7 +10,8 @@ module.exports = {
   ],
   testPathIgnorePatterns: [
     '/node_modules/',
-    '/__mocks__/'
+    '/__mocks__/',
+    '/e2e_playwright/'
   ],
   transform: {
     '^.+\\.(ts|tsx)$': 'ts-jest'
@@ -23,7 +24,7 @@ module.exports = {
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
-  // setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
   testTimeout: 10000,
   verbose: true,
   forceExit: true,

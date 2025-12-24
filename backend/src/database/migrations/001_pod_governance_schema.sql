@@ -6,6 +6,18 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Create authenticated_users role if not exists
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticated_users') THEN
+    CREATE ROLE authenticated_users NOLOGIN;
+  END IF;
+END
+$$;
+
+GRANT authenticated_users TO postgres;
+GRANT authenticated_users TO current_user;
+
 -- ============================================================================
 -- Pod Management Tables
 -- ============================================================================
@@ -80,6 +92,12 @@ CREATE TABLE users (
     mfa_secret VARCHAR(255),
     emergency_contact JSONB,
     preferences JSONB DEFAULT '{}',
+    employee_number VARCHAR(50),
+    hire_date DATE,
+    termination_date DATE,
+    hourly_rate DECIMAL(10,2),
+    salary DECIMAL(12,2),
+    is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 
@@ -264,8 +282,8 @@ CREATE TABLE caregivers (
     CONSTRAINT valid_bg_status CHECK (background_check_status IN ('pending', 'in_progress', 'cleared', 'flagged', 'failed'))
 );
 
--- Visits/Shifts table with pod isolation
-CREATE TABLE visits (
+-- Shifts/Visits table with pod isolation
+CREATE TABLE shifts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     pod_id UUID NOT NULL REFERENCES pods(id),
@@ -292,7 +310,7 @@ CREATE TABLE evv_records (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     pod_id UUID NOT NULL REFERENCES pods(id),
-    visit_id UUID NOT NULL REFERENCES visits(id),
+    shift_id UUID NOT NULL REFERENCES shifts(id),
     caregiver_id UUID NOT NULL REFERENCES caregivers(id),
     client_id UUID NOT NULL REFERENCES clients(id),
     clock_in_time TIMESTAMP WITH TIME ZONE,
@@ -344,7 +362,7 @@ CREATE TABLE claims (
 -- ============================================================================
 
 -- Comprehensive audit log
-CREATE TABLE audit_events (
+CREATE TABLE audit_log (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     pod_id UUID REFERENCES pods(id), -- Null for org-level events
@@ -441,14 +459,14 @@ CREATE INDEX idx_caregivers_pod_id ON caregivers(pod_id);
 CREATE INDEX idx_caregivers_user_id ON caregivers(user_id);
 CREATE INDEX idx_caregivers_status ON caregivers(employment_status);
 
-CREATE INDEX idx_visits_pod_id ON visits(pod_id);
-CREATE INDEX idx_visits_client_id ON visits(client_id);
-CREATE INDEX idx_visits_caregiver_id ON visits(caregiver_id);
-CREATE INDEX idx_visits_scheduled_start ON visits(scheduled_start);
-CREATE INDEX idx_visits_status ON visits(status);
+CREATE INDEX idx_shifts_pod_id ON shifts(pod_id);
+CREATE INDEX idx_shifts_client_id ON shifts(client_id);
+CREATE INDEX idx_shifts_caregiver_id ON shifts(caregiver_id);
+CREATE INDEX idx_shifts_scheduled_start ON shifts(scheduled_start);
+CREATE INDEX idx_shifts_status ON shifts(status);
 
 CREATE INDEX idx_evv_records_pod_id ON evv_records(pod_id);
-CREATE INDEX idx_evv_records_visit_id ON evv_records(visit_id);
+CREATE INDEX idx_evv_records_shift_id ON evv_records(shift_id);
 CREATE INDEX idx_evv_records_compliance_status ON evv_records(compliance_status);
 
 CREATE INDEX idx_claims_pod_id ON claims(pod_id);
@@ -457,11 +475,11 @@ CREATE INDEX idx_claims_status ON claims(status);
 CREATE INDEX idx_claims_submission_date ON claims(submission_date);
 
 -- Audit indexes
-CREATE INDEX idx_audit_events_organization_id ON audit_events(organization_id);
-CREATE INDEX idx_audit_events_pod_id ON audit_events(pod_id);
-CREATE INDEX idx_audit_events_user_id ON audit_events(user_id);
-CREATE INDEX idx_audit_events_timestamp ON audit_events(timestamp);
-CREATE INDEX idx_audit_events_phi_accessed ON audit_events(phi_accessed);
+CREATE INDEX idx_audit_log_organization_id ON audit_log(organization_id);
+CREATE INDEX idx_audit_log_pod_id ON audit_log(pod_id);
+CREATE INDEX idx_audit_log_user_id ON audit_log(user_id);
+CREATE INDEX idx_audit_log_timestamp ON audit_log(timestamp);
+CREATE INDEX idx_audit_log_phi_accessed ON audit_log(phi_accessed);
 
 -- ============================================================================
 -- Row Level Security (RLS) Policies
@@ -470,10 +488,10 @@ CREATE INDEX idx_audit_events_phi_accessed ON audit_events(phi_accessed);
 -- Enable RLS on all sensitive tables
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE caregivers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE visits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shifts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE evv_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE claims ENABLE ROW LEVEL SECURITY;
-ALTER TABLE audit_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
 
 -- Client RLS policy
 CREATE POLICY client_pod_isolation ON clients
@@ -507,8 +525,8 @@ CREATE POLICY caregiver_pod_isolation ON caregivers
         )
     );
 
--- Visit RLS policy
-CREATE POLICY visit_pod_isolation ON visits
+-- Shift RLS policy
+CREATE POLICY shift_pod_isolation ON shifts
     USING (
         pod_id IN (
             SELECT pod_id FROM user_pod_memberships
@@ -566,7 +584,7 @@ CREATE POLICY claim_pod_isolation ON claims
     );
 
 -- Audit events RLS policy
-CREATE POLICY audit_pod_isolation ON audit_events
+CREATE POLICY audit_pod_isolation ON audit_log
     USING (
         pod_id IS NULL  -- Org-level events visible to admins
         OR
@@ -591,7 +609,7 @@ CREATE POLICY audit_pod_isolation ON audit_events
 CREATE OR REPLACE FUNCTION log_audit_event()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO audit_events (
+    INSERT INTO audit_log (
         organization_id,
         pod_id,
         event_type,
@@ -616,9 +634,9 @@ BEGIN
             WHEN TG_OP = 'DELETE' THEN to_jsonb(OLD)
             ELSE to_jsonb(NEW)
         END,
-        TG_TABLE_NAME IN ('clients', 'visits', 'evv_records'),
+        TG_TABLE_NAME IN ('clients', 'shifts', 'evv_records'),
         CASE
-            WHEN TG_TABLE_NAME IN ('clients', 'visits', 'evv_records') THEN 'phi'
+            WHEN TG_TABLE_NAME IN ('clients', 'shifts', 'evv_records') THEN 'phi'
             ELSE 'internal'
         END
     );
@@ -634,7 +652,7 @@ CREATE TRIGGER audit_clients AFTER INSERT OR UPDATE OR DELETE ON clients
 CREATE TRIGGER audit_caregivers AFTER INSERT OR UPDATE OR DELETE ON caregivers
     FOR EACH ROW EXECUTE FUNCTION log_audit_event();
 
-CREATE TRIGGER audit_visits AFTER INSERT OR UPDATE OR DELETE ON visits
+CREATE TRIGGER audit_shifts AFTER INSERT OR UPDATE OR DELETE ON shifts
     FOR EACH ROW EXECUTE FUNCTION log_audit_event();
 
 CREATE TRIGGER audit_evv_records AFTER INSERT OR UPDATE OR DELETE ON evv_records
@@ -741,5 +759,20 @@ LEFT JOIN user_pod_memberships upm ON u.id = upm.user_id AND upm.status = 'activ
 LEFT JOIN user_attributes ua ON u.id = ua.user_id AND ua.is_active = true AND ua.expires_at > NOW()
 LEFT JOIN roles r ON u.role = r.name AND r.organization_id = u.organization_id
 GROUP BY u.id, u.email, u.role, u.status;
+
+-- Seed default organization
+INSERT INTO organizations (
+    name, 
+    slug,
+    type, 
+    status, 
+    settings
+) VALUES (
+    'Serenity Default Org', 
+    'serenity-default-org',
+    'agency', 
+    'active', 
+    '{"timezone": "America/New_York", "locale": "en-US"}'::jsonb
+);
 
 COMMIT;

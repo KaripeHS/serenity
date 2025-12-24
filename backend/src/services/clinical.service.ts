@@ -107,7 +107,7 @@ export class ClinicalService {
           c.emergency_contacts,
           c.medical_info,
           c.care_plan
-       FROM visits v
+       FROM shifts v
        JOIN clients c ON v.client_id = c.id
        WHERE v.id = $1`,
       [visitId]
@@ -398,7 +398,7 @@ export class ClinicalService {
 
     // Get existing visit tasks
     const visit = await this.db.query(
-      'SELECT care_tasks FROM visits WHERE id = $1',
+      'SELECT care_tasks FROM shifts WHERE id = $1',
       [visitId]
     );
 
@@ -421,7 +421,7 @@ export class ClinicalService {
     }));
 
     await this.db.query(
-      `UPDATE visits
+      `UPDATE shifts
        SET care_tasks = $1, updated_at = NOW()
        WHERE id = $2`,
       [JSON.stringify(taskDocs), visitId]

@@ -90,6 +90,21 @@ CREATE INDEX idx_payer_rules_active ON payer_rules(is_active, effective_date, ex
 CREATE INDEX idx_payer_rules_service_codes ON payer_rules USING GIN(applies_to_service_codes) WHERE applies_to_service_codes IS NOT NULL;
 CREATE INDEX idx_payer_rules_priority ON payer_rules(priority ASC);
 
+-- Payer definitions
+CREATE TABLE IF NOT EXISTS payers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id),
+    name VARCHAR(255) NOT NULL,
+    payer_id VARCHAR(100) UNIQUE, -- External ID
+    type VARCHAR(50) DEFAULT 'commercial',
+    contact_info JSONB,
+    status VARCHAR(20) DEFAULT 'active',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_payers_org ON payers(organization_id);
+
 -- ============================================================================
 -- Payer Contracts Table
 -- Stores contract details with payers (rates, terms, etc.)

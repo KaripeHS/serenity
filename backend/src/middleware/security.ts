@@ -123,9 +123,15 @@ export const sanitizeRequest = (req: Request, res: Response, next: NextFunction)
 // CORS configuration
 export const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Support multiple origins from CORS_ORIGINS env var (comma-separated)
+    const configuredOrigins = process.env.CORS_ORIGINS
+      ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
+      : [environmentService.getApplicationConfig().corsOrigin];
+
     const allowedOrigins = [
-      environmentService.getApplicationConfig().corsOrigin,
+      ...configuredOrigins,
       'http://localhost:3000',
+      'http://localhost:3001',
       'http://localhost:5173'
     ];
 
@@ -135,7 +141,7 @@ export const corsOptions = {
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      securityLogger.warn('CORS violation attempt', { origin });
+      securityLogger.warn('CORS violation attempt', { origin, allowedOrigins });
       callback(new Error('Not allowed by CORS'), false);
     }
   },

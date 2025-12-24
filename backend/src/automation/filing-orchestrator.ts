@@ -1084,7 +1084,7 @@ export class FilingOrchestrator extends EventEmitter {
         batchSize: 1000,
         allowDuplicates: false,
         requiresApproval: false,
-        fileNamingPattern: 'evv_submission_{timestamp}_{pod_code}',
+        fileNamingPattern: 'evv_submission_{timestamp}_{pod_code}.xml',
         includeTimestamp: true,
         includeChecksum: true,
         requiresAcknowledgment: true,

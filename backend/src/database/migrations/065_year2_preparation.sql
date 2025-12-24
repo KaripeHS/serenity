@@ -371,6 +371,9 @@ CREATE TABLE IF NOT EXISTS payroll_employee_mappings (
 CREATE INDEX idx_payroll_emp_caregiver ON payroll_employee_mappings(caregiver_id);
 
 -- Payroll runs
+DROP TABLE IF EXISTS payroll_line_items CASCADE;
+DROP TABLE IF EXISTS payroll_runs CASCADE;
+
 CREATE TABLE IF NOT EXISTS payroll_runs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id),
@@ -483,20 +486,20 @@ CREATE INDEX idx_payroll_item_caregiver ON payroll_line_items(caregiver_id);
 -- ============================================================
 
 -- DODD-eligible caregivers view
-CREATE OR REPLACE VIEW dodd_eligible_caregivers AS
 SELECT
   cg.id,
-  cg.first_name || ' ' || cg.last_name AS name,
+  u.first_name || ' ' || u.last_name AS name,
   cg.organization_id,
-  cg.primary_pod_id,
+  cg.pod_id AS primary_pod_id,
   dcr.dodd_background_check_status,
   dcr.dodd_orientation_complete,
   dcr.evv_certified,
   dcr.is_dodd_eligible,
   dcr.eligibility_verified_at
 FROM caregivers cg
+JOIN users u ON cg.user_id = u.id
 JOIN dodd_caregiver_requirements dcr ON dcr.caregiver_id = cg.id
-WHERE cg.status = 'active'
+WHERE cg.employment_status = 'active'
   AND dcr.is_dodd_eligible = TRUE;
 
 -- HPC authorization utilization view

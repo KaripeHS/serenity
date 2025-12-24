@@ -6,6 +6,8 @@
 -- AVAILABILITY PATTERNS TABLE (Weekly recurring)
 -- ============================================
 
+DROP TABLE IF EXISTS time_off_requests CASCADE;
+
 CREATE TABLE IF NOT EXISTS caregiver_availability_patterns (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id),

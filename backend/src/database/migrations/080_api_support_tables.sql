@@ -268,7 +268,7 @@ ON CONFLICT (id) DO NOTHING;
 CREATE TABLE IF NOT EXISTS gps_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   caregiver_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  visit_id UUID REFERENCES visits(id) ON DELETE CASCADE,
+  shift_id UUID REFERENCES shifts(id) ON DELETE CASCADE,
   latitude DECIMAL(10,8) NOT NULL,
   longitude DECIMAL(11,8) NOT NULL,
   accuracy DECIMAL(10,2), -- Meters
@@ -278,7 +278,7 @@ CREATE TABLE IF NOT EXISTS gps_logs (
 );
 
 CREATE INDEX idx_gps_logs_caregiver ON gps_logs(caregiver_id);
-CREATE INDEX idx_gps_logs_visit ON gps_logs(visit_id);
+CREATE INDEX idx_gps_logs_visit ON gps_logs(shift_id);
 CREATE INDEX idx_gps_logs_timestamp ON gps_logs(timestamp DESC);
 
 -- ============================================================================
@@ -287,7 +287,7 @@ CREATE INDEX idx_gps_logs_timestamp ON gps_logs(timestamp DESC);
 
 CREATE TABLE IF NOT EXISTS geofence_violations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  visit_id UUID NOT NULL REFERENCES visits(id) ON DELETE CASCADE,
+  shift_id UUID NOT NULL REFERENCES shifts(id) ON DELETE CASCADE,
   caregiver_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
   check_in_latitude DECIMAL(10,8) NOT NULL,
@@ -306,35 +306,35 @@ CREATE TABLE IF NOT EXISTS geofence_violations (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_geofence_violations_visit ON geofence_violations(visit_id);
+CREATE INDEX idx_geofence_violations_visit ON geofence_violations(shift_id);
 CREATE INDEX idx_geofence_violations_caregiver ON geofence_violations(caregiver_id);
 CREATE INDEX idx_geofence_violations_status ON geofence_violations(status);
 CREATE INDEX idx_geofence_violations_timestamp ON geofence_violations(timestamp DESC);
 
 -- ============================================================================
--- Care Plans (if not already exists)
+-- Care Plans (Handled by 075_client_assessments.sql)
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS care_plans (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
-  effective_date DATE NOT NULL,
-  review_date DATE NOT NULL,
-  created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  approved_by UUID REFERENCES users(id) ON DELETE SET NULL,
-  approved_at TIMESTAMPTZ,
-  status VARCHAR(50) NOT NULL DEFAULT 'draft' CHECK (status IN (
-    'draft', 'active', 'expired', 'superseded'
-  )),
-  goals JSONB, -- Array of care goals
-  services JSONB, -- Array of services
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+-- CREATE TABLE IF NOT EXISTS care_plans (
+--   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+--   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+--   effective_date DATE NOT NULL,
+--   review_date DATE NOT NULL,
+--   created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+--   approved_by UUID REFERENCES users(id) ON DELETE SET NULL,
+--   approved_at TIMESTAMPTZ,
+--   status VARCHAR(50) NOT NULL DEFAULT 'draft' CHECK (status IN (
+--     'draft', 'active', 'expired', 'superseded'
+--   )),
+--   goals JSONB, -- Array of care goals
+--   services JSONB, -- Array of services
+--   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+--   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- );
 
-CREATE INDEX idx_care_plans_client ON care_plans(client_id);
-CREATE INDEX idx_care_plans_status ON care_plans(status);
-CREATE INDEX idx_care_plans_review_date ON care_plans(review_date);
+-- CREATE INDEX idx_care_plans_client ON care_plans(client_id);
+-- CREATE INDEX idx_care_plans_status ON care_plans(status);
+-- CREATE INDEX idx_care_plans_review_date ON care_plans(review_date);
 
 -- ============================================================================
 -- Visit Notes (if not already exists)
@@ -342,7 +342,7 @@ CREATE INDEX idx_care_plans_review_date ON care_plans(review_date);
 
 CREATE TABLE IF NOT EXISTS visit_notes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  visit_id UUID NOT NULL REFERENCES visits(id) ON DELETE CASCADE,
+  shift_id UUID NOT NULL REFERENCES shifts(id) ON DELETE CASCADE,
   caregiver_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   note TEXT NOT NULL,
   tasks_completed TEXT[], -- Array of task descriptions
@@ -350,7 +350,7 @@ CREATE TABLE IF NOT EXISTS visit_notes (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_visit_notes_visit ON visit_notes(visit_id);
+CREATE INDEX idx_visit_notes_visit ON visit_notes(shift_id);
 CREATE INDEX idx_visit_notes_caregiver ON visit_notes(caregiver_id);
 
 -- ============================================================================
@@ -381,9 +381,9 @@ CREATE TRIGGER update_report_schedules_updated_at
   BEFORE UPDATE ON report_schedules
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_care_plans_updated_at
-  BEFORE UPDATE ON care_plans
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- CREATE TRIGGER update_care_plans_updated_at
+--   BEFORE UPDATE ON care_plans
+--   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================================
 -- Seed Data for Development/Testing
@@ -480,5 +480,5 @@ COMMENT ON TABLE report_schedules IS 'Scheduled report automation for Business I
 COMMENT ON TABLE report_templates IS 'Pre-configured report templates';
 COMMENT ON TABLE gps_logs IS 'GPS location tracking for Operations Command Center - GPS Tracking tab';
 COMMENT ON TABLE geofence_violations IS 'Geofence violation tracking for Operations Command Center';
-COMMENT ON TABLE care_plans IS 'Client care plans for Client & Family Portal';
+-- COMMENT ON TABLE care_plans IS 'Client care plans for Client & Family Portal';
 COMMENT ON TABLE visit_notes IS 'Visit documentation and task completion for Client & Family Portal';

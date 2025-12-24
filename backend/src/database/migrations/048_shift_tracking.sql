@@ -33,7 +33,7 @@ CREATE POLICY "Users can create logs for their shifts" ON shift_tracking_logs
         EXISTS (
             SELECT 1 FROM shifts 
             WHERE id = shift_tracking_logs.shift_id 
-            AND caregiver_id = auth.uid()
+            AND caregiver_id = current_setting('app.current_user_id')::UUID
         )
     );
 
@@ -42,7 +42,7 @@ CREATE POLICY "Admins can view logs" ON shift_tracking_logs
     USING (
         EXISTS (
             SELECT 1 FROM users 
-            WHERE id = auth.uid() 
+            WHERE id = current_setting('app.current_user_id')::UUID 
             AND role IN ('admin', 'super_admin', 'coordinator') 
             AND organization_id = shift_tracking_logs.organization_id
         )

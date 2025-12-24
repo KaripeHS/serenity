@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS open_shifts (
   auto_assign_min_score INTEGER DEFAULT 80, -- Minimum qualification score
 
   -- Original visit reference (if converted from existing visit)
-  original_visit_id UUID REFERENCES visits(id),
+  original_shift_id UUID REFERENCES shifts(id),
 
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -186,7 +186,7 @@ SELECT
   os.*,
   c.first_name || ' ' || c.last_name AS client_name,
   c.address AS client_address,
-  c.city AS client_city,
+  c.address->>'city' AS client_city,
   sb.id AS my_bid_id,
   sb.status AS my_bid_status,
   sb.qualification_score AS my_score,

@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS budget_transactions (
   running_balance DECIMAL(12, 2),
 
   -- Related records
-  visit_id UUID REFERENCES visits(id),
+  visit_id UUID REFERENCES shifts(id),
   claim_id UUID,
   service_date DATE,
   service_type VARCHAR(50),
@@ -228,11 +228,12 @@ SELECT
     ELSE 'healthy'
   END AS health_status,
   (cb.period_end - CURRENT_DATE) AS days_remaining,
-  a.payer_name,
-  a.authorization_number
+  a.authorization_number,
+  p.name AS payer_name
 FROM client_budgets cb
 JOIN clients c ON c.id = cb.client_id
 LEFT JOIN authorizations a ON a.id = cb.authorization_id
+LEFT JOIN payers p ON p.id = a.payer_id
 WHERE cb.is_current = TRUE;
 
 -- View: Recent budget transactions for family portal
@@ -280,7 +281,7 @@ DECLARE
   v_running_balance DECIMAL(12, 2);
   v_caregiver_name VARCHAR(200);
 BEGIN
-  -- Only process completed visits with billing
+  -- Only process completed shifts with billing
   IF NEW.status != 'completed' OR NEW.total_amount IS NULL THEN
     RETURN NEW;
   END IF;
@@ -338,7 +339,7 @@ $$ LANGUAGE plpgsql;
 
 -- Trigger for visit completion
 CREATE TRIGGER trigger_record_budget_transaction
-  AFTER UPDATE ON visits
+  AFTER UPDATE ON shifts
   FOR EACH ROW
   WHEN (OLD.status != 'completed' AND NEW.status = 'completed')
   EXECUTE FUNCTION record_budget_transaction_from_visit();
@@ -508,6 +509,6 @@ COMMENT ON TABLE client_budgets IS 'Client budget definitions for tracking servi
 COMMENT ON TABLE budget_transactions IS 'Individual transactions against client budgets';
 COMMENT ON TABLE budget_alerts IS 'Alerts sent when budgets reach thresholds';
 COMMENT ON TABLE budget_forecasts IS 'Budget spending forecasts and projections';
-COMMENT ON FUNCTION record_budget_transaction_from_visit IS 'Auto-records budget transactions when visits complete';
+COMMENT ON FUNCTION record_budget_transaction_from_visit IS 'Auto-records budget transactions when shifts complete';
 COMMENT ON FUNCTION check_budget_alerts IS 'Checks and creates budget alerts based on thresholds';
 COMMENT ON FUNCTION generate_budget_forecast IS 'Generates spending forecast for a budget';

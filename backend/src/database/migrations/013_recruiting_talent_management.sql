@@ -19,7 +19,7 @@ CREATE TABLE applicants (
   application_date DATE NOT NULL DEFAULT CURRENT_DATE,
   source VARCHAR(50) NOT NULL DEFAULT 'website'
     CHECK (source IN ('website', 'referral', 'indeed', 'ziprecruiter', 'facebook', 'linkedin', 'other')),
-  referred_by UUID REFERENCES employees(id),
+  referred_by UUID REFERENCES users(id),
 
   -- Resume and qualifications
   resume_file_id UUID,
@@ -52,7 +52,7 @@ CREATE TABLE applicants (
 
   -- Decision tracking
   hired_date DATE,
-  hired_as_employee_id UUID REFERENCES employees(id),
+  hired_as_employee_id UUID REFERENCES users(id),
   rejection_reason TEXT,
   rejection_date DATE,
 
@@ -130,7 +130,7 @@ CREATE TABLE job_requisitions (
 -- Performance reviews
 CREATE TABLE performance_reviews (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  employee_id UUID NOT NULL REFERENCES employees(id),
+  employee_id UUID NOT NULL REFERENCES users(id),
 
   review_period VARCHAR(20) NOT NULL, -- e.g., "2024-Q1", "2024-Annual"
   review_type VARCHAR(20) NOT NULL
@@ -171,7 +171,7 @@ CREATE TABLE performance_reviews (
 -- Employee goals tracking
 CREATE TABLE employee_goals (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  employee_id UUID NOT NULL REFERENCES employees(id),
+  employee_id UUID NOT NULL REFERENCES users(id),
   performance_review_id UUID REFERENCES performance_reviews(id),
 
   goal_description TEXT NOT NULL,
@@ -200,7 +200,7 @@ CREATE TABLE employee_goals (
 -- Retention risk analysis
 CREATE TABLE retention_risks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  employee_id UUID NOT NULL REFERENCES employees(id),
+  employee_id UUID NOT NULL REFERENCES users(id),
 
   risk_level VARCHAR(10) NOT NULL
     CHECK (risk_level IN ('low', 'medium', 'high', 'critical')),
@@ -258,7 +258,7 @@ CREATE TABLE training_programs (
 -- Training enrollments and completions
 CREATE TABLE training_enrollments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  employee_id UUID NOT NULL REFERENCES employees(id),
+  employee_id UUID NOT NULL REFERENCES users(id),
   training_program_id UUID NOT NULL REFERENCES training_programs(id),
 
   enrolled_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -286,7 +286,7 @@ CREATE TABLE training_enrollments (
 -- Compensation history and adjustments
 CREATE TABLE compensation_history (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  employee_id UUID NOT NULL REFERENCES employees(id),
+  employee_id UUID NOT NULL REFERENCES users(id),
 
   effective_date DATE NOT NULL,
   salary_amount DECIMAL(12,2),
@@ -334,7 +334,7 @@ CREATE TABLE skills_matrix (
 -- Employee skills assessment
 CREATE TABLE employee_skills (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  employee_id UUID NOT NULL REFERENCES employees(id),
+  employee_id UUID NOT NULL REFERENCES users(id),
   skill_id UUID NOT NULL REFERENCES skills_matrix(id),
 
   proficiency_level INTEGER NOT NULL CHECK (proficiency_level BETWEEN 1 AND 5),
@@ -421,7 +421,7 @@ CREATE POLICY job_requisitions_organization_policy ON job_requisitions
 CREATE POLICY performance_reviews_organization_policy ON performance_reviews
   FOR ALL TO authenticated_users
   USING (EXISTS (
-    SELECT 1 FROM employees e
+    SELECT 1 FROM users e
     WHERE e.id = performance_reviews.employee_id
     AND e.organization_id = current_setting('app.current_organization_id')::UUID
   ));
@@ -429,7 +429,7 @@ CREATE POLICY performance_reviews_organization_policy ON performance_reviews
 CREATE POLICY employee_goals_organization_policy ON employee_goals
   FOR ALL TO authenticated_users
   USING (EXISTS (
-    SELECT 1 FROM employees e
+    SELECT 1 FROM users e
     WHERE e.id = employee_goals.employee_id
     AND e.organization_id = current_setting('app.current_organization_id')::UUID
   ));
@@ -437,7 +437,7 @@ CREATE POLICY employee_goals_organization_policy ON employee_goals
 CREATE POLICY retention_risks_organization_policy ON retention_risks
   FOR ALL TO authenticated_users
   USING (EXISTS (
-    SELECT 1 FROM employees e
+    SELECT 1 FROM users e
     WHERE e.id = retention_risks.employee_id
     AND e.organization_id = current_setting('app.current_organization_id')::UUID
   ));
@@ -449,7 +449,7 @@ CREATE POLICY training_programs_organization_policy ON training_programs
 CREATE POLICY training_enrollments_organization_policy ON training_enrollments
   FOR ALL TO authenticated_users
   USING (EXISTS (
-    SELECT 1 FROM employees e
+    SELECT 1 FROM users e
     WHERE e.id = training_enrollments.employee_id
     AND e.organization_id = current_setting('app.current_organization_id')::UUID
   ));
@@ -457,7 +457,7 @@ CREATE POLICY training_enrollments_organization_policy ON training_enrollments
 CREATE POLICY compensation_history_organization_policy ON compensation_history
   FOR ALL TO authenticated_users
   USING (EXISTS (
-    SELECT 1 FROM employees e
+    SELECT 1 FROM users e
     WHERE e.id = compensation_history.employee_id
     AND e.organization_id = current_setting('app.current_organization_id')::UUID
   ));
@@ -469,7 +469,7 @@ CREATE POLICY skills_matrix_organization_policy ON skills_matrix
 CREATE POLICY employee_skills_organization_policy ON employee_skills
   FOR ALL TO authenticated_users
   USING (EXISTS (
-    SELECT 1 FROM employees e
+    SELECT 1 FROM users e
     WHERE e.id = employee_skills.employee_id
     AND e.organization_id = current_setting('app.current_organization_id')::UUID
   ));
@@ -491,14 +491,14 @@ SELECT
   pr.employee_id,
   e.first_name,
   e.last_name,
-  e.position,
+  e.role,
   pr.review_period,
   pr.overall_rating,
   pr.promotion_recommended,
   pr.recommended_salary_adjustment,
   pr.status as review_status
 FROM performance_reviews pr
-JOIN employees e ON pr.employee_id = e.id
+JOIN users e ON pr.employee_id = e.id
 WHERE pr.review_period = (
   SELECT MAX(review_period)
   FROM performance_reviews pr2
@@ -510,7 +510,7 @@ SELECT
   rr.employee_id,
   e.first_name,
   e.last_name,
-  e.position,
+  e.role,
   e.hire_date,
   rr.risk_level,
   rr.risk_score,
@@ -518,7 +518,7 @@ SELECT
   jsonb_array_length(rr.recommended_actions) as recommended_action_count,
   jsonb_array_length(rr.actions_taken) as actions_taken_count
 FROM retention_risks rr
-JOIN employees e ON rr.employee_id = e.id
+JOIN users e ON rr.employee_id = e.id
 WHERE rr.calculated_at = (
   SELECT MAX(calculated_at)
   FROM retention_risks rr2
@@ -539,14 +539,14 @@ BEGIN
   -- Get active employee count
   SELECT COUNT(*)
   INTO active_count
-  FROM employees
+  FROM users
   WHERE organization_id = org_id
   AND termination_date IS NULL;
 
   -- Get termination count for period
   SELECT COUNT(*)
   INTO termination_count
-  FROM employees
+  FROM users
   WHERE organization_id = org_id
   AND termination_date >= CURRENT_DATE - (period_months || ' months')::INTERVAL
   AND termination_date IS NOT NULL;

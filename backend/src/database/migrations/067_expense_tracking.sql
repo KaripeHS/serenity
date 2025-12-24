@@ -58,6 +58,10 @@ CROSS JOIN (VALUES
 ON CONFLICT DO NOTHING;
 
 -- Expense claims submitted by caregivers
+DROP TABLE IF EXISTS mileage_logs CASCADE;
+DROP TABLE IF EXISTS expense_approvals CASCADE;
+DROP TABLE IF EXISTS expense_claims CASCADE;
+
 CREATE TABLE IF NOT EXISTS expense_claims (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id),
@@ -77,7 +81,7 @@ CREATE TABLE IF NOT EXISTS expense_claims (
   submitted_at TIMESTAMPTZ DEFAULT NOW(),
 
   -- Visit association (optional)
-  visit_id UUID REFERENCES visits(id),
+  shift_id UUID REFERENCES shifts(id),
   client_id UUID REFERENCES clients(id),
 
   -- Mileage-specific fields
@@ -121,7 +125,7 @@ CREATE INDEX idx_expense_claims_org ON expense_claims(organization_id);
 CREATE INDEX idx_expense_claims_caregiver ON expense_claims(caregiver_id);
 CREATE INDEX idx_expense_claims_status ON expense_claims(status);
 CREATE INDEX idx_expense_claims_date ON expense_claims(expense_date);
-CREATE INDEX idx_expense_claims_visit ON expense_claims(visit_id);
+CREATE INDEX idx_expense_claims_visit ON expense_claims(shift_id);
 
 -- Generate claim numbers
 CREATE OR REPLACE FUNCTION generate_expense_claim_number()
@@ -177,7 +181,7 @@ CREATE TABLE IF NOT EXISTS mileage_logs (
     'training',          -- Training attendance
     'other'              -- Other approved travel
   )),
-  visit_id UUID REFERENCES visits(id),
+  shift_id UUID REFERENCES shifts(id),
   client_id UUID REFERENCES clients(id),
 
   -- Distance
@@ -246,12 +250,13 @@ GROUP BY caregiver_id, DATE_TRUNC('month', expense_date);
 CREATE OR REPLACE VIEW pending_expense_approvals AS
 SELECT
   ec.*,
-  c.first_name || ' ' || c.last_name AS caregiver_name,
+  u.first_name || ' ' || u.last_name AS caregiver_name,
   cat.name AS category_name,
   cat.code AS category_code,
   cl.first_name || ' ' || cl.last_name AS client_name
 FROM expense_claims ec
 JOIN caregivers c ON c.id = ec.caregiver_id
+JOIN users u ON c.user_id = u.id
 JOIN expense_categories cat ON cat.id = ec.category_id
 LEFT JOIN clients cl ON cl.id = ec.client_id
 WHERE ec.status = 'submitted'

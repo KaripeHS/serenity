@@ -38,11 +38,11 @@ ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 -- Conversations: Users can see conversations they are participants in
 CREATE POLICY conversations_participant_access ON conversations
     USING (
-        auth.uid() = ANY(participants)
+        current_setting('app.current_user_id')::UUID = ANY(participants)
         OR
         EXISTS (
             SELECT 1 FROM users u
-            WHERE u.id = auth.uid()
+            WHERE u.id = current_setting('app.current_user_id')::UUID
             AND u.role IN ('admin', 'super_admin') -- Admins might see all org convos
             AND u.organization_id = conversations.organization_id
         )
@@ -53,12 +53,12 @@ CREATE POLICY messages_participant_access ON messages
     USING (
         conversation_id IN (
             SELECT id FROM conversations
-            WHERE auth.uid() = ANY(participants)
+            WHERE current_setting('app.current_user_id')::UUID = ANY(participants)
         )
         OR
         EXISTS (
             SELECT 1 FROM users u
-            WHERE u.id = auth.uid()
+            WHERE u.id = current_setting('app.current_user_id')::UUID
             AND u.role IN ('admin', 'super_admin')
             AND u.organization_id = (SELECT organization_id FROM conversations WHERE id = messages.conversation_id)
         )

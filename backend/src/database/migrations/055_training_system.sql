@@ -6,6 +6,10 @@
 -- TRAINING TYPES TABLE
 -- ============================================
 
+DROP TABLE IF EXISTS training_progress CASCADE;
+DROP TABLE IF EXISTS training_assignments CASCADE;
+DROP TABLE IF EXISTS training_types CASCADE;
+
 CREATE TABLE IF NOT EXISTS training_types (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID REFERENCES organizations(id),
@@ -196,7 +200,7 @@ LEFT JOIN training_assignments ta ON ta.user_id = u.id
 WHERE u.is_active = true
   AND tt.is_active = true
   AND (tt.organization_id IS NULL OR tt.organization_id = u.organization_id)
-  AND (tt.required_for_roles IS NULL OR tt.required_for_roles @> ARRAY[u.role] OR 'all' = ANY(tt.required_for_roles));
+  AND (tt.required_for_roles IS NULL OR tt.required_for_roles @> ARRAY[u.role]::TEXT[] OR 'all' = ANY(tt.required_for_roles));
 
 -- ============================================
 -- FUNCTION: Auto-assign required training on new hire
@@ -216,7 +220,7 @@ BEGIN
       WHERE is_required = true
         AND is_active = true
         AND (organization_id IS NULL OR organization_id = NEW.organization_id)
-        AND (required_for_roles IS NULL OR required_for_roles @> ARRAY[NEW.role] OR 'all' = ANY(required_for_roles))
+        AND (required_for_roles IS NULL OR required_for_roles @> ARRAY[NEW.role]::TEXT[] OR 'all' = ANY(required_for_roles))
     LOOP
       -- Set due date based on training type (orientation = 7 days, others = 30 days)
       due_date := CASE

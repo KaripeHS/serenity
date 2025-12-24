@@ -47,7 +47,7 @@ export class ClientService {
     const result = await pool.query(
       `
       SELECT
-        v.id as visit_id,
+        v.id as shift_id,
         v.scheduled_start,
         v.scheduled_end,
         v.service_type,
@@ -58,9 +58,9 @@ export class ClientService {
         u.phone as caregiver_phone,
         vc.check_in_time,
         vc.check_out_time
-      FROM visits v
+      FROM shifts v
       LEFT JOIN users u ON v.caregiver_id = u.id
-      LEFT JOIN visit_check_ins vc ON v.id = vc.visit_id
+      LEFT JOIN visit_check_ins vc ON v.id = vc.shift_id
       WHERE v.client_id = $1
         AND v.scheduled_start >= NOW()
         AND v.scheduled_start <= $2
@@ -71,7 +71,7 @@ export class ClientService {
     );
 
     return result.rows.map(row => ({
-      visitId: row.visit_id,
+      visitId: row.shift_id,
       scheduledStart: row.scheduled_start,
       scheduledEnd: row.scheduled_end,
       serviceType: row.service_type,
@@ -95,7 +95,7 @@ export class ClientService {
     const result = await pool.query(
       `
       SELECT
-        v.id as visit_id,
+        v.id as shift_id,
         v.scheduled_start,
         v.scheduled_end,
         v.service_type,
@@ -105,9 +105,9 @@ export class ClientService {
         vc.check_in_time,
         vc.check_out_time,
         vc.notes as visit_notes
-      FROM visits v
+      FROM shifts v
       LEFT JOIN users u ON v.caregiver_id = u.id
-      LEFT JOIN visit_check_ins vc ON v.id = vc.visit_id
+      LEFT JOIN visit_check_ins vc ON v.id = vc.shift_id
       WHERE v.client_id = $1
         AND v.scheduled_start >= $2
         AND v.status IN ('completed', 'missed')
@@ -118,7 +118,7 @@ export class ClientService {
     );
 
     return result.rows.map(row => ({
-      visitId: row.visit_id,
+      visitId: row.shift_id,
       scheduledStart: row.scheduled_start,
       scheduledEnd: row.scheduled_end,
       serviceType: row.service_type,
@@ -145,7 +145,7 @@ export class ClientService {
         u.email,
         COUNT(v.id) as total_visits
       FROM users u
-      INNER JOIN visits v ON u.id = v.caregiver_id
+      INNER JOIN shifts v ON u.id = v.caregiver_id
       WHERE v.client_id = $1
         AND v.scheduled_start >= NOW() - INTERVAL '90 days'
       GROUP BY u.id, u.first_name, u.last_name, u.role, u.phone, u.email
@@ -326,7 +326,7 @@ export class ClientService {
   ) {
     let query = `
       SELECT
-        v.id as visit_id,
+        v.id as shift_id,
         v.scheduled_start,
         v.scheduled_end,
         v.service_type,
@@ -343,9 +343,9 @@ export class ClientService {
         vc.check_out_longitude,
         vc.notes as visit_notes,
         vc.tasks_completed
-      FROM visits v
+      FROM shifts v
       LEFT JOIN users u ON v.caregiver_id = u.id
-      LEFT JOIN visit_check_ins vc ON v.id = vc.visit_id
+      LEFT JOIN visit_check_ins vc ON v.id = vc.shift_id
       WHERE v.client_id = $1
         AND v.scheduled_start >= $2
         AND v.scheduled_start <= $3
@@ -373,7 +373,7 @@ export class ClientService {
       }
 
       return {
-        visitId: row.visit_id,
+        visitId: row.shift_id,
         scheduledStart: row.scheduled_start,
         scheduledEnd: row.scheduled_end,
         serviceType: row.service_type,

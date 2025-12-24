@@ -39,10 +39,10 @@ export async function runComplianceCheck(): Promise<void> {
       SELECT v.id, v.patient_id, p.first_name || ' ' || p.last_name as patient_name,
              v.caregiver_id, c.first_name || ' ' || c.last_name as caregiver_name,
              v.start_time
-      FROM visits v
+      FROM shifts v
       JOIN patients p ON v.patient_id = p.id
       JOIN caregivers c ON v.caregiver_id = c.id
-      LEFT JOIN clinical_notes n ON v.id = n.visit_id
+      LEFT JOIN clinical_notes n ON v.id = n.shift_id
       WHERE v.status = 'completed'
       AND v.start_time >= NOW() - INTERVAL '7 days'
       AND n.id IS NULL
@@ -68,7 +68,7 @@ export async function runComplianceCheck(): Promise<void> {
              v.caregiver_id, c.first_name || ' ' || c.last_name as caregiver_name,
              n.created_at
       FROM clinical_notes n
-      JOIN visits v ON n.visit_id = v.id
+      JOIN shifts v ON n.shift_id = v.id
       JOIN patients p ON v.patient_id = p.id
       JOIN caregivers c ON v.caregiver_id = c.id
       WHERE n.status = 'draft'

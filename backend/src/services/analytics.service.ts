@@ -367,8 +367,8 @@ export class AnalyticsService {
         role: 'DSP',
         recommendedHires: dspNeeded,
         urgency: forecastDays <= 30 ? 'immediate' as const :
-                forecastDays <= 60 ? '30_days' as const :
-                '60_days' as const,
+          forecastDays <= 60 ? '30_days' as const :
+            '60_days' as const,
         reason: `Predicted ${predictedNewClients} new clients in ${forecastDays} days`,
         estimatedCost: dspNeeded * 45000 // Average DSP salary
       });
@@ -443,7 +443,7 @@ export class AnalyticsService {
           COALESCE(u.max_hours_per_week, 40) as max_hours,
           COALESCE(SUM(EXTRACT(EPOCH FROM (v.scheduled_end - v.scheduled_start)) / 3600), 0) as scheduled_hours
         FROM users u
-        LEFT JOIN visits v ON v.caregiver_id = u.id
+        LEFT JOIN shifts v ON v.caregiver_id = u.id
           AND v.scheduled_start >= DATE_TRUNC('week', NOW())
           AND v.scheduled_start < DATE_TRUNC('week', NOW()) + INTERVAL '1 week'
           AND v.status != 'cancelled'
@@ -519,14 +519,14 @@ export class AnalyticsService {
           -- Visit frequency
           (
             SELECT COUNT(*)
-            FROM visits
+            FROM shifts
             WHERE caregiver_id = u.id
               AND scheduled_start >= NOW() - INTERVAL '30 days'
           ) as visits_last_30d,
 
           (
             SELECT COUNT(*)
-            FROM visits
+            FROM shifts
             WHERE caregiver_id = u.id
               AND scheduled_start >= NOW() - INTERVAL '60 days'
               AND scheduled_start < NOW() - INTERVAL '30 days'
@@ -543,8 +543,8 @@ export class AnalyticsService {
           -- Late check-ins
           (
             SELECT COUNT(*)
-            FROM visits v
-            JOIN visit_check_ins vci ON v.id = vci.visit_id
+            FROM shifts v
+            JOIN shift_check_ins vci ON v.id = vci.visit_id
             WHERE v.caregiver_id = u.id
               AND vci.actual_check_in > v.scheduled_start + INTERVAL '15 minutes'
               AND v.scheduled_start >= NOW() - INTERVAL '30 days'
@@ -638,8 +638,8 @@ export class AnalyticsService {
 
       // Determine risk level
       const riskLevel = churnProbability >= 0.7 ? 'critical' :
-                       churnProbability >= 0.5 ? 'high' :
-                       churnProbability >= 0.3 ? 'medium' : 'low';
+        churnProbability >= 0.5 ? 'high' :
+          churnProbability >= 0.3 ? 'medium' : 'low';
 
       // Generate interventions
       const interventions = [];
@@ -893,7 +893,7 @@ export class AnalyticsService {
 
       // Determine priority
       const priority = score >= 75 ? 'hot' :
-                      score >= 50 ? 'warm' : 'cold';
+        score >= 50 ? 'warm' : 'cold';
 
       // Generate recommended actions
       const recommendedActions = [];

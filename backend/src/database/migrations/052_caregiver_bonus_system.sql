@@ -460,35 +460,35 @@ ALTER TABLE shift_cancellations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY bonus_config_select ON bonus_configurations
   FOR SELECT USING (
     organization_id IN (
-      SELECT organization_id FROM pod_members WHERE user_id = current_setting('app.current_user_id', true)::uuid
+      SELECT organization_id FROM user_pod_memberships WHERE user_id = current_setting('app.current_user_id', true)::uuid
     )
   );
 
 CREATE POLICY ncns_select ON no_call_no_shows
   FOR SELECT USING (
     organization_id IN (
-      SELECT organization_id FROM pod_members WHERE user_id = current_setting('app.current_user_id', true)::uuid
+      SELECT organization_id FROM user_pod_memberships WHERE user_id = current_setting('app.current_user_id', true)::uuid
     )
   );
 
 CREATE POLICY complaints_select ON client_complaints
   FOR SELECT USING (
     organization_id IN (
-      SELECT organization_id FROM pod_members WHERE user_id = current_setting('app.current_user_id', true)::uuid
+      SELECT organization_id FROM user_pod_memberships WHERE user_id = current_setting('app.current_user_id', true)::uuid
     )
   );
 
 CREATE POLICY eligibility_select ON bonus_eligibility
   FOR SELECT USING (
     organization_id IN (
-      SELECT organization_id FROM pod_members WHERE user_id = current_setting('app.current_user_id', true)::uuid
+      SELECT organization_id FROM user_pod_memberships WHERE user_id = current_setting('app.current_user_id', true)::uuid
     )
   );
 
 CREATE POLICY payouts_select ON bonus_payouts
   FOR SELECT USING (
     organization_id IN (
-      SELECT organization_id FROM pod_members WHERE user_id = current_setting('app.current_user_id', true)::uuid
+      SELECT organization_id FROM user_pod_memberships WHERE user_id = current_setting('app.current_user_id', true)::uuid
     )
   );
 

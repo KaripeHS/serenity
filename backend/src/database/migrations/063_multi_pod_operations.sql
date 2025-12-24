@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS cross_pod_assignments (
   caregiver_id UUID NOT NULL REFERENCES caregivers(id),
 
   -- Pods involved
-  primary_pod_id UUID NOT NULL REFERENCES pods(id),
+  pod_id UUID NOT NULL REFERENCES pods(id),
   assigned_pod_id UUID NOT NULL REFERENCES pods(id),
 
   -- Assignment details
@@ -315,8 +315,8 @@ SELECT
   pr.name AS region_name,
 
   -- Current state
-  (SELECT COUNT(*) FROM clients c WHERE c.primary_pod_id = p.id AND c.status = 'active') AS active_clients,
-  (SELECT COUNT(*) FROM caregivers cg WHERE cg.primary_pod_id = p.id AND cg.status = 'active') AS active_caregivers,
+  (SELECT COUNT(*) FROM clients c WHERE c.pod_id = p.id AND c.status = 'active') AS active_clients,
+  (SELECT COUNT(*) FROM caregivers cg WHERE cg.pod_id = p.id AND cg.employment_status = 'active') AS active_caregivers,
   p.target_client_count,
   p.target_caregiver_count,
 
@@ -363,15 +363,15 @@ SELECT
 
   -- Outgoing (sending help)
   (SELECT COUNT(*) FROM cross_pod_assignments cpa
-   WHERE cpa.primary_pod_id = p.id AND cpa.status = 'active') AS outgoing_assignments,
+   WHERE cpa.pod_id = p.id AND cpa.status = 'active') AS outgoing_assignments,
   (SELECT SUM(actual_hours_worked) FROM cross_pod_assignments cpa
-   WHERE cpa.primary_pod_id = p.id AND cpa.status IN ('active', 'completed')
+   WHERE cpa.pod_id = p.id AND cpa.status IN ('active', 'completed')
      AND cpa.start_date >= DATE_TRUNC('month', CURRENT_DATE)) AS outgoing_hours_mtd,
 
   -- Floating pool
   (SELECT COUNT(*) FROM floating_caregiver_pool fcp
    JOIN caregivers cg ON cg.id = fcp.caregiver_id
-   WHERE cg.primary_pod_id = p.id AND fcp.is_available = TRUE) AS floaters_available
+   WHERE cg.pod_id = p.id AND fcp.is_available = TRUE) AS floaters_available
 
 FROM pods p
 WHERE p.status = 'active';
@@ -421,8 +421,8 @@ BEGIN
 
   -- Calculate metrics
   SELECT
-    (SELECT COUNT(*) FROM clients WHERE primary_pod_id = p_pod_id AND status = 'active'),
-    (SELECT COUNT(*) FROM caregivers WHERE primary_pod_id = p_pod_id AND status = 'active'),
+    (SELECT COUNT(*) FROM clients WHERE pod_id = p_pod_id AND status = 'active'),
+    (SELECT COUNT(*) FROM caregivers WHERE pod_id = p_pod_id AND status = 'active'),
     COUNT(*) AS scheduled,
     COUNT(*) FILTER (WHERE status = 'completed') AS completed,
     COUNT(*) FILTER (WHERE status = 'missed') AS missed,
@@ -434,8 +434,8 @@ BEGIN
   INTO v_metrics
   FROM shifts
   WHERE start_time::DATE = p_date
-    AND (client_id IN (SELECT id FROM clients WHERE primary_pod_id = p_pod_id)
-         OR caregiver_id IN (SELECT id FROM caregivers WHERE primary_pod_id = p_pod_id));
+    AND (client_id IN (SELECT id FROM clients WHERE pod_id = p_pod_id)
+         OR caregiver_id IN (SELECT id FROM caregivers WHERE pod_id = p_pod_id));
 
   -- Insert snapshot
   INSERT INTO pod_performance_daily (

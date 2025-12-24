@@ -98,7 +98,7 @@ export class ScheduleOptimizerService {
         EXTRACT(EPOCH FROM (v.scheduled_end - v.scheduled_start)) / 60 as duration_minutes,
         v.service_type,
         v.required_skills
-      FROM visits v
+      FROM shifts v
       INNER JOIN clients c ON v.client_id = c.id
       WHERE v.organization_id = $1
         AND v.caregiver_id IS NULL
@@ -148,7 +148,7 @@ export class ScheduleOptimizerService {
         MAX(c.longitude) as last_visit_lon,
         MAX(v.scheduled_end) as last_visit_end
       FROM users u
-      LEFT JOIN visits v ON u.id = v.caregiver_id
+      LEFT JOIN shifts v ON u.id = v.caregiver_id
         AND v.scheduled_start >= $2
         AND v.scheduled_start < $3
         AND v.status IN ('scheduled', 'in_progress', 'completed')
@@ -515,8 +515,8 @@ export class ScheduleOptimizerService {
         v1.scheduled_end as visit1_end,
         v2.scheduled_start as visit2_start,
         v2.scheduled_end as visit2_end
-      FROM visits v1
-      INNER JOIN visits v2 ON v1.caregiver_id = v2.caregiver_id
+      FROM shifts v1
+      INNER JOIN shifts v2 ON v1.caregiver_id = v2.caregiver_id
         AND v1.id < v2.id
         AND v1.scheduled_start < v2.scheduled_end
         AND v1.scheduled_end > v2.scheduled_start
@@ -543,7 +543,7 @@ export class ScheduleOptimizerService {
         SUM(EXTRACT(EPOCH FROM (v.scheduled_end - v.scheduled_start)) / 3600) as scheduled_hours,
         SUM(EXTRACT(EPOCH FROM (v.scheduled_end - v.scheduled_start)) / 3600) - u.max_hours_per_week as excess_hours
       FROM users u
-      INNER JOIN visits v ON u.id = v.caregiver_id
+      INNER JOIN shifts v ON u.id = v.caregiver_id
       WHERE u.organization_id = $1
         AND v.scheduled_start >= $2
         AND v.scheduled_start < $3
@@ -580,7 +580,7 @@ export class ScheduleOptimizerService {
         COALESCE(SUM(EXTRACT(EPOCH FROM (v.scheduled_end - v.scheduled_start)) / 3600), 0) as scheduled_hours,
         COALESCE(SUM(EXTRACT(EPOCH FROM (v.scheduled_end - v.scheduled_start)) / 3600), 0) / u.max_hours_per_week * 100 as utilization
       FROM users u
-      LEFT JOIN visits v ON u.id = v.caregiver_id
+      LEFT JOIN shifts v ON u.id = v.caregiver_id
         AND v.scheduled_start >= $2
         AND v.scheduled_start < $3
         AND v.status IN ('scheduled', 'in_progress', 'completed')

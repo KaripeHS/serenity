@@ -222,7 +222,7 @@ export class BIService {
         COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed,
         COUNT(CASE WHEN status = 'missed' THEN 1 END) as missed,
         COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled
-      FROM visits
+      FROM shifts
       WHERE organization_id = $1
         AND scheduled_start >= NOW() - INTERVAL '12 months'
       GROUP BY DATE_TRUNC('month', scheduled_start)
@@ -240,8 +240,8 @@ export class BIService {
           WHEN vc.check_in_time <= v.scheduled_start + INTERVAL '15 minutes'
           THEN 1
         END) as on_time
-      FROM visits v
-      INNER JOIN visit_check_ins vc ON v.id = vc.visit_id
+      FROM shifts v
+      INNER JOIN visit_check_ins vc ON v.id = vc.shift_id
       WHERE v.organization_id = $1
         AND v.status = 'completed'
         AND v.scheduled_start >= NOW() - INTERVAL '30 days'
@@ -298,7 +298,7 @@ export class BIService {
         SUM(EXTRACT(EPOCH FROM (v.scheduled_end - v.scheduled_start)) / 3600) as scheduled_hours,
         COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits
       FROM users u
-      LEFT JOIN visits v ON u.id = v.caregiver_id
+      LEFT JOIN shifts v ON u.id = v.caregiver_id
         AND v.scheduled_start >= NOW() - INTERVAL '30 days'
         AND v.scheduled_start < NOW()
       WHERE u.organization_id = $1

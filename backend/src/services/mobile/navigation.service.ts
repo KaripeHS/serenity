@@ -187,7 +187,7 @@ export class NavigationService {
         c.longitude as client_lng,
         c.full_name as client_name,
         c.service_address
-      FROM visits v
+      FROM shifts v
       JOIN clients c ON v.client_id = c.id
       WHERE v.id = $1
       `,

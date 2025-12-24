@@ -14,4 +14,16 @@ CREATE TABLE IF NOT EXISTS proposals (
 CREATE INDEX idx_proposals_lead_id ON proposals(lead_id);
 CREATE INDEX idx_proposals_status ON proposals(status);
 
-TRIGGER_UPDATE_TIMESTAMP(proposals);
+-- Trigger to update updated_at
+CREATE OR REPLACE FUNCTION update_proposals_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_proposals_timestamp
+BEFORE UPDATE ON proposals
+FOR EACH ROW
+EXECUTE FUNCTION update_proposals_updated_at();

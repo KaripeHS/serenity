@@ -145,7 +145,7 @@ class CaregiverPerformanceService {
         COUNT(*) FILTER (WHERE clock_out_time IS NOT NULL) AS evv_clock_outs,
         COUNT(*) FILTER (WHERE manual_entry = TRUE) AS evv_manual_entries,
         COUNT(*) FILTER (WHERE has_exception = TRUE) AS evv_exceptions
-      FROM visits
+      FROM shifts
       WHERE caregiver_id = $1
         AND visit_date = $2
     `,

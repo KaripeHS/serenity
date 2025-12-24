@@ -4,6 +4,11 @@
 -- ============================================================================
 
 -- 1. Claims Batches Table
+DROP TABLE IF EXISTS credential_service_mappings CASCADE;
+DROP TABLE IF EXISTS credentials CASCADE;
+DROP TABLE IF EXISTS payment_postings CASCADE;
+DROP TABLE IF EXISTS claims_batches CASCADE;
+
 CREATE TABLE IF NOT EXISTS claims_batches (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,

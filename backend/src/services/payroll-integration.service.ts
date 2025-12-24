@@ -593,7 +593,7 @@ export class PayrollIntegrationService {
         SUM(
           EXTRACT(EPOCH FROM (v.clock_out_time - v.clock_in_time)) / 3600
         ) as total_hours
-      FROM visits v
+      FROM shifts v
       JOIN payroll_employee_mappings m ON m.caregiver_id = v.caregiver_id
       JOIN users u ON u.id = v.caregiver_id
       WHERE u.organization_id = $1
@@ -670,7 +670,7 @@ export class PayrollIntegrationService {
           AND v.evv_verification_status = 'verified'
         ) as compliant_visits
       FROM payroll_line_items li
-      LEFT JOIN visits v ON v.caregiver_id = li.caregiver_id
+      LEFT JOIN shifts v ON v.caregiver_id = li.caregiver_id
         AND v.visit_date >= $2
         AND v.visit_date <= $3
         AND v.status = 'completed'

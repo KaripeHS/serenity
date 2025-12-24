@@ -213,6 +213,8 @@ CREATE POLICY physician_orders_org_isolation ON physician_orders
 -- Care Plans Table
 -- ============================================================================
 
+DROP TABLE IF EXISTS care_plans CASCADE;
+
 CREATE TABLE care_plans (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,

@@ -89,13 +89,13 @@ export class MultiStateComplianceService {
 
     const rules: StateComplianceRules = {
       state: row.state,
-      licensingRequirements: JSON.parse(row.licensing_requirements),
-      trainingRequirements: JSON.parse(row.training_requirements),
-      staffingRatios: JSON.parse(row.staffing_ratios),
-      wageRules: JSON.parse(row.wage_rules),
-      backgroundCheckRequirements: JSON.parse(row.background_check_requirements),
-      evvRequirements: JSON.parse(row.evv_requirements),
-      medicaidPrograms: JSON.parse(row.medicaid_programs)
+      licensingRequirements: row.licensing_requirements,
+      trainingRequirements: row.training_requirements,
+      staffingRatios: row.staffing_ratios,
+      wageRules: row.wage_rules,
+      backgroundCheckRequirements: row.background_check_requirements,
+      evvRequirements: row.evv_requirements,
+      medicaidPrograms: row.medicaid_programs
     };
 
     // Cache rules

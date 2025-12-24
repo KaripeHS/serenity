@@ -55,28 +55,31 @@ CREATE INDEX IF NOT EXISTS idx_morning_checkins_date ON morning_check_ins(check_
 CREATE INDEX IF NOT EXISTS idx_morning_checkins_user ON morning_check_ins(user_id);
 CREATE INDEX IF NOT EXISTS idx_morning_checkins_pod ON morning_check_ins(pod_id);
 
--- Shifts table (enhanced from visits)
-CREATE TABLE IF NOT EXISTS shifts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    pod_id UUID REFERENCES pods(id),
-    caregiver_id UUID NOT NULL REFERENCES users(id),
-    client_id UUID NOT NULL REFERENCES clients(id),
-    scheduled_start TIMESTAMP WITH TIME ZONE NOT NULL,
-    scheduled_end TIMESTAMP WITH TIME ZONE NOT NULL,
-    actual_start TIMESTAMP WITH TIME ZONE,
-    actual_end TIMESTAMP WITH TIME ZONE,
-    status VARCHAR(20) DEFAULT 'scheduled',
-    service_code VARCHAR(20),
-    authorization_number VARCHAR(100),
-    evv_record_id UUID,
-    notes TEXT,
-    created_by UUID REFERENCES users(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+-- Shifts table (enhanced from visits/shifts in 001)
+-- Add columns not present in 001
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'shifts' AND column_name = 'service_code') THEN
+        ALTER TABLE shifts ADD COLUMN service_code VARCHAR(20);
+    END IF;
 
-    CONSTRAINT valid_shift_status CHECK (status IN ('scheduled', 'confirmed', 'in_progress', 'completed', 'missed', 'cancelled'))
-);
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'shifts' AND column_name = 'authorization_number') THEN
+        ALTER TABLE shifts ADD COLUMN authorization_number VARCHAR(100);
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'shifts' AND column_name = 'evv_record_id') THEN
+        ALTER TABLE shifts ADD COLUMN evv_record_id UUID;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'shifts' AND column_name = 'created_by') THEN
+        ALTER TABLE shifts ADD COLUMN created_by UUID REFERENCES users(id);
+    END IF;
+END $$;
+
+-- Update status constraint to include new statuses
+ALTER TABLE shifts DROP CONSTRAINT IF EXISTS valid_status;
+ALTER TABLE shifts DROP CONSTRAINT IF EXISTS valid_shift_status;
+ALTER TABLE shifts ADD CONSTRAINT valid_shift_status CHECK (status IN ('scheduled', 'confirmed', 'in_progress', 'completed', 'missed', 'cancelled', 'no_show'));
 
 CREATE INDEX IF NOT EXISTS idx_shifts_caregiver_date ON shifts(caregiver_id, scheduled_start);
 CREATE INDEX IF NOT EXISTS idx_shifts_client_date ON shifts(client_id, scheduled_start);
@@ -152,6 +155,10 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                    WHERE table_name = 'clients' AND column_name = 'evv_consent_status') THEN
         ALTER TABLE clients ADD COLUMN evv_consent_status VARCHAR(20) DEFAULT 'pending';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'clients' AND column_name = 'evv_consent_date') THEN
         ALTER TABLE clients ADD COLUMN evv_consent_date DATE;
     END IF;
 END $$;

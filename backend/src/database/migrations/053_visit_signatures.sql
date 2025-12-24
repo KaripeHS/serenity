@@ -8,7 +8,7 @@
 
 CREATE TABLE IF NOT EXISTS visit_signatures (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  visit_id UUID NOT NULL UNIQUE, -- One signature per visit
+  shift_id UUID NOT NULL UNIQUE REFERENCES shifts(id), -- One signature per visit/shift
   caregiver_id UUID NOT NULL,
   signature_data TEXT NOT NULL, -- Base64 encoded signature image
   signed_by VARCHAR(20) NOT NULL CHECK (signed_by IN ('client', 'representative', 'caregiver')),
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS visit_signatures (
 );
 
 -- Index for fast lookups by visit
-CREATE INDEX IF NOT EXISTS idx_visit_signatures_visit_id ON visit_signatures(visit_id);
+CREATE INDEX IF NOT EXISTS idx_visit_signatures_shift_id ON visit_signatures(shift_id);
 
 -- Index for caregiver audit trail
 CREATE INDEX IF NOT EXISTS idx_visit_signatures_caregiver_id ON visit_signatures(caregiver_id);
@@ -78,6 +78,14 @@ END $$;
 -- ============================================
 -- CARE PLANS TABLE ENHANCEMENT
 -- ============================================
+
+CREATE TABLE IF NOT EXISTS care_plans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  status VARCHAR(20) DEFAULT 'active',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
 -- Add enhanced care plan columns if not exist
 DO $$

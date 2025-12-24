@@ -24,7 +24,7 @@ export class CaregiverService {
 
     const visitsQuery = `
       SELECT
-        v.id as visit_id,
+        v.id as shift_id,
         c.name as client_name,
         c.address as client_address,
         c.latitude as client_latitude,
@@ -42,9 +42,9 @@ export class CaregiverService {
         vci.check_out_longitude,
         v.notes,
         v.tasks
-      FROM visits v
+      FROM shifts v
       JOIN clients c ON v.client_id = c.id
-      LEFT JOIN visit_check_ins vci ON v.id = vci.visit_id
+      LEFT JOIN visit_check_ins vci ON v.id = vci.shift_id
       WHERE v.caregiver_id = $1
         AND v.scheduled_start >= $2
         AND v.scheduled_start <= $3
@@ -59,12 +59,12 @@ export class CaregiverService {
       const contactsQuery = `
         SELECT name, relationship, phone
         FROM client_emergency_contacts
-        WHERE client_id = (SELECT client_id FROM visits WHERE id = $1)
+        WHERE client_id = (SELECT client_id FROM shifts WHERE id = $1)
         ORDER BY priority
         LIMIT 3
       `;
 
-      const contactsResult = await db.query(contactsQuery, [row.visit_id]);
+      const contactsResult = await db.query(contactsQuery, [row.shift_id]);
 
       // Parse tasks if stored as JSON
       let tasks = [];
@@ -77,7 +77,7 @@ export class CaregiverService {
       }
 
       return {
-        visitId: row.visit_id,
+        visitId: row.shift_id,
         clientName: row.client_name,
         clientAddress: row.client_address,
         scheduledStart: row.scheduled_start,
@@ -315,11 +315,11 @@ export class CaregiverService {
           COUNT(*) FILTER (
             WHERE EXISTS (
               SELECT 1 FROM visit_check_ins vci
-              WHERE vci.visit_id = v.id
+              WHERE vci.shift_id = v.id
                 AND vci.actual_check_in <= v.scheduled_start + INTERVAL '15 minutes'
             )
           ) as on_time_visits
-        FROM visits v
+        FROM shifts v
         WHERE caregiver_id = $1
           AND scheduled_start >= NOW() - INTERVAL '30 days'
       )

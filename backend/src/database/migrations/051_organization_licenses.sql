@@ -275,26 +275,29 @@ ALTER TABLE license_applications ENABLE ROW LEVEL SECURITY;
 CREATE POLICY org_licenses_select ON organization_licenses
   FOR SELECT USING (
     organization_id IN (
-      SELECT organization_id FROM pod_members WHERE user_id = current_setting('app.current_user_id')::uuid
+      SELECT p.organization_id FROM user_pod_memberships pm
+      JOIN pods p ON pm.pod_id = p.id
+      WHERE pm.user_id = current_setting('app.current_user_id')::uuid
     )
   );
 
 CREATE POLICY org_licenses_insert ON organization_licenses
   FOR INSERT WITH CHECK (
     organization_id IN (
-      SELECT pm.organization_id FROM pod_members pm
+      SELECT p.organization_id FROM user_pod_memberships pm
       JOIN pods p ON pm.pod_id = p.id
       WHERE pm.user_id = current_setting('app.current_user_id')::uuid
-      AND pm.role IN ('admin', 'owner', 'executive')
+      AND pm.role_in_pod IN ('admin', 'owner', 'executive')
     )
   );
 
 CREATE POLICY org_licenses_update ON organization_licenses
   FOR UPDATE USING (
     organization_id IN (
-      SELECT pm.organization_id FROM pod_members pm
+      SELECT p.organization_id FROM user_pod_memberships pm
+      JOIN pods p ON pm.pod_id = p.id
       WHERE pm.user_id = current_setting('app.current_user_id')::uuid
-      AND pm.role IN ('admin', 'owner', 'executive')
+      AND pm.role_in_pod IN ('admin', 'owner', 'executive')
     )
   );
 
@@ -309,7 +312,9 @@ CREATE POLICY opportunity_prompts_insert ON license_opportunity_prompts
 CREATE POLICY license_apps_select ON license_applications
   FOR SELECT USING (
     organization_id IN (
-      SELECT organization_id FROM pod_members WHERE user_id = current_setting('app.current_user_id')::uuid
+      SELECT p.organization_id FROM user_pod_memberships pm
+      JOIN pods p ON pm.pod_id = p.id
+      WHERE pm.user_id = current_setting('app.current_user_id')::uuid
     )
   );
 

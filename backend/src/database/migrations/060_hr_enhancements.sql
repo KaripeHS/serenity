@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS onboarding_templates (
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by UUID NOT NULL REFERENCES users(id),
+  created_by UUID REFERENCES users(id),
 
   UNIQUE(organization_id, template_name)
 );
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS onboarding_instances (
   organization_id UUID NOT NULL REFERENCES organizations(id),
 
   -- Who is being onboarded
-  employee_id UUID REFERENCES employees(id),
+  employee_id UUID REFERENCES users(id),
   caregiver_id UUID REFERENCES caregivers(id),
   applicant_id UUID REFERENCES applicants(id), -- Before they become employee
 
@@ -401,7 +401,7 @@ BEGIN
   IF p_new_hire_name IS NOT NULL THEN
     v_hire_name := p_new_hire_name;
   ELSIF p_employee_id IS NOT NULL THEN
-    SELECT first_name || ' ' || last_name INTO v_hire_name FROM employees WHERE id = p_employee_id;
+    SELECT first_name || ' ' || last_name INTO v_hire_name FROM users WHERE id = p_employee_id;
   ELSIF p_caregiver_id IS NOT NULL THEN
     SELECT first_name || ' ' || last_name INTO v_hire_name FROM caregivers WHERE id = p_caregiver_id;
   ELSIF p_applicant_id IS NOT NULL THEN

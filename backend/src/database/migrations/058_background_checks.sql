@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS background_checks (
 
   -- Subject of check
   caregiver_id UUID REFERENCES caregivers(id),
-  employee_id UUID REFERENCES employees(id),
+  employee_id UUID REFERENCES users(id),
   applicant_id UUID REFERENCES applicants(id),
 
   -- Check type and provider
@@ -161,7 +161,7 @@ CREATE INDEX idx_reference_checks_bg ON reference_checks(background_check_id);
 -- Ohio-specific disqualifying offenses catalog
 CREATE TABLE IF NOT EXISTS disqualifying_offense_codes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  offense_code VARCHAR(20) NOT NULL UNIQUE,
+  offense_code VARCHAR(50) NOT NULL UNIQUE,
   offense_type VARCHAR(50) NOT NULL, -- 'absolute', 'presumptive_5yr', 'presumptive_10yr'
   offense_description TEXT NOT NULL,
   orc_section VARCHAR(50), -- Ohio Revised Code section
@@ -211,7 +211,7 @@ SELECT
   END AS subject_type,
   COALESCE(bc.caregiver_id, bc.employee_id, bc.applicant_id) AS subject_id,
   COALESCE(
-    c.first_name || ' ' || c.last_name,
+    cu.first_name || ' ' || cu.last_name,
     e.first_name || ' ' || e.last_name,
     a.first_name || ' ' || a.last_name
   ) AS subject_name,
@@ -225,7 +225,8 @@ SELECT
   END AS health_status
 FROM background_checks bc
 LEFT JOIN caregivers c ON c.id = bc.caregiver_id
-LEFT JOIN employees e ON e.id = bc.employee_id
+LEFT JOIN users cu ON c.user_id = cu.id
+LEFT JOIN users e ON e.id = bc.employee_id
 LEFT JOIN applicants a ON a.id = bc.applicant_id;
 
 -- View: Compliance summary
@@ -248,9 +249,9 @@ CREATE OR REPLACE VIEW caregivers_needing_background_check AS
 SELECT
   c.id AS caregiver_id,
   c.organization_id,
-  c.first_name,
-  c.last_name,
-  c.email,
+  u.first_name,
+  u.last_name,
+  u.email,
   c.hire_date,
   bc.id AS latest_check_id,
   bc.check_type AS latest_check_type,
@@ -269,6 +270,7 @@ SELECT
     ELSE bc.expires_at - CURRENT_DATE
   END AS days_until_expiry
 FROM caregivers c
+JOIN users u ON c.user_id = u.id
 LEFT JOIN LATERAL (
   SELECT * FROM background_checks
   WHERE caregiver_id = c.id
@@ -276,7 +278,7 @@ LEFT JOIN LATERAL (
   ORDER BY completed_at DESC NULLS LAST
   LIMIT 1
 ) bc ON TRUE
-WHERE c.status = 'active'
+WHERE c.employment_status = 'active'
 ORDER BY
   CASE
     WHEN bc.id IS NULL THEN 0

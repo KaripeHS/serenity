@@ -62,8 +62,8 @@ export class OperationsService {
             WHERE vci.actual_check_in IS NOT NULL
               AND vci.actual_check_in > v.scheduled_start + INTERVAL '15 minutes'
           ) as late_checkins
-        FROM visits v
-        LEFT JOIN visit_check_ins vci ON v.id = vci.visit_id
+        FROM shifts v
+        LEFT JOIN shift_check_ins vci ON v.id = vci.visit_id
         WHERE v.organization_id = $1
           AND v.scheduled_start >= $2
           AND v.scheduled_start <= $3
@@ -118,7 +118,7 @@ export class OperationsService {
         c.name as client_name,
         v.scheduled_start,
         'No caregiver assigned' as issue
-      FROM visits v
+      FROM shifts v
       JOIN clients c ON v.client_id = c.id
       WHERE v.organization_id = $1
         AND v.scheduled_start >= $2
@@ -160,8 +160,8 @@ export class OperationsService {
           v2.scheduled_start as visit2_start,
           c1.name as client1_name,
           c2.name as client2_name
-        FROM visits v1
-        JOIN visits v2 ON v1.caregiver_id = v2.caregiver_id
+        FROM shifts v1
+        JOIN shifts v2 ON v1.caregiver_id = v2.caregiver_id
           AND v1.id < v2.id
           AND v1.scheduled_start < v2.scheduled_end
           AND v1.scheduled_end > v2.scheduled_start
@@ -206,7 +206,7 @@ export class OperationsService {
           COALESCE(u.max_hours_per_week, 40) as max_hours,
           SUM(EXTRACT(EPOCH FROM (v.scheduled_end - v.scheduled_start)) / 3600) as scheduled_hours
         FROM users u
-        JOIN visits v ON v.caregiver_id = u.id
+        JOIN shifts v ON v.caregiver_id = u.id
         WHERE u.organization_id = $1
           AND v.scheduled_start >= DATE_TRUNC('week', $2::DATE)
           AND v.scheduled_start < DATE_TRUNC('week', $2::DATE) + INTERVAL '1 week'
@@ -263,8 +263,8 @@ export class OperationsService {
               OR (vci.actual_check_in IS NULL AND v.scheduled_start < NOW() - INTERVAL '30 minutes')
           ) as missed_checkin
         FROM users u
-        JOIN visits v ON v.caregiver_id = u.id
-        LEFT JOIN visit_check_ins vci ON v.id = vci.visit_id
+        JOIN shifts v ON v.caregiver_id = u.id
+        LEFT JOIN shift_check_ins vci ON v.id = vci.visit_id
         WHERE u.organization_id = $1
           AND u.role IN ('CAREGIVER', 'DSP_BASIC', 'DSP_MED')
           AND u.status = 'active'
@@ -312,8 +312,8 @@ export class OperationsService {
             FILTER (WHERE vci.actual_check_in > v.scheduled_start) as avg_checkin_delay,
           AVG(EXTRACT(EPOCH FROM (vci.actual_check_out - v.scheduled_end)) / 60)
             FILTER (WHERE vci.actual_check_out > v.scheduled_end) as avg_checkout_delay
-        FROM visits v
-        LEFT JOIN visit_check_ins vci ON v.id = vci.visit_id
+        FROM shifts v
+        LEFT JOIN shift_check_ins vci ON v.id = vci.visit_id
         WHERE v.organization_id = $1
           AND v.scheduled_start >= $2
       )
@@ -393,7 +393,7 @@ export class OperationsService {
         v.scheduled_end,
         v.service_type,
         v.status
-      FROM visits v
+      FROM shifts v
       JOIN clients c ON v.client_id = c.id
       LEFT JOIN users u ON v.caregiver_id = u.id
       WHERE v.organization_id = $1
@@ -472,7 +472,7 @@ export class OperationsService {
           ELSE 0
         END as utilization_rate
       FROM users u
-      LEFT JOIN visits v ON v.caregiver_id = u.id
+      LEFT JOIN shifts v ON v.caregiver_id = u.id
         AND v.scheduled_start >= $2
         AND v.scheduled_start <= $3
         AND v.status NOT IN ('cancelled')
@@ -488,7 +488,7 @@ export class OperationsService {
     return result.rows.map(row => {
       const utilizationRate = parseFloat(row.utilization_rate);
       const status = utilizationRate < 70 ? 'underutilized' :
-                    utilizationRate > 100 ? 'overutilized' : 'optimal';
+        utilizationRate > 100 ? 'overutilized' : 'optimal';
 
       return {
         caregiverId: row.caregiver_id,
@@ -552,10 +552,10 @@ export class OperationsService {
         gl.longitude as current_longitude,
         gl.accuracy as current_accuracy,
         gl.timestamp as current_timestamp
-      FROM visits v
+      FROM shifts v
       JOIN users u ON v.caregiver_id = u.id
       JOIN clients c ON v.client_id = c.id
-      LEFT JOIN visit_check_ins vci ON v.id = vci.visit_id
+      LEFT JOIN shift_check_ins vci ON v.id = vci.visit_id
       LEFT JOIN LATERAL (
         SELECT latitude, longitude, accuracy, timestamp
         FROM gps_logs
@@ -586,10 +586,10 @@ export class OperationsService {
         const dLat = (row.client_latitude - row.current_latitude) * Math.PI / 180;
         const dLon = (row.client_longitude - row.current_longitude) * Math.PI / 180;
 
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1) * Math.cos(lat2) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(lat1) * Math.cos(lat2) *
+          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         distanceFromClient = 6371000 * c; // Distance in meters
 
         isWithinGeofence = distanceFromClient <= (row.geofence_radius_meters || 100);

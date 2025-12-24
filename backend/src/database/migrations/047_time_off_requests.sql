@@ -31,14 +31,14 @@ ALTER TABLE time_off_requests ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own requests" ON time_off_requests
     FOR SELECT
-    USING (user_id = auth.uid() OR organization_id = current_setting('app.current_organization_id', true)::UUID);
+    USING (user_id = current_setting('app.current_user_id')::UUID OR organization_id = current_setting('app.current_organization_id', true)::UUID);
 
 CREATE POLICY "Admins can manage all requests" ON time_off_requests
     FOR ALL
     USING (
         EXISTS (
             SELECT 1 FROM users 
-            WHERE id = auth.uid() 
+            WHERE id = current_setting('app.current_user_id')::UUID 
             AND role IN ('admin', 'super_admin') 
             AND organization_id = time_off_requests.organization_id
         )

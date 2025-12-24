@@ -35,7 +35,7 @@ AND a.organization_id IS NULL;
 CREATE TABLE IF NOT EXISTS authorization_usage (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   authorization_id UUID NOT NULL REFERENCES authorizations(id) ON DELETE CASCADE,
-  visit_id UUID REFERENCES visits(id),
+  shift_id UUID REFERENCES shifts(id),
   usage_date DATE NOT NULL,
   units_used INTEGER NOT NULL,
   billing_code VARCHAR(20),

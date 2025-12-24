@@ -844,36 +844,67 @@ export class HRService {
 
   private isCredentialBlocking(credentialType: string, role: UserRole): boolean {
     const blockingCredentials: Record<UserRole, string[]> = {
-      [UserRole.CAREGIVER]: ['HHA', 'CPR', 'First_Aid'],
-      [UserRole.SCHEDULER]: [],
-      [UserRole.FIELD_SUPERVISOR]: ['CPR'],
-      [UserRole.HR_MANAGER]: [],
-      [UserRole.CREDENTIALING_SPECIALIST]: [],
+      // Executive Leadership
+      [UserRole.FOUNDER]: [],
+      [UserRole.CEO]: [],
+      [UserRole.CFO]: [],
+      [UserRole.COO]: [],
+
+      // Security & Compliance
+      [UserRole.SECURITY_OFFICER]: [],
+      [UserRole.COMPLIANCE_OFFICER]: [],
+
+      // Finance Department
+      [UserRole.FINANCE_DIRECTOR]: [],
+      [UserRole.FINANCE_MANAGER]: [],
       [UserRole.BILLING_MANAGER]: [],
       [UserRole.RCM_ANALYST]: [],
-      [UserRole.FINANCE_DIRECTOR]: [],
-      [UserRole.COMPLIANCE_OFFICER]: [],
-      [UserRole.SECURITY_OFFICER]: [],
+      [UserRole.INSURANCE_MANAGER]: [],
+      [UserRole.BILLING_CODER]: [],
+
+      // Operations Department
+      [UserRole.OPERATIONS_MANAGER]: [],
+      [UserRole.FIELD_OPS_MANAGER]: ['CPR'],
+      [UserRole.POD_LEAD]: ['CPR'],
+      [UserRole.FIELD_SUPERVISOR]: ['CPR'],
+      [UserRole.SCHEDULING_MANAGER]: [],
+      [UserRole.SCHEDULER]: [],
+      [UserRole.DISPATCHER]: [],
+      [UserRole.QA_MANAGER]: [],
+
+      // HR Department
+      [UserRole.HR_DIRECTOR]: [],
+      [UserRole.HR_MANAGER]: [],
+      [UserRole.RECRUITER]: [],
+      [UserRole.CREDENTIALING_SPECIALIST]: [],
+
+      // IT & Support
       [UserRole.IT_ADMIN]: [],
       [UserRole.SUPPORT_AGENT]: [],
-      [UserRole.FOUNDER]: [],
-      [UserRole.CLIENT]: [],
-      [UserRole.FAMILY]: [],
-      [UserRole.PAYER_AUDITOR]: [],
-      [UserRole.AI_SERVICE]: [],
 
-      // Clinical Roles
+      // Clinical Leadership
+      [UserRole.DIRECTOR_OF_NURSING]: ['RN_LICENSE', 'CPR'],
+      [UserRole.CLINICAL_DIRECTOR]: ['RN_LICENSE'],
+      [UserRole.NURSING_SUPERVISOR]: ['RN_LICENSE', 'CPR'],
+
+      // Clinical Staff
       [UserRole.RN_CASE_MANAGER]: ['RN_LICENSE', 'CPR'],
       [UserRole.LPN_LVN]: ['LPN_LICENSE', 'CPR'],
       [UserRole.THERAPIST]: ['THERAPY_LICENSE', 'CPR'],
-      [UserRole.CLINICAL_DIRECTOR]: ['RN_LICENSE'],
       [UserRole.QIDP]: ['QIDP_CERT'],
+
+      // Direct Care Staff
       [UserRole.DSP_MED]: ['MED_ADMIN_CERT', 'CPR', 'First_Aid'],
       [UserRole.DSP_BASIC]: ['CPR', 'First_Aid'],
+      [UserRole.HHA]: ['HHA', 'CPR', 'First_Aid'],
+      [UserRole.CNA]: ['CNA_CERT', 'CPR', 'First_Aid'],
+      [UserRole.CAREGIVER]: ['HHA', 'CPR', 'First_Aid'],
 
-      // Admin
-      [UserRole.INSURANCE_MANAGER]: [],
-      [UserRole.BILLING_CODER]: []
+      // External Access
+      [UserRole.CLIENT]: [],
+      [UserRole.FAMILY]: [],
+      [UserRole.PAYER_AUDITOR]: [],
+      [UserRole.AI_SERVICE]: []
     };
 
     return blockingCredentials[role]?.includes(credentialType) || false;
@@ -881,36 +912,67 @@ export class HRService {
 
   private getRequiredCredentials(role: UserRole): string[] {
     const requiredCredentials: Record<UserRole, string[]> = {
-      [UserRole.CAREGIVER]: ['HHA', 'CPR', 'First_Aid', 'Background_Check'],
-      [UserRole.FIELD_SUPERVISOR]: ['CPR', 'Background_Check'],
-      [UserRole.HR_MANAGER]: ['Background_Check'],
-      [UserRole.CREDENTIALING_SPECIALIST]: ['Background_Check'],
+      // Executive Leadership
+      [UserRole.FOUNDER]: [],
+      [UserRole.CEO]: ['Background_Check'],
+      [UserRole.CFO]: ['Background_Check'],
+      [UserRole.COO]: ['Background_Check'],
+
+      // Security & Compliance
+      [UserRole.SECURITY_OFFICER]: ['Background_Check'],
+      [UserRole.COMPLIANCE_OFFICER]: ['Background_Check'],
+
+      // Finance Department
+      [UserRole.FINANCE_DIRECTOR]: ['Background_Check'],
+      [UserRole.FINANCE_MANAGER]: ['Background_Check'],
       [UserRole.BILLING_MANAGER]: ['Background_Check'],
       [UserRole.RCM_ANALYST]: ['Background_Check'],
-      [UserRole.FINANCE_DIRECTOR]: ['Background_Check'],
-      [UserRole.COMPLIANCE_OFFICER]: ['Background_Check'],
-      [UserRole.SECURITY_OFFICER]: ['Background_Check'],
-      [UserRole.IT_ADMIN]: ['Background_Check'],
-      [UserRole.SCHEDULER]: ['Background_Check'],
-      [UserRole.SUPPORT_AGENT]: ['Background_Check'],
-      [UserRole.FOUNDER]: [],
-      [UserRole.CLIENT]: [],
-      [UserRole.FAMILY]: [],
-      [UserRole.PAYER_AUDITOR]: [],
-      [UserRole.AI_SERVICE]: [],
+      [UserRole.INSURANCE_MANAGER]: ['Background_Check'],
+      [UserRole.BILLING_CODER]: ['Background_Check'],
 
-      // Clinical Roles
+      // Operations Department
+      [UserRole.OPERATIONS_MANAGER]: ['Background_Check'],
+      [UserRole.FIELD_OPS_MANAGER]: ['CPR', 'Background_Check'],
+      [UserRole.POD_LEAD]: ['CPR', 'Background_Check'],
+      [UserRole.FIELD_SUPERVISOR]: ['CPR', 'Background_Check'],
+      [UserRole.SCHEDULING_MANAGER]: ['Background_Check'],
+      [UserRole.SCHEDULER]: ['Background_Check'],
+      [UserRole.DISPATCHER]: ['Background_Check'],
+      [UserRole.QA_MANAGER]: ['Background_Check'],
+
+      // HR Department
+      [UserRole.HR_DIRECTOR]: ['Background_Check'],
+      [UserRole.HR_MANAGER]: ['Background_Check'],
+      [UserRole.RECRUITER]: ['Background_Check'],
+      [UserRole.CREDENTIALING_SPECIALIST]: ['Background_Check'],
+
+      // IT & Support
+      [UserRole.IT_ADMIN]: ['Background_Check'],
+      [UserRole.SUPPORT_AGENT]: ['Background_Check'],
+
+      // Clinical Leadership
+      [UserRole.DIRECTOR_OF_NURSING]: ['RN_LICENSE', 'CPR', 'Background_Check'],
+      [UserRole.CLINICAL_DIRECTOR]: ['RN_LICENSE', 'Background_Check'],
+      [UserRole.NURSING_SUPERVISOR]: ['RN_LICENSE', 'CPR', 'Background_Check'],
+
+      // Clinical Staff
       [UserRole.RN_CASE_MANAGER]: ['RN_LICENSE', 'CPR', 'Background_Check'],
       [UserRole.LPN_LVN]: ['LPN_LICENSE', 'CPR', 'Background_Check'],
       [UserRole.THERAPIST]: ['THERAPY_LICENSE', 'CPR', 'Background_Check'],
-      [UserRole.CLINICAL_DIRECTOR]: ['RN_LICENSE', 'Background_Check'],
       [UserRole.QIDP]: ['QIDP_CERT', 'Background_Check'],
+
+      // Direct Care Staff
       [UserRole.DSP_MED]: ['MED_ADMIN_CERT', 'CPR', 'First_Aid', 'Background_Check'],
       [UserRole.DSP_BASIC]: ['CPR', 'First_Aid', 'Background_Check'],
+      [UserRole.HHA]: ['HHA', 'CPR', 'First_Aid', 'Background_Check'],
+      [UserRole.CNA]: ['CNA_CERT', 'CPR', 'First_Aid', 'Background_Check'],
+      [UserRole.CAREGIVER]: ['HHA', 'CPR', 'First_Aid', 'Background_Check'],
 
-      // Admin
-      [UserRole.INSURANCE_MANAGER]: ['Background_Check'],
-      [UserRole.BILLING_CODER]: ['Background_Check']
+      // External Access
+      [UserRole.CLIENT]: [],
+      [UserRole.FAMILY]: [],
+      [UserRole.PAYER_AUDITOR]: [],
+      [UserRole.AI_SERVICE]: []
     };
 
     return requiredCredentials[role] || [];
