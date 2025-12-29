@@ -609,7 +609,7 @@ export default function CareersPage() {
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g., RN, LPN, HHA, or N/A"
+                    placeholder="e.g., RN, LPN, STNA/CNA, HHA, or N/A"
                     className="w-full px-4 py-3 rounded-xl border border-warm-gray-300 focus:border-serenity-green-500 focus:ring-2 focus:ring-serenity-green-200 outline-none transition-all"
                     value={formData.licenseType}
                     onChange={(e) => setFormData({ ...formData, licenseType: e.target.value })}
