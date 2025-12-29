@@ -596,10 +596,10 @@ export default function CareersPage() {
                     onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                   >
                     <option value="">Select a position...</option>
-                    <option value="Personal Care Aide / Caregiver">Personal Care Aide / Caregiver</option>
-                    <option value="Home Health Aide (HHA)">Home Health Aide (HHA)</option>
-                    <option value="Homemaker / Companion">Homemaker / Companion</option>
-                    <option value="Other">Other</option>
+                    <option value="HHA / STNA">HHA / STNA (Home Health Aide / State Tested Nursing Assistant)</option>
+                    <option value="LPN">LPN (Licensed Practical Nurse)</option>
+                    <option value="RN">RN (Registered Nurse)</option>
+                    <option value="Other">Other (PT, OT, SLP, MSW, etc.)</option>
                   </select>
                 </div>
 
