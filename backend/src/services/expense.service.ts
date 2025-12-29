@@ -388,16 +388,18 @@ class ExpenseService {
     receiptFilename?: string;
     status?: 'draft' | 'submitted';
   }): Promise<ExpenseClaim> {
+    const claimNumber = 'EXP-' + Date.now().toString().slice(-6) + '-' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+
     const result = await db.query(`
       INSERT INTO expense_claims (
         organization_id, caregiver_id, category_id, description,
-        amount, expense_date, visit_id, client_id,
+        amount, expense_date, shift_id, client_id,
         is_mileage, start_location, end_location, miles, mileage_rate,
-        receipt_url, receipt_filename, receipt_uploaded_at, status
+        receipt_url, receipt_filename, receipt_uploaded_at, status, claim_number
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
-        CASE WHEN $14 IS NOT NULL THEN NOW() ELSE NULL END,
-        $16
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::text, $15,
+        CASE WHEN $14::text IS NOT NULL THEN NOW() ELSE NULL END,
+        $16, $17
       )
       RETURNING *
     `, [
@@ -405,7 +407,7 @@ class ExpenseService {
       data.amount, data.expenseDate, data.visitId, data.clientId,
       data.isMileage || false, data.startLocation, data.endLocation,
       data.miles, data.mileageRate, data.receiptUrl, data.receiptFilename,
-      data.status || 'submitted'
+      data.status || 'submitted', claimNumber
     ]);
 
     logger.info('Expense claim created', {
@@ -764,7 +766,7 @@ class ExpenseService {
       currency: row.currency,
       expenseDate: row.expense_date,
       submittedAt: row.submitted_at,
-      visitId: row.visit_id,
+      visitId: row.shift_id, // Map shift_id to visitId
       clientId: row.client_id,
       clientName: row.client_name,
       isMileage: row.is_mileage,

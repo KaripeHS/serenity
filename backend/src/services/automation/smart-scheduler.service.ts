@@ -382,9 +382,9 @@ export class SmartSchedulerService {
         u.id,
         u.first_name || ' ' || u.last_name as name
       FROM users u
-      WHERE u.organization_id = $1
-        AND u.role = 'CAREGIVER'
-        AND u.active = true
+      JOIN caregivers c ON c.user_id = u.id
+      WHERE c.organization_id = $1
+        AND u.status = 'active'
         AND NOT EXISTS (
           SELECT 1 FROM shifts v
           WHERE v.caregiver_id = u.id
@@ -504,10 +504,12 @@ export class SmartSchedulerService {
       // Get active recurring visit templates
       const templates = await pool.query(
         `
-        SELECT * FROM recurring_visit_templates
-        WHERE organization_id = $1
-          AND active = true
-          AND (end_date IS NULL OR end_date >= NOW())
+        SELECT t.*, c.pod_id 
+        FROM recurring_visit_templates t
+        JOIN clients c ON t.client_id = c.id
+        WHERE t.organization_id = $1
+          AND t.active = true
+          AND (t.end_date IS NULL OR t.end_date >= NOW())
         `,
         [organizationId]
       );
@@ -534,19 +536,23 @@ export class SmartSchedulerService {
                 INSERT INTO shifts (
                   organization_id,
                   client_id,
+                  pod_id,
                   scheduled_start,
                   scheduled_end,
                   service_type,
                   status,
+                  visit_code,
                   created_at
-                ) VALUES ($1, $2, $3, $4, $5, 'scheduled', NOW())
+                ) VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', $7, NOW())
                 `,
                 [
                   organizationId,
                   template.client_id,
+                  template.pod_id,
                   visit.scheduledStart,
                   visit.scheduledEnd,
-                  template.service_type
+                  template.service_type,
+                  `VISIT-${Date.now()}-${Math.floor(Math.random() * 1000)}`
                 ]
               );
 
@@ -573,7 +579,11 @@ export class SmartSchedulerService {
     endDate: Date
   ): Array<{ scheduledStart: Date; scheduledEnd: Date }> {
     const visits: Array<{ scheduledStart: Date; scheduledEnd: Date }> = [];
-    const pattern = template.recurrence_pattern; // daily, weekly, biweekly, monthly
+    // Handle both string (old format) and object (new format) patterns
+    const patternRaw = template.recurrence_pattern;
+    const pattern = (typeof patternRaw === 'object' && patternRaw !== null && 'frequency' in patternRaw)
+      ? patternRaw.frequency
+      : patternRaw;
 
     let currentDate = new Date(template.start_date);
     const duration = template.duration_minutes;

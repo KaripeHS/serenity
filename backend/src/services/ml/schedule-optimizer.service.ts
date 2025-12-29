@@ -141,25 +141,31 @@ export class ScheduleOptimizerService {
       SELECT
         u.id,
         u.first_name || ' ' || u.last_name as name,
-        u.skills,
+        cg.specializations as skills,
         u.max_hours_per_week,
         COALESCE(SUM(EXTRACT(EPOCH FROM (v.scheduled_end - v.scheduled_start)) / 3600), 0) as scheduled_hours,
         MAX(c.latitude) as last_visit_lat,
         MAX(c.longitude) as last_visit_lon,
         MAX(v.scheduled_end) as last_visit_end
       FROM users u
+      JOIN caregivers cg ON u.id = cg.user_id
       LEFT JOIN shifts v ON u.id = v.caregiver_id
         AND v.scheduled_start >= $2
         AND v.scheduled_start < $3
         AND v.status IN ('scheduled', 'in_progress', 'completed')
       LEFT JOIN clients c ON v.client_id = c.id
-      WHERE u.organization_id = $1
-        AND u.role IN ('CAREGIVER', 'DSP_BASIC', 'DSP_MED')
-        AND u.status = 'active'
-      GROUP BY u.id, u.first_name, u.last_name, u.skills, u.max_hours_per_week
+      WHERE cg.organization_id = $1
+        AND u.role IN ('caregiver', 'CAREGIVER', 'DSP_BASIC', 'DSP_MED', 'dsp_basic', 'dsp_med')
+        AND (u.status = 'active' OR u.is_active = true)
+      GROUP BY u.id, u.first_name, u.last_name, cg.specializations, u.max_hours_per_week
       `,
       [organizationId, startDate, endDate]
     );
+
+    console.log(`DEBUG OPTIMIZER: Found ${result.rows.length} available caregivers for Org ${organizationId}`);
+    if (result.rows.length > 0) {
+      console.log('DEBUG OPTIMIZER: First caregiver:', JSON.stringify(result.rows[0], null, 2));
+    }
 
     return result.rows.map(row => ({
       id: row.id,

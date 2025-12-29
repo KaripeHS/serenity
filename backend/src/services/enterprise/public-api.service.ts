@@ -86,32 +86,37 @@ export class PublicAPIService {
       ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
       : null;
 
-    await pool.query(
-      `
-      INSERT INTO api_keys (
-        organization_id,
-        name,
-        key_hash,
-        secret_hash,
-        scopes,
-        rate_limit_per_minute,
-        active,
-        expires_at,
-        created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, true, $7, NOW())
-      `,
-      [
-        organizationId,
-        name,
-        hashedKey,
-        hashedSecret,
-        JSON.stringify(scopes),
-        rateLimitPerMinute,
-        expiresAt
-      ]
-    );
-
-    return { apiKey, apiSecret };
+    try {
+      await pool.query(
+        `
+        INSERT INTO api_keys (
+          organization_id,
+          name,
+          api_key,
+          api_secret_hash,
+          scopes,
+          rate_limit_per_minute,
+          is_active,
+          expires_at,
+          created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, true, $7, NOW())
+        `,
+        [
+          organizationId,
+          name,
+          hashedKey,
+          hashedSecret,
+          JSON.stringify(scopes),
+          rateLimitPerMinute,
+          expiresAt
+        ]
+      );
+      console.log('[API Debug] Generated key. Hash:', hashedKey);
+      return { apiKey, apiSecret };
+    } catch (err: any) {
+      console.error('[API Debug] Error generating API key:', err);
+      throw err;
+    }
   }
 
   /**
@@ -124,6 +129,7 @@ export class PublicAPIService {
     try {
       const hashedKey = this.hashCredential(apiKey);
       const hashedSecret = this.hashCredential(apiSecret);
+      console.log('[API Debug] Authenticating. Hash:', hashedKey);
 
       const result = await pool.query(
         `
@@ -134,20 +140,25 @@ export class PublicAPIService {
           rate_limit_per_minute,
           expires_at
         FROM api_keys
-        WHERE key_hash = $1
-          AND secret_hash = $2
-          AND active = true
+        WHERE api_key = $1
+          AND api_secret_hash = $2
+          AND is_active = true
           AND (expires_at IS NULL OR expires_at > NOW())
         `,
         [hashedKey, hashedSecret]
       );
 
       if (result.rows.length === 0) {
+        console.log('[API Debug] Auth failed. Params:', { hashedKey, hashedSecret });
+        console.log('[API Debug] Query result empty.');
         return null;
       }
 
       const apiKeyRecord = result.rows[0];
-      const scopes = JSON.parse(apiKeyRecord.scopes);
+      // pg returns JSONB as object, no need to parse if it's already an array/object
+      const scopes = typeof apiKeyRecord.scopes === 'string'
+        ? JSON.parse(apiKeyRecord.scopes)
+        : apiKeyRecord.scopes;
 
       // Generate JWT token
       const token = jwt.sign(
@@ -182,8 +193,10 @@ export class PublicAPIService {
   } | null> {
     try {
       const decoded = jwt.verify(token, this.jwtSecret) as any;
+      // console.log('[API Debug] Decoded token:', decoded); // optional
 
       if (decoded.type !== 'api_access') {
+        console.log('[API Debug] Invalid token type:', decoded.type);
         return null;
       }
 
@@ -193,6 +206,7 @@ export class PublicAPIService {
         scopes: decoded.scopes
       };
     } catch (error) {
+      console.log('[API Debug] Token verification failed:', error.message);
       return null;
     }
   }
@@ -629,7 +643,7 @@ export class PublicAPIService {
         name,
         scopes,
         rate_limit_per_minute,
-        active,
+        is_active as active,
         created_at,
         expires_at
       FROM api_keys
@@ -642,7 +656,7 @@ export class PublicAPIService {
     return result.rows.map(row => ({
       id: row.id,
       name: row.name,
-      scopes: JSON.parse(row.scopes),
+      scopes: typeof row.scopes === 'string' ? JSON.parse(row.scopes) : row.scopes,
       rateLimitPerMinute: row.rate_limit_per_minute,
       active: row.active,
       createdAt: row.created_at,

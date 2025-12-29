@@ -174,6 +174,12 @@ router.post('/', async (req: AuthenticatedRequest, res: Response, next: NextFunc
       availableStartDate,
     } = req.body;
 
+    logger.info('Creating applicant request', {
+      body: req.body,
+      organizationId,
+      userId
+    });
+
     if (!firstName || !lastName || !email || !phone || !positionAppliedFor) {
       throw ApiErrors.badRequest('firstName, lastName, email, phone, and positionAppliedFor are required');
     }

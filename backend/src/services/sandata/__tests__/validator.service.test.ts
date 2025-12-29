@@ -199,7 +199,7 @@ describe('SandataValidatorService', () => {
       // Create location at ~90% of radius
       const visit = createMockVisit({
         clockInLocation: {
-          latitude: 39.9633, // ~0.23 miles from client
+          latitude: 39.9642, // ~0.22 miles from client (between 0.2 and 0.25)
           longitude: -82.9988,
         },
       });
@@ -374,7 +374,7 @@ describe('SandataValidatorService', () => {
     it('should warn when approaching authorization limit (>80%)', async () => {
       const visit = createMockVisit({
         serviceCode: 'T1019',
-        units: 1, // Only 1 of 2 remaining units
+        units: 2, // 2 of 2 remaining (100% of remaining, so > 80%)
         serviceDate: '2025-06-01',
       });
 

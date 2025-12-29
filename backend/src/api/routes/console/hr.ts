@@ -9,11 +9,115 @@ import { Router, Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../../middleware/auth';
 import { v4 as uuidv4 } from 'uuid';
 import onboardingRouter from './onboarding';
+import { pool } from '../../../config/database';
 
 const router = Router();
 
 // Mount onboarding sub-router
 router.use('/onboarding', onboardingRouter);
+
+// ========================================
+// HR METRICS / DASHBOARD
+// ========================================
+
+/**
+ * GET /api/console/hr/metrics
+ * Get HR dashboard metrics (real data only - no mock data)
+ */
+router.get('/metrics', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const organizationId = req.user?.organizationId;
+
+    // Get total staff count
+    const staffResult = await pool.query(`
+      SELECT COUNT(*) as count
+      FROM users
+      WHERE organization_id = $1 AND status = 'active'
+    `, [organizationId]);
+
+    // Get open positions count
+    const positionsResult = await pool.query(`
+      SELECT COUNT(*) as count
+      FROM job_postings
+      WHERE organization_id = $1 AND status = 'open'
+    `, [organizationId]).catch(() => ({ rows: [{ count: 0 }] }));
+
+    // Get pending applications count
+    const applicationsResult = await pool.query(`
+      SELECT COUNT(*) as count
+      FROM applicants
+      WHERE organization_id = $1 AND status = 'pending'
+    `, [organizationId]).catch(() => ({ rows: [{ count: 0 }] }));
+
+    // Get training compliance (users with valid required credentials / total users)
+    let trainingCompliance = 0;
+    try {
+      const complianceResult = await pool.query(`
+        SELECT
+          COUNT(DISTINCT u.id) as total_staff,
+          COUNT(DISTINCT CASE
+            WHEN NOT EXISTS (
+              SELECT 1 FROM credentials c
+              WHERE c.user_id = u.id
+              AND c.status = 'expired'
+              AND c.is_required = true
+            ) THEN u.id
+          END) as compliant_staff
+        FROM users u
+        WHERE u.organization_id = $1 AND u.status = 'active'
+          AND u.role IN ('caregiver', 'dsp_basic', 'dsp_med', 'hha', 'cna', 'rn_case_manager', 'lpn_lvn', 'therapist', 'qidp')
+      `, [organizationId]);
+
+      const totalStaff = parseInt(complianceResult.rows[0]?.total_staff || '0', 10);
+      const compliantStaff = parseInt(complianceResult.rows[0]?.compliant_staff || '0', 10);
+      trainingCompliance = totalStaff > 0 ? (compliantStaff / totalStaff) * 100 : 0;
+    } catch {
+      trainingCompliance = 0;
+    }
+
+    // Get average time to hire (days from application to hire)
+    let avgTimeToHire = 0;
+    try {
+      const hireTimeResult = await pool.query(`
+        SELECT AVG(EXTRACT(DAY FROM (hired_date - created_at))) as avg_days
+        FROM applicants
+        WHERE organization_id = $1 AND status = 'hired' AND hired_date IS NOT NULL
+      `, [organizationId]);
+      avgTimeToHire = Math.round(parseFloat(hireTimeResult.rows[0]?.avg_days || '0'));
+    } catch {
+      avgTimeToHire = 0;
+    }
+
+    // Get turnover rate (terminated / total staff in last 12 months)
+    let turnoverRate = 0;
+    try {
+      const turnoverResult = await pool.query(`
+        SELECT
+          COUNT(*) FILTER (WHERE status = 'terminated' AND updated_at >= NOW() - INTERVAL '12 months') as terminated,
+          COUNT(*) as total
+        FROM users
+        WHERE organization_id = $1
+          AND role IN ('caregiver', 'dsp_basic', 'dsp_med', 'hha', 'cna', 'rn_case_manager', 'lpn_lvn', 'therapist', 'qidp')
+      `, [organizationId]);
+      const terminated = parseInt(turnoverResult.rows[0]?.terminated || '0', 10);
+      const total = parseInt(turnoverResult.rows[0]?.total || '0', 10);
+      turnoverRate = total > 0 ? (terminated / total) * 100 : 0;
+    } catch {
+      turnoverRate = 0;
+    }
+
+    res.json({
+      totalStaff: parseInt(staffResult.rows[0]?.count || '0', 10),
+      openPositions: parseInt(positionsResult.rows[0]?.count || '0', 10),
+      pendingApplications: parseInt(applicationsResult.rows[0]?.count || '0', 10),
+      trainingCompliance: Math.round(trainingCompliance * 10) / 10,
+      avgTimeToHire,
+      turnoverRate: Math.round(turnoverRate * 10) / 10
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // ========================================
 // APPLICANT MANAGEMENT
@@ -25,121 +129,101 @@ router.use('/onboarding', onboardingRouter);
  */
 router.get('/applicants', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const { status, stage, position } = req.query;
+    const { status, stage, position, search, limit = 50, offset = 0 } = req.query;
+    const organizationId = req.user?.organizationId;
 
-    // TODO: Query database with filters
-    // const db = getDbClient();
-    // let query = 'SELECT * FROM applicants WHERE organization_id = $1';
-    // const params = [req.user?.organizationId];
-    // if (status) { query += ' AND status = $2'; params.push(status); }
-    // const result = await db.query(query, params);
+    // Build query with filters
+    let query = `
+      SELECT
+        id,
+        first_name as "firstName",
+        last_name as "lastName",
+        email,
+        phone,
+        position_applied_for as "positionAppliedFor",
+        created_at as "applicationDate",
+        status,
+        current_stage as "currentStage",
+        source,
+        certifications,
+        experience_level as "experienceLevel",
+        availability,
+        skills
+      FROM applicants
+      WHERE organization_id = $1
+    `;
+    const params: any[] = [organizationId];
+    let paramIndex = 2;
 
-    // Mock data for development
-    const mockApplicants = [
-      {
-        id: 'app-001',
-        firstName: 'Sarah',
-        lastName: 'Johnson',
-        email: 'sarah.johnson@email.com',
-        phone: '(937) 555-0123',
-        positionAppliedFor: 'Home Health Aide (HHA)',
-        applicationDate: '2024-11-01T10:30:00Z',
-        status: 'new',
-        currentStage: 'application_received',
-        source: 'website',
-        hasLicense: true,
-        availability: 'full-time',
-        yearsExperience: 3
-      },
-      {
-        id: 'app-002',
-        firstName: 'Michael',
-        lastName: 'Chen',
-        email: 'mchen@email.com',
-        phone: '(614) 555-0456',
-        positionAppliedFor: 'Licensed Practical Nurse (LPN)',
-        applicationDate: '2024-10-28T14:20:00Z',
-        status: 'screening',
-        currentStage: 'phone_screen_scheduled',
-        source: 'website',
-        hasLicense: true,
-        availability: 'full-time',
-        yearsExperience: 5
-      },
-      {
-        id: 'app-003',
-        firstName: 'Emily',
-        lastName: 'Rodriguez',
-        email: 'e.rodriguez@email.com',
-        phone: '(513) 555-0789',
-        positionAppliedFor: 'Home Health Aide (HHA)',
-        applicationDate: '2024-10-25T09:15:00Z',
-        status: 'interviewing',
-        currentStage: 'in_person_interview_scheduled',
-        source: 'indeed',
-        hasLicense: true,
-        availability: 'part-time',
-        yearsExperience: 2
-      },
-      {
-        id: 'app-004',
-        firstName: 'James',
-        lastName: 'Wilson',
-        email: 'jwilson@email.com',
-        phone: '(937) 555-0321',
-        positionAppliedFor: 'Registered Nurse (RN)',
-        applicationDate: '2024-10-20T16:00:00Z',
-        status: 'offer',
-        currentStage: 'offer_extended',
-        source: 'linkedin',
-        hasLicense: true,
-        availability: 'full-time',
-        yearsExperience: 7
-      },
-      {
-        id: 'app-005',
-        firstName: 'Lisa',
-        lastName: 'Martinez',
-        email: 'lmartinez@email.com',
-        phone: '(614) 555-0654',
-        positionAppliedFor: 'Home Health Aide (HHA)',
-        applicationDate: '2024-10-15T11:30:00Z',
-        status: 'hired',
-        currentStage: 'onboarding',
-        source: 'referral',
-        hasLicense: true,
-        availability: 'full-time',
-        yearsExperience: 4
-      },
-      {
-        id: 'app-006',
-        firstName: 'David',
-        lastName: 'Thompson',
-        email: 'dthompson@email.com',
-        phone: '(937) 555-0987',
-        positionAppliedFor: 'Pod Lead',
-        applicationDate: '2024-10-10T13:45:00Z',
-        status: 'rejected',
-        currentStage: 'rejected_insufficient_experience',
-        source: 'website',
-        hasLicense: false,
-        availability: 'full-time',
-        yearsExperience: 1
-      }
-    ];
-
-    // Apply filters if provided
-    let filteredApplicants = mockApplicants;
     if (status) {
-      filteredApplicants = filteredApplicants.filter(a => a.status === status);
+      query += ` AND status = $${paramIndex}`;
+      params.push(status);
+      paramIndex++;
+    }
+    if (stage) {
+      query += ` AND current_stage = $${paramIndex}`;
+      params.push(stage);
+      paramIndex++;
     }
     if (position) {
-      filteredApplicants = filteredApplicants.filter(a => a.positionAppliedFor === position);
+      query += ` AND position_applied_for = $${paramIndex}`;
+      params.push(position);
+      paramIndex++;
+    }
+    if (search) {
+      query += ` AND (
+        first_name ILIKE $${paramIndex} OR
+        last_name ILIKE $${paramIndex} OR
+        email ILIKE $${paramIndex} OR
+        phone ILIKE $${paramIndex}
+      )`;
+      params.push(`%${search}%`);
+      paramIndex++;
     }
 
+    query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(Number(limit), Number(offset));
+
+    const result = await pool.query(query, params);
+
+    // Get total count for pagination
+    let countQuery = `SELECT COUNT(*) FROM applicants WHERE organization_id = $1`;
+    const countParams: any[] = [organizationId];
+    let countParamIndex = 2;
+
+    if (status) {
+      countQuery += ` AND status = $${countParamIndex}`;
+      countParams.push(status);
+      countParamIndex++;
+    }
+    if (stage) {
+      countQuery += ` AND current_stage = $${countParamIndex}`;
+      countParams.push(stage);
+      countParamIndex++;
+    }
+    if (position) {
+      countQuery += ` AND position_applied_for = $${countParamIndex}`;
+      countParams.push(position);
+      countParamIndex++;
+    }
+    if (search) {
+      countQuery += ` AND (
+        first_name ILIKE $${countParamIndex} OR
+        last_name ILIKE $${countParamIndex} OR
+        email ILIKE $${countParamIndex} OR
+        phone ILIKE $${countParamIndex}
+      )`;
+      countParams.push(`%${search}%`);
+    }
+
+    const countResult = await pool.query(countQuery, countParams);
+    const total = parseInt(countResult.rows[0].count, 10);
+
     res.json({
-      applicants: filteredApplicants,
-      total: filteredApplicants.length
+      applicants: result.rows,
+      total,
+      limit: Number(limit),
+      offset: Number(offset)
     });
   } catch (error) {
     next(error);
@@ -153,50 +237,49 @@ router.get('/applicants', async (req: AuthenticatedRequest, res: Response, next:
 router.get('/applicants/:id', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
+    const organizationId = req.user?.organizationId;
 
-    // TODO: Query database
-    // const db = getDbClient();
-    // const result = await db.query('SELECT * FROM applicants WHERE id = $1', [id]);
+    const result = await pool.query(`
+      SELECT
+        id,
+        first_name as "firstName",
+        last_name as "lastName",
+        email,
+        phone,
+        address,
+        date_of_birth as "dateOfBirth",
+        position_applied_for as "positionAppliedFor",
+        created_at as "applicationDate",
+        status,
+        current_stage as "currentStage",
+        source,
+        referred_by as "referredBy",
+        certifications,
+        experience_level as "experienceLevel",
+        skills,
+        availability,
+        desired_salary_min as "desiredSalaryMin",
+        desired_salary_max as "desiredSalaryMax",
+        available_start_date as "availableStartDate",
+        ai_screening_score as "aiScreeningScore",
+        ai_screening_notes as "aiScreeningNotes",
+        background_check_status as "backgroundCheckStatus",
+        reference_check_status as "referenceCheckStatus",
+        notes,
+        hired_date as "hiredDate",
+        rejection_reason as "rejectionReason",
+        rejection_date as "rejectionDate",
+        updated_at as "updatedAt"
+      FROM applicants
+      WHERE id = $1 AND organization_id = $2
+    `, [id, organizationId]);
 
-    // Mock detailed applicant data
-    const mockApplicant = {
-      id,
-      firstName: 'Sarah',
-      lastName: 'Johnson',
-      email: 'sarah.johnson@email.com',
-      phone: '(937) 555-0123',
-      address: '123 Main St, Dayton, OH 45402',
-      positionAppliedFor: 'Home Health Aide (HHA)',
-      applicationDate: '2024-11-01T10:30:00Z',
-      status: 'new',
-      currentStage: 'application_received',
-      source: 'website',
-      hasLicense: true,
-      licenseType: 'HHA',
-      licenseNumber: 'HHA123456',
-      licenseExpiration: '2025-12-31',
-      hasCPR: true,
-      cprExpiration: '2025-06-30',
-      availability: 'full-time',
-      desiredPayRate: '$16/hour',
-      canStartDate: '2024-11-15',
-      yearsExperience: 3,
-      previousEmployer: 'Care Plus Home Health',
-      reasonForLeaving: 'Seeking career growth',
-      hasReliableTransportation: true,
-      hasSmartphone: true,
-      canLift50lbs: true,
-      agreeToBackground: true,
-      agreeToContact: true,
-      notes: 'Strong candidate with excellent references. Previous supervisor highly recommended.',
-      timeline: [
-        { stage: 'application_received', date: '2024-11-01T10:30:00Z', completedBy: 'System' },
-        { stage: 'resume_reviewed', date: '2024-11-01T14:20:00Z', completedBy: 'Gloria Martinez' }
-      ]
-    };
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Applicant not found' });
+    }
 
     res.json({
-      applicant: mockApplicant
+      applicant: result.rows[0]
     });
   } catch (error) {
     next(error);
@@ -404,42 +487,80 @@ router.post('/applicants/:id/reject', async (req: AuthenticatedRequest, res: Res
  */
 router.get('/analytics', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    // TODO: Calculate real metrics from database
+    const organizationId = req.user?.organizationId;
 
-    const mockAnalytics = {
-      pipeline: {
-        new: 12,
-        screening: 8,
-        interviewing: 5,
-        offer: 2,
-        hired: 15,
-        rejected: 23
-      },
-      timeToHire: {
-        average: 18, // days
-        fastest: 7,
-        slowest: 45
-      },
-      sourceBreakdown: {
-        website: 32,
-        indeed: 18,
-        linkedin: 9,
-        referral: 6
-      },
-      conversionRates: {
-        applicationToScreen: 0.65,
-        screenToInterview: 0.58,
-        interviewToOffer: 0.42,
-        offerToHire: 0.88
-      },
-      topPositions: [
-        { position: 'Home Health Aide (HHA)', applications: 45 },
-        { position: 'Licensed Practical Nurse (LPN)', applications: 12 },
-        { position: 'Registered Nurse (RN)', applications: 8 }
-      ]
+    // Pipeline status counts
+    const pipelineResult = await pool.query(`
+      SELECT status, COUNT(*) as count
+      FROM applicants
+      WHERE organization_id = $1
+      GROUP BY status
+    `, [organizationId]);
+
+    const pipeline: Record<string, number> = {
+      new: 0,
+      screening: 0,
+      interviewing: 0,
+      reference_check: 0,
+      background_check: 0,
+      offer_pending: 0,
+      hired: 0,
+      rejected: 0,
+      withdrawn: 0
     };
+    pipelineResult.rows.forEach(row => {
+      pipeline[row.status] = parseInt(row.count, 10);
+    });
 
-    res.json(mockAnalytics);
+    // Source breakdown
+    const sourceResult = await pool.query(`
+      SELECT source, COUNT(*) as count
+      FROM applicants
+      WHERE organization_id = $1
+      GROUP BY source
+      ORDER BY count DESC
+    `, [organizationId]);
+
+    const sourceBreakdown: Record<string, number> = {};
+    sourceResult.rows.forEach(row => {
+      sourceBreakdown[row.source || 'unknown'] = parseInt(row.count, 10);
+    });
+
+    // Top positions
+    const positionsResult = await pool.query(`
+      SELECT position_applied_for as position, COUNT(*) as applications
+      FROM applicants
+      WHERE organization_id = $1
+      GROUP BY position_applied_for
+      ORDER BY applications DESC
+      LIMIT 5
+    `, [organizationId]);
+
+    // Time to hire for hired applicants
+    const timeToHireResult = await pool.query(`
+      SELECT
+        AVG(EXTRACT(DAY FROM (hired_date - created_at))) as average,
+        MIN(EXTRACT(DAY FROM (hired_date - created_at))) as fastest,
+        MAX(EXTRACT(DAY FROM (hired_date - created_at))) as slowest
+      FROM applicants
+      WHERE organization_id = $1 AND status = 'hired' AND hired_date IS NOT NULL
+    `, [organizationId]);
+
+    const timeToHire = timeToHireResult.rows[0];
+
+    res.json({
+      pipeline,
+      timeToHire: {
+        average: Math.round(timeToHire?.average || 0),
+        fastest: Math.round(timeToHire?.fastest || 0),
+        slowest: Math.round(timeToHire?.slowest || 0)
+      },
+      sourceBreakdown,
+      topPositions: positionsResult.rows.map(row => ({
+        position: row.position,
+        applications: parseInt(row.applications, 10)
+      }))
+    });
   } catch (error) {
     next(error);
   }

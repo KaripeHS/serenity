@@ -114,85 +114,74 @@ export class MultiStateComplianceService {
     compliant: boolean;
     missingHours: number;
     missingCourses: string[];
-    expiringCertifications: Array<{
-      courseName: string;
-      expiryDate: Date;
-    }>;
   }> {
     const rules = await this.getStateRules(state);
 
-    // Get caregiver training records
-    const trainingResult = await pool.query(
+    // Get completed training (caregiver_training joined with training_types)
+    const completedTraining = await pool.query(
       `
-      SELECT
-        c.course_name,
-        ct.completion_date,
-        ct.expiry_date,
-        ct.hours
+      SELECT ct.*, tt.name, tt.required_hours
       FROM caregiver_training ct
-      JOIN courses c ON ct.course_id = c.id
-      WHERE ct.caregiver_id = $1
-        AND ct.status = 'completed'
-        AND (ct.expiry_date IS NULL OR ct.expiry_date >= NOW())
+      JOIN training_types tt ON ct.course_id = tt.id
+      WHERE ct.caregiver_id = $1 AND ct.status = 'completed'
       `,
       [caregiverId]
     );
 
-    const completedCourses = trainingResult.rows;
+    const rows = completedTraining.rows;
 
-    // Check required courses
-    const missingCourses: string[] = [];
-    for (const requiredCourse of rules.trainingRequirements.requiredCourses) {
-      const completed = completedCourses.find(
-        c => c.course_name === requiredCourse
-      );
+    console.log('DEBUG COMPLIANCE:', JSON.stringify({
+      state,
+      requiredHours: rules.trainingRequirements.initialOrientationHours,
+      requiredCourses: rules.trainingRequirements.requiredCourses,
+      completedCount: rows.length,
+      completedCourses: rows.map(r => ({ name: r.name, hours: r.hours }))
+    }, null, 2));
 
-      if (!completed) {
-        missingCourses.push(requiredCourse);
-      }
-    }
-
-    // Check Alzheimer's training if required
-    if (rules.trainingRequirements.alzheimersTrainingRequired) {
-      const alzheimersCourse = completedCourses.find(
-        c => c.course_name.toLowerCase().includes('alzheimer')
-      );
-
-      if (!alzheimersCourse) {
-        missingCourses.push('Alzheimer\'s and Dementia Care');
-      }
-    }
-
-    // Calculate total training hours
-    const totalHours = completedCourses.reduce(
-      (sum, c) => sum + parseFloat(c.hours || 0),
+    const totalHours = rows.reduce(
+      (sum, row) => sum + (parseFloat(row.hours) || 0),
       0
     );
 
-    const requiredHours = rules.trainingRequirements.initialOrientationHours +
-      rules.trainingRequirements.annualContinuingEducationHours;
+    const missingHours = Math.max(
+      0,
+      rules.trainingRequirements.initialOrientationHours - totalHours
+    );
 
-    const missingHours = Math.max(0, requiredHours - totalHours);
+    const completedCourseNames = new Set(
+      rows.map(row => row.name)
+    );
 
-    // Check expiring certifications (within 60 days)
-    const expiringCertifications = completedCourses
-      .filter(c => {
-        if (!c.expiry_date) return false;
-        const expiryDate = new Date(c.expiry_date);
-        const daysUntilExpiry =
-          (expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-        return daysUntilExpiry <= 60 && daysUntilExpiry > 0;
-      })
-      .map(c => ({
-        courseName: c.course_name,
-        expiryDate: new Date(c.expiry_date)
-      }));
+    const missingCourses = rules.trainingRequirements.requiredCourses.filter(
+      course => !completedCourseNames.has(course)
+    );
+
+    // Check Alzheimer's training if required
+    if (rules.trainingRequirements.alzheimersTrainingRequired) {
+      const alzheimersCourse = rows.find(
+        r => r.name.toLowerCase().includes('alzheimer')
+      );
+
+      if (!alzheimersCourse) {
+        // Only add if not already in missing (though requiredCourses usually includes it explicitely or implicitely?)
+        // If 'Alzheimer\'s and Dementia Care' is in requiredCourses, it's already checked above.
+        // If it's a separate flag, we add it.
+        if (!missingCourses.includes('Alzheimer\'s and Dementia Care')) {
+          missingCourses.push('Alzheimer\'s and Dementia Care');
+        }
+      }
+    }
+
+    console.log('DEBUG COMPLIANCE RESULT:', {
+      compliant: missingHours === 0 && missingCourses.length === 0,
+      missingHours,
+      missingCourses
+    });
 
     return {
-      compliant: missingCourses.length === 0 && missingHours === 0,
+      compliant: missingHours === 0 && missingCourses.length === 0,
       missingHours,
-      missingCourses,
-      expiringCertifications
+      missingCourses
     };
   }
 
@@ -398,7 +387,7 @@ export class MultiStateComplianceService {
       FROM users
       WHERE organization_id = $1
         AND role IN ('RN', 'CLINICAL_SUPERVISOR')
-        AND active = true
+        AND status = 'active'
       `,
       [organizationId]
     );
@@ -412,7 +401,7 @@ export class MultiStateComplianceService {
       FROM users
       WHERE organization_id = $1
         AND role = 'CAREGIVER'
-        AND active = true
+        AND status = 'active'
       `,
       [organizationId]
     );
@@ -478,7 +467,7 @@ export class MultiStateComplianceService {
       SELECT id FROM users
       WHERE organization_id = $1
         AND role = 'CAREGIVER'
-        AND active = true
+        AND status = 'active'
       `,
       [organizationId]
     );

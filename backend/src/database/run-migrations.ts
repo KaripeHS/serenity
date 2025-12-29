@@ -13,6 +13,7 @@ dotenv.config();
 
 async function runMigrations() {
   const connectionString = process.env.DATABASE_URL;
+  console.log('DEBUG: connectionString =', connectionString);
 
   if (!connectionString) {
     console.error('❌ DATABASE_URL environment variable is not set');

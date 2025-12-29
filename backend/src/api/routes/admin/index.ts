@@ -22,7 +22,7 @@ const repository = getSandataRepository(getDbClient());
 
 // All Admin routes require authentication + admin role
 router.use(requireAuth);
-router.use(requireRole('admin', 'super_admin'));
+router.use(requireRole('admin', 'super_admin', 'founder'));
 
 // ============================================================================
 // ORGANIZATIONS
@@ -380,7 +380,7 @@ router.get('/users', async (req: AuthenticatedRequest, res: Response, next) => {
  * Create a new user (with data reuse logic)
  */
 router.post('/users',
-  requireRole('admin', 'hr_manager', 'it_admin'),
+  requireRole('admin', 'hr_manager', 'it_admin', 'founder'),
   async (req: AuthenticatedRequest, res: Response, next) => {
     try {
       const { email, firstName, lastName, role, organizationId, patientId } = req.body;
