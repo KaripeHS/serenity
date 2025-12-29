@@ -44,9 +44,43 @@ temp/
 # Testing
 coverage/
 .nyc_output/
+test-results/
+playwright-report/
+backend/test-results/
+backend/playwright-report/
+backend/tests/e2e_playwright/
+
+# Test output files
+**/output_v*.txt
+**/output_final.txt
+**/e2e_results_*.txt
+**/migration_log*.txt
+**/test_*.txt
+**/integration_*.txt
+**/backend_test_results*.txt
+**/full_*.txt
+**/lifecycle_results.txt
+**/types_test_results*.txt
+**/complete_lifecycle_results.txt
+**/*_results.txt
+**/debug_*.json
+
+# Temporary/backup files
+*.bak
+*.backup
+nuke.ts
+fix_test.js
+inspect_*.ts
 
 # Misc
 .cache/
 *.pid
 *.seed
 *.pid.lock
+
+# Local settings (machine-specific)
+.claude/settings.local.json
+.firebase/*.cache
+
+# Agent directories
+.agent/
