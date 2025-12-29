@@ -13,28 +13,28 @@ import { loggerService } from '../../shared/services/logger.service';
 // Always-open positions for continuous pipeline
 const CORE_POSITIONS = [
   {
-    id: 'caregiver',
-    role: 'Personal Care Aide / Caregiver',
+    id: 'hha-stna',
+    role: 'HHA / STNA',
     badge: 'Ongoing Hiring',
-    description: 'Provide compassionate personal care assistance, companionship, and homemaker services with our pod-based team model. Build lasting client relationships.',
+    description: 'Provide compassionate personal care, assist with daily living activities, and support clients in maintaining their independence. Join our pod-based care team.',
     requirements: ['STNA or HHA certification (or willingness to obtain)', 'Compassionate nature', 'Reliable transportation'],
     benefits: ['$15-$20/hour', 'Pod-based care', 'Weekly direct deposit', 'Paid training']
   },
   {
-    id: 'hha',
-    role: 'Home Health Aide (HHA)',
+    id: 'lpn',
+    role: 'LPN (Licensed Practical Nurse)',
     badge: 'Ongoing Hiring',
-    description: 'Support seniors with daily living, companionship, and personal care. Paid training opportunities available. No prior experience required!',
-    requirements: ['HHA certification (or willingness to obtain)', 'Compassionate nature', 'Reliable transportation'],
-    benefits: ['$15-$18/hour', 'Paid training', 'Flexible hours', 'Career growth path']
+    description: 'Deliver skilled nursing care including medication administration, wound care, and health monitoring. Work alongside our clinical team to ensure quality patient outcomes.',
+    requirements: ['Active Ohio LPN license', 'Home health experience preferred', 'Reliable transportation'],
+    benefits: ['$25-$32/hour', 'Flexible scheduling', 'Weekly direct deposit', 'Clinical support team']
   },
   {
-    id: 'homemaker',
-    role: 'Homemaker / Companion',
+    id: 'rn',
+    role: 'RN (Registered Nurse)',
     badge: 'Ongoing Hiring',
-    description: 'Help seniors maintain their independence at home with meal prep, light housekeeping, errands, and friendly companionship. No certification required!',
-    requirements: ['Compassionate and reliable', 'Valid driver\'s license', 'No experience necessary'],
-    benefits: ['$14-$17/hour', 'Flexible schedules', 'Paid training', 'Meaningful work']
+    description: 'Lead patient assessments, develop care plans, and supervise clinical staff. Play a key role in ensuring compliance and delivering exceptional home health care.',
+    requirements: ['Active Ohio RN license', 'Home health or clinical experience', 'Strong assessment skills'],
+    benefits: ['$35-$45/hour', 'Leadership opportunities', 'Flexible schedule', 'Professional development']
   }
 ];
 
