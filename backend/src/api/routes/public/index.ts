@@ -29,6 +29,33 @@ router.use('/referrals', referralsRouter);
 const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
 
 /**
+ * Generate a short, phone-friendly application ID
+ * Format: APP-YYYYMMDD-XXX (e.g., APP-20251229-A7K)
+ */
+function generateShortApplicationId(): string {
+  const now = new Date();
+  // Convert to EST (Ohio timezone)
+  const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const year = estDate.getFullYear();
+  const month = String(estDate.getMonth() + 1).padStart(2, '0');
+  const day = String(estDate.getDate()).padStart(2, '0');
+  // Generate 3-character alphanumeric suffix (base36: 0-9, A-Z)
+  const suffix = Math.random().toString(36).substring(2, 5).toUpperCase();
+  return `APP-${year}${month}${day}-${suffix}`;
+}
+
+/**
+ * Format date to EST timezone for Ohio
+ */
+function formatToEST(date: Date): string {
+  return date.toLocaleString('en-US', {
+    timeZone: 'America/New_York',
+    dateStyle: 'long',
+    timeStyle: 'short'
+  });
+}
+
+/**
  * GET /api/public/careers/jobs
  * Get all active job listings
  */
@@ -120,7 +147,8 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
     }
 
     const db = getDbClient();
-    const applicationId = uuidv4();
+    const applicationId = generateShortApplicationId();
+    const submittedAtEST = formatToEST(new Date());
 
     // Build availability JSON object
     const availabilityData = {
@@ -210,7 +238,7 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
           applicantEmail: email,
           jobTitle: position,
           applicationId,
-          submittedAt: new Date().toISOString()
+          submittedAt: submittedAtEST  // Already formatted to EST
         });
 
         // Send alert email to HR with all decision-making data
@@ -220,7 +248,7 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
           applicantPhone: phone,
           jobTitle: position,
           applicationId,
-          submittedAt: new Date().toISOString(),
+          submittedAt: submittedAtEST,  // Already formatted to EST
           experience: priorExperience || 'Not specified',
           availability: availability || 'Full-time',
           // additionalInfo: {

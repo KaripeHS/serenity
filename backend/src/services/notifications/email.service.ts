@@ -342,10 +342,7 @@ export class EmailService {
                       <strong>Position:</strong> ${data.jobTitle}
                     </p>
                     <p style="margin: 0; color: #6b7280; font-size: 14px;">
-                      <strong>Submitted:</strong> ${new Date(data.submittedAt).toLocaleString('en-US', {
-      dateStyle: 'long',
-      timeStyle: 'short'
-    })}
+                      <strong>Submitted:</strong> ${data.submittedAt} (EST)
                     </p>
                   </td>
                 </tr>
@@ -466,10 +463,7 @@ export class EmailService {
                       <strong>Availability:</strong> ${data.availability}
                     </p>
                     <p style="margin: 0; color: #374151; font-size: 14px;">
-                      <strong>Submitted:</strong> ${new Date(data.submittedAt).toLocaleString('en-US', {
-      dateStyle: 'long',
-      timeStyle: 'short'
-    })}
+                      <strong>Submitted:</strong> ${data.submittedAt} (EST)
                     </p>
                   </td>
                 </tr>
@@ -499,7 +493,7 @@ export class EmailService {
               <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 30px 0;">
                 <tr>
                   <td align="center">
-                    <a href="http://localhost:3001/dashboard/hr?applicationId=${data.applicationId}"
+                    <a href="https://console.serenitycarepartners.com/hr/applications?id=${data.applicationId}"
                        style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 16px; font-weight: bold;">
                       View Application in Dashboard →
                     </a>
@@ -554,7 +548,7 @@ APPLICATION DETAILS
 -------------------
 Application ID: ${data.applicationId}
 Position: ${data.jobTitle}
-Submitted: ${new Date(data.submittedAt).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' })}
+Submitted: ${data.submittedAt} (EST)
 
 WHAT'S NEXT?
 ------------
@@ -590,7 +584,7 @@ Phone: ${data.applicantPhone}
 Position: ${data.jobTitle}
 Experience: ${data.experience}
 Availability: ${data.availability}
-Submitted: ${new Date(data.submittedAt).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' })}
+Submitted: ${data.submittedAt} (EST)
 
 NEXT STEPS
 ----------
@@ -599,7 +593,7 @@ NEXT STEPS
 3. Schedule phone screening if qualified
 4. Update application status in system
 
-View Application: http://localhost:3001/dashboard/hr?applicationId=${data.applicationId}
+View Application: https://console.serenitycarepartners.com/hr/applications?id=${data.applicationId}
 
 Application ID: ${data.applicationId}
 
