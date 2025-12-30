@@ -53,11 +53,28 @@ interface DashboardLink {
   priority: 'high' | 'medium' | 'low';
 }
 
+// Role categories for filtering content
+const HR_ROLES = ['recruiter', 'hr_manager', 'hr_director', 'credentialing_specialist'];
+const CLINICAL_ROLES = ['rn', 'lpn', 'don', 'clinical_director', 'nursing_supervisor', 'rn_case_manager', 'qidp', 'therapist'];
+const OPERATIONS_ROLES = ['operations_manager', 'field_ops_manager', 'pod_lead', 'field_supervisor', 'scheduling_manager', 'scheduler', 'dispatcher'];
+const FINANCE_ROLES = ['cfo', 'finance_director', 'finance_manager', 'billing_manager', 'rcm_analyst', 'billing_coder'];
+const CAREGIVER_ROLES = ['caregiver', 'hha', 'cna', 'dsp_basic', 'dsp_med_certified'];
+const EXECUTIVE_ROLES = ['founder', 'ceo', 'coo', 'cfo'];
+
 export default function WorkingHomePage() {
   const { user, isLoading, isFounder } = useAuth();
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Determine user's role category
+  const userRole = user?.role?.toLowerCase() || '';
+  const isHRRole = HR_ROLES.includes(userRole);
+  const isClinicalRole = CLINICAL_ROLES.includes(userRole);
+  const isOperationsRole = OPERATIONS_ROLES.includes(userRole);
+  const isFinanceRole = FINANCE_ROLES.includes(userRole);
+  const isCaregiverRole = CAREGIVER_ROLES.includes(userRole);
+  const isExecutiveRole = EXECUTIVE_ROLES.includes(userRole) || isFounder();
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -117,52 +134,229 @@ export default function WorkingHomePage() {
     }
   };
 
-  const quickActions: QuickAction[] = [
-    {
-      title: 'Schedule Visit',
-      description: 'Create new patient visit',
-      icon: CalendarIcon,
-      href: '/scheduling/new',
-      color: '#3B82F6'
-    },
-    {
-      title: 'Clock In/Out',
-      description: 'EVV time tracking',
-      icon: ClockIcon,
-      href: '/evv/clock',
-      color: '#10B981'
-    },
-    {
-      title: 'Add Patient',
-      description: 'New patient intake',
-      icon: UserGroupIcon,
-      href: '/patients/new',
-      color: '#8B5CF6'
-    },
-    {
-      title: 'Process Billing',
-      description: 'Submit claims',
-      icon: CurrencyDollarIcon,
-      href: '/billing/process',
-      badge: '12 ready',
-      color: '#059669'
-    },
-    {
-      title: 'Review Applications',
-      description: 'HR recruiting pipeline',
-      icon: DocumentTextIcon,
-      href: '/hr/applications',
-      badge: '8 pending',
-      color: '#EA580C'
-    },
-    {
-      title: 'AI Assistant',
-      description: 'Ask Serenity AI anything',
-      icon: PlayCircleIcon,
-      href: '/ai-assistant',
-      color: '#6366F1'
+  // Role-specific quick actions
+  const getQuickActionsForRole = (): QuickAction[] => {
+    // HR Roles (Recruiter, HR Manager, etc.)
+    if (isHRRole) {
+      return [
+        {
+          title: 'Review Applications',
+          description: 'View pending applicants',
+          icon: DocumentTextIcon,
+          href: '/hr/applications',
+          badge: 'New',
+          color: '#EA580C'
+        },
+        {
+          title: 'Post Job Opening',
+          description: 'Create new job listing',
+          icon: UserGroupIcon,
+          href: '/hr/jobs/new',
+          color: '#3B82F6'
+        },
+        {
+          title: 'Schedule Interview',
+          description: 'Book candidate interviews',
+          icon: CalendarIcon,
+          href: '/hr/interviews',
+          color: '#10B981'
+        },
+        {
+          title: 'Onboarding',
+          description: 'New hire checklist',
+          icon: AcademicCapIcon,
+          href: '/hr/onboarding',
+          color: '#8B5CF6'
+        }
+      ];
     }
-  ];
+
+    // Clinical Roles
+    if (isClinicalRole) {
+      return [
+        {
+          title: 'Patient Care Plans',
+          description: 'View and update care plans',
+          icon: HeartIcon,
+          href: '/clinical/care-plans',
+          color: '#EC4899'
+        },
+        {
+          title: 'Assessments',
+          description: 'Complete patient assessments',
+          icon: DocumentTextIcon,
+          href: '/clinical/assessments',
+          color: '#3B82F6'
+        },
+        {
+          title: 'Schedule Visit',
+          description: 'Create new patient visit',
+          icon: CalendarIcon,
+          href: '/scheduling/new',
+          color: '#10B981'
+        },
+        {
+          title: 'Clinical Notes',
+          description: 'Document patient notes',
+          icon: DocumentTextIcon,
+          href: '/clinical/notes',
+          color: '#8B5CF6'
+        }
+      ];
+    }
+
+    // Caregiver Roles
+    if (isCaregiverRole) {
+      return [
+        {
+          title: 'Clock In/Out',
+          description: 'EVV time tracking',
+          icon: ClockIcon,
+          href: '/evv/clock',
+          color: '#10B981'
+        },
+        {
+          title: 'My Schedule',
+          description: 'View your shifts',
+          icon: CalendarIcon,
+          href: '/my-schedule',
+          color: '#3B82F6'
+        },
+        {
+          title: 'Document Visit',
+          description: 'Complete visit notes',
+          icon: DocumentTextIcon,
+          href: '/visits/document',
+          color: '#8B5CF6'
+        },
+        {
+          title: 'Training',
+          description: 'Complete required training',
+          icon: AcademicCapIcon,
+          href: '/training',
+          color: '#F59E0B'
+        }
+      ];
+    }
+
+    // Finance/Billing Roles
+    if (isFinanceRole) {
+      return [
+        {
+          title: 'Process Billing',
+          description: 'Submit claims',
+          icon: CurrencyDollarIcon,
+          href: '/billing/process',
+          badge: 'Ready',
+          color: '#059669'
+        },
+        {
+          title: 'Payroll',
+          description: 'Review payroll',
+          icon: BanknotesIcon,
+          href: '/payroll',
+          color: '#3B82F6'
+        },
+        {
+          title: 'AR Management',
+          description: 'Accounts receivable',
+          icon: DocumentTextIcon,
+          href: '/billing/ar',
+          color: '#8B5CF6'
+        },
+        {
+          title: 'Reports',
+          description: 'Financial reports',
+          icon: ChartBarIcon,
+          href: '/reports/finance',
+          color: '#F59E0B'
+        }
+      ];
+    }
+
+    // Operations Roles
+    if (isOperationsRole) {
+      return [
+        {
+          title: 'Schedule Visit',
+          description: 'Create new patient visit',
+          icon: CalendarIcon,
+          href: '/scheduling/new',
+          color: '#3B82F6'
+        },
+        {
+          title: 'Dispatch Board',
+          description: 'Real-time coordination',
+          icon: TruckIcon,
+          href: '/dispatch',
+          color: '#10B981'
+        },
+        {
+          title: 'Coverage Gaps',
+          description: 'Fill open shifts',
+          icon: UserGroupIcon,
+          href: '/scheduling/gaps',
+          badge: 'Alert',
+          color: '#EF4444'
+        },
+        {
+          title: 'EVV Monitor',
+          description: 'Track compliance',
+          icon: ClockIcon,
+          href: '/evv/monitor',
+          color: '#8B5CF6'
+        }
+      ];
+    }
+
+    // Executive/Default - show all options
+    return [
+      {
+        title: 'Schedule Visit',
+        description: 'Create new patient visit',
+        icon: CalendarIcon,
+        href: '/scheduling/new',
+        color: '#3B82F6'
+      },
+      {
+        title: 'Clock In/Out',
+        description: 'EVV time tracking',
+        icon: ClockIcon,
+        href: '/evv/clock',
+        color: '#10B981'
+      },
+      {
+        title: 'Add Patient',
+        description: 'New patient intake',
+        icon: UserGroupIcon,
+        href: '/patients/new',
+        color: '#8B5CF6'
+      },
+      {
+        title: 'Process Billing',
+        description: 'Submit claims',
+        icon: CurrencyDollarIcon,
+        href: '/billing/process',
+        color: '#059669'
+      },
+      {
+        title: 'Review Applications',
+        description: 'HR recruiting pipeline',
+        icon: DocumentTextIcon,
+        href: '/hr/applications',
+        color: '#EA580C'
+      },
+      {
+        title: 'AI Assistant',
+        description: 'Ask Serenity AI anything',
+        icon: PlayCircleIcon,
+        href: '/ai-assistant',
+        color: '#6366F1'
+      }
+    ];
+  };
+
+  const quickActions = getQuickActionsForRole();
 
   const dashboardLinks: DashboardLink[] = [
     {
@@ -259,10 +453,59 @@ export default function WorkingHomePage() {
     priority: 'high'
   };
 
+  // Filter dashboard links based on role
+  const getFilteredDashboards = (): DashboardLink[] => {
+    // HR Roles - only show HR-related dashboards
+    if (isHRRole) {
+      return dashboardLinks.filter(d =>
+        d.href === '/dashboard/hr' ||
+        d.href === '/dashboard/training'
+      );
+    }
+
+    // Clinical Roles
+    if (isClinicalRole) {
+      return dashboardLinks.filter(d =>
+        d.href === '/dashboard/clinical' ||
+        d.href === '/dashboard/operations' ||
+        d.href === '/dashboard/compliance'
+      );
+    }
+
+    // Caregiver Roles - minimal dashboards
+    if (isCaregiverRole) {
+      return dashboardLinks.filter(d =>
+        d.href === '/dashboard/training' ||
+        d.href === '/family-portal'
+      );
+    }
+
+    // Finance Roles
+    if (isFinanceRole) {
+      return dashboardLinks.filter(d =>
+        d.href === '/dashboard/billing' ||
+        d.href === '/dashboard/tax' ||
+        d.href === '/dashboard/executive'
+      );
+    }
+
+    // Operations Roles
+    if (isOperationsRole) {
+      return dashboardLinks.filter(d =>
+        d.href === '/dashboard/operations' ||
+        d.href === '/dashboard/clinical'
+      );
+    }
+
+    // Executive/Default - show all
+    return dashboardLinks;
+  };
+
   // Conditionally add governance dashboard for authorized users
+  const filteredDashboards = getFilteredDashboards();
   const allDashboardLinks = (isFounder() || user?.permissions.includes('governance:admin'))
-    ? [governanceDashboard, ...dashboardLinks]
-    : dashboardLinks;
+    ? [governanceDashboard, ...filteredDashboards]
+    : filteredDashboards;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -346,7 +589,7 @@ export default function WorkingHomePage() {
       </header>
 
       <main className="max-w-screen-xl mx-auto px-4 py-8">
-        {/* System Overview */}
+        {/* System Overview - Show role-appropriate metrics */}
         {metricsLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {[1, 2, 3, 4].map((i) => (
@@ -357,7 +600,55 @@ export default function WorkingHomePage() {
               </Card>
             ))}
           </div>
+        ) : isHRRole ? (
+          /* HR-specific metrics */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fade-in">
+            <Card hoverable className="transition-all hover:scale-105">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-600 m-0">Open Positions</h3>
+                <div className="p-2 bg-primary-50 rounded-lg">
+                  <DocumentTextIcon className="h-5 w-5 text-primary-600" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-gray-900">3</div>
+              <p className="text-xs text-gray-500 mt-1 m-0">HHA, LPN, RN</p>
+            </Card>
+
+            <Card hoverable className="transition-all hover:scale-105">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-600 m-0">New Applications</h3>
+                <div className="p-2 bg-success-50 rounded-lg">
+                  <UsersIcon className="h-5 w-5 text-success-600" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-gray-900">8</div>
+              <p className="text-xs text-gray-500 mt-1 m-0">Awaiting review</p>
+            </Card>
+
+            <Card hoverable className="transition-all hover:scale-105">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-600 m-0">Interviews Scheduled</h3>
+                <div className="p-2 bg-caregiver-50 rounded-lg">
+                  <CalendarIcon className="h-5 w-5 text-caregiver-600" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-gray-900">2</div>
+              <p className="text-xs text-gray-500 mt-1 m-0">This week</p>
+            </Card>
+
+            <Card hoverable className="transition-all hover:scale-105">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-600 m-0">Active Staff</h3>
+                <div className="p-2 bg-success-50 rounded-lg">
+                  <UserGroupIcon className="h-5 w-5 text-success-600" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-gray-900">{metrics?.activeStaff || 0}</div>
+              <p className="text-xs text-gray-500 mt-1 m-0">Total employees</p>
+            </Card>
+          </div>
         ) : metrics && (
+          /* Default/Executive metrics */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fade-in">
             <Card hoverable className="transition-all hover:scale-105">
               <div className="flex items-center justify-between mb-2">
@@ -392,7 +683,7 @@ export default function WorkingHomePage() {
                 {metrics.completedVisitsToday}/{metrics.scheduledVisitsToday}
               </div>
               <p className="text-xs text-gray-500 mt-1 m-0">
-                {Math.round((metrics.completedVisitsToday / metrics.scheduledVisitsToday) * 100)}% completion rate
+                {metrics.scheduledVisitsToday > 0 ? Math.round((metrics.completedVisitsToday / metrics.scheduledVisitsToday) * 100) : 0}% completion rate
               </p>
             </Card>
 
