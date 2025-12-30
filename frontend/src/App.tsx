@@ -11,6 +11,7 @@ import { WebEVVClock } from './components/evv/WebEVVClock';
 import { PatientList } from './pages/patients/PatientList';
 import { PatientDetail } from './pages/patients/PatientDetail';
 import HomePage from './pages/HomePage';
+import WorkingHomePage from './components/WorkingHomePage';
 
 // Dashboard Components
 import { WorkingExecutiveDashboard } from './components/dashboards/WorkingExecutiveDashboard';

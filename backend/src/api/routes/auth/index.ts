@@ -323,28 +323,31 @@ router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response, 
     const pod = user.pod_id ? await repository.getPod(user.pod_id) : null;
 
     res.json({
-      id: user.id,
-      email: user.email,
-      firstName: user.first_name,
-      lastName: user.last_name,
-      role: user.role,
-      status: user.status,
-      phoneNumber: user.phone_number,
-      organization: organization
-        ? {
-          id: organization.id,
-          name: organization.name,
-        }
-        : null,
-      pod: pod
-        ? {
-          id: pod.id,
-          name: pod.name,
-        }
-        : null,
-      sandataEmployeeId: user.sandata_employee_id,
-      hireDate: user.hire_date,
-      createdAt: user.created_at,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        role: user.role,
+        status: user.status,
+        organizationId: user.organization_id,
+        phoneNumber: user.phone_number,
+        organization: organization
+          ? {
+            id: organization.id,
+            name: organization.name,
+          }
+          : null,
+        pod: pod
+          ? {
+            id: pod.id,
+            name: pod.name,
+          }
+          : null,
+        sandataEmployeeId: user.sandata_employee_id,
+        hireDate: user.hire_date,
+        createdAt: user.created_at,
+      }
     });
   } catch (error) {
     next(error);

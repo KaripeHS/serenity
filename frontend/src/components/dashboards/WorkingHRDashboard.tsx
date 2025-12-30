@@ -100,7 +100,7 @@ export function WorkingHRDashboard() {
 
   useEffect(() => {
     const loadData = async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('serenity_access_token');
       const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -268,7 +268,7 @@ export function WorkingHRDashboard() {
               { key: 'dashboard', label: 'Dashboard', count: null },
               { key: 'applications', label: 'Applications', count: applications.filter(app => app.status === 'new').length },
               { key: 'staff', label: 'Staff', count: staffList.filter(staff => staff.trainingDue.length > 0).length },
-              { key: 'training', label: 'Training', count: 8 }
+              { key: 'training', label: 'Training', count: staffList.filter(staff => staff.trainingDue.length > 0).length }
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -298,17 +298,17 @@ export function WorkingHRDashboard() {
               <MetricCard
                 title="Total Staff"
                 value={metrics.totalStaff}
-                subtitle="+3 this month"
+                subtitle="Active employees"
                 icon={UserGroupIcon}
                 iconColor="bg-caregiver-600"
               />
               <MetricCard
                 title="Open Positions"
                 value={metrics.openPositions}
-                subtitle="Need urgent filling"
+                subtitle={metrics.openPositions > 0 ? "Need to be filled" : "All positions filled"}
                 icon={BriefcaseIcon}
                 iconColor="bg-danger-600"
-                valueColor="text-danger-600"
+                valueColor={metrics.openPositions > 0 ? "text-danger-600" : "text-success-600"}
               />
               <MetricCard
                 title="Pending Applications"
@@ -329,31 +329,42 @@ export function WorkingHRDashboard() {
               <MetricCard
                 title="Avg Time to Hire"
                 value={`${metrics.avgTimeToHire} days`}
-                subtitle="-2 days improved"
+                subtitle={metrics.avgTimeToHire > 0 ? "Average hiring time" : "No hires yet"}
                 icon={ClockIcon}
                 iconColor="bg-info-600"
               />
               <MetricCard
                 title="Turnover Rate"
                 value={`${metrics.turnoverRate}%`}
-                subtitle="Below industry avg"
+                subtitle={metrics.turnoverRate < 15 ? "Below industry average" : "Monitor closely"}
                 icon={ArrowTrendingDownIcon}
                 iconColor="bg-success-600"
-                valueColor="text-success-600"
+                valueColor={metrics.turnoverRate < 15 ? "text-success-600" : "text-warning-600"}
               />
             </div>
 
-            {/* Alerts */}
+            {/* Alerts - Dynamic based on actual data */}
             <div className="space-y-4 mb-8 animate-fade-in">
-              <Alert variant="danger" title="Training Renewals Due">
-                8 staff members need CPR renewal by Friday
-              </Alert>
-              <Alert variant="warning" title="Open Positions Critical">
-                3 RN positions urgently needed in Columbus area
-              </Alert>
-              <Alert variant="info" title="Performance Reviews">
-                12 quarterly reviews scheduled this week
-              </Alert>
+              {staffList.filter(s => s.trainingDue.length > 0).length > 0 && (
+                <Alert variant="danger" title="Training Renewals Due">
+                  {staffList.filter(s => s.trainingDue.length > 0).length} staff member{staffList.filter(s => s.trainingDue.length > 0).length > 1 ? 's' : ''} need training renewal
+                </Alert>
+              )}
+              {metrics.openPositions > 0 && (
+                <Alert variant="warning" title="Open Positions">
+                  {metrics.openPositions} position{metrics.openPositions > 1 ? 's' : ''} need to be filled
+                </Alert>
+              )}
+              {metrics.pendingApplications > 0 && (
+                <Alert variant="info" title="Pending Applications">
+                  {metrics.pendingApplications} application{metrics.pendingApplications > 1 ? 's' : ''} awaiting review
+                </Alert>
+              )}
+              {staffList.filter(s => s.trainingDue.length > 0).length === 0 && metrics.openPositions === 0 && metrics.pendingApplications === 0 && (
+                <Alert variant="success" title="All Clear">
+                  No urgent items requiring attention
+                </Alert>
+              )}
             </div>
 
             {/* HR Analytics */}
@@ -565,34 +576,59 @@ export function WorkingHRDashboard() {
         {/* Training View */}
         {activeView === 'training' && (
           <div className="space-y-6 animate-fade-in">
+            {/* Staff with training due */}
+            {staffList.filter(s => s.trainingDue.length > 0).length > 0 ? (
+              <Card>
+                <Alert variant="danger" title={`Training Renewals Due (${staffList.filter(s => s.trainingDue.length > 0).length} staff)`}>
+                  The following staff members have training that needs to be renewed
+                </Alert>
+                <div className="mt-4 space-y-3">
+                  {staffList.filter(s => s.trainingDue.length > 0).map((staff) => (
+                    <div key={staff.id} className="p-4 bg-warning-50 rounded-lg border-l-4 border-warning-600">
+                      <p className="font-medium text-gray-900">{staff.name}</p>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {staff.trainingDue.map((training, i) => (
+                          <Badge key={i} variant="warning" size="sm">{training}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            ) : (
+              <Card>
+                <Alert variant="success" title="All Training Up to Date">
+                  No staff members have pending training renewals
+                </Alert>
+              </Card>
+            )}
+
+            {/* Training Compliance Summary */}
             <Card>
-              <Alert variant="danger" title="🚨 Urgent Training Renewals (8 staff)">
-                CPR certification expires this Friday for 8 staff members
-              </Alert>
-              <button className="mt-4 w-full md:w-auto px-6 py-2 bg-danger-600 text-white rounded-lg font-medium hover:bg-danger-700 transition-colors">
-                📧 Send Renewal Reminders
-              </button>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Training Compliance Overview</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 bg-success-50 rounded-lg text-center">
+                  <p className="text-3xl font-bold text-success-600">{metrics.trainingCompliance}%</p>
+                  <p className="text-sm text-gray-600">Overall Compliance Rate</p>
+                </div>
+                <div className="p-4 bg-primary-50 rounded-lg text-center">
+                  <p className="text-3xl font-bold text-primary-600">{metrics.totalStaff}</p>
+                  <p className="text-sm text-gray-600">Total Staff</p>
+                </div>
+                <div className="p-4 bg-warning-50 rounded-lg text-center">
+                  <p className="text-3xl font-bold text-warning-600">{staffList.filter(s => s.trainingDue.length > 0).length}</p>
+                  <p className="text-sm text-gray-600">Needing Renewal</p>
+                </div>
+              </div>
             </Card>
 
+            {/* Note about training courses */}
             <Card>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Training Courses</h3>
-              <div className="space-y-3">
-                {[
-                  { name: 'Advanced Wound Care', duration: '4 hours', available: 'Next Tuesday' },
-                  { name: 'HIPAA Compliance Update', duration: '2 hours', available: 'Online' },
-                  { name: 'Emergency Response', duration: '6 hours', available: 'This Friday' }
-                ].map((course, index) => (
-                  <div key={index} className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 p-4 bg-info-50 rounded-lg border border-info-200">
-                    <div>
-                      <p className="font-medium text-gray-900">{course.name}</p>
-                      <p className="text-sm text-gray-600">{course.duration} • {course.available}</p>
-                    </div>
-                    <button className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors whitespace-nowrap">
-                      Enroll Staff
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Training Management</h3>
+              <p className="text-gray-600">
+                Training courses and enrollment will be available once the training module is fully configured.
+                Contact your administrator to set up training courses for your organization.
+              </p>
             </Card>
           </div>
         )}

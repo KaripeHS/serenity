@@ -69,7 +69,7 @@ export function WorkingOperationsDashboard() {
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/operations/metrics`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${localStorage.getItem('serenity_access_token')}`,
             'Content-Type': 'application/json'
           }
         });

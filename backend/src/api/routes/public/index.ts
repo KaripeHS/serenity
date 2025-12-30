@@ -26,7 +26,7 @@ router.use('/leads', leadsRouter);
 router.use('/referrals', referralsRouter);
 
 // Default organization ID (first org in system - Serenity Care Partners)
-const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
+const DEFAULT_ORG_ID = 'acdf0560-4c26-47ad-a38d-2b2153fcb039'; // Serenity Care Partners
 
 /**
  * Generate a short, phone-friendly application ID

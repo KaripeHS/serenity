@@ -106,13 +106,31 @@ router.get('/metrics', async (req: AuthenticatedRequest, res: Response, next: Ne
       turnoverRate = 0;
     }
 
+    // Get interviews scheduled this week
+    let interviewsScheduled = 0;
+    try {
+      const interviewsResult = await pool.query(`
+        SELECT COUNT(*) as count
+        FROM interviews i
+        JOIN applicants a ON i.applicant_id = a.id
+        WHERE a.organization_id = $1
+          AND i.status = 'scheduled'
+          AND i.scheduled_date >= DATE_TRUNC('week', CURRENT_DATE)
+          AND i.scheduled_date < DATE_TRUNC('week', CURRENT_DATE) + INTERVAL '1 week'
+      `, [organizationId]);
+      interviewsScheduled = parseInt(interviewsResult.rows[0]?.count || '0', 10);
+    } catch {
+      interviewsScheduled = 0;
+    }
+
     res.json({
       totalStaff: parseInt(staffResult.rows[0]?.count || '0', 10),
       openPositions: parseInt(positionsResult.rows[0]?.count || '0', 10),
       pendingApplications: parseInt(applicationsResult.rows[0]?.count || '0', 10),
       trainingCompliance: Math.round(trainingCompliance * 10) / 10,
       avgTimeToHire,
-      turnoverRate: Math.round(turnoverRate * 10) / 10
+      turnoverRate: Math.round(turnoverRate * 10) / 10,
+      interviewsScheduled
     });
   } catch (error) {
     next(error);

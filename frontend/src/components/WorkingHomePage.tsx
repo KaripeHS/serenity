@@ -34,6 +34,13 @@ interface SystemMetrics {
   systemHealth: 'excellent' | 'good' | 'warning' | 'critical';
 }
 
+interface HRMetrics {
+  openPositions: number;
+  pendingApplications: number;
+  interviewsScheduled: number;
+  activeStaff: number;
+}
+
 interface QuickAction {
   title: string;
   description: string;
@@ -64,6 +71,7 @@ const EXECUTIVE_ROLES = ['founder', 'ceo', 'coo', 'cfo'];
 export default function WorkingHomePage() {
   const { user, isLoading, isFounder } = useAuth();
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
+  const [hrMetrics, setHrMetrics] = useState<HRMetrics | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -82,6 +90,49 @@ export default function WorkingHomePage() {
     return () => clearInterval(timer);
   }, []);
 
+  // Load HR metrics for HR roles
+  useEffect(() => {
+    if (isHRRole && user) {
+      loadHRMetrics();
+    }
+  }, [isHRRole, user]);
+
+  const loadHRMetrics = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/hr/metrics`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('serenity_access_token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setHrMetrics({
+          openPositions: data.openPositions || 0,
+          pendingApplications: data.pendingApplications || 0,
+          interviewsScheduled: data.interviewsScheduled || 0,
+          activeStaff: data.totalStaff || 0
+        });
+      } else {
+        setHrMetrics({
+          openPositions: 0,
+          pendingApplications: 0,
+          interviewsScheduled: 0,
+          activeStaff: 0
+        });
+      }
+    } catch (error) {
+      loggerService.error('Failed to load HR metrics:', error);
+      setHrMetrics({
+        openPositions: 0,
+        pendingApplications: 0,
+        interviewsScheduled: 0,
+        activeStaff: 0
+      });
+    }
+  };
+
   const loadSystemMetrics = async () => {
     try {
       setMetricsLoading(true);
@@ -89,7 +140,7 @@ export default function WorkingHomePage() {
       // Try to fetch real metrics from API
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/dashboard/metrics`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('serenity_access_token')}`,
           'Content-Type': 'application/json'
         }
       });
@@ -610,8 +661,8 @@ export default function WorkingHomePage() {
                   <DocumentTextIcon className="h-5 w-5 text-primary-600" />
                 </div>
               </div>
-              <div className="text-3xl font-bold text-gray-900">3</div>
-              <p className="text-xs text-gray-500 mt-1 m-0">HHA, LPN, RN</p>
+              <div className="text-3xl font-bold text-gray-900">{hrMetrics?.openPositions || 0}</div>
+              <p className="text-xs text-gray-500 mt-1 m-0">{hrMetrics?.openPositions ? 'Need to fill' : 'All filled'}</p>
             </Card>
 
             <Card hoverable className="transition-all hover:scale-105">
@@ -621,8 +672,8 @@ export default function WorkingHomePage() {
                   <UsersIcon className="h-5 w-5 text-success-600" />
                 </div>
               </div>
-              <div className="text-3xl font-bold text-gray-900">8</div>
-              <p className="text-xs text-gray-500 mt-1 m-0">Awaiting review</p>
+              <div className="text-3xl font-bold text-gray-900">{hrMetrics?.pendingApplications || 0}</div>
+              <p className="text-xs text-gray-500 mt-1 m-0">{hrMetrics?.pendingApplications ? 'Awaiting review' : 'None pending'}</p>
             </Card>
 
             <Card hoverable className="transition-all hover:scale-105">
@@ -632,8 +683,8 @@ export default function WorkingHomePage() {
                   <CalendarIcon className="h-5 w-5 text-caregiver-600" />
                 </div>
               </div>
-              <div className="text-3xl font-bold text-gray-900">2</div>
-              <p className="text-xs text-gray-500 mt-1 m-0">This week</p>
+              <div className="text-3xl font-bold text-gray-900">{hrMetrics?.interviewsScheduled || 0}</div>
+              <p className="text-xs text-gray-500 mt-1 m-0">{hrMetrics?.interviewsScheduled ? 'This week' : 'None scheduled'}</p>
             </Card>
 
             <Card hoverable className="transition-all hover:scale-105">
@@ -643,7 +694,7 @@ export default function WorkingHomePage() {
                   <UserGroupIcon className="h-5 w-5 text-success-600" />
                 </div>
               </div>
-              <div className="text-3xl font-bold text-gray-900">{metrics?.activeStaff || 0}</div>
+              <div className="text-3xl font-bold text-gray-900">{hrMetrics?.activeStaff || 0}</div>
               <p className="text-xs text-gray-500 mt-1 m-0">Total employees</p>
             </Card>
           </div>
