@@ -7,6 +7,8 @@ import { Skeleton } from '../ui/Skeleton';
 import { Alert } from '../ui/Alert';
 import { Chart } from '../ui/Chart';
 import { ProgressRing } from '../ui/ProgressRing';
+import { ApplicantDetailsModal } from '../hr/ApplicantDetailsModal';
+import { RejectionModal } from '../hr/RejectionModal';
 import {
   ArrowLeftIcon,
   UserGroupIcon,
@@ -29,6 +31,8 @@ interface HRMetrics {
 interface Application {
   id: string;
   name: string;
+  email?: string;
+  phone?: string;
   position: string;
   status: 'new' | 'reviewing' | 'interview' | 'scheduled' | 'rejected';
   experience: string;
@@ -98,6 +102,12 @@ export function WorkingHRDashboard() {
   const [hiringTrendData, setHiringTrendData] = useState<{ label: string; value: number }[]>([]);
   const [departmentStaffData, setDepartmentStaffData] = useState<{ label: string; value: number }[]>([]);
 
+  // Modal states
+  const [selectedApplicant, setSelectedApplicant] = useState<Application | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [applicantToReject, setApplicantToReject] = useState<Application | null>(null);
+
   useEffect(() => {
     const loadData = async () => {
       const token = localStorage.getItem('serenity_access_token');
@@ -142,6 +152,8 @@ export function WorkingHRDashboard() {
           const applicants = (data.applicants || []).map((a: any) => ({
             id: a.id,
             name: `${a.firstName || ''} ${a.lastName || ''}`.trim() || 'Unknown',
+            email: a.email,
+            phone: a.phone,
             position: a.positionAppliedFor || 'Not specified',
             status: mapApplicantStatus(a.status || a.currentStage),
             experience: a.experienceLevel || 'Not specified',
@@ -243,14 +255,19 @@ export function WorkingHRDashboard() {
     }
   };
 
-  // Handle rejecting an applicant
-  const handleReject = async (app: Application) => {
-    const reason = prompt('Enter rejection reason:', 'Position filled');
-    if (!reason) return;
+  // Handle opening rejection modal
+  const handleReject = (app: Application) => {
+    setApplicantToReject(app);
+    setShowRejectionModal(true);
+  };
+
+  // Handle confirming rejection
+  const handleConfirmRejection = async (reason: string, sendEmail: boolean) => {
+    if (!applicantToReject) return;
 
     const token = localStorage.getItem('serenity_access_token');
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/hr/applicants/${app.id}/status`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/hr/applicants/${applicantToReject.id}/status`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -261,9 +278,9 @@ export function WorkingHRDashboard() {
 
       if (response.ok) {
         setApplications(prev => prev.map(a =>
-          a.id === app.id ? { ...a, status: 'rejected' as const } : a
+          a.id === applicantToReject.id ? { ...a, status: 'rejected' as const } : a
         ));
-        alert(`${app.name}'s application has been rejected.\nReason: ${reason}`);
+        // TODO: If sendEmail is true, trigger email notification
       } else {
         const error = await response.json();
         alert(`Failed to reject: ${error.message || 'Unknown error'}`);
@@ -271,11 +288,13 @@ export function WorkingHRDashboard() {
     } catch (error) {
       alert('Failed to reject applicant. Please try again.');
     }
+    setApplicantToReject(null);
   };
 
   // Handle viewing applicant details
   const handleViewDetails = (app: Application) => {
-    alert(`Applicant Details\n\nName: ${app.name}\nPosition: ${app.position}\nExperience: ${app.experience}\nLocation: ${app.location}\nApplied: ${app.applied}\nStatus: ${app.status}\n\n(Full details modal coming soon)`);
+    setSelectedApplicant(app);
+    setShowDetailsModal(true);
   };
 
   if (loading) {
@@ -704,6 +723,34 @@ export function WorkingHRDashboard() {
           </div>
         )}
       </div>
+
+      {/* Applicant Details Modal */}
+      {selectedApplicant && (
+        <ApplicantDetailsModal
+          applicant={selectedApplicant}
+          isOpen={showDetailsModal}
+          onClose={() => {
+            setShowDetailsModal(false);
+            setSelectedApplicant(null);
+          }}
+          onMoveToInterview={() => handleMoveToInterview(selectedApplicant)}
+          onReject={() => handleReject(selectedApplicant)}
+        />
+      )}
+
+      {/* Rejection Modal */}
+      {applicantToReject && (
+        <RejectionModal
+          applicantName={applicantToReject.name}
+          position={applicantToReject.position}
+          isOpen={showRejectionModal}
+          onClose={() => {
+            setShowRejectionModal(false);
+            setApplicantToReject(null);
+          }}
+          onConfirm={handleConfirmRejection}
+        />
+      )}
     </div>
   );
 }
