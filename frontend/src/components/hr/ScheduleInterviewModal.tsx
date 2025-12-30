@@ -60,10 +60,9 @@ export function ScheduleInterviewModal({
 
   if (!isOpen) return null;
 
-  // Set default date to tomorrow
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const minDate = tomorrow.toISOString().split('T')[0];
+  // Allow scheduling from today onwards
+  const today = new Date();
+  const minDate = today.toISOString().split('T')[0];
 
   const handleSubmit = async () => {
     if (!scheduledDate) {
