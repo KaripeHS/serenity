@@ -9,6 +9,7 @@ import { Chart } from '../ui/Chart';
 import { ProgressRing } from '../ui/ProgressRing';
 import { ApplicantDetailsModal } from '../hr/ApplicantDetailsModal';
 import { RejectionModal } from '../hr/RejectionModal';
+import { ScheduleInterviewModal, InterviewScheduleData } from '../hr/ScheduleInterviewModal';
 import {
   ArrowLeftIcon,
   UserGroupIcon,
@@ -107,6 +108,8 @@ export function WorkingHRDashboard() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [applicantToReject, setApplicantToReject] = useState<Application | null>(null);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [applicantToSchedule, setApplicantToSchedule] = useState<Application | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -303,6 +306,50 @@ export function WorkingHRDashboard() {
   const handleViewDetails = (app: Application) => {
     setSelectedApplicant(app);
     setShowDetailsModal(true);
+  };
+
+  // Handle opening schedule interview modal
+  const handleScheduleInterview = (app: Application) => {
+    setApplicantToSchedule(app);
+    setShowScheduleModal(true);
+  };
+
+  // Handle confirming interview schedule
+  const handleConfirmSchedule = async (data: InterviewScheduleData) => {
+    if (!applicantToSchedule) return;
+
+    const token = localStorage.getItem('serenity_access_token');
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/hr/applicants/${applicantToSchedule.id}/interview`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          interviewType: data.interviewType,
+          scheduledDate: `${data.scheduledDate}T${data.scheduledTime}:00`,
+          duration: data.duration,
+          location: data.location,
+          interviewerName: data.interviewerName,
+          notes: data.notes,
+          sendCalendarInvite: data.sendCalendarInvite
+        })
+      });
+
+      if (response.ok) {
+        // Update local state to reflect scheduled status
+        setApplications(prev => prev.map(a =>
+          a.id === applicantToSchedule.id ? { ...a, status: 'scheduled' as const } : a
+        ));
+      } else {
+        const error = await response.json();
+        alert(`Failed to schedule interview: ${error.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert('Failed to schedule interview. Please try again.');
+    }
+    setApplicantToSchedule(null);
   };
 
   if (loading) {
@@ -587,7 +634,10 @@ export function WorkingHRDashboard() {
                           </>
                         )}
                         {app.status === 'interview' && (
-                          <button className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
+                          <button
+                            onClick={() => handleScheduleInterview(app)}
+                            className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+                          >
                             📅 Schedule Interview
                           </button>
                         )}
@@ -757,6 +807,21 @@ export function WorkingHRDashboard() {
             setApplicantToReject(null);
           }}
           onConfirm={handleConfirmRejection}
+        />
+      )}
+
+      {/* Schedule Interview Modal */}
+      {applicantToSchedule && (
+        <ScheduleInterviewModal
+          applicantName={applicantToSchedule.name}
+          position={applicantToSchedule.position}
+          applicantEmail={applicantToSchedule.email}
+          isOpen={showScheduleModal}
+          onClose={() => {
+            setShowScheduleModal(false);
+            setApplicantToSchedule(null);
+          }}
+          onSchedule={handleConfirmSchedule}
         />
       )}
     </div>
