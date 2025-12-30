@@ -201,13 +201,21 @@ export function WorkingHRDashboard() {
     const statusMap: Record<string, Application['status']> = {
       'pending': 'new',
       'new': 'new',
+      'screening': 'reviewing',
       'reviewing': 'reviewing',
       'review': 'reviewing',
       'interview': 'interview',
+      'interviewing': 'interview',
+      'interviews': 'interview',
       'interview_scheduled': 'scheduled',
       'scheduled': 'scheduled',
       'rejected': 'rejected',
-      'declined': 'rejected'
+      'declined': 'rejected',
+      'withdrawn': 'rejected',
+      'hired': 'scheduled',
+      'offer_pending': 'scheduled',
+      'reference_check': 'reviewing',
+      'background_check': 'reviewing'
     };
     return statusMap[status?.toLowerCase()] || 'new';
   }
@@ -245,7 +253,7 @@ export function WorkingHRDashboard() {
         setApplications(prev => prev.map(a =>
           a.id === app.id ? { ...a, status: 'interview' as const } : a
         ));
-        alert(`${app.name} has been moved to Interview stage.`);
+        // Status updated successfully - no alert needed
       } else {
         const error = await response.json();
         alert(`Failed to update status: ${error.message || 'Unknown error'}`);
