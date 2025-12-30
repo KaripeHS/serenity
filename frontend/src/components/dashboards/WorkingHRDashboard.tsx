@@ -27,7 +27,7 @@ interface HRMetrics {
 }
 
 interface Application {
-  id: number;
+  id: string;
   name: string;
   position: string;
   status: 'new' | 'reviewing' | 'interview' | 'scheduled' | 'rejected';
@@ -139,8 +139,8 @@ export function WorkingHRDashboard() {
         // Process applicants - map to component's Application interface
         if (applicantsRes.ok) {
           const data = await applicantsRes.json();
-          const applicants = (data.applicants || []).map((a: any, idx: number) => ({
-            id: idx + 1,
+          const applicants = (data.applicants || []).map((a: any) => ({
+            id: a.id,
             name: `${a.firstName || ''} ${a.lastName || ''}`.trim() || 'Unknown',
             position: a.positionAppliedFor || 'Not specified',
             status: mapApplicantStatus(a.status || a.currentStage),
@@ -215,6 +215,68 @@ export function WorkingHRDashboard() {
     if (diffDays < 7) return `${diffDays} days ago`;
     return date.toLocaleDateString();
   }
+
+  // Handle moving applicant to interview stage
+  const handleMoveToInterview = async (app: Application) => {
+    const token = localStorage.getItem('serenity_access_token');
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/hr/applicants/${app.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: 'interviewing', currentStage: 'interviews' })
+      });
+
+      if (response.ok) {
+        setApplications(prev => prev.map(a =>
+          a.id === app.id ? { ...a, status: 'interview' as const } : a
+        ));
+        alert(`${app.name} has been moved to Interview stage.`);
+      } else {
+        const error = await response.json();
+        alert(`Failed to update status: ${error.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert('Failed to update applicant status. Please try again.');
+    }
+  };
+
+  // Handle rejecting an applicant
+  const handleReject = async (app: Application) => {
+    const reason = prompt('Enter rejection reason:', 'Position filled');
+    if (!reason) return;
+
+    const token = localStorage.getItem('serenity_access_token');
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/hr/applicants/${app.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: 'rejected', rejectionReason: reason })
+      });
+
+      if (response.ok) {
+        setApplications(prev => prev.map(a =>
+          a.id === app.id ? { ...a, status: 'rejected' as const } : a
+        ));
+        alert(`${app.name}'s application has been rejected.\nReason: ${reason}`);
+      } else {
+        const error = await response.json();
+        alert(`Failed to reject: ${error.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert('Failed to reject applicant. Please try again.');
+    }
+  };
+
+  // Handle viewing applicant details
+  const handleViewDetails = (app: Application) => {
+    alert(`Applicant Details\n\nName: ${app.name}\nPosition: ${app.position}\nExperience: ${app.experience}\nLocation: ${app.location}\nApplied: ${app.applied}\nStatus: ${app.status}\n\n(Full details modal coming soon)`);
+  };
 
   if (loading) {
     return (
@@ -483,10 +545,16 @@ export function WorkingHRDashboard() {
                       <div className="flex flex-wrap gap-2 mt-3">
                         {app.status === 'new' && (
                           <>
-                            <button className="px-3 py-1.5 bg-success-600 text-white rounded-lg text-sm font-medium hover:bg-success-700 transition-colors">
+                            <button
+                              onClick={() => handleMoveToInterview(app)}
+                              className="px-3 py-1.5 bg-success-600 text-white rounded-lg text-sm font-medium hover:bg-success-700 transition-colors"
+                            >
                               ✓ Move to Interview
                             </button>
-                            <button className="px-3 py-1.5 bg-danger-600 text-white rounded-lg text-sm font-medium hover:bg-danger-700 transition-colors">
+                            <button
+                              onClick={() => handleReject(app)}
+                              className="px-3 py-1.5 bg-danger-600 text-white rounded-lg text-sm font-medium hover:bg-danger-700 transition-colors"
+                            >
                               ✗ Reject
                             </button>
                           </>
@@ -496,7 +564,10 @@ export function WorkingHRDashboard() {
                             📅 Schedule Interview
                           </button>
                         )}
-                        <button className="px-3 py-1.5 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors">
+                        <button
+                          onClick={() => handleViewDetails(app)}
+                          className="px-3 py-1.5 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                        >
                           👁️ View Details
                         </button>
                       </div>

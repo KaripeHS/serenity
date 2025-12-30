@@ -311,38 +311,52 @@ router.get('/applicants/:id', async (req: AuthenticatedRequest, res: Response, n
 router.put('/applicants/:id/status', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { status, stage, notes } = req.body;
+    const { status, currentStage, rejectionReason, notes } = req.body;
 
     // Validation
-    const validStatuses = ['new', 'screening', 'interviewing', 'offer', 'hired', 'rejected'];
+    const validStatuses = ['pending', 'new', 'screening', 'interviewing', 'reference_check', 'background_check', 'offer_pending', 'hired', 'rejected', 'withdrawn'];
     if (status && !validStatuses.includes(status)) {
-      return res.status(400).json({ error: 'Invalid status' });
+      return res.status(400).json({ error: 'Invalid status', validStatuses });
     }
 
-    // TODO: Update database
-    // const db = getDbClient();
-    // await db.query(
-    //   'UPDATE applicants SET status = $1, current_stage = $2, updated_at = NOW() WHERE id = $3',
-    //   [status, stage, id]
-    // );
+    // Build update query dynamically
+    const updates: string[] = ['updated_at = NOW()'];
+    const values: any[] = [];
+    let paramIndex = 1;
 
-    // TODO: Log status change in audit log
-    // await logAuditEvent({
-    //   userId: req.user?.id,
-    //   action: 'applicant_status_updated',
-    //   resourceType: 'applicant',
-    //   resourceId: id,
-    //   changes: { status, stage, notes }
-    // });
+    if (status) {
+      updates.push(`status = $${paramIndex++}`);
+      values.push(status);
+    }
+    if (currentStage) {
+      updates.push(`current_stage = $${paramIndex++}`);
+      values.push(currentStage);
+    }
+    if (rejectionReason) {
+      updates.push(`rejection_reason = $${paramIndex++}`);
+      values.push(rejectionReason);
+    }
+    if (notes) {
+      updates.push(`notes = COALESCE(notes, '') || E'\\n' || $${paramIndex++}`);
+      values.push(notes);
+    }
 
-    console.log(`[HR] Applicant ${id} status updated to ${status} (${stage}) by ${req.user?.userId}`);
+    values.push(id);
+
+    // Update database
+    const result = await pool.query(
+      `UPDATE applicants SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+      values
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Applicant not found' });
+    }
 
     res.json({
       success: true,
       message: 'Applicant status updated successfully',
-      applicantId: id,
-      newStatus: status,
-      newStage: stage
+      applicant: result.rows[0]
     });
   } catch (error) {
     next(error);

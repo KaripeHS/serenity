@@ -654,49 +654,57 @@ export default function WorkingHomePage() {
         ) : isHRRole ? (
           /* HR-specific metrics */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fade-in">
-            <Card hoverable className="transition-all hover:scale-105">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600 m-0">Open Positions</h3>
-                <div className="p-2 bg-primary-50 rounded-lg">
-                  <DocumentTextIcon className="h-5 w-5 text-primary-600" />
+            <Link to="/dashboard/hr" className="block">
+              <Card hoverable className="transition-all hover:scale-105 cursor-pointer">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-600 m-0">Open Positions</h3>
+                  <div className="p-2 bg-primary-50 rounded-lg">
+                    <DocumentTextIcon className="h-5 w-5 text-primary-600" />
+                  </div>
                 </div>
-              </div>
-              <div className="text-3xl font-bold text-gray-900">{hrMetrics?.openPositions || 0}</div>
-              <p className="text-xs text-gray-500 mt-1 m-0">{hrMetrics?.openPositions ? 'Need to fill' : 'All filled'}</p>
-            </Card>
+                <div className="text-3xl font-bold text-gray-900">{hrMetrics?.openPositions || 0}</div>
+                <p className="text-xs text-gray-500 mt-1 m-0">{hrMetrics?.openPositions ? 'Need to fill' : 'All filled'}</p>
+              </Card>
+            </Link>
 
-            <Card hoverable className="transition-all hover:scale-105">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600 m-0">New Applications</h3>
-                <div className="p-2 bg-success-50 rounded-lg">
-                  <UsersIcon className="h-5 w-5 text-success-600" />
+            <Link to="/hr/applications" className="block">
+              <Card hoverable className="transition-all hover:scale-105 cursor-pointer">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-600 m-0">New Applications</h3>
+                  <div className="p-2 bg-success-50 rounded-lg">
+                    <UsersIcon className="h-5 w-5 text-success-600" />
+                  </div>
                 </div>
-              </div>
-              <div className="text-3xl font-bold text-gray-900">{hrMetrics?.pendingApplications || 0}</div>
-              <p className="text-xs text-gray-500 mt-1 m-0">{hrMetrics?.pendingApplications ? 'Awaiting review' : 'None pending'}</p>
-            </Card>
+                <div className="text-3xl font-bold text-gray-900">{hrMetrics?.pendingApplications || 0}</div>
+                <p className="text-xs text-gray-500 mt-1 m-0">{hrMetrics?.pendingApplications ? 'Awaiting review' : 'None pending'}</p>
+              </Card>
+            </Link>
 
-            <Card hoverable className="transition-all hover:scale-105">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600 m-0">Interviews Scheduled</h3>
-                <div className="p-2 bg-caregiver-50 rounded-lg">
-                  <CalendarIcon className="h-5 w-5 text-caregiver-600" />
+            <Link to="/hr/interviews" className="block">
+              <Card hoverable className="transition-all hover:scale-105 cursor-pointer">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-600 m-0">Interviews Scheduled</h3>
+                  <div className="p-2 bg-caregiver-50 rounded-lg">
+                    <CalendarIcon className="h-5 w-5 text-caregiver-600" />
+                  </div>
                 </div>
-              </div>
-              <div className="text-3xl font-bold text-gray-900">{hrMetrics?.interviewsScheduled || 0}</div>
-              <p className="text-xs text-gray-500 mt-1 m-0">{hrMetrics?.interviewsScheduled ? 'This week' : 'None scheduled'}</p>
-            </Card>
+                <div className="text-3xl font-bold text-gray-900">{hrMetrics?.interviewsScheduled || 0}</div>
+                <p className="text-xs text-gray-500 mt-1 m-0">{hrMetrics?.interviewsScheduled ? 'This week' : 'None scheduled'}</p>
+              </Card>
+            </Link>
 
-            <Card hoverable className="transition-all hover:scale-105">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600 m-0">Active Staff</h3>
-                <div className="p-2 bg-success-50 rounded-lg">
-                  <UserGroupIcon className="h-5 w-5 text-success-600" />
+            <Link to="/dashboard/hr" className="block">
+              <Card hoverable className="transition-all hover:scale-105 cursor-pointer">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-600 m-0">Active Staff</h3>
+                  <div className="p-2 bg-success-50 rounded-lg">
+                    <UserGroupIcon className="h-5 w-5 text-success-600" />
+                  </div>
                 </div>
-              </div>
-              <div className="text-3xl font-bold text-gray-900">{hrMetrics?.activeStaff || 0}</div>
-              <p className="text-xs text-gray-500 mt-1 m-0">Total employees</p>
-            </Card>
+                <div className="text-3xl font-bold text-gray-900">{hrMetrics?.activeStaff || 0}</div>
+                <p className="text-xs text-gray-500 mt-1 m-0">Total employees</p>
+              </Card>
+            </Link>
           </div>
         ) : metrics && (
           /* Default/Executive metrics */
