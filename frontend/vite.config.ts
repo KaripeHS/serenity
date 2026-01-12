@@ -18,6 +18,17 @@ export default defineConfig(({ mode }) => ({
   server: {
     port: 3000,
     host: true,
+    // Proxy disabled for E2E tests - Playwright mocks will intercept API calls instead
+    // Uncomment the proxy below for local development with backend
+    /*
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+    */
   },
   build: {
     outDir: 'dist',

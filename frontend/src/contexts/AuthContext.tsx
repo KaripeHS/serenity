@@ -146,10 +146,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         };
 
         setUser(fullUser);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to restore session:', err);
-        clearTokens();
-        setError('Session expired. Please login again.');
+        // Only clear tokens on explicit 401 unauthorized, not network errors
+        if (err?.status === 401) {
+          clearTokens();
+          setError('Session expired. Please login again.');
+        } else {
+          // For other errors (network, server error), keep token and let user retry
+          console.warn('[AuthContext] Non-auth error during session restore, keeping token');
+          setError('Failed to connect. Please refresh the page.');
+        }
       } finally {
         setIsLoading(false);
       }

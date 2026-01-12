@@ -1,0 +1,180 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/build-enable-automatic-updates: 'false'
+    run.googleapis.com/build-id: d0f75bd3-9f73-48d6-961c-4b81dae14e00
+    run.googleapis.com/build-image-uri: us-central1-docker.pkg.dev/serenity-erp-prod/cloud-run-source-deploy/serenity-backend
+    run.googleapis.com/build-name: projects/774652480816/locations/us-central1/builds/d0f75bd3-9f73-48d6-961c-4b81dae14e00
+    run.googleapis.com/build-source-location: gs://run-sources-serenity-erp-prod-us-central1/services/serenity-backend/1767592543.785599-41873281f93541a382806f3c4faea83e.zip#1767592544849203
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+    run.googleapis.com/urls: '["https://serenity-backend-774652480816.us-central1.run.app","https://serenity-backend-emwu3i5aya-uc.a.run.app"]'
+  labels:
+    cloud.googleapis.com/location: us-central1
+  name: serenity-backend
+  namespace: '774652480816'
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '10'
+        run.googleapis.com/client-name: gcloud
+        run.googleapis.com/client-version: 548.0.0
+        run.googleapis.com/cloudsql-instances: serenity-erp-prod:us-central1:serenity-db
+        run.googleapis.com/startup-cpu-boost: 'true'
+      labels:
+        client.knative.dev/nonce: xmnmafktgv
+        run.googleapis.com/startupProbeType: Default
+    spec:
+      containerConcurrency: 80
+      containers:
+      - env:
+        - name: NODE_ENV
+          value: development
+        - name: CORS_ORIGINS
+          value: http://localhost:3001,http://localhost:3002,http://localhost:3003,https://console.serenitycarepartners.com,https://serenity-erp-prod.web.app,https://serenity-erp-prod.firebaseapp.com
+        - name: FRONTEND_URL
+          value: https://serenity-erp-prod.web.app
+        - name: DATABASE_URL
+          value: postgresql://postgres:ot0uBLfZ0KN0kLAW@/serenity?host=/cloudsql/serenity-erp-prod:us-central1:serenity-db
+        - name: DB_POOL_MIN
+          value: '2'
+        - name: DB_POOL_MAX
+          value: '10'
+        - name: JWT_SECRET
+          value: serenity-erp-dev-jwt-secret-key-change-in-production-minimum-64-chars-long
+        - name: ENCRYPTION_KEY
+          value: serenity-erp-dev-encryption-key-32-characters-minimum
+        - name: SESSION_SECRET
+          value: serenity-erp-dev-session-secret-32-characters-minimum
+        - name: JWT_EXPIRES_IN
+          value: 8h
+        - name: REFRESH_TOKEN_EXPIRES_IN
+          value: 7d
+        - name: BCRYPT_SALT_ROUNDS
+          value: '10'
+        - name: OPENAI_API_KEY
+          value: sk-placeholder-for-development-mode-only
+        - name: AZURE_OPENAI_KEY
+          value: placeholder-for-development-mode-only
+        - name: AZURE_OPENAI_ENDPOINT
+          value: https://placeholder.openai.azure.com
+        - name: ANTHROPIC_API_KEY
+          value: placeholder-for-development-mode-only
+        - name: INDEED_API_KEY
+          value: placeholder-for-development-mode-only
+        - name: EMAIL_SERVICE_KEY
+          value: placeholder-for-development-mode-only
+        - name: SMS_SERVICE_KEY
+          value: placeholder-for-development-mode-only
+        - name: AUDIT_SERVICE_URL
+          value: http://localhost:3000/audit
+        - name: SANDATA_ENVIRONMENT
+          value: sandbox
+        - name: SANDATA_API_URL
+          value: https://api-sandbox.sandata.com/evv/v4
+        - name: SANDATA_API_KEY
+          value: your-api-key-here
+        - name: SANDATA_PROVIDER_ID
+          value: your-provider-id
+        - name: SANDATA_TIMEOUT
+          value: '30000'
+        - name: SANDATA_RETRY_ATTEMPTS
+          value: '3'
+        - name: REDIS_URL
+          value: redis://localhost:6379
+        - name: REDIS_PASSWORD
+        - name: REDIS_DB
+          value: '0'
+        - name: EMAIL_PROVIDER
+          value: sendgrid
+        - name: SENDGRID_API_KEY
+          value: your-sendgrid-api-key-here
+        - name: EMAIL_FROM
+          value: careers@serenitycarepartners.com
+        - name: EMAIL_FROM_NAME
+          value: Serenity Care Partners
+        - name: HR_EMAIL
+          value: hr@serenitycarepartners.com
+        - name: TWILIO_ACCOUNT_SID
+          value: your-twilio-account-sid
+        - name: TWILIO_AUTH_TOKEN
+          value: your-twilio-auth-token
+        - name: TWILIO_PHONE_NUMBER
+          value: '+19375550100'
+        - name: CLEARINGHOUSE_ENVIRONMENT
+          value: sandbox
+        - name: CLEARINGHOUSE_API_URL
+          value: https://api-sandbox.changehealthcare.com
+        - name: CLEARINGHOUSE_API_KEY
+          value: your-api-key
+        - name: CLEARINGHOUSE_SUBMITTER_ID
+          value: your-submitter-id
+        - name: CLEARINGHOUSE_RECEIVER_ID
+          value: your-receiver-id
+        - name: PAYROLL_PROVIDER
+          value: gusto
+        - name: GUSTO_API_KEY
+          value: your-gusto-api-key
+        - name: GUSTO_COMPANY_ID
+          value: your-company-id
+        - name: GUSTO_API_URL
+          value: https://api-sandbox.gusto.com
+        - name: LOG_LEVEL
+          value: info
+        - name: LOG_FORMAT
+          value: pretty
+        - name: LOG_REQUESTS
+          value: 'true'
+        - name: RATE_LIMIT_WINDOW_MS
+          value: '900000'
+        - name: RATE_LIMIT_MAX
+          value: '100'
+        - name: RATE_LIMIT_PUBLIC_MAX
+          value: '300'
+        - name: RATE_LIMIT_AUTH_MAX
+          value: '5'
+        - name: UPLOAD_DIR
+          value: ./uploads
+        - name: MAX_FILE_SIZE
+          value: '10485760'
+        - name: ALLOWED_FILE_TYPES
+          value: image/jpeg,image/png,image/gif,application/pdf,application/msword
+        - name: FEATURE_CLAIMS_GATE_ENABLED
+          value: 'false'
+        - name: FEATURE_SANDATA_SANDBOX_ENABLED
+          value: 'true'
+        - name: FEATURE_MORNING_CHECKIN_NOTIFICATIONS
+          value: 'true'
+        - name: FEATURE_AUTO_SANDATA_SYNC
+          value: 'false'
+        - name: SENTRY_DSN
+        - name: SENTRY_ENABLE_TRACING
+          value: 'false'
+        - name: GA_TRACKING_ID
+        - name: DEBUG
+          value: 'false'
+        - name: LOG_SQL_QUERIES
+          value: 'false'
+        - name: AUTO_SEED_DATA
+          value: 'false'
+        image: us-central1-docker.pkg.dev/serenity-erp-prod/cloud-run-source-deploy/serenity-backend@sha256:3e15678994dba3d4fc7244fd316d3f3809f1a7c9a6878d85f3938d2324b78668
+        ports:
+        - containerPort: 8080
+          name: http1
+        resources:
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        startupProbe:
+          failureThreshold: 1
+          periodSeconds: 240
+          tcpSocket:
+            port: 8080
+          timeoutSeconds: 240
+      serviceAccountName: 774652480816-compute@developer.gserviceaccount.com
+      timeoutSeconds: 900
+  traffic:
+  - percent: 100
+    latestRevision: true

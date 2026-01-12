@@ -1,0 +1,211 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/build-enable-automatic-updates: 'false'
+    run.googleapis.com/build-id: 99dc4065-a752-4454-8e1b-bb5774c99a3f
+    run.googleapis.com/build-image-uri: us-central1-docker.pkg.dev/serenity-erp-prod/cloud-run-source-deploy/serenity-backend
+    run.googleapis.com/build-name: projects/774652480816/locations/us-central1/builds/99dc4065-a752-4454-8e1b-bb5774c99a3f
+    run.googleapis.com/build-source-location: gs://run-sources-serenity-erp-prod-us-central1/services/serenity-backend/1767591191.975791-8d106785c88643d29dd13ee9caa91353.zip#1767591193532398
+    run.googleapis.com/client-name: gcloud
+    run.googleapis.com/client-version: 548.0.0
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+    run.googleapis.com/operation-id: 21176291-8042-49ea-9ffe-31f4b7f06ec3
+    run.googleapis.com/urls: '["https://serenity-backend-774652480816.us-central1.run.app","https://serenity-backend-emwu3i5aya-uc.a.run.app"]'
+    serving.knative.dev/creator: bluehavenconsultants@gmail.com
+    serving.knative.dev/lastModifier: bluehavenconsultants@gmail.com
+  creationTimestamp: '2025-12-03T05:47:27.508546Z'
+  generation: 125
+  labels:
+    cloud.googleapis.com/location: us-central1
+  name: serenity-backend
+  namespace: '774652480816'
+  resourceVersion: AAZHnXe4fok
+  selfLink: /apis/serving.knative.dev/v1/namespaces/774652480816/services/serenity-backend
+  uid: 2ad4b798-d2c9-44c4-863b-298070cdeffc
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '10'
+        run.googleapis.com/client-name: gcloud
+        run.googleapis.com/client-version: 548.0.0
+        run.googleapis.com/cloudsql-instances: serenity-erp-prod:us-central1:serenity-db
+        run.googleapis.com/startup-cpu-boost: 'true'
+      labels:
+        client.knative.dev/nonce: xdyxxfolob
+        run.googleapis.com/startupProbeType: Default
+    spec:
+      containerConcurrency: 80
+      containers:
+      - env:
+        - name: NODE_ENV
+          value: production
+        - name: CORS_ORIGINS
+          value: http://localhost:3001,http://localhost:3002,http://localhost:3003,https://console.serenitycarepartners.com,https://serenity-erp-prod.web.app,https://serenity-erp-prod.firebaseapp.com
+        - name: FRONTEND_URL
+          value: https://serenity-erp-prod.web.app
+        - name: DATABASE_URL
+          value: postgresql://postgres:ot0uBLfZ0KN0kLAW@/serenity?host=/cloudsql/serenity-erp-prod:us-central1:serenity-db
+        - name: DB_POOL_MIN
+          value: '2'
+        - name: DB_POOL_MAX
+          value: '10'
+        - name: JWT_SECRET
+          value: serenity-erp-dev-jwt-secret-key-change-in-production-minimum-64-chars-long
+        - name: ENCRYPTION_KEY
+          value: serenity-erp-dev-encryption-key-32-characters-minimum
+        - name: SESSION_SECRET
+          value: serenity-erp-dev-session-secret-32-characters-minimum
+        - name: JWT_EXPIRES_IN
+          value: 8h
+        - name: REFRESH_TOKEN_EXPIRES_IN
+          value: 7d
+        - name: BCRYPT_SALT_ROUNDS
+          value: '10'
+        - name: OPENAI_API_KEY
+          value: sk-placeholder-for-development-mode-only
+        - name: AZURE_OPENAI_KEY
+          value: placeholder-for-development-mode-only
+        - name: AZURE_OPENAI_ENDPOINT
+          value: https://placeholder.openai.azure.com
+        - name: ANTHROPIC_API_KEY
+          value: placeholder-for-development-mode-only
+        - name: INDEED_API_KEY
+          value: placeholder-for-development-mode-only
+        - name: EMAIL_SERVICE_KEY
+          value: placeholder-for-development-mode-only
+        - name: SMS_SERVICE_KEY
+          value: placeholder-for-development-mode-only
+        - name: AUDIT_SERVICE_URL
+          value: http://localhost:3000/audit
+        - name: SANDATA_ENVIRONMENT
+          value: sandbox
+        - name: SANDATA_API_URL
+          value: https://api-sandbox.sandata.com/evv/v4
+        - name: SANDATA_API_KEY
+          value: your-api-key-here
+        - name: SANDATA_PROVIDER_ID
+          value: your-provider-id
+        - name: SANDATA_TIMEOUT
+          value: '30000'
+        - name: SANDATA_RETRY_ATTEMPTS
+          value: '3'
+        - name: REDIS_URL
+          value: redis://localhost:6379
+        - name: REDIS_PASSWORD
+        - name: REDIS_DB
+          value: '0'
+        - name: EMAIL_PROVIDER
+          value: sendgrid
+        - name: SENDGRID_API_KEY
+          value: your-sendgrid-api-key-here
+        - name: EMAIL_FROM
+          value: careers@serenitycarepartners.com
+        - name: EMAIL_FROM_NAME
+          value: Serenity Care Partners
+        - name: HR_EMAIL
+          value: hr@serenitycarepartners.com
+        - name: TWILIO_ACCOUNT_SID
+          value: your-twilio-account-sid
+        - name: TWILIO_AUTH_TOKEN
+          value: your-twilio-auth-token
+        - name: TWILIO_PHONE_NUMBER
+          value: '+19375550100'
+        - name: CLEARINGHOUSE_ENVIRONMENT
+          value: sandbox
+        - name: CLEARINGHOUSE_API_URL
+          value: https://api-sandbox.changehealthcare.com
+        - name: CLEARINGHOUSE_API_KEY
+          value: your-api-key
+        - name: CLEARINGHOUSE_SUBMITTER_ID
+          value: your-submitter-id
+        - name: CLEARINGHOUSE_RECEIVER_ID
+          value: your-receiver-id
+        - name: PAYROLL_PROVIDER
+          value: gusto
+        - name: GUSTO_API_KEY
+          value: your-gusto-api-key
+        - name: GUSTO_COMPANY_ID
+          value: your-company-id
+        - name: GUSTO_API_URL
+          value: https://api-sandbox.gusto.com
+        - name: LOG_LEVEL
+          value: info
+        - name: LOG_FORMAT
+          value: pretty
+        - name: LOG_REQUESTS
+          value: 'true'
+        - name: RATE_LIMIT_WINDOW_MS
+          value: '900000'
+        - name: RATE_LIMIT_MAX
+          value: '100'
+        - name: RATE_LIMIT_PUBLIC_MAX
+          value: '300'
+        - name: RATE_LIMIT_AUTH_MAX
+          value: '5'
+        - name: UPLOAD_DIR
+          value: ./uploads
+        - name: MAX_FILE_SIZE
+          value: '10485760'
+        - name: ALLOWED_FILE_TYPES
+          value: image/jpeg,image/png,image/gif,application/pdf,application/msword
+        - name: FEATURE_CLAIMS_GATE_ENABLED
+          value: 'false'
+        - name: FEATURE_SANDATA_SANDBOX_ENABLED
+          value: 'true'
+        - name: FEATURE_MORNING_CHECKIN_NOTIFICATIONS
+          value: 'true'
+        - name: FEATURE_AUTO_SANDATA_SYNC
+          value: 'false'
+        - name: SENTRY_DSN
+        - name: SENTRY_ENABLE_TRACING
+          value: 'false'
+        - name: GA_TRACKING_ID
+        - name: DEBUG
+          value: 'false'
+        - name: LOG_SQL_QUERIES
+          value: 'false'
+        - name: AUTO_SEED_DATA
+          value: 'false'
+        image: us-central1-docker.pkg.dev/serenity-erp-prod/cloud-run-source-deploy/serenity-backend@sha256:4b86a4f7cd73dd3517a09fbc9fb0cbfe9c39b7c4455fd68f4bfd134187bba7b1
+        ports:
+        - containerPort: 8080
+          name: http1
+        resources:
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        startupProbe:
+          failureThreshold: 1
+          periodSeconds: 240
+          tcpSocket:
+            port: 8080
+          timeoutSeconds: 240
+      serviceAccountName: 774652480816-compute@developer.gserviceaccount.com
+      timeoutSeconds: 900
+  traffic:
+  - percent: 100
+    revisionName: serenity-backend-00112-2kl
+status:
+  address:
+    url: https://serenity-backend-emwu3i5aya-uc.a.run.app
+  conditions:
+  - lastTransitionTime: '2026-01-05T05:38:24.203600Z'
+    status: 'True'
+    type: Ready
+  - lastTransitionTime: '2026-01-05T05:38:24.250376Z'
+    reason: Retired
+    status: 'True'
+    type: ConfigurationsReady
+  - lastTransitionTime: '2026-01-05T05:15:39.696070Z'
+    status: 'True'
+    type: RoutesReady
+  latestCreatedRevisionName: serenity-backend-00121-465
+  latestReadyRevisionName: serenity-backend-00112-2kl
+  observedGeneration: 125
+  traffic:
+  - percent: 100
+    revisionName: serenity-backend-00112-2kl
+  url: https://serenity-backend-emwu3i5aya-uc.a.run.app

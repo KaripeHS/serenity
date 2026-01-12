@@ -29,11 +29,17 @@ interface MetricCardProps {
   icon: React.ComponentType<any>;
   iconColor: string;
   valueColor?: string;
+  onClick?: () => void;
 }
 
-function MetricCard({ title, value, subtitle, icon: Icon, iconColor, valueColor = 'text-gray-900' }: MetricCardProps) {
+function MetricCard({ title, value, subtitle, icon: Icon, iconColor, valueColor = 'text-gray-900', onClick }: MetricCardProps) {
   return (
-    <Card hoverable className="transition-all hover:scale-105">
+    <Card
+      hoverable
+      clickable={!!onClick}
+      onClick={onClick}
+      className={`transition-all hover:scale-105 ${onClick ? 'cursor-pointer' : ''}`}
+    >
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">{title}</h3>
       </div>
@@ -93,7 +99,7 @@ export function WorkingTrainingDashboard() {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<TrainingMetrics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState<'dashboard' | 'compliance' | 'courses'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'compliance' | 'courses' | 'expiringSoon' | 'overdue' | 'trainingHours'>('dashboard');
   const [staffTraining, setStaffTraining] = useState<Staff[]>([]);
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
 
@@ -257,6 +263,7 @@ export function WorkingTrainingDashboard() {
                 icon={AcademicCapIcon}
                 iconColor={metrics.complianceRate >= 90 ? 'bg-success-600' : 'bg-warning-600'}
                 valueColor={getComplianceColor()}
+                onClick={() => setActiveView('compliance')}
               />
               <MetricCard
                 title="Expiring Soon"
@@ -265,6 +272,7 @@ export function WorkingTrainingDashboard() {
                 icon={ClockIcon}
                 iconColor="bg-warning-600"
                 valueColor="text-warning-600"
+                onClick={() => setActiveView('expiringSoon')}
               />
               <MetricCard
                 title="Overdue"
@@ -273,6 +281,7 @@ export function WorkingTrainingDashboard() {
                 icon={ExclamationTriangleIcon}
                 iconColor="bg-danger-600"
                 valueColor="text-danger-600"
+                onClick={() => setActiveView('overdue')}
               />
               <MetricCard
                 title="Training Hours YTD"
@@ -281,6 +290,7 @@ export function WorkingTrainingDashboard() {
                 icon={BookOpenIcon}
                 iconColor="bg-primary-600"
                 valueColor="text-primary-600"
+                onClick={() => setActiveView('trainingHours')}
               />
             </div>
 
@@ -321,7 +331,10 @@ export function WorkingTrainingDashboard() {
                         Training Progress: {staff.completedHours}/{staff.requiredHours} hours
                       </p>
                     </div>
-                    <button className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors whitespace-nowrap">
+                    <button
+                      onClick={() => alert(`Reminder sent to ${staff.name} about certification renewals`)}
+                      className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors whitespace-nowrap"
+                    >
                       📧 Send Reminder
                     </button>
                   </div>
@@ -354,6 +367,102 @@ export function WorkingTrainingDashboard() {
           </Card>
         )}
 
+        {/* Expiring Soon View */}
+        {activeView === 'expiringSoon' && (
+          <Card className="animate-fade-in">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Certifications Expiring Soon (Next 30 Days)</h2>
+            <div className="space-y-4">
+              {staffTraining.filter(staff => staff.certifications.some(cert => cert.status === 'expires_soon')).map((staff) => (
+                <div key={staff.id} className="p-4 border border-warning-200 bg-warning-50 rounded-lg">
+                  <h4 className="font-semibold text-gray-900 mb-2">{staff.name} - {staff.position}</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {staff.certifications.filter(cert => cert.status === 'expires_soon').map((cert, idx) => (
+                      <div key={idx} className="p-3 bg-white border border-warning-300 rounded">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-sm">{cert.name}</span>
+                          <Badge variant="warning" size="sm">{cert.daysLeft} days</Badge>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1">Expires: {new Date(cert.expiryDate).toLocaleDateString()}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Overdue View */}
+        {activeView === 'overdue' && (
+          <Card className="animate-fade-in">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Overdue Certifications - Immediate Action Required</h2>
+            <div className="space-y-4">
+              {staffTraining.filter(staff => staff.certifications.some(cert => cert.status === 'overdue')).map((staff) => (
+                <div key={staff.id} className="p-4 border border-danger-200 bg-danger-50 rounded-lg">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{staff.name} - {staff.position}</h4>
+                      <p className="text-sm text-gray-600">⚠️ Compliance status: Non-compliant</p>
+                    </div>
+                    <button
+                      onClick={() => alert(`Urgent reminder sent to ${staff.name}`)}
+                      className="px-3 py-1.5 bg-danger-600 text-white rounded text-sm hover:bg-danger-700"
+                    >
+                      Send Urgent Notice
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {staff.certifications.filter(cert => cert.status === 'overdue').map((cert, idx) => (
+                      <div key={idx} className="p-3 bg-white border border-danger-300 rounded">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-sm">{cert.name}</span>
+                          <Badge variant="danger" size="sm">{Math.abs(cert.daysLeft)} days overdue</Badge>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1">Expired: {new Date(cert.expiryDate).toLocaleDateString()}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Training Hours View */}
+        {activeView === 'trainingHours' && (
+          <Card className="animate-fade-in">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Training Hours YTD</h2>
+            <div className="space-y-4">
+              {staffTraining.map((staff) => (
+                <div key={staff.id} className="p-4 border border-gray-200 rounded-lg">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{staff.name}</h4>
+                      <p className="text-sm text-gray-600">{staff.position}</p>
+                    </div>
+                    <Badge variant={staff.completedHours >= staff.requiredHours ? 'success' : 'warning'}>
+                      {staff.completedHours}/{staff.requiredHours} hours
+                    </Badge>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div
+                      className={`h-3 rounded-full ${
+                        staff.completedHours >= staff.requiredHours ? 'bg-success-600' : 'bg-primary-600'
+                      }`}
+                      style={{ width: `${Math.min((staff.completedHours / staff.requiredHours) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {staff.completedHours >= staff.requiredHours
+                      ? '✓ Annual requirement met'
+                      : `${staff.requiredHours - staff.completedHours} hours remaining`}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
         {/* Courses View */}
         {activeView === 'courses' && (
           <Card className="animate-fade-in">
@@ -380,6 +489,11 @@ export function WorkingTrainingDashboard() {
 
                   <div className="flex flex-wrap gap-2">
                     <button
+                      onClick={() => {
+                        if (course.enrolled < course.spots) {
+                          window.location.href = `/training/courses/${course.id}/enroll`;
+                        }
+                      }}
                       disabled={course.enrolled >= course.spots}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         course.enrolled >= course.spots
@@ -389,7 +503,10 @@ export function WorkingTrainingDashboard() {
                     >
                       {course.enrolled >= course.spots ? '✓ Full' : '➕ Enroll Staff'}
                     </button>
-                    <button className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors">
+                    <button
+                      onClick={() => window.location.href = `/training/courses/${course.id}`}
+                      className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                    >
                       👁️ View Details
                     </button>
                   </div>

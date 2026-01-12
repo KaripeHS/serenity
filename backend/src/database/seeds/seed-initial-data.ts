@@ -110,16 +110,40 @@ async function seedInitialData() {
       { firstName: 'Ashley', lastName: 'Davis', email: 'ashley.davis@serenitycarepartners.com', phone: '+15135552005' },
     ];
 
-    const caregiverIds: string[] = [];
+    const caregiverUserIds: string[] = [];
+    const caregiverRecordIds: string[] = [];
 
-    for (const cg of caregivers) {
+    for (let i = 0; i < caregivers.length; i++) {
+      const cg = caregivers[i];
       const result = await pool.query(`
         INSERT INTO users (organization_id, email, password_hash, first_name, last_name, phone, role, status)
         VALUES ($1, $2, $3, $4, $5, $6, 'caregiver', 'active')
         ON CONFLICT (email) DO UPDATE SET password_hash = $3
         RETURNING id
       `, [orgId, cg.email, caregiverPassword, cg.firstName, cg.lastName, cg.phone]);
-      caregiverIds.push(result.rows[0].id);
+
+      const userId = result.rows[0].id;
+      caregiverUserIds.push(userId);
+
+      // Create caregiver record
+      // Distribute between CIN-A and CIN-B
+      const podId = (i < 3) ? cinAPodId : cinBPodId;
+
+      const cgRecordResult = await pool.query(`
+        INSERT INTO caregivers (user_id, organization_id, pod_id, employee_code, hire_date, employment_status)
+        VALUES ($1, $2, $3, $4, '2025-01-01', 'active')
+        ON CONFLICT (employee_code) DO NOTHING
+        RETURNING id
+      `, [userId, orgId, podId, `EMP-${1000 + i}`]);
+
+      // Handle case where it already exists (on conflict do nothing returns nothing)
+      if (cgRecordResult.rows.length > 0) {
+        caregiverRecordIds.push(cgRecordResult.rows[0].id);
+      } else {
+        // Fetch existing
+        const existing = await pool.query('SELECT id FROM caregivers WHERE user_id = $1', [userId]);
+        caregiverRecordIds.push(existing.rows[0].id);
+      }
     }
     console.log('✅ Sample caregivers created/updated');
 
@@ -133,23 +157,23 @@ async function seedInitialData() {
       `, [podLeadId, cinAPodId]);
 
       // First 3 caregivers to CIN-A
-      for (let i = 0; i < 3 && i < caregiverIds.length; i++) {
+      for (let i = 0; i < 3 && i < caregiverUserIds.length; i++) {
         await pool.query(`
           INSERT INTO user_pod_memberships (user_id, pod_id, role_in_pod, is_primary, status)
           VALUES ($1, $2, 'caregiver', true, 'active')
           ON CONFLICT (user_id, pod_id) DO UPDATE SET status = 'active'
-        `, [caregiverIds[i], cinAPodId]);
+        `, [caregiverUserIds[i], cinAPodId]);
       }
     }
 
-    if (cinBPodId && caregiverIds.length > 3) {
+    if (cinBPodId && caregiverUserIds.length > 3) {
       // Remaining caregivers to CIN-B
-      for (let i = 3; i < caregiverIds.length; i++) {
+      for (let i = 3; i < caregiverUserIds.length; i++) {
         await pool.query(`
           INSERT INTO user_pod_memberships (user_id, pod_id, role_in_pod, is_primary, status)
           VALUES ($1, $2, 'caregiver', true, 'active')
           ON CONFLICT (user_id, pod_id) DO UPDATE SET status = 'active'
-        `, [caregiverIds[i], cinBPodId]);
+        `, [caregiverUserIds[i], cinBPodId]);
       }
     }
     console.log('✅ Pod memberships assigned');
@@ -210,7 +234,7 @@ async function seedInitialData() {
     ];
 
     for (const template of shiftTemplates) {
-      if (caregiverIds[template.cgIdx] && clientIds[template.clientIdx]) {
+      if (caregiverRecordIds[template.cgIdx] && clientIds[template.clientIdx]) {
         const startTime = new Date(today);
         startTime.setHours(template.startHour, 0, 0, 0);
 
@@ -220,9 +244,9 @@ async function seedInitialData() {
         const podId = template.clientIdx < 3 ? cinAPodId : cinBPodId;
 
         await pool.query(`
-          INSERT INTO shifts (organization_id, pod_id, caregiver_id, client_id, scheduled_start, scheduled_end, status, service_code, notes)
-          VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', 'T1019', '[SAMPLE] Auto-generated shift')
-        `, [orgId, podId, caregiverIds[template.cgIdx], clientIds[template.clientIdx], startTime, endTime]);
+          INSERT INTO shifts (organization_id, pod_id, caregiver_id, client_id, scheduled_start, scheduled_end, status, service_code, notes, visit_code, service_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', 'T1019', '[SAMPLE] Auto-generated shift', 'V'||floor(random()*100000)::text, 'home_health_aide')
+        `, [orgId, podId, caregiverRecordIds[template.cgIdx], clientIds[template.clientIdx], startTime, endTime]);
       }
     }
     console.log('✅ Sample shifts created for today');
@@ -234,7 +258,7 @@ async function seedInitialData() {
       { type: 'STNA', authority: 'Ohio Board of Nursing', daysValid: 730 },
     ];
 
-    for (let i = 0; i < caregiverIds.length; i++) {
+    for (let i = 0; i < caregiverUserIds.length; i++) {
       for (const cert of certTypes) {
         const issueDate = new Date();
         issueDate.setDate(issueDate.getDate() - Math.floor(Math.random() * 180));
@@ -246,7 +270,7 @@ async function seedInitialData() {
           INSERT INTO certifications (user_id, organization_id, certification_type, issuing_authority, issue_date, expiration_date, status)
           VALUES ($1, $2, $3, $4, $5, $6, 'active')
           ON CONFLICT DO NOTHING
-        `, [caregiverIds[i], orgId, cert.type, cert.authority, issueDate, expirationDate]);
+        `, [caregiverUserIds[i], orgId, cert.type, cert.authority, issueDate, expirationDate]);
       }
     }
     console.log('✅ Sample certifications created');

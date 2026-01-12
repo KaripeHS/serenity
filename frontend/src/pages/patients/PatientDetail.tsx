@@ -68,11 +68,61 @@ export function PatientDetail() {
 
     if (!patient) {
         return (
-            <div className="p-6 text-center">
-                <h2 className="text-xl font-semibold text-gray-900">Patient not found</h2>
-                <Link to="/patients" className="text-primary-600 hover:underline mt-2 inline-block">
-                    Return to Patient List
-                </Link>
+            <div className="min-h-[60vh] flex items-center justify-center p-6">
+                <div className="max-w-md w-full text-center">
+                    {/* Icon */}
+                    <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                        <UserIcon className="h-8 w-8 text-gray-400" />
+                    </div>
+
+                    {/* Message */}
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Patient Not Found</h2>
+                    <p className="text-gray-600 mb-6">
+                        The patient you're looking for doesn't exist or may have been removed.
+                        This could be because:
+                    </p>
+
+                    {/* Possible reasons */}
+                    <ul className="text-left text-sm text-gray-500 mb-8 space-y-2 bg-gray-50 rounded-lg p-4">
+                        <li className="flex items-start gap-2">
+                            <span className="text-gray-400">•</span>
+                            <span>The patient ID <code className="bg-gray-200 px-1 rounded text-xs">{patientId}</code> is invalid</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                            <span className="text-gray-400">•</span>
+                            <span>The patient record was deleted or transferred</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                            <span className="text-gray-400">•</span>
+                            <span>You may not have permission to view this patient</span>
+                        </li>
+                    </ul>
+
+                    {/* Actions */}
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        <Link
+                            to="/patients"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors"
+                        >
+                            <ArrowLeftIcon className="h-4 w-4" />
+                            Back to Patient List
+                        </Link>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+
+                    {/* Help link */}
+                    <p className="mt-6 text-sm text-gray-500">
+                        Need help? Contact your administrator or{' '}
+                        <a href="mailto:support@serenitycarepartners.com" className="text-primary-600 hover:underline">
+                            support team
+                        </a>
+                    </p>
+                </div>
             </div>
         );
     }

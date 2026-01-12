@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS leads (
     service_interest VARCHAR(100) NOT NULL, -- '24/7 Care', 'Post-Op', 'Companionship', 'Dementia Care', 'Other'
     status VARCHAR(50) NOT NULL DEFAULT 'new', -- 'new', 'contacted', 'assessment_scheduled', 'contract_sent', 'converted', 'lost'
     source VARCHAR(100) NOT NULL DEFAULT 'web', -- 'web', 'referral', 'event', 'other'
+    partner_id UUID NULL, -- Optional referral partner
     estimated_value DECIMAL(10, 2), -- Monthly estimated value
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

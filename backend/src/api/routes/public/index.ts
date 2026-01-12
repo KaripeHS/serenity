@@ -21,9 +21,11 @@ router.use(publicRateLimiter);
 
 import leadsRouter from '../../public/leads.routes';
 import referralsRouter from '../../public/referrals.routes';
+import intakeRouter from '../../public/intake.routes';
 
 router.use('/leads', leadsRouter);
 router.use('/referrals', referralsRouter);
+router.use('/intake', intakeRouter);
 
 // Default organization ID (first org in system - Serenity Care Partners)
 const DEFAULT_ORG_ID = 'acdf0560-4c26-47ad-a38d-2b2153fcb039'; // Serenity Care Partners
@@ -147,7 +149,7 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
     }
 
     const db = getDbClient();
-    const applicationId = generateShortApplicationId();
+    const shortApplicationId = generateShortApplicationId();
     const submittedAtEST = formatToEST(new Date());
 
     // Build availability JSON object
@@ -174,9 +176,8 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
       experienceLevel = 'junior'; // Detailed experience suggests some background
     }
 
-    // Store application in database
+    // Store application in database (let database generate UUID for id)
     await db.insert('applicants', {
-      id: applicationId,
       organization_id: DEFAULT_ORG_ID,
       first_name: firstName,
       last_name: lastName,
@@ -220,7 +221,7 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
     });
 
     logger.info('Application submitted successfully', {
-      applicationId,
+      applicationId: shortApplicationId,
       email,
       position,
       organizationId: DEFAULT_ORG_ID
@@ -237,7 +238,7 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
           applicantName: name,
           applicantEmail: email,
           jobTitle: position,
-          applicationId,
+          applicationId: shortApplicationId,
           submittedAt: submittedAtEST  // Already formatted to EST
         });
 
@@ -247,7 +248,7 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
           applicantEmail: email,
           applicantPhone: phone,
           jobTitle: position,
-          applicationId,
+          applicationId: shortApplicationId,
           submittedAt: submittedAtEST,  // Already formatted to EST
           experience: priorExperience || 'Not specified',
           availability: availability || 'Full-time',
@@ -261,11 +262,11 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
           // }
         });
 
-        logger.info('Application confirmation emails sent', { applicationId });
+        logger.info('Application confirmation emails sent', { applicationId: shortApplicationId });
       } catch (emailError) {
         // Log email errors but don't fail the application submission
         logger.error('Failed to send application emails', {
-          applicationId,
+          applicationId: shortApplicationId,
           error: emailError
         });
       }
@@ -274,7 +275,7 @@ router.post('/careers/apply', async (req: Request, res: Response, next) => {
     res.status(201).json({
       success: true,
       message: 'Application submitted successfully',
-      applicationId: applicationId,
+      applicationId: shortApplicationId,
     });
   } catch (error) {
     logger.error('Error submitting application', { error });

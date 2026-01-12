@@ -407,7 +407,12 @@ export default function ReferralCrmDashboard() {
           <div className="bg-white rounded-lg border p-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold">Recent Leads</h3>
-              <button className="text-sm text-blue-600 hover:underline">View All</button>
+              <button
+                onClick={() => window.location.href = '/referrals/leads'}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                View All
+              </button>
             </div>
             <div className="space-y-3">
               {leads.slice(0, 5).map(lead => (
@@ -428,7 +433,12 @@ export default function ReferralCrmDashboard() {
           <div className="bg-white rounded-lg border p-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold">Top Referral Partners</h3>
-              <button className="text-sm text-blue-600 hover:underline">View All</button>
+              <button
+                onClick={() => window.location.href = '/referrals/partners'}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                View All
+              </button>
             </div>
             <div className="space-y-3">
               {partners.slice(0, 5).map(partner => (
@@ -452,7 +462,12 @@ export default function ReferralCrmDashboard() {
           <div className="bg-white rounded-lg border p-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold">Campaign Performance</h3>
-              <button className="text-sm text-blue-600 hover:underline">View All</button>
+              <button
+                onClick={() => window.location.href = '/referrals/campaigns'}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                View All
+              </button>
             </div>
             <div className="space-y-3">
               {campaigns.map(campaign => (
@@ -545,10 +560,18 @@ export default function ReferralCrmDashboard() {
                     <td className="px-4 py-3 text-sm">{lead.assignedTo}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-1">
-                        <button className="p-1.5 hover:bg-gray-100 rounded">
+                        <button
+                          onClick={() => window.location.href = `/referrals/leads/${lead.id}/edit`}
+                          className="p-1.5 hover:bg-gray-100 rounded"
+                          title="Edit lead"
+                        >
                           <Edit2 className="w-4 h-4 text-gray-500" />
                         </button>
-                        <button className="p-1.5 hover:bg-gray-100 rounded">
+                        <button
+                          onClick={() => window.location.href = `/referrals/leads/${lead.id}/contact`}
+                          className="p-1.5 hover:bg-gray-100 rounded"
+                          title="Contact lead"
+                        >
                           <Phone className="w-4 h-4 text-gray-500" />
                         </button>
                       </div>
@@ -656,10 +679,18 @@ export default function ReferralCrmDashboard() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-1">
-                      <button className="p-1.5 hover:bg-gray-100 rounded">
+                      <button
+                        onClick={() => window.location.href = `/referrals/campaigns/${campaign.id}/analytics`}
+                        className="p-1.5 hover:bg-gray-100 rounded"
+                        title="View analytics"
+                      >
                         <BarChart3 className="w-4 h-4 text-gray-500" />
                       </button>
-                      <button className="p-1.5 hover:bg-gray-100 rounded">
+                      <button
+                        onClick={() => window.location.href = `/referrals/campaigns/${campaign.id}/edit`}
+                        className="p-1.5 hover:bg-gray-100 rounded"
+                        title="Edit campaign"
+                      >
                         <Edit2 className="w-4 h-4 text-gray-500" />
                       </button>
                     </div>

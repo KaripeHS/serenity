@@ -79,6 +79,20 @@ async function runMigrations() {
     const filePath = path.join(migrationsDir, file);
     const sql = fs.readFileSync(filePath, 'utf8');
 
+    // Safety check: Warn about destructive operations in production
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isSafeMigration = /SAFE_MIGRATION/i.test(sql); // Explicitly marked as safe
+    const hasDestructiveOps = /DROP\s+TABLE(?!\s+IF\s+EXISTS\s+_migrations)/i.test(sql) ||
+                              /TRUNCATE\s+TABLE/i.test(sql) ||
+                              /DELETE\s+FROM\s+(?!_migrations)/i.test(sql);
+
+    if (isProduction && hasDestructiveOps && !isSafeMigration) {
+      console.warn(`⚠️  WARNING: ${file} contains potentially destructive operations (DROP/TRUNCATE/DELETE)`);
+      console.warn(`   Skipping in production for safety. Review and run manually if needed.`);
+      skipCount++;
+      continue;
+    }
+
     try {
       await pool.query('BEGIN');
 

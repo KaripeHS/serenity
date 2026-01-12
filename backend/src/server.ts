@@ -15,6 +15,7 @@ import { marketingAutomationJob } from './jobs/marketing-automation.job';
 import { ClinicalRiskMonitor } from './jobs/clinical-risk-monitor.job';
 
 const logger = createLogger('server');
+const BUILD_VERSION = 'dashboard-fix-v1'; // Force rebuild
 
 async function main() {
   try {
@@ -53,9 +54,23 @@ async function main() {
   }
 }
 
+// Handle unhandled rejections and exceptions
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
 // Run if this is the main module
 if (require.main === module) {
-  main();
+  main().catch((error) => {
+    console.error('Fatal error during server startup:', error);
+    process.exit(1);
+  });
 }
 
 export { main };

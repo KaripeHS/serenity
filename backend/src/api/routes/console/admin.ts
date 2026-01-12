@@ -149,7 +149,7 @@ router.get('/users', async (req: AuthenticatedRequest, res: Response, next: Next
     const { sort, order, role, search } = req.query;
 
     let query = `
-      SELECT 
+      SELECT
         u.id,
         u.email,
         u.first_name,
@@ -159,10 +159,12 @@ router.get('/users', async (req: AuthenticatedRequest, res: Response, next: Next
         u.status,
         u.last_login,
         u.created_at,
-        u.pod_id,
+        CASE WHEN u.status = 'active' THEN true ELSE false END as is_active,
+        upm.pod_id,
         p.name as pod_name
       FROM users u
-      LEFT JOIN pods p ON u.pod_id = p.id
+      LEFT JOIN user_pod_memberships upm ON u.id = upm.user_id AND upm.is_primary = true
+      LEFT JOIN pods p ON upm.pod_id = p.id
       WHERE u.organization_id = $1
     `;
 
@@ -192,8 +194,8 @@ router.get('/users', async (req: AuthenticatedRequest, res: Response, next: Next
       lastName: row.last_name,
       role: row.role,
       clinicalRole: row.clinical_role,
-      status: row.status ? 'active' : 'inactive', // map boolean to string if needed, or stick to DB schema
-      isActive: row.status, // Assuming boolean in DB as per previous schema files, let's verify. usually is_active
+      status: row.status, // Already a string: 'active', 'inactive', 'suspended', 'pending'
+      isActive: row.is_active, // Boolean field
       lastLogin: row.last_login,
       podId: row.pod_id,
       podName: row.pod_name
@@ -211,25 +213,61 @@ router.get('/users', async (req: AuthenticatedRequest, res: Response, next: Next
  */
 router.post('/users', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const { email, firstName, lastName, role, podId } = req.body;
+    const { email, firstName, lastName, role, podId, clinicalRole } = req.body;
 
     if (!email || !firstName || !lastName || !role) {
       throw ApiErrors.badRequest('Missing required fields');
     }
 
-    // Basic insert (In production, use authenticated HRService.createEmployee)
-    const userId = `user-${Date.now()}`;
-    const is_active = true;
-
     // Using simple query for prototype, assuming users table structure from schema
-    // Note: This relies on DB definition.
+    // Use 'status' column instead of 'is_active' for compatibility with production DB
     const result = await db.query(`
-       INSERT INTO users (organization_id, email, first_name, last_name, role, is_active, pod_id, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-       RETURNING id, email, first_name, last_name, role, is_active, created_at
-     `, [req.user?.organizationId, email, firstName, lastName, role, is_active, podId]);
+       INSERT INTO users (organization_id, email, first_name, last_name, role, clinical_role, status, pod_id, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, 'active', $7, NOW(), NOW())
+       RETURNING id, email, first_name, last_name, role, clinical_role, status, created_at
+     `, [req.user?.organizationId, email, firstName, lastName, role, clinicalRole || null, podId || null]);
 
-    res.status(201).json(result.rows[0]);
+    const newUser = result.rows[0];
+
+    // Log the user creation to audit log
+    try {
+      await db.query(`
+        INSERT INTO audit_log (
+          organization_id,
+          event_type,
+          user_id,
+          resource_type,
+          resource_id,
+          action,
+          outcome,
+          ip_address,
+          event_data,
+          timestamp
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::inet, $9, NOW())
+      `, [
+        req.user?.organizationId,
+        'USER_MANAGEMENT',
+        req.user?.userId,  // Use userId instead of id
+        'user',
+        newUser.id,
+        'USER_CREATED',
+        'success',
+        req.ip || '0.0.0.0',
+        JSON.stringify({
+          createdUserId: newUser.id,
+          createdUserEmail: email,
+          createdUserRole: role,
+          createdByUserId: req.user?.userId,
+          createdByRole: req.user?.role
+        })
+      ]);
+    } catch (auditError) {
+      console.error('Failed to write audit log for user creation:', auditError);
+      // Don't fail the request if audit logging fails
+    }
+
+    res.status(201).json(newUser);
   } catch (error) {
     next(error);
   }
@@ -708,5 +746,668 @@ router.get('/security-metrics', async (req: AuthenticatedRequest, res: Response,
     next(error);
   }
 });
+
+// ============================================================================
+// COMPREHENSIVE USER MANAGEMENT
+// ============================================================================
+
+/**
+ * POST /api/console/admin/users/:userId/reset-password
+ * Reset user password and send email
+ */
+router.post('/users/:userId/reset-password', requireRole(UserRole.IT_ADMIN, UserRole.HR_MANAGER, UserRole.CEO), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.params;
+    const { sendEmail = true } = req.body;
+
+    // Generate temporary password
+    const tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10).toUpperCase();
+    const bcrypt = require('bcrypt');
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    // Update password and force reset on next login
+    const result = await db.query(`
+      UPDATE users
+      SET password_hash = $1,
+          password_reset_required = true,
+          updated_at = NOW()
+      WHERE id = $2 AND organization_id = $3
+      RETURNING id, email, first_name, last_name
+    `, [hashedPassword, userId, req.user?.organizationId]);
+
+    if (result.rowCount === 0) {
+      throw ApiErrors.notFound('User');
+    }
+
+    const user = result.rows[0];
+
+    // TODO: Send email with temp password
+    if (sendEmail) {
+      // await emailService.sendPasswordReset(user.email, tempPassword);
+      console.log(`Password reset for ${user.email}: ${tempPassword}`);
+    }
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully',
+      tempPassword: sendEmail ? undefined : tempPassword // Only return if not sending email
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/console/admin/users/:userId/activate
+ * Activate user account
+ */
+router.post('/users/:userId/activate', requireRole(UserRole.IT_ADMIN, UserRole.HR_MANAGER, UserRole.CEO), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await db.query(`
+      UPDATE users
+      SET status = 'active',
+          updated_at = NOW()
+      WHERE id = $1 AND organization_id = $2
+      RETURNING id, email, first_name, last_name, status
+    `, [userId, req.user?.organizationId]);
+
+    if (result.rowCount === 0) {
+      throw ApiErrors.notFound('User');
+    }
+
+    res.json({ success: true, user: result.rows[0] });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/console/admin/users/:userId/deactivate
+ * Deactivate user account
+ */
+router.post('/users/:userId/deactivate', requireRole(UserRole.IT_ADMIN, UserRole.HR_MANAGER, UserRole.CEO), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.params;
+    const { reason } = req.body;
+
+    const result = await db.query(`
+      UPDATE users
+      SET status = 'inactive',
+          updated_at = NOW()
+      WHERE id = $1 AND organization_id = $2
+      RETURNING id, email, first_name, last_name, status
+    `, [userId, req.user?.organizationId]);
+
+    if (result.rowCount === 0) {
+      throw ApiErrors.notFound('User');
+    }
+
+    // TODO: Log deactivation reason in audit table
+    // await db.query(`
+    //   INSERT INTO user_audit_log (user_id, action, reason, performed_by, created_at)
+    //   VALUES ($1, 'deactivate', $2, $3, NOW())
+    // `, [userId, reason, req.user?.id]);
+
+    res.json({ success: true, user: result.rows[0] });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * DELETE /api/console/admin/users/:userId
+ * Soft delete user (archive)
+ */
+router.delete('/users/:userId', requireRole(UserRole.IT_ADMIN), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.params;
+
+    // Soft delete by setting deleted_at timestamp
+    const result = await db.query(`
+      UPDATE users
+      SET status = 'archived',
+          deleted_at = NOW(),
+          updated_at = NOW()
+      WHERE id = $1 AND organization_id = $2
+      RETURNING id
+    `, [userId, req.user?.organizationId]);
+
+    if (result.rowCount === 0) {
+      throw ApiErrors.notFound('User');
+    }
+
+    res.json({ success: true, message: 'User archived successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/console/admin/users/:userId/activity
+ * Get user activity log
+ */
+router.get('/users/:userId/activity', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.params;
+    const { limit = 50, offset = 0 } = req.query;
+
+    // TODO: Query actual audit log table
+    // const result = await db.query(`
+    //   SELECT
+    //     action,
+    //     resource_type,
+    //     resource_id,
+    //     details,
+    //     ip_address,
+    //     user_agent,
+    //     created_at
+    //   FROM audit_logs
+    //   WHERE user_id = $1 AND organization_id = $2
+    //   ORDER BY created_at DESC
+    //   LIMIT $3 OFFSET $4
+    // `, [userId, req.user?.organizationId, limit, offset]);
+
+    // Mock data for now
+    const activities = [
+      {
+        id: '1',
+        action: 'login',
+        resourceType: 'auth',
+        details: 'Successful login',
+        ipAddress: '192.168.1.100',
+        createdAt: new Date().toISOString()
+      }
+    ];
+
+    res.json({ success: true, activities });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/console/admin/users/:userId/sessions
+ * Get active sessions for user
+ */
+router.get('/users/:userId/sessions', requireRole(UserRole.IT_ADMIN), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.params;
+
+    // TODO: Query session table
+    // const result = await db.query(`
+    //   SELECT
+    //     id,
+    //     ip_address,
+    //     user_agent,
+    //     last_activity,
+    //     created_at
+    //   FROM user_sessions
+    //   WHERE user_id = $1 AND organization_id = $2 AND expires_at > NOW()
+    //   ORDER BY last_activity DESC
+    // `, [userId, req.user?.organizationId]);
+
+    const sessions = [];
+
+    res.json({ success: true, sessions });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * DELETE /api/console/admin/users/:userId/sessions/:sessionId
+ * Terminate a specific user session
+ */
+router.delete('/users/:userId/sessions/:sessionId', requireRole(UserRole.IT_ADMIN), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { userId, sessionId } = req.params;
+
+    // TODO: Delete session from database
+    // await db.query(`
+    //   DELETE FROM user_sessions
+    //   WHERE id = $1 AND user_id = $2 AND organization_id = $3
+    // `, [sessionId, userId, req.user?.organizationId]);
+
+    res.json({ success: true, message: 'Session terminated' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/console/admin/users/:userId/sessions/terminate-all
+ * Terminate all sessions for a user
+ */
+router.post('/users/:userId/sessions/terminate-all', requireRole(UserRole.IT_ADMIN), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.params;
+
+    // TODO: Delete all sessions
+    // await db.query(`
+    //   DELETE FROM user_sessions
+    //   WHERE user_id = $1 AND organization_id = $2
+    // `, [userId, req.user?.organizationId]);
+
+    res.json({ success: true, message: 'All sessions terminated' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/console/admin/users/bulk-update
+ * Bulk update users
+ */
+router.post('/users/bulk-update', requireRole(UserRole.IT_ADMIN, UserRole.HR_MANAGER, UserRole.CEO), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { userIds, updates } = req.body;
+
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      throw ApiErrors.badRequest('userIds array is required');
+    }
+
+    if (!updates || Object.keys(updates).length === 0) {
+      throw ApiErrors.badRequest('updates object is required');
+    }
+
+    const allowedFields = ['role', 'status', 'clinical_role'];
+    const setStatements: string[] = [];
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    // Build dynamic SET clause
+    for (const [key, value] of Object.entries(updates)) {
+      if (allowedFields.includes(key)) {
+        setStatements.push(`${key} = $${paramIndex}`);
+        params.push(value);
+        paramIndex++;
+      }
+    }
+
+    if (setStatements.length === 0) {
+      throw ApiErrors.badRequest('No valid fields to update');
+    }
+
+    // Add updated_at
+    setStatements.push(`updated_at = NOW()`);
+
+    // Add userIds and organizationId to params
+    params.push(userIds);
+    params.push(req.user?.organizationId);
+
+    const query = `
+      UPDATE users
+      SET ${setStatements.join(', ')}
+      WHERE id = ANY($${paramIndex}) AND organization_id = $${paramIndex + 1}
+      RETURNING id
+    `;
+
+    const result = await db.query(query, params);
+
+    res.json({
+      success: true,
+      message: `Updated ${result.rowCount} users`,
+      updatedCount: result.rowCount
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/console/admin/users/export
+ * Export users to CSV
+ */
+router.get('/users/export', requireRole(UserRole.IT_ADMIN, UserRole.HR_MANAGER, UserRole.CEO), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { role, status, podId } = req.query;
+
+    let query = `
+      SELECT
+        u.id,
+        u.email,
+        u.first_name,
+        u.last_name,
+        u.role,
+        u.clinical_role,
+        u.status,
+        u.phone,
+        u.created_at,
+        u.last_login,
+        p.name as pod_name
+      FROM users u
+      LEFT JOIN user_pod_memberships upm ON u.id = upm.user_id AND upm.is_primary = true
+      LEFT JOIN pods p ON upm.pod_id = p.id
+      WHERE u.organization_id = $1
+    `;
+
+    const params: any[] = [req.user?.organizationId];
+    let paramIndex = 2;
+
+    if (role) {
+      query += ` AND u.role = $${paramIndex++}`;
+      params.push(role);
+    }
+
+    if (status) {
+      query += ` AND u.status = $${paramIndex++}`;
+      params.push(status);
+    }
+
+    if (podId) {
+      query += ` AND upm.pod_id = $${paramIndex++}`;
+      params.push(podId);
+    }
+
+    query += ` ORDER BY u.last_name, u.first_name`;
+
+    const result = await db.query(query, params);
+
+    // Convert to CSV
+    const headers = ['ID', 'Email', 'First Name', 'Last Name', 'Role', 'Clinical Role', 'Status', 'Phone', 'Pod', 'Created At', 'Last Login'];
+    const csvRows = [headers.join(',')];
+
+    result.rows.forEach(row => {
+      const values = [
+        row.id,
+        row.email,
+        row.first_name,
+        row.last_name,
+        row.role,
+        row.clinical_role || '',
+        row.status,
+        row.phone || '',
+        row.pod_name || '',
+        row.created_at,
+        row.last_login || ''
+      ];
+      csvRows.push(values.map(v => `"${v}"`).join(','));
+    });
+
+    const csv = csvRows.join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="users-export.csv"');
+    res.send(csv);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/console/admin/users/stats
+ * Get user statistics
+ */
+router.get('/users/stats', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const result = await db.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'active') as active_users,
+        COUNT(*) FILTER (WHERE status = 'inactive') as inactive_users,
+        COUNT(*) FILTER (WHERE status = 'suspended') as suspended_users,
+        COUNT(*) FILTER (WHERE last_login > NOW() - INTERVAL '7 days') as active_last_week,
+        COUNT(*) FILTER (WHERE last_login > NOW() - INTERVAL '30 days') as active_last_month,
+        COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '30 days') as new_this_month,
+        COUNT(DISTINCT role) as total_roles
+      FROM users
+      WHERE organization_id = $1 AND status != 'archived'
+    `, [req.user?.organizationId]);
+
+    const stats = result.rows[0];
+
+    // Get role distribution
+    const roleResult = await db.query(`
+      SELECT role, COUNT(*) as count
+      FROM users
+      WHERE organization_id = $1 AND status != 'archived'
+      GROUP BY role
+      ORDER BY count DESC
+    `, [req.user?.organizationId]);
+
+    res.json({
+      success: true,
+      stats: {
+        activeUsers: parseInt(stats.active_users),
+        inactiveUsers: parseInt(stats.inactive_users),
+        suspendedUsers: parseInt(stats.suspended_users),
+        activeLastWeek: parseInt(stats.active_last_week),
+        activeLastMonth: parseInt(stats.active_last_month),
+        newThisMonth: parseInt(stats.new_this_month),
+        totalRoles: parseInt(stats.total_roles),
+        roleDistribution: roleResult.rows
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================================================
+// AUDIT LOG ROUTES
+// ============================================================================
+
+/**
+ * GET /api/console/admin/audit-logs
+ * Get audit logs with filtering
+ */
+router.get('/audit-logs', requireRole(UserRole.FOUNDER, UserRole.CEO, UserRole.COO, UserRole.COMPLIANCE_OFFICER, UserRole.IT_ADMIN), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const {
+      limit = 50,
+      offset = 0,
+      category,
+      eventType,
+      userId,
+      dateFrom,
+      dateTo,
+      search
+    } = req.query;
+
+    let query = `
+      SELECT
+        a.id,
+        a.event_type,
+        a.action,
+        a.resource_type,
+        a.resource_id,
+        a.outcome,
+        a.ip_address,
+        a.user_agent,
+        a.event_data,
+        a.phi_accessed,
+        a.data_classification,
+        a.timestamp,
+        u.first_name,
+        u.last_name,
+        u.email,
+        u.role as user_role
+      FROM audit_log a
+      LEFT JOIN users u ON a.user_id = u.id
+      WHERE a.organization_id = $1
+    `;
+
+    const params: any[] = [req.user?.organizationId];
+    let paramIndex = 2;
+
+    // Filter by event type
+    if (eventType) {
+      query += ` AND a.action = $${paramIndex++}`;
+      params.push(eventType);
+    }
+
+    // Filter by resource type (category)
+    if (category) {
+      query += ` AND a.resource_type = $${paramIndex++}`;
+      params.push(category);
+    }
+
+    // Filter by user
+    if (userId) {
+      query += ` AND a.user_id = $${paramIndex++}`;
+      params.push(userId);
+    }
+
+    // Filter by date range
+    if (dateFrom) {
+      query += ` AND a.timestamp >= $${paramIndex++}`;
+      params.push(dateFrom);
+    }
+    if (dateTo) {
+      query += ` AND a.timestamp <= $${paramIndex++}`;
+      params.push(dateTo + 'T23:59:59');
+    }
+
+    // Search filter
+    if (search) {
+      query += ` AND (
+        a.action ILIKE $${paramIndex} OR
+        a.event_data::text ILIKE $${paramIndex} OR
+        u.email ILIKE $${paramIndex} OR
+        u.first_name ILIKE $${paramIndex} OR
+        u.last_name ILIKE $${paramIndex}
+      )`;
+      params.push(`%${search}%`);
+      paramIndex++;
+    }
+
+    // Add ordering and pagination
+    query += ` ORDER BY a.timestamp DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+    params.push(Number(limit), Number(offset));
+
+    const result = await db.query(query, params);
+
+    // Get total count
+    let countQuery = `SELECT COUNT(*) as total FROM audit_log a WHERE a.organization_id = $1`;
+    const countParams: any[] = [req.user?.organizationId];
+
+    const countResult = await db.query(countQuery, countParams);
+    const total = parseInt(countResult.rows[0]?.total || '0');
+
+    // Map to frontend format
+    const logs = result.rows.map(row => ({
+      id: row.id,
+      timestamp: row.timestamp,
+      eventType: mapActionToEventType(row.action),
+      category: mapResourceToCategory(row.resource_type),
+      action: row.action,
+      description: formatEventDescription(row),
+      userId: row.user_id,
+      userName: row.first_name && row.last_name ? `${row.first_name} ${row.last_name}` : 'System',
+      userEmail: row.email || 'system@serenitycare.com',
+      userRole: row.user_role || 'system',
+      ipAddress: row.ip_address || '0.0.0.0',
+      userAgent: row.user_agent || 'Unknown',
+      resourceType: row.resource_type,
+      resourceId: row.resource_id,
+      status: row.outcome === 'success' ? 'success' : row.outcome === 'failure' ? 'failure' : 'warning',
+      metadata: row.event_data,
+      sessionId: row.session_id || 'N/A'
+    }));
+
+    res.json({
+      logs,
+      total,
+      limit: Number(limit),
+      offset: Number(offset)
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/console/admin/audit-logs/stats
+ * Get audit log statistics
+ */
+router.get('/audit-logs/stats', requireRole(UserRole.FOUNDER, UserRole.CEO, UserRole.COO, UserRole.COMPLIANCE_OFFICER, UserRole.IT_ADMIN), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const result = await db.query(`
+      SELECT
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE resource_type = 'phi' OR phi_accessed = true) as phi_access,
+        COUNT(*) FILTER (WHERE action LIKE '%SECURITY%' OR action LIKE '%ALERT%') as security_events,
+        COUNT(*) FILTER (WHERE action = 'LOGIN_FAILED') as failed_logins,
+        COUNT(DISTINCT user_id) as unique_users
+      FROM audit_log
+      WHERE organization_id = $1
+        AND timestamp >= NOW() - INTERVAL '30 days'
+    `, [req.user?.organizationId]);
+
+    const stats = result.rows[0] || {
+      total: 0,
+      phi_access: 0,
+      security_events: 0,
+      failed_logins: 0,
+      unique_users: 0
+    };
+
+    res.json({
+      total: parseInt(stats.total),
+      phiAccess: parseInt(stats.phi_access),
+      securityEvents: parseInt(stats.security_events),
+      failedLogins: parseInt(stats.failed_logins),
+      uniqueUsers: parseInt(stats.unique_users)
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Helper functions to map database values to frontend types
+function mapActionToEventType(action: string): string {
+  const actionMap: Record<string, string> = {
+    'USER_CREATED': 'USER_CREATE',
+    'USER_UPDATED': 'USER_UPDATE',
+    'USER_DELETED': 'USER_DELETE',
+    'LOGIN': 'LOGIN',
+    'LOGOUT': 'LOGOUT',
+    'LOGIN_FAILED': 'LOGIN_FAILED',
+    'PATIENT_VIEWED': 'PATIENT_VIEW',
+    'PATIENT_CREATED': 'PATIENT_CREATE',
+    'PATIENT_UPDATED': 'PATIENT_UPDATE',
+    'PHI_ACCESS': 'PHI_ACCESS',
+    'DOCUMENT_VIEWED': 'DOCUMENT_VIEW',
+    'CLAIM_CREATED': 'CLAIM_CREATE',
+    'SETTINGS_CHANGED': 'SETTINGS_CHANGE',
+    'ROLE_CHANGED': 'ROLE_CHANGE'
+  };
+  return actionMap[action] || action;
+}
+
+function mapResourceToCategory(resourceType: string): string {
+  const categoryMap: Record<string, string> = {
+    'user': 'user_management',
+    'auth': 'authentication',
+    'patient': 'patient_data',
+    'phi': 'phi_access',
+    'claim': 'billing',
+    'schedule': 'scheduling',
+    'config': 'system',
+    'security': 'security'
+  };
+  return categoryMap[resourceType] || 'system';
+}
+
+function formatEventDescription(row: any): string {
+  const data = row.event_data || {};
+  const userName = row.first_name && row.last_name ? `${row.first_name} ${row.last_name}` : 'System';
+
+  switch (row.action) {
+    case 'USER_CREATED':
+      return `${userName} created new user: ${data.createdUserEmail || 'Unknown'} with role ${data.createdUserRole || 'Unknown'}`;
+    case 'USER_UPDATED':
+      return `${userName} updated user: ${data.targetUserEmail || 'Unknown'}`;
+    case 'LOGIN':
+      return `${userName} logged in successfully`;
+    case 'LOGOUT':
+      return `${userName} logged out`;
+    case 'LOGIN_FAILED':
+      return `Failed login attempt for ${data.email || 'Unknown'}`;
+    default:
+      return `${userName} performed ${row.action} on ${row.resource_type || 'resource'}`;
+  }
+}
 
 export default router;

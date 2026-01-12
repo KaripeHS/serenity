@@ -57,6 +57,11 @@ import clientBudgetsRouter from './client-budgets.routes';
 import referralCrmRouter from './referral-crm.routes';
 import shiftDifferentialRouter from './shift-differential.routes';
 import lmsRouter from './lms.routes';
+import subscriptionsRouter from './subscriptions.routes';
+import executiveRouter from './executive';
+import intakeRouter from './intake.routes';
+import notificationsRouter from './notifications.routes';
+import usersRouter from './users.routes';
 
 const router = Router();
 
@@ -66,11 +71,15 @@ router.use(requireAuth);
 // Finance & Accounting routes (Phase 11)
 router.use('/finance', financeRouter);
 
-// Dashboard builder routes (old)
-// router.use('/dashboard', dashboardRouter);
+// Dashboard metrics routes (includes /metrics endpoint for Executive Dashboard)
+router.use('/dashboard', dashboardRouter);
 
-// Dashboard data API routes (new - Phase 5.1)
+// Dashboard-specific view routes (executive, hr, operations, etc.)
+// Merged under /dashboard namespace to allow endpoints like /dashboard/executive
 router.use('/dashboard', dashboardsRouter);
+
+// Executive Dashboard routes (comprehensive CEO metrics)
+router.use('/executive', executiveRouter);
 
 // Pods management routes
 router.use('/pods', podsRouter);
@@ -223,6 +232,22 @@ router.use('/shift-differential', shiftDifferentialRouter);
 // BIC Feature: LMS (Learning Management System)
 // Course content, quizzes, learning paths, and certificates
 router.use('/lms', lmsRouter);
+
+// Subscriptions & Integrations Management
+// Real-time status of all third-party services, API keys, and costs
+router.use('/subscriptions', subscriptionsRouter);
+
+// Client Self-Service Intake Management
+// Manage access codes, invitations, and review submissions
+router.use('/intake', intakeRouter);
+
+// Unified Notifications routes
+// Aggregates alerts from credentials, coverage, training, claims, incidents, etc.
+router.use('/notifications', notificationsRouter);
+
+// User Profile routes
+// Profile management, password change for authenticated users
+router.use('/users', usersRouter);
 
 // Intelligent Scheduling routes (Phase 6)
 import { createSchedulingRoutes } from './scheduling';

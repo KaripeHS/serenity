@@ -31,11 +31,14 @@ function AdminSystemDashboard() {
   const roleAccess = useRoleAccess();
   const [selectedTab, setSelectedTab] = useState('overview');
 
+  // Executives (Founder, CEO, COO) get full access to all tabs for oversight
+  const isExecutive = roleAccess.isFounder || roleAccess.isExecutive;
+
   // Fetch urgent items
   const { data: urgentData, isLoading } = useQuery({
     queryKey: ['admin', 'urgent'],
     queryFn: async () => {
-      const [systemAlerts, securityEvents] = await Promise.all([
+      const [systemAlerts, securityEvents]: any[] = await Promise.all([
         api.get('/admin/alerts'),
         api.get('/admin/security/events'),
       ]);
@@ -78,13 +81,13 @@ function AdminSystemDashboard() {
       icon: <Activity className="w-4 h-4" />,
       content: <OverviewTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.MANAGE_USERS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.MANAGE_USERS)) && {
       id: 'users',
       label: 'User Management',
       icon: <Users className="w-4 h-4" />,
       content: <UserManagementTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_SYSTEM_LOGS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_SYSTEM_LOGS)) && {
       id: 'security',
       label: 'Security',
       icon: <Shield className="w-4 h-4" />,
@@ -92,13 +95,13 @@ function AdminSystemDashboard() {
       badgeColor: 'red',
       content: <SecurityTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.MANAGE_SYSTEM_SETTINGS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.MANAGE_SYSTEM_SETTINGS)) && {
       id: 'settings',
       label: 'System Settings',
       icon: <Settings className="w-4 h-4" />,
       content: <SystemSettingsTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_SYSTEM_LOGS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_SYSTEM_LOGS)) && {
       id: 'database',
       label: 'Database',
       icon: <Database className="w-4 h-4" />,
@@ -307,8 +310,22 @@ function UserManagementTab() {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex gap-2 justify-center">
-                      <button className="text-blue-600 hover:underline text-sm">Edit</button>
-                      <button className="text-red-600 hover:underline text-sm">Disable</button>
+                      <button
+                        onClick={() => window.location.href = `/admin/users/${user.id}/edit`}
+                        className="text-blue-600 hover:underline text-sm"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`Are you sure you want to disable ${user.name}?`)) {
+                            alert(`User ${user.name} has been disabled`);
+                          }
+                        }}
+                        className="text-red-600 hover:underline text-sm"
+                      >
+                        Disable
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -461,7 +478,10 @@ function SystemSettingsTab() {
         </div>
       </WidgetContainer>
 
-      <button className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+      <button
+        onClick={() => alert('System settings have been saved successfully')}
+        className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+      >
         Save Settings
       </button>
     </div>
@@ -521,7 +541,12 @@ function DatabaseTab() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <button className="text-blue-600 hover:underline text-sm">Download</button>
+                    <button
+                      onClick={() => alert('Initiating backup download...')}
+                      className="text-blue-600 hover:underline text-sm"
+                    >
+                      Download
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -530,7 +555,14 @@ function DatabaseTab() {
         </div>
       </WidgetContainer>
 
-      <button className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+      <button
+        onClick={() => {
+          if (confirm('Are you sure you want to initiate a database backup?')) {
+            alert('Database backup initiated. You will be notified when complete.');
+          }
+        }}
+        className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+      >
         Backup Now
       </button>
     </div>

@@ -363,18 +363,18 @@ export default function WorkingHomePage() {
     // Executive/Default - show all options
     return [
       {
+        title: 'Manage Users',
+        description: 'Create & manage access',
+        icon: UsersIcon,
+        href: '/admin/users',
+        color: '#8B5CF6'
+      },
+      {
         title: 'Schedule Visit',
         description: 'Create new patient visit',
         icon: CalendarIcon,
         href: '/scheduling/new',
         color: '#3B82F6'
-      },
-      {
-        title: 'Clock In/Out',
-        description: 'EVV time tracking',
-        icon: ClockIcon,
-        href: '/evv/clock',
-        color: '#10B981'
       },
       {
         title: 'Add Patient',
@@ -474,6 +474,15 @@ export default function WorkingHomePage() {
       priority: 'medium'
     },
     {
+      title: 'Scheduling Calendar',
+      description: 'Advanced calendar with search, filters, and caregiver matching',
+      icon: CalendarIcon,
+      href: '/dashboard/scheduling-calendar',
+      users: ['Schedulers', 'Operations'],
+      features: ['Week/Month Views', 'Search & Filter', 'Caregiver Assignment', 'Priority Alerts'],
+      priority: 'medium'
+    },
+    {
       title: 'Family Portal',
       description: 'Patient family engagement with visit updates and communication',
       icon: BuildingOffice2Icon,
@@ -489,6 +498,153 @@ export default function WorkingHomePage() {
       href: '/dashboard/training',
       users: ['Training Coordinator', 'HR'],
       features: ['Course Management', 'Certification Tracking', 'Compliance Training', 'Skills Development'],
+      priority: 'low'
+    }
+  ];
+
+  // Admin & System Management Tools (CEO only)
+  const adminTools: DashboardLink[] = [
+    {
+      title: 'User Management',
+      description: 'Create and manage user accounts, roles, and permissions',
+      icon: UsersIcon,
+      href: '/admin/users',
+      users: ['CEO', 'Founder'],
+      features: ['Create Users', 'Edit Roles', 'View Credentials', 'Access Control'],
+      priority: 'high'
+    },
+    {
+      title: 'Roles & Permissions',
+      description: 'Configure role-based access control and permissions',
+      icon: ShieldCheckIcon,
+      href: '/admin/roles',
+      users: ['CEO', 'Founder'],
+      features: ['Role Configuration', 'Permission Management', 'Access Levels'],
+      priority: 'high'
+    },
+    {
+      title: 'Pod Management',
+      description: 'Organize teams into geographic care pods',
+      icon: BuildingOffice2Icon,
+      href: '/admin/pods',
+      users: ['CEO', 'Operations'],
+      features: ['Create Pods', 'Assign Team Leads', 'Pod Metrics', 'Territory Management'],
+      priority: 'medium'
+    },
+    {
+      title: 'Audit Logs',
+      description: 'View system activity and access history',
+      icon: DocumentTextIcon,
+      href: '/admin/audit',
+      users: ['CEO', 'Compliance'],
+      features: ['Activity Logs', 'Access History', 'Compliance Tracking', 'Security Events'],
+      priority: 'medium'
+    }
+  ];
+
+  // Finance & Accounting Tools (CEO/CFO only)
+  const financeTools: DashboardLink[] = [
+    {
+      title: 'Bank Accounts',
+      description: 'Manage bank accounts and reconciliation',
+      icon: BanknotesIcon,
+      href: '/dashboard/finance/bank-accounts',
+      users: ['CFO', 'Finance'],
+      features: ['Account Management', 'Reconciliation', 'Transaction History'],
+      priority: 'high'
+    },
+    {
+      title: 'Financial Reports',
+      description: 'P&L, Balance Sheet, Cash Flow statements',
+      icon: ChartBarIcon,
+      href: '/dashboard/finance/reports',
+      users: ['CFO', 'Finance'],
+      features: ['P&L Reports', 'Balance Sheet', 'Cash Flow', 'Financial Analysis'],
+      priority: 'high'
+    },
+    {
+      title: 'Vendor Center',
+      description: 'Manage vendors and accounts payable',
+      icon: TruckIcon,
+      href: '/dashboard/finance/vendors',
+      users: ['Finance', 'Operations'],
+      features: ['Vendor Management', 'AP Tracking', 'Payment Processing'],
+      priority: 'medium'
+    },
+    {
+      title: 'Expense Portal',
+      description: 'Employee expense tracking and reimbursement',
+      icon: CurrencyDollarIcon,
+      href: '/dashboard/finance/expenses',
+      users: ['Finance', 'All Staff'],
+      features: ['Expense Submission', 'Approval Workflow', 'Reimbursement'],
+      priority: 'medium'
+    },
+    {
+      title: 'Bank Feeds',
+      description: 'Automated bank transaction imports',
+      icon: CogIcon,
+      href: '/dashboard/finance/bank-feeds',
+      users: ['Finance'],
+      features: ['Transaction Import', 'Auto-Categorization', 'Bank Sync'],
+      priority: 'medium'
+    },
+    {
+      title: 'Payroll Manager',
+      description: 'Payroll processing and tax compliance',
+      icon: BanknotesIcon,
+      href: '/dashboard/finance/payroll',
+      users: ['Finance', 'HR'],
+      features: ['Payroll Processing', 'Tax Calculations', 'Direct Deposit', 'Pay Stubs'],
+      priority: 'high'
+    }
+  ];
+
+  // Advanced/Specialized Dashboards
+  const advancedDashboards: DashboardLink[] = [
+    {
+      title: 'Billing AR Dashboard',
+      description: 'Accounts receivable and aging analysis',
+      icon: CurrencyDollarIcon,
+      href: '/dashboard/billing-ar',
+      users: ['Billing', 'Finance'],
+      features: ['AR Aging', 'Collections', 'Payment Tracking'],
+      priority: 'medium'
+    },
+    {
+      title: 'Background Checks',
+      description: 'Manage employee background screening',
+      icon: ShieldCheckIcon,
+      href: '/dashboard/background-checks',
+      users: ['HR', 'Compliance'],
+      features: ['Screening Status', 'Clearance Tracking', 'Compliance Monitoring'],
+      priority: 'medium'
+    },
+    {
+      title: 'Credential Tracking',
+      description: 'Monitor staff credentials and expiration dates',
+      icon: DocumentTextIcon,
+      href: '/dashboard/credentials',
+      users: ['HR', 'Compliance'],
+      features: ['License Expiration', 'Certification Tracking', 'Renewal Alerts'],
+      priority: 'medium'
+    },
+    {
+      title: 'Care Plan Editor',
+      description: 'Create and manage patient care plans',
+      icon: HeartIcon,
+      href: '/dashboard/care-plans',
+      users: ['Clinical', 'Nurses'],
+      features: ['Plan Creation', 'Goal Setting', 'Progress Tracking'],
+      priority: 'medium'
+    },
+    {
+      title: 'CRM Lead Pipeline',
+      description: 'Manage leads and business development',
+      icon: ChartBarIcon,
+      href: '/dashboard/crm',
+      users: ['Sales', 'Executive'],
+      features: ['Lead Tracking', 'Pipeline Management', 'Conversion Analytics'],
       priority: 'low'
     }
   ];
@@ -707,57 +863,81 @@ export default function WorkingHomePage() {
             </Link>
           </div>
         ) : metrics && (
-          /* Default/Executive metrics */
+          /* Default/Executive metrics - hide financial data from clinical roles */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fade-in">
-            <Card hoverable className="transition-all hover:scale-105">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600 m-0">Active Patients</h3>
-                <div className="p-2 bg-primary-50 rounded-lg">
-                  <UserGroupIcon className="h-5 w-5 text-primary-600" />
+            <Link to="/dashboard/clinical" className="block">
+              <Card hoverable className="transition-all hover:scale-105 cursor-pointer">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-600 m-0">Active Patients</h3>
+                  <div className="p-2 bg-primary-50 rounded-lg">
+                    <UserGroupIcon className="h-5 w-5 text-primary-600" />
+                  </div>
                 </div>
-              </div>
-              <div className="text-3xl font-bold text-gray-900">{metrics.activePatients}</div>
-              <p className="text-xs text-gray-500 mt-1 m-0">Across Ohio counties</p>
-            </Card>
+                <div className="text-3xl font-bold text-gray-900">{metrics.activePatients}</div>
+                <p className="text-xs text-gray-500 mt-1 m-0">Across Ohio counties</p>
+              </Card>
+            </Link>
 
-            <Card hoverable className="transition-all hover:scale-105">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600 m-0">Active Staff</h3>
-                <div className="p-2 bg-success-50 rounded-lg">
-                  <UsersIcon className="h-5 w-5 text-success-600" />
+            <Link to="/dashboard/hr" className="block">
+              <Card hoverable className="transition-all hover:scale-105 cursor-pointer">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-600 m-0">Active Staff</h3>
+                  <div className="p-2 bg-success-50 rounded-lg">
+                    <UsersIcon className="h-5 w-5 text-success-600" />
+                  </div>
                 </div>
-              </div>
-              <div className="text-3xl font-bold text-gray-900">{metrics.activeStaff}</div>
-              <p className="text-xs text-gray-500 mt-1 m-0">Caregivers & clinical staff</p>
-            </Card>
+                <div className="text-3xl font-bold text-gray-900">{metrics.activeStaff}</div>
+                <p className="text-xs text-gray-500 mt-1 m-0">Caregivers & clinical staff</p>
+              </Card>
+            </Link>
 
-            <Card hoverable className="transition-all hover:scale-105">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600 m-0">Today's Visits</h3>
-                <div className="p-2 bg-caregiver-50 rounded-lg">
-                  <CalendarIcon className="h-5 w-5 text-caregiver-600" />
+            <Link to="/dashboard/operations" className="block">
+              <Card hoverable className="transition-all hover:scale-105 cursor-pointer">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-600 m-0">Today's Visits</h3>
+                  <div className="p-2 bg-caregiver-50 rounded-lg">
+                    <CalendarIcon className="h-5 w-5 text-caregiver-600" />
+                  </div>
                 </div>
-              </div>
-              <div className="text-3xl font-bold text-gray-900">
-                {metrics.completedVisitsToday}/{metrics.scheduledVisitsToday}
-              </div>
-              <p className="text-xs text-gray-500 mt-1 m-0">
-                {metrics.scheduledVisitsToday > 0 ? Math.round((metrics.completedVisitsToday / metrics.scheduledVisitsToday) * 100) : 0}% completion rate
-              </p>
-            </Card>
+                <div className="text-3xl font-bold text-gray-900">
+                  {metrics.completedVisitsToday}/{metrics.scheduledVisitsToday}
+                </div>
+                <p className="text-xs text-gray-500 mt-1 m-0">
+                  {metrics.scheduledVisitsToday > 0 ? Math.round((metrics.completedVisitsToday / metrics.scheduledVisitsToday) * 100) : 0}% completion rate
+                </p>
+              </Card>
+            </Link>
 
-            <Card hoverable className="transition-all hover:scale-105">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600 m-0">Monthly Revenue</h3>
-                <div className="p-2 bg-success-50 rounded-lg">
-                  <CurrencyDollarIcon className="h-5 w-5 text-success-600" />
-                </div>
-              </div>
-              <div className="text-3xl font-bold text-gray-900">{formatCurrency(metrics.monthlyRevenue)}</div>
-              <p className="text-xs text-gray-500 mt-1 m-0">
-                EVV Compliance: {(metrics.evvComplianceRate * 100).toFixed(1)}%
-              </p>
-            </Card>
+            {/* Only show financial data to executives and finance roles - hide from clinical/care team */}
+            {(isExecutiveRole || isFinanceRole) ? (
+              <Link to="/dashboard/billing" className="block">
+                <Card hoverable className="transition-all hover:scale-105 cursor-pointer">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-gray-600 m-0">Monthly Revenue</h3>
+                    <div className="p-2 bg-success-50 rounded-lg">
+                      <CurrencyDollarIcon className="h-5 w-5 text-success-600" />
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-gray-900">{formatCurrency(metrics.monthlyRevenue)}</div>
+                  <p className="text-xs text-gray-500 mt-1 m-0">
+                    EVV Compliance: {(metrics.evvComplianceRate * 100).toFixed(1)}%
+                  </p>
+                </Card>
+              </Link>
+            ) : (
+              <Link to="/evv/monitor" className="block">
+                <Card hoverable className="transition-all hover:scale-105 cursor-pointer">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-gray-600 m-0">EVV Compliance</h3>
+                    <div className="p-2 bg-success-50 rounded-lg">
+                      <ClockIcon className="h-5 w-5 text-success-600" />
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-gray-900">{(metrics.evvComplianceRate * 100).toFixed(1)}%</div>
+                  <p className="text-xs text-gray-500 mt-1 m-0">Electronic visit verification</p>
+                </Card>
+              </Link>
+            )}
           </div>
         )}
 
@@ -917,6 +1097,136 @@ export default function WorkingHomePage() {
             </div>
           </div>
         </div>
+
+        {/* Admin & System Management - CEO Only */}
+        {isExecutiveRole && (
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#111827', marginBottom: '1rem' }}>Admin & System Management</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+              {adminTools.map((tool, index) => {
+                const Icon = tool.icon;
+                return (
+                  <div key={index} style={{
+                    backgroundColor: 'white',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #e5e7eb',
+                    padding: '1rem',
+                    transition: 'all 0.2s'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                      <Icon style={{ height: '1.25rem', width: '1.25rem', color: '#8B5CF6' }} />
+                      <h4 style={{ fontWeight: '500', color: '#111827', margin: 0 }}>{tool.title}</h4>
+                    </div>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.75rem' }}>{tool.description}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+                        {tool.features.length} features
+                      </div>
+                      <Link to={tool.href} style={{
+                        display: 'inline-block',
+                        padding: '0.25rem 0.75rem',
+                        backgroundColor: '#8B5CF6',
+                        color: 'white',
+                        borderRadius: '0.375rem',
+                        textDecoration: 'none',
+                        fontSize: '0.875rem'
+                      }}>
+                        Access →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Finance & Accounting - CEO/CFO Only */}
+        {(isExecutiveRole || isFinanceRole) && (
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#111827', marginBottom: '1rem' }}>Finance & Accounting</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+              {financeTools.map((tool, index) => {
+                const Icon = tool.icon;
+                return (
+                  <div key={index} style={{
+                    backgroundColor: 'white',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #e5e7eb',
+                    padding: '1rem',
+                    transition: 'all 0.2s'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                      <Icon style={{ height: '1.25rem', width: '1.25rem', color: '#059669' }} />
+                      <h4 style={{ fontWeight: '500', color: '#111827', margin: 0 }}>{tool.title}</h4>
+                    </div>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.75rem' }}>{tool.description}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+                        {tool.features.length} features
+                      </div>
+                      <Link to={tool.href} style={{
+                        display: 'inline-block',
+                        padding: '0.25rem 0.75rem',
+                        backgroundColor: '#059669',
+                        color: 'white',
+                        borderRadius: '0.375rem',
+                        textDecoration: 'none',
+                        fontSize: '0.875rem'
+                      }}>
+                        Access →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Advanced Dashboards - CEO Only */}
+        {isExecutiveRole && (
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#111827', marginBottom: '1rem' }}>Advanced & Specialized Tools</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+              {advancedDashboards.map((tool, index) => {
+                const Icon = tool.icon;
+                return (
+                  <div key={index} style={{
+                    backgroundColor: 'white',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #e5e7eb',
+                    padding: '1rem',
+                    transition: 'all 0.2s'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                      <Icon style={{ height: '1.25rem', width: '1.25rem', color: '#6b7280' }} />
+                      <h4 style={{ fontWeight: '500', color: '#111827', margin: 0 }}>{tool.title}</h4>
+                    </div>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.75rem' }}>{tool.description}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+                        {tool.users.join(', ')}
+                      </div>
+                      <Link to={tool.href} style={{
+                        display: 'inline-block',
+                        padding: '0.25rem 0.75rem',
+                        backgroundColor: 'white',
+                        color: '#374151',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        textDecoration: 'none',
+                        fontSize: '0.875rem'
+                      }}>
+                        Access →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* System Status Footer */}
         <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e5e7eb', padding: '1.5rem' }}>

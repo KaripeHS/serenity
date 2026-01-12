@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -10,6 +10,10 @@ import { ProgressRing } from '../ui/ProgressRing';
 import { ApplicantDetailsModal } from '../hr/ApplicantDetailsModal';
 import { RejectionModal } from '../hr/RejectionModal';
 import { ScheduleInterviewModal, InterviewScheduleData } from '../hr/ScheduleInterviewModal';
+import { AcceptOfferModal, AcceptOfferData } from '../hr/AcceptOfferModal';
+import { SuccessModal } from '../hr/SuccessModal';
+import { StaffProfileModal } from '../hr/StaffProfileModal';
+import { assignMemberToPod } from '../../utils/podAssignment';
 import {
   ArrowLeftIcon,
   UserGroupIcon,
@@ -17,7 +21,14 @@ import {
   DocumentTextIcon,
   AcademicCapIcon,
   ClockIcon,
-  ArrowTrendingDownIcon
+  ArrowTrendingDownIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  XMarkIcon,
+  ChevronUpDownIcon,
+  EnvelopeIcon,
+  CalendarDaysIcon,
+  PencilSquareIcon
 } from '@heroicons/react/24/outline';
 
 interface HRMetrics {
@@ -35,20 +46,58 @@ interface Application {
   email?: string;
   phone?: string;
   position: string;
-  status: 'new' | 'reviewing' | 'interview' | 'scheduled' | 'rejected';
+  status: 'new' | 'reviewing' | 'interview' | 'scheduled' | 'offered' | 'hired' | 'rejected';
   experience: string;
   location: string;
   applied: string;
+  appliedDate: Date;
+  source?: string;
+  certifications?: string[];
+  availability?: {
+    fullTime?: boolean;
+    partTime?: boolean;
+    weekends?: boolean;
+    nights?: boolean;
+    flexible?: boolean;
+  };
+  desiredSalaryMin?: number;
+  desiredSalaryMax?: number;
+  availableStartDate?: string;
+  aiScreeningScore?: number;
+}
+
+interface FilterState {
+  search: string;
+  statuses: Application['status'][];
+  positions: string[];
+  sources: string[];
+  experienceLevels: string[];
+  dateRange: { from: string; to: string };
+  sortBy: 'name' | 'date' | 'status' | 'position';
+  sortOrder: 'asc' | 'desc';
 }
 
 interface Staff {
-  id: number;
+  id: string;
   name: string;
+  email: string;
+  phone: string;
   position: string;
   department: string;
+  status: string;
   hireDate: string;
   certifications: string[];
   trainingDue: string[];
+}
+
+interface StaffFilterState {
+  search: string;
+  departments: string[];
+  roles: string[];
+  statuses: string[];
+  trainingStatus: 'all' | 'due' | 'current';
+  sortBy: 'name' | 'department' | 'role' | 'hireDate';
+  sortOrder: 'asc' | 'desc';
 }
 
 interface MetricCardProps {
@@ -58,13 +107,20 @@ interface MetricCardProps {
   icon: React.ComponentType<any>;
   iconColor: string;
   valueColor?: string;
+  onClick?: () => void;
+  clickLabel?: string;
 }
 
-function MetricCard({ title, value, subtitle, icon: Icon, iconColor, valueColor = 'text-gray-900' }: MetricCardProps) {
-  return (
-    <Card hoverable className="transition-all hover:scale-105">
+function MetricCard({ title, value, subtitle, icon: Icon, iconColor, valueColor = 'text-gray-900', onClick, clickLabel }: MetricCardProps) {
+  const content = (
+    <>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">{title}</h3>
+        {onClick && (
+          <span className="text-xs text-primary-600 font-medium">
+            {clickLabel || 'View Details'} →
+          </span>
+        )}
       </div>
       <div className="flex items-center gap-4">
         <div className={`p-3 ${iconColor} rounded-lg`}>
@@ -75,6 +131,20 @@ function MetricCard({ title, value, subtitle, icon: Icon, iconColor, valueColor 
           <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
         </div>
       </div>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <Card hoverable className="transition-all hover:scale-105 cursor-pointer" onClick={onClick}>
+        {content}
+      </Card>
+    );
+  }
+
+  return (
+    <Card hoverable className="transition-all hover:scale-105">
+      {content}
     </Card>
   );
 }
@@ -85,6 +155,8 @@ function ApplicationStatusBadge({ status }: { status: Application['status'] }) {
     reviewing: { variant: 'warning', label: 'Reviewing' },
     interview: { variant: 'success', label: 'Interview' },
     scheduled: { variant: 'primary', label: 'Scheduled' },
+    offered: { variant: 'warning', label: 'Offer Pending' },
+    hired: { variant: 'success', label: 'Hired - Onboarding' },
     rejected: { variant: 'danger', label: 'Rejected' }
   };
 
@@ -94,6 +166,7 @@ function ApplicationStatusBadge({ status }: { status: Application['status'] }) {
 
 export function WorkingHRDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [metrics, setMetrics] = useState<HRMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<'dashboard' | 'applications' | 'staff' | 'training'>('dashboard');
@@ -110,6 +183,44 @@ export function WorkingHRDashboard() {
   const [applicantToReject, setApplicantToReject] = useState<Application | null>(null);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [applicantToSchedule, setApplicantToSchedule] = useState<Application | null>(null);
+  const [showAcceptOfferModal, setShowAcceptOfferModal] = useState(false);
+  const [applicantToAccept, setApplicantToAccept] = useState<Application | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successModalData, setSuccessModalData] = useState<{
+    title: string;
+    message: string;
+    details: string[];
+    footer?: string;
+  } | null>(null);
+
+  // Staff modal states
+  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+  const [showStaffProfileModal, setShowStaffProfileModal] = useState(false);
+
+  // Filter states for applications
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<FilterState>({
+    search: '',
+    statuses: [],
+    positions: [],
+    sources: [],
+    experienceLevels: [],
+    dateRange: { from: '', to: '' },
+    sortBy: 'date',
+    sortOrder: 'desc'
+  });
+
+  // Filter states for staff
+  const [showStaffFilters, setShowStaffFilters] = useState(false);
+  const [staffFilters, setStaffFilters] = useState<StaffFilterState>({
+    search: '',
+    departments: [],
+    roles: [],
+    statuses: [],
+    trainingStatus: 'all',
+    sortBy: 'name',
+    sortOrder: 'asc'
+  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -160,8 +271,16 @@ export function WorkingHRDashboard() {
             position: a.positionAppliedFor || 'Not specified',
             status: mapApplicantStatus(a.status || a.currentStage),
             experience: a.experienceLevel || 'Not specified',
-            location: a.city ? `${a.city}, OH` : 'Ohio',
-            applied: formatTimeAgo(a.applicationDate || a.createdAt)
+            location: a.address ? extractCity(a.address) : 'Ohio',
+            applied: formatTimeAgo(a.applicationDate || a.createdAt),
+            appliedDate: new Date(a.applicationDate || a.createdAt),
+            source: a.source || 'website',
+            certifications: a.certifications || [],
+            availability: a.availability || {},
+            desiredSalaryMin: a.desiredSalaryMin,
+            desiredSalaryMax: a.desiredSalaryMax,
+            availableStartDate: a.availableStartDate,
+            aiScreeningScore: a.aiScreeningScore
           }));
           setApplications(applicants);
         }
@@ -169,16 +288,25 @@ export function WorkingHRDashboard() {
         // Process staff list
         if (staffRes && staffRes.ok) {
           const data = await staffRes.json();
-          const staff = (data.staff || []).map((s: any, idx: number) => ({
-            id: idx + 1,
+          console.log('[HR Dashboard] Staff API response:', data);
+          const staff = (data.staff || []).map((s: any) => ({
+            id: s.id,
             name: `${s.firstName || ''} ${s.lastName || ''}`.trim() || 'Unknown',
-            position: s.role || s.position || 'Staff',
-            department: s.department || 'General',
-            hireDate: s.hireDate || s.createdAt || '',
+            email: s.email || '',
+            phone: s.phone || '',
+            position: formatRole(s.role) || 'Staff',
+            department: formatDepartment(s.department) || 'General',
+            status: s.status || 'active',
+            hireDate: s.hireDate || '',
             certifications: s.certifications || [],
             trainingDue: s.trainingDue || []
           }));
+          console.log('[HR Dashboard] Processed staff list:', staff.length, 'members');
           setStaffList(staff);
+        } else if (staffRes) {
+          console.error('[HR Dashboard] Staff API error:', staffRes.status, await staffRes.text().catch(() => 'No body'));
+        } else {
+          console.error('[HR Dashboard] Staff API call returned null');
         }
 
       } catch (error) {
@@ -208,15 +336,18 @@ export function WorkingHRDashboard() {
       'reviewing': 'reviewing',
       'review': 'reviewing',
       'interview': 'interview',
-      'interviewing': 'interview',
       'interviews': 'interview',
+      'interviewing': 'interview',  // Moved to interview stage but not yet scheduled
       'interview_scheduled': 'scheduled',
       'scheduled': 'scheduled',
+      'offer_pending': 'offered',
+      'offer': 'offered',
+      'offered': 'offered',
+      'hired': 'hired',
+      'onboarding': 'hired',
       'rejected': 'rejected',
       'declined': 'rejected',
       'withdrawn': 'rejected',
-      'hired': 'scheduled',
-      'offer_pending': 'scheduled',
       'reference_check': 'reviewing',
       'background_check': 'reviewing'
     };
@@ -238,6 +369,263 @@ export function WorkingHRDashboard() {
     if (diffDays < 7) return `${diffDays} days ago`;
     return date.toLocaleDateString();
   }
+
+  // Helper to extract city from address
+  function extractCity(address: string): string {
+    if (!address) return 'Ohio';
+    // Try to extract city from address (assumes format like "123 Main St, City, OH 12345")
+    const parts = address.split(',');
+    if (parts.length >= 2) {
+      return parts[parts.length - 2].trim() + ', OH';
+    }
+    return 'Ohio';
+  }
+
+  // Helper to format role names
+  function formatRole(role: string): string {
+    if (!role) return 'Staff';
+    const roleMap: Record<string, string> = {
+      'founder': 'Founder',
+      'ceo': 'CEO',
+      'cfo': 'CFO',
+      'coo': 'COO',
+      'finance_director': 'Finance Director',
+      'finance_manager': 'Finance Manager',
+      'billing_manager': 'Billing Manager',
+      'rcm_analyst': 'RCM Analyst',
+      'insurance_manager': 'Insurance Manager',
+      'billing_coder': 'Billing Coder',
+      'operations_manager': 'Operations Manager',
+      'field_ops_manager': 'Field Ops Manager',
+      'pod_lead': 'Pod Lead',
+      'field_supervisor': 'Field Supervisor',
+      'scheduling_manager': 'Scheduling Manager',
+      'scheduler': 'Scheduler',
+      'dispatcher': 'Dispatcher',
+      'qa_manager': 'QA Manager',
+      'dsp_med': 'DSP (Med Certified)',
+      'dsp_basic': 'DSP (Basic)',
+      'caregiver': 'Caregiver',
+      'director_of_nursing': 'Director of Nursing',
+      'clinical_director': 'Clinical Director',
+      'nursing_supervisor': 'Nursing Supervisor',
+      'rn_case_manager': 'RN Case Manager',
+      'lpn_lvn': 'LPN/LVN',
+      'qidp': 'QIDP',
+      'therapist': 'Therapist',
+      'hha': 'Home Health Aide',
+      'cna': 'CNA',
+      'hr_director': 'HR Director',
+      'hr_manager': 'HR Manager',
+      'recruiter': 'Recruiter',
+      'credentialing_specialist': 'Credentialing Specialist',
+      'compliance_officer': 'Compliance Officer',
+      'security_officer': 'Security Officer',
+      'it_admin': 'IT Admin',
+      'support_agent': 'Support Agent',
+      'client': 'Client',
+      'family': 'Family Member',
+      'payer_auditor': 'Payer Auditor'
+    };
+    return roleMap[role] || role.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  // Helper to format department names
+  function formatDepartment(dept: string): string {
+    if (!dept) return 'General';
+    const deptMap: Record<string, string> = {
+      'EXEC': 'Executive',
+      'FIN': 'Finance',
+      'OPS': 'Operations',
+      'CLIN': 'Clinical',
+      'HR': 'Human Resources',
+      'COMP': 'Compliance',
+      'IT': 'IT'
+    };
+    return deptMap[dept] || dept;
+  }
+
+  // Get unique values for filter dropdowns
+  const uniquePositions = [...new Set(applications.map(a => a.position))].filter(Boolean).sort();
+  const uniqueSources = [...new Set(applications.map(a => a.source))].filter((s): s is string => Boolean(s)).sort();
+  const uniqueExperienceLevels = [...new Set(applications.map(a => a.experience))].filter(Boolean).sort();
+
+  // Filter and sort applications
+  const filteredApplications = applications
+    .filter(app => {
+      // Search filter
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
+        const matchesSearch =
+          app.name.toLowerCase().includes(searchLower) ||
+          app.email?.toLowerCase().includes(searchLower) ||
+          app.phone?.includes(filters.search) ||
+          app.position.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
+
+      // Status filter
+      if (filters.statuses.length > 0 && !filters.statuses.includes(app.status)) {
+        return false;
+      }
+
+      // Position filter
+      if (filters.positions.length > 0 && !filters.positions.includes(app.position)) {
+        return false;
+      }
+
+      // Source filter
+      if (filters.sources.length > 0 && !filters.sources.includes(app.source || '')) {
+        return false;
+      }
+
+      // Experience level filter
+      if (filters.experienceLevels.length > 0 && !filters.experienceLevels.includes(app.experience)) {
+        return false;
+      }
+
+      // Date range filter
+      if (filters.dateRange.from) {
+        const fromDate = new Date(filters.dateRange.from);
+        if (app.appliedDate < fromDate) return false;
+      }
+      if (filters.dateRange.to) {
+        const toDate = new Date(filters.dateRange.to);
+        toDate.setHours(23, 59, 59, 999);
+        if (app.appliedDate > toDate) return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+      switch (filters.sortBy) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'date':
+          // For dates: a - b gives oldest first (ascending), so we use that as base
+          comparison = a.appliedDate.getTime() - b.appliedDate.getTime();
+          break;
+        case 'status':
+          const statusOrder: Record<Application['status'], number> = { new: 0, reviewing: 1, interview: 2, scheduled: 3, offered: 4, hired: 5, rejected: 6 };
+          comparison = statusOrder[a.status] - statusOrder[b.status];
+          break;
+        case 'position':
+          comparison = a.position.localeCompare(b.position);
+          break;
+      }
+      // For 'desc' order, negate the comparison (so newest first for dates, Z-A for names)
+      return filters.sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+  // Count active filters
+  const activeFilterCount =
+    (filters.search ? 1 : 0) +
+    filters.statuses.length +
+    filters.positions.length +
+    filters.sources.length +
+    filters.experienceLevels.length +
+    (filters.dateRange.from || filters.dateRange.to ? 1 : 0);
+
+  // Reset all filters
+  const resetFilters = () => {
+    setFilters({
+      search: '',
+      statuses: [],
+      positions: [],
+      sources: [],
+      experienceLevels: [],
+      dateRange: { from: '', to: '' },
+      sortBy: 'date',
+      sortOrder: 'desc'
+    });
+  };
+
+  // Get unique values for staff filter dropdowns
+  const uniqueDepartments = [...new Set(staffList.map(s => s.department))].filter(Boolean).sort();
+  const uniqueRoles = [...new Set(staffList.map(s => s.position))].filter(Boolean).sort();
+  const uniqueStaffStatuses = [...new Set(staffList.map(s => s.status))].filter(Boolean).sort();
+
+  // Filter and sort staff
+  const filteredStaff = staffList
+    .filter(staff => {
+      // Search filter
+      if (staffFilters.search) {
+        const searchLower = staffFilters.search.toLowerCase();
+        const matchesSearch =
+          staff.name.toLowerCase().includes(searchLower) ||
+          staff.email?.toLowerCase().includes(searchLower) ||
+          staff.phone?.includes(staffFilters.search) ||
+          staff.position.toLowerCase().includes(searchLower) ||
+          staff.department.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
+
+      // Department filter
+      if (staffFilters.departments.length > 0 && !staffFilters.departments.includes(staff.department)) {
+        return false;
+      }
+
+      // Role filter
+      if (staffFilters.roles.length > 0 && !staffFilters.roles.includes(staff.position)) {
+        return false;
+      }
+
+      // Status filter
+      if (staffFilters.statuses.length > 0 && !staffFilters.statuses.includes(staff.status)) {
+        return false;
+      }
+
+      // Training status filter
+      if (staffFilters.trainingStatus === 'due' && staff.trainingDue.length === 0) {
+        return false;
+      }
+      if (staffFilters.trainingStatus === 'current' && staff.trainingDue.length > 0) {
+        return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+      switch (staffFilters.sortBy) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'department':
+          comparison = a.department.localeCompare(b.department);
+          break;
+        case 'role':
+          comparison = a.position.localeCompare(b.position);
+          break;
+        case 'hireDate':
+          comparison = new Date(a.hireDate).getTime() - new Date(b.hireDate).getTime();
+          break;
+      }
+      return staffFilters.sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+  // Count active staff filters
+  const activeStaffFilterCount =
+    (staffFilters.search ? 1 : 0) +
+    staffFilters.departments.length +
+    staffFilters.roles.length +
+    staffFilters.statuses.length +
+    (staffFilters.trainingStatus !== 'all' ? 1 : 0);
+
+  // Reset all staff filters
+  const resetStaffFilters = () => {
+    setStaffFilters({
+      search: '',
+      departments: [],
+      roles: [],
+      statuses: [],
+      trainingStatus: 'all',
+      sortBy: 'name',
+      sortOrder: 'asc'
+    });
+  };
 
   // Handle moving applicant to interview stage
   const handleMoveToInterview = async (app: Application) => {
@@ -278,20 +666,19 @@ export function WorkingHRDashboard() {
 
     const token = localStorage.getItem('serenity_access_token');
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/hr/applicants/${applicantToReject.id}/status`, {
-        method: 'PUT',
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/hr/applicants/${applicantToReject.id}/reject`, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ status: 'rejected', rejectionReason: reason })
+        body: JSON.stringify({ reason, sendEmail })
       });
 
       if (response.ok) {
         setApplications(prev => prev.map(a =>
           a.id === applicantToReject.id ? { ...a, status: 'rejected' as const } : a
         ));
-        // TODO: If sendEmail is true, trigger email notification
       } else {
         const error = await response.json();
         alert(`Failed to reject: ${error.message || 'Unknown error'}`);
@@ -328,7 +715,8 @@ export function WorkingHRDashboard() {
         },
         body: JSON.stringify({
           interviewType: data.interviewType,
-          scheduledDate: `${data.scheduledDate}T${data.scheduledTime}:00`,
+          scheduledDate: data.scheduledDate,
+          scheduledTime: data.scheduledTime,
           duration: data.duration,
           location: data.location,
           interviewerName: data.interviewerName,
@@ -350,6 +738,179 @@ export function WorkingHRDashboard() {
       alert('Failed to schedule interview. Please try again.');
     }
     setApplicantToSchedule(null);
+  };
+
+  // Handle canceling interview
+  const handleCancelInterview = async (app: Application) => {
+    if (!confirm(`Are you sure you want to cancel the interview for ${app.name}?`)) {
+      return;
+    }
+
+    const token = localStorage.getItem('serenity_access_token');
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/hr/applicants/${app.id}/cancel-interview`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason: 'Cancelled by HR', sendEmail: true })
+      });
+
+      if (response.ok) {
+        setApplications(prev => prev.map(a =>
+          a.id === app.id ? { ...a, status: 'interview' as const } : a
+        ));
+        // Interview cancelled - candidate and HR have been notified
+      } else {
+        const error = await response.json();
+        alert(`Failed to cancel interview: ${error.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert('Failed to cancel interview. Please try again.');
+    }
+  };
+
+  // Handle offering job to applicant
+  const handleOfferJob = async (app: Application) => {
+    if (!confirm(`Are you sure you want to extend a job offer to ${app.name} for the ${app.position} position?`)) {
+      return;
+    }
+
+    const token = localStorage.getItem('serenity_access_token');
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/hr/applicants/${app.id}/offer`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sendEmail: true })
+      });
+
+      if (response.ok) {
+        setApplications(prev => prev.map(a =>
+          a.id === app.id ? { ...a, status: 'offered' as const } : a
+        ));
+        // Job offer extended - candidate and HR have been notified via email
+      } else {
+        const error = await response.json();
+        alert(`Failed to extend offer: ${error.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert('Failed to extend job offer. Please try again.');
+    }
+  };
+
+  // Handle resending offer email to applicant
+  const handleResendOffer = async (app: Application) => {
+    if (!confirm(`Resend job offer email to ${app.name} (${app.email || 'no email'})?\n\nThis will send the offer details and next steps to the candidate.`)) {
+      return;
+    }
+
+    const token = localStorage.getItem('serenity_access_token');
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/hr/applicants/${app.id}/offer`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sendEmail: true, resend: true })
+      });
+
+      if (response.ok) {
+        alert(`Offer email resent to ${app.email || app.name}.\n\nThe candidate will receive:\n• Job offer details\n• Next steps to accept\n• Contact information`);
+      } else {
+        const error = await response.json();
+        alert(`Failed to resend offer: ${error.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert('Failed to resend offer email. Please try again.');
+    }
+  };
+
+  // Handle accepting offer - opens modal
+  const handleAcceptOffer = (app: Application) => {
+    setApplicantToAccept(app);
+    setShowAcceptOfferModal(true);
+  };
+
+  // Process the actual acceptance after modal confirmation
+  const processAcceptOffer = async (data: AcceptOfferData) => {
+    if (!applicantToAccept) return;
+
+    const token = localStorage.getItem('serenity_access_token');
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/console/hr/applicants/${applicantToAccept.id}/accept-offer`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          startDate: data.startDate,
+          role: data.role,
+          sendEmail: data.sendWelcomeEmail,
+          notes: data.notes,
+          podId: data.podId
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+
+        // If pod assignment was requested, assign the new staff member to the pod
+        if (data.podId && result.staffId) {
+          const currentUser = JSON.parse(localStorage.getItem('serenity_user') || '{}');
+          const performedBy = currentUser.id || 'system';
+          const performedByName = currentUser.firstName && currentUser.lastName
+            ? `${currentUser.firstName} ${currentUser.lastName}`
+            : 'HR System';
+
+          const podResult = assignMemberToPod({
+            memberId: result.staffId,
+            memberName: applicantToAccept.name,
+            memberEmail: applicantToAccept.email || '',
+            memberRole: data.role,
+            memberType: 'staff',
+            podId: data.podId,
+            performedBy,
+            performedByName,
+            notes: 'Assigned during hiring process'
+          });
+
+          if (!podResult.success) {
+            console.error('Failed to assign to pod:', podResult.error);
+          }
+        }
+        setApplications(prev => prev.map(a =>
+          a.id === applicantToAccept.id ? { ...a, status: 'hired' as Application['status'] } : a
+        ));
+
+        // Show success modal instead of alert
+        const details = [
+          'Employee record created',
+          `${result.onboardingItemCount} onboarding items generated`
+        ];
+        if (data.sendWelcomeEmail) {
+          details.push('Welcome email sent');
+        }
+
+        setSuccessModalData({
+          title: 'Hire Successful!',
+          message: `${applicantToAccept.name} has been hired!`,
+          details,
+          footer: `Start date: ${data.startDate || 'To be determined'}`
+        });
+        setShowSuccessModal(true);
+      } else {
+        const error = await response.json();
+        alert(`Failed to accept offer: ${error.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert('Failed to accept offer. Please try again.');
+    }
   };
 
   if (loading) {
@@ -429,7 +990,7 @@ export function WorkingHRDashboard() {
         {/* Dashboard View */}
         {activeView === 'dashboard' && (
           <>
-            {/* Key Metrics */}
+            {/* Key Metrics - All tiles are clickable */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 animate-fade-in">
               <MetricCard
                 title="Total Staff"
@@ -437,6 +998,8 @@ export function WorkingHRDashboard() {
                 subtitle="Active employees"
                 icon={UserGroupIcon}
                 iconColor="bg-caregiver-600"
+                onClick={() => setActiveView('staff')}
+                clickLabel="View Staff"
               />
               <MetricCard
                 title="Open Positions"
@@ -445,6 +1008,8 @@ export function WorkingHRDashboard() {
                 icon={BriefcaseIcon}
                 iconColor="bg-danger-600"
                 valueColor={metrics.openPositions > 0 ? "text-danger-600" : "text-success-600"}
+                onClick={() => setActiveView('applications')}
+                clickLabel="View Positions"
               />
               <MetricCard
                 title="Pending Applications"
@@ -453,14 +1018,21 @@ export function WorkingHRDashboard() {
                 icon={DocumentTextIcon}
                 iconColor="bg-primary-600"
                 valueColor="text-primary-600"
+                onClick={() => {
+                  setFilters(prev => ({ ...prev, statuses: ['new'] }));
+                  setActiveView('applications');
+                }}
+                clickLabel="Review Now"
               />
               <MetricCard
                 title="Training Compliance"
                 value={`${metrics.trainingCompliance}%`}
-                subtitle="Above target"
+                subtitle={metrics.trainingCompliance >= 90 ? "Above target" : "Below target"}
                 icon={AcademicCapIcon}
                 iconColor="bg-success-600"
-                valueColor="text-success-600"
+                valueColor={metrics.trainingCompliance >= 90 ? "text-success-600" : "text-warning-600"}
+                onClick={() => setActiveView('training')}
+                clickLabel="View Training"
               />
               <MetricCard
                 title="Avg Time to Hire"
@@ -468,6 +1040,11 @@ export function WorkingHRDashboard() {
                 subtitle={metrics.avgTimeToHire > 0 ? "Average hiring time" : "No hires yet"}
                 icon={ClockIcon}
                 iconColor="bg-info-600"
+                onClick={() => {
+                  setFilters(prev => ({ ...prev, statuses: ['hired'] }));
+                  setActiveView('applications');
+                }}
+                clickLabel="View Hires"
               />
               <MetricCard
                 title="Turnover Rate"
@@ -476,6 +1053,8 @@ export function WorkingHRDashboard() {
                 icon={ArrowTrendingDownIcon}
                 iconColor="bg-success-600"
                 valueColor={metrics.turnoverRate < 15 ? "text-success-600" : "text-warning-600"}
+                onClick={() => setActiveView('staff')}
+                clickLabel="View Staff"
               />
             </div>
 
@@ -602,9 +1181,221 @@ export function WorkingHRDashboard() {
         {/* Applications View */}
         {activeView === 'applications' && (
           <Card className="animate-fade-in">
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">Job Applications</h3>
+            {/* Header with title and filter toggle */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">Job Applications</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Showing {filteredApplications.length} of {applications.length} applications
+                  {activeFilterCount > 0 && ` (${activeFilterCount} filter${activeFilterCount > 1 ? 's' : ''} active)`}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                {/* Search box */}
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search name, email, phone..."
+                    value={filters.search}
+                    onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                    className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
+                  {filters.search && (
+                    <button
+                      onClick={() => setFilters(prev => ({ ...prev, search: '' }))}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <XMarkIcon className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter toggle button */}
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    showFilters || activeFilterCount > 0
+                      ? 'bg-primary-100 text-primary-700 border border-primary-300'
+                      : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                  }`}
+                >
+                  <FunnelIcon className="h-4 w-4" />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <span className="bg-primary-600 text-white text-xs px-2 py-0.5 rounded-full">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Sort dropdown */}
+                <div className="relative">
+                  <select
+                    value={`${filters.sortBy}-${filters.sortOrder}`}
+                    onChange={(e) => {
+                      const [sortBy, sortOrder] = e.target.value.split('-') as [FilterState['sortBy'], FilterState['sortOrder']];
+                      setFilters(prev => ({ ...prev, sortBy, sortOrder }));
+                    }}
+                    className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                    <option value="name-asc">Name A-Z</option>
+                    <option value="name-desc">Name Z-A</option>
+                    <option value="status-asc">Status (Pipeline)</option>
+                    <option value="position-asc">Position A-Z</option>
+                  </select>
+                  <ChevronUpDownIcon className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
+            {/* Expandable filter panel */}
+            {showFilters && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Status filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <div className="space-y-2">
+                      {(['new', 'reviewing', 'interview', 'scheduled', 'offered', 'rejected'] as const).map((status) => (
+                        <label key={status} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={filters.statuses.includes(status)}
+                            onChange={(e) => {
+                              setFilters(prev => ({
+                                ...prev,
+                                statuses: e.target.checked
+                                  ? [...prev.statuses, status]
+                                  : prev.statuses.filter(s => s !== status)
+                              }));
+                            }}
+                            className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                          />
+                          <span className="capitalize">{status}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Position filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {uniquePositions.map((position) => (
+                        <label key={position} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={filters.positions.includes(position)}
+                            onChange={(e) => {
+                              setFilters(prev => ({
+                                ...prev,
+                                positions: e.target.checked
+                                  ? [...prev.positions, position]
+                                  : prev.positions.filter(p => p !== position)
+                              }));
+                            }}
+                            className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                          />
+                          <span className="truncate">{position}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Source filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Source</label>
+                    <div className="space-y-2">
+                      {uniqueSources.map((source) => (
+                        <label key={source} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={filters.sources.includes(source)}
+                            onChange={(e) => {
+                              setFilters(prev => ({
+                                ...prev,
+                                sources: e.target.checked
+                                  ? [...prev.sources, source]
+                                  : prev.sources.filter(s => s !== source)
+                              }));
+                            }}
+                            className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                          />
+                          <span className="capitalize">{source}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Date range filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Application Date</label>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs text-gray-500">From</label>
+                        <input
+                          type="date"
+                          value={filters.dateRange.from}
+                          onChange={(e) => setFilters(prev => ({
+                            ...prev,
+                            dateRange: { ...prev.dateRange, from: e.target.value }
+                          }))}
+                          className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500">To</label>
+                        <input
+                          type="date"
+                          value={filters.dateRange.to}
+                          onChange={(e) => setFilters(prev => ({
+                            ...prev,
+                            dateRange: { ...prev.dateRange, to: e.target.value }
+                          }))}
+                          className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Clear filters button */}
+                {activeFilterCount > 0 && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end">
+                    <button
+                      onClick={resetFilters}
+                      className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                    >
+                      Clear all filters
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Applications list */}
             <div className="space-y-4">
-              {applications.map((app) => (
+              {filteredApplications.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <FunnelIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg font-medium">No applications found</p>
+                  <p className="text-sm mt-1">
+                    {activeFilterCount > 0 ? 'Try adjusting your filters' : 'No applications have been submitted yet'}
+                  </p>
+                  {activeFilterCount > 0 && (
+                    <button
+                      onClick={resetFilters}
+                      className="mt-4 text-primary-600 hover:text-primary-700 font-medium text-sm"
+                    >
+                      Clear all filters
+                    </button>
+                  )}
+                </div>
+              ) : (
+                filteredApplications.map((app) => (
                 <div key={app.id} className="p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-all">
                   <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                     <div className="flex-1">
@@ -617,22 +1408,17 @@ export function WorkingHRDashboard() {
                         <ApplicationStatusBadge status={app.status} />
                       </div>
                       <div className="flex flex-wrap gap-2 mt-3">
+                        {/* New applications: Move to Interview */}
                         {app.status === 'new' && (
-                          <>
-                            <button
-                              onClick={() => handleMoveToInterview(app)}
-                              className="px-3 py-1.5 bg-success-600 text-white rounded-lg text-sm font-medium hover:bg-success-700 transition-colors"
-                            >
-                              ✓ Move to Interview
-                            </button>
-                            <button
-                              onClick={() => handleReject(app)}
-                              className="px-3 py-1.5 bg-danger-600 text-white rounded-lg text-sm font-medium hover:bg-danger-700 transition-colors"
-                            >
-                              ✗ Reject
-                            </button>
-                          </>
+                          <button
+                            onClick={() => handleMoveToInterview(app)}
+                            className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+                          >
+                            ✓ Move to Interview
+                          </button>
                         )}
+
+                        {/* Interview stage (not yet scheduled): Schedule Interview */}
                         {app.status === 'interview' && (
                           <button
                             onClick={() => handleScheduleInterview(app)}
@@ -641,6 +1427,74 @@ export function WorkingHRDashboard() {
                             📅 Schedule Interview
                           </button>
                         )}
+
+                        {/* Scheduled: Reschedule/Cancel */}
+                        {app.status === 'scheduled' && (
+                          <>
+                            <button
+                              onClick={() => handleScheduleInterview(app)}
+                              className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+                            >
+                              📅 Reschedule Interview
+                            </button>
+                            <button
+                              onClick={() => handleCancelInterview(app)}
+                              className="px-3 py-1.5 bg-warning-600 text-white rounded-lg text-sm font-medium hover:bg-warning-700 transition-colors"
+                            >
+                              ✗ Cancel Interview
+                            </button>
+                          </>
+                        )}
+
+                        {/* Offer Job - available for non-rejected, non-offered, non-hired applicants */}
+                        {app.status !== 'rejected' && app.status !== 'offered' && app.status !== 'hired' && (
+                          <button
+                            onClick={() => handleOfferJob(app)}
+                            className="px-3 py-1.5 bg-success-600 text-white rounded-lg text-sm font-medium hover:bg-success-700 transition-colors"
+                          >
+                            🎉 Offer Job
+                          </button>
+                        )}
+
+                        {/* Offer Pending Actions - Resend offer email or mark as accepted */}
+                        {app.status === 'offered' && (
+                          <>
+                            <button
+                              onClick={() => handleResendOffer(app)}
+                              className="px-3 py-1.5 bg-warning-600 text-white rounded-lg text-sm font-medium hover:bg-warning-700 transition-colors"
+                            >
+                              📧 Resend Offer
+                            </button>
+                            <button
+                              onClick={() => handleAcceptOffer(app)}
+                              className="px-3 py-1.5 bg-success-600 text-white rounded-lg text-sm font-medium hover:bg-success-700 transition-colors"
+                            >
+                              ✅ Mark Accepted
+                            </button>
+                          </>
+                        )}
+
+                        {/* Reject - available except for already rejected, offered, or hired */}
+                        {app.status !== 'rejected' && app.status !== 'offered' && app.status !== 'hired' && (
+                          <button
+                            onClick={() => handleReject(app)}
+                            className="px-3 py-1.5 bg-danger-600 text-white rounded-lg text-sm font-medium hover:bg-danger-700 transition-colors"
+                          >
+                            ✗ Reject
+                          </button>
+                        )}
+
+                        {/* View Onboarding - available for hired applicants */}
+                        {app.status === 'hired' && (
+                          <Link
+                            to={`/hr/onboarding/${app.id}`}
+                            className="px-3 py-1.5 bg-success-600 text-white rounded-lg text-sm font-medium hover:bg-success-700 transition-colors inline-flex items-center"
+                          >
+                            📋 View Onboarding
+                          </Link>
+                        )}
+
+                        {/* View Details - always available */}
                         <button
                           onClick={() => handleViewDetails(app)}
                           className="px-3 py-1.5 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
@@ -651,7 +1505,8 @@ export function WorkingHRDashboard() {
                     </div>
                   </div>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           </Card>
         )}
@@ -659,9 +1514,229 @@ export function WorkingHRDashboard() {
         {/* Staff View */}
         {activeView === 'staff' && (
           <Card className="animate-fade-in">
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">Staff Directory</h3>
+            {/* Header with title and filter toggle */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">Staff Directory</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Showing {filteredStaff.length} of {staffList.length} staff members
+                  {activeStaffFilterCount > 0 && ` (${activeStaffFilterCount} filter${activeStaffFilterCount > 1 ? 's' : ''} active)`}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                {/* Search box */}
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search name, email, role..."
+                    value={staffFilters.search}
+                    onChange={(e) => setStaffFilters(prev => ({ ...prev, search: e.target.value }))}
+                    className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
+                  {staffFilters.search && (
+                    <button
+                      onClick={() => setStaffFilters(prev => ({ ...prev, search: '' }))}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <XMarkIcon className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter toggle button */}
+                <button
+                  onClick={() => setShowStaffFilters(!showStaffFilters)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    showStaffFilters || activeStaffFilterCount > 0
+                      ? 'bg-primary-100 text-primary-700 border border-primary-300'
+                      : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                  }`}
+                >
+                  <FunnelIcon className="h-4 w-4" />
+                  Filters
+                  {activeStaffFilterCount > 0 && (
+                    <span className="bg-primary-600 text-white text-xs px-2 py-0.5 rounded-full">
+                      {activeStaffFilterCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Sort dropdown */}
+                <div className="relative">
+                  <select
+                    value={`${staffFilters.sortBy}-${staffFilters.sortOrder}`}
+                    onChange={(e) => {
+                      const [sortBy, sortOrder] = e.target.value.split('-') as [StaffFilterState['sortBy'], StaffFilterState['sortOrder']];
+                      setStaffFilters(prev => ({ ...prev, sortBy, sortOrder }));
+                    }}
+                    className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="name-asc">Name A-Z</option>
+                    <option value="name-desc">Name Z-A</option>
+                    <option value="department-asc">Department A-Z</option>
+                    <option value="department-desc">Department Z-A</option>
+                    <option value="role-asc">Role A-Z</option>
+                    <option value="role-desc">Role Z-A</option>
+                    <option value="hireDate-desc">Newest Hire</option>
+                    <option value="hireDate-asc">Oldest Hire</option>
+                  </select>
+                  <ChevronUpDownIcon className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
+            {/* Expandable filter panel */}
+            {showStaffFilters && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Department filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {uniqueDepartments.map((dept) => (
+                        <label key={dept} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={staffFilters.departments.includes(dept)}
+                            onChange={(e) => {
+                              setStaffFilters(prev => ({
+                                ...prev,
+                                departments: e.target.checked
+                                  ? [...prev.departments, dept]
+                                  : prev.departments.filter(d => d !== dept)
+                              }));
+                            }}
+                            className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                          />
+                          <span>{dept}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Role filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Role/Position</label>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {uniqueRoles.map((role) => (
+                        <label key={role} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={staffFilters.roles.includes(role)}
+                            onChange={(e) => {
+                              setStaffFilters(prev => ({
+                                ...prev,
+                                roles: e.target.checked
+                                  ? [...prev.roles, role]
+                                  : prev.roles.filter(r => r !== role)
+                              }));
+                            }}
+                            className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                          />
+                          <span className="truncate">{role}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Status filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Employment Status</label>
+                    <div className="space-y-2">
+                      {uniqueStaffStatuses.map((status) => (
+                        <label key={status} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={staffFilters.statuses.includes(status)}
+                            onChange={(e) => {
+                              setStaffFilters(prev => ({
+                                ...prev,
+                                statuses: e.target.checked
+                                  ? [...prev.statuses, status]
+                                  : prev.statuses.filter(s => s !== status)
+                              }));
+                            }}
+                            className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                          />
+                          <span className="capitalize">{status}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Training status filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Training Status</label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input
+                          type="radio"
+                          name="trainingStatus"
+                          checked={staffFilters.trainingStatus === 'all'}
+                          onChange={() => setStaffFilters(prev => ({ ...prev, trainingStatus: 'all' }))}
+                          className="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500"
+                        />
+                        <span>All Staff</span>
+                      </label>
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input
+                          type="radio"
+                          name="trainingStatus"
+                          checked={staffFilters.trainingStatus === 'due'}
+                          onChange={() => setStaffFilters(prev => ({ ...prev, trainingStatus: 'due' }))}
+                          className="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500"
+                        />
+                        <span>Training Due</span>
+                      </label>
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input
+                          type="radio"
+                          name="trainingStatus"
+                          checked={staffFilters.trainingStatus === 'current'}
+                          onChange={() => setStaffFilters(prev => ({ ...prev, trainingStatus: 'current' }))}
+                          className="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500"
+                        />
+                        <span>Training Current</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Clear filters button */}
+                {activeStaffFilterCount > 0 && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end">
+                    <button
+                      onClick={resetStaffFilters}
+                      className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                    >
+                      Clear all filters
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Staff list */}
             <div className="space-y-4">
-              {staffList.map((staff) => (
+              {filteredStaff.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <UserGroupIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg font-medium">No staff members found</p>
+                  <p className="text-sm mt-1">
+                    {activeStaffFilterCount > 0 ? 'Try adjusting your filters' : 'Staff data is loading or no active staff in the system'}
+                  </p>
+                  {activeStaffFilterCount > 0 && (
+                    <button
+                      onClick={resetStaffFilters}
+                      className="mt-4 text-primary-600 hover:text-primary-700 font-medium text-sm"
+                    >
+                      Clear all filters
+                    </button>
+                  )}
+                </div>
+              ) : (
+                filteredStaff.map((staff) => (
                 <div
                   key={staff.id}
                   className={`p-4 border rounded-lg transition-all ${
@@ -676,21 +1751,31 @@ export function WorkingHRDashboard() {
                         <div>
                           <h4 className="text-lg font-semibold text-gray-900">{staff.name}</h4>
                           <p className="text-sm text-gray-600">{staff.position} • {staff.department} Department</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            📧 {staff.email || 'No email'} • 📞 {staff.phone || 'No phone'}
+                          </p>
                           <p className="text-xs text-gray-500 mt-1">📅 Hired: {new Date(staff.hireDate).toLocaleDateString()}</p>
                         </div>
-                        {staff.trainingDue.length > 0 && (
-                          <Badge variant="warning">Training Due</Badge>
-                        )}
-                      </div>
-
-                      <div className="mt-3">
-                        <p className="text-xs font-medium text-gray-700 mb-1">Certifications:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {staff.certifications.map((cert, i) => (
-                            <Badge key={i} variant="success" size="sm">{cert}</Badge>
-                          ))}
+                        <div className="flex flex-col gap-1 items-end">
+                          <Badge variant={staff.status === 'active' ? 'success' : 'warning'} size="sm">
+                            {staff.status}
+                          </Badge>
+                          {staff.trainingDue.length > 0 && (
+                            <Badge variant="danger" size="sm">Training Due</Badge>
+                          )}
                         </div>
                       </div>
+
+                      {staff.certifications.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-xs font-medium text-gray-700 mb-1">Certifications:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {staff.certifications.map((cert, i) => (
+                              <Badge key={i} variant="success" size="sm">{cert}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {staff.trainingDue.length > 0 && (
                         <div className="mt-3">
@@ -704,19 +1789,54 @@ export function WorkingHRDashboard() {
                       )}
 
                       <div className="flex flex-wrap gap-2 mt-4">
-                        <button className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
-                          👁️ View Profile
+                        <button
+                          onClick={() => navigate(`/hr/staff/${staff.id}`)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+                        >
+                          <UserGroupIcon className="h-4 w-4" />
+                          View Profile
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (staff.email) {
+                              window.location.href = `mailto:${staff.email}`;
+                            } else {
+                              alert('No email address on file for this employee.');
+                            }
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                        >
+                          <EnvelopeIcon className="h-4 w-4" />
+                          Message
+                        </button>
+                        <button
+                          onClick={() => window.open('/dashboard/scheduling-calendar', '_blank')}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-info-600 text-white rounded-lg text-sm font-medium hover:bg-info-700 transition-colors"
+                        >
+                          <CalendarDaysIcon className="h-4 w-4" />
+                          Schedule
                         </button>
                         {staff.trainingDue.length > 0 && (
-                          <button className="px-3 py-1.5 bg-danger-600 text-white rounded-lg text-sm font-medium hover:bg-danger-700 transition-colors">
-                            📧 Send Training Reminder
+                          <button
+                            onClick={() => {
+                              if (staff.email) {
+                                alert(`Training reminder will be sent to ${staff.email} for: ${staff.trainingDue.join(', ')}`);
+                              } else {
+                                alert('No email address on file. Please update employee contact information.');
+                              }
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-danger-600 text-white rounded-lg text-sm font-medium hover:bg-danger-700 transition-colors"
+                          >
+                            <AcademicCapIcon className="h-4 w-4" />
+                            Training Reminder
                           </button>
                         )}
                       </div>
                     </div>
                   </div>
                 </div>
-              ))}
+                ))
+              )}
             </div>
           </Card>
         )}
@@ -822,6 +1942,64 @@ export function WorkingHRDashboard() {
             setApplicantToSchedule(null);
           }}
           onSchedule={handleConfirmSchedule}
+        />
+      )}
+
+      {/* Accept Offer Modal */}
+      {applicantToAccept && (
+        <AcceptOfferModal
+          applicantName={applicantToAccept.name}
+          position={applicantToAccept.position}
+          applicantEmail={applicantToAccept.email}
+          isOpen={showAcceptOfferModal}
+          onClose={() => {
+            setShowAcceptOfferModal(false);
+            setApplicantToAccept(null);
+          }}
+          onAccept={processAcceptOffer}
+        />
+      )}
+
+      {/* Success Modal */}
+      {successModalData && (
+        <SuccessModal
+          isOpen={showSuccessModal}
+          onClose={() => {
+            setShowSuccessModal(false);
+            setSuccessModalData(null);
+          }}
+          title={successModalData.title}
+          message={successModalData.message}
+          details={successModalData.details}
+          footer={successModalData.footer}
+        />
+      )}
+
+      {/* Staff Profile Modal */}
+      {selectedStaff && (
+        <StaffProfileModal
+          staff={selectedStaff}
+          isOpen={showStaffProfileModal}
+          onClose={() => {
+            setShowStaffProfileModal(false);
+            setSelectedStaff(null);
+          }}
+          onEdit={() => {
+            navigate(`/hr/staff/${selectedStaff.id}`);
+          }}
+          onSendMessage={() => {
+            if (selectedStaff.email) {
+              window.location.href = `mailto:${selectedStaff.email}`;
+            } else {
+              alert('No email address on file for this employee.');
+            }
+          }}
+          onViewSchedule={() => {
+            navigate('/dashboard/scheduling-calendar');
+          }}
+          onManageCredentials={() => {
+            navigate('/dashboard/credentials');
+          }}
         />
       )}
     </div>

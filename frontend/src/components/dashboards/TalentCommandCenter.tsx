@@ -45,7 +45,7 @@ function TalentCommandCenter() {
   const { data: urgentData, isLoading: urgentLoading } = useQuery({
     queryKey: ['hr', 'urgent'],
     queryFn: async () => {
-      const [credentials, background, training, discipline] = await Promise.all([
+      const [credentials, background, training, discipline]: any[] = await Promise.all([
         api.get('/hr/credentials/expiring?days=30'),
         api.get('/hr/background-checks/expiring?days=30'),
         api.get('/training/overdue'),
@@ -64,7 +64,7 @@ function TalentCommandCenter() {
   // Fetch HR summary stats
   const { data: hrStats } = useQuery({
     queryKey: ['hr', 'stats'],
-    queryFn: () => api.get('/hr/stats').then((res) => res.data),
+    queryFn: () => api.get('/hr/stats').then((res: any) => res.data || res),
   });
 
   // Build urgent items array
@@ -128,8 +128,11 @@ function TalentCommandCenter() {
   ];
 
   // Define tabs (filter based on role permissions)
+  // Executives (Founder, CEO, COO) get full access to all tabs for oversight
+  const isExecutive = roleAccess.isFounder || roleAccess.isExecutive;
+
   const tabs: Tab[] = [
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_HR_PIPELINE) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_HR_PIPELINE)) && {
       id: 'pipeline',
       label: 'Pipeline',
       icon: <UserPlus className="w-4 h-4" />,
@@ -137,7 +140,7 @@ function TalentCommandCenter() {
       badgeColor: 'blue',
       content: <PipelineTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.MANAGE_CREDENTIALS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.MANAGE_CREDENTIALS)) && {
       id: 'credentials',
       label: 'Credentials',
       icon: <Award className="w-4 h-4" />,
@@ -145,7 +148,7 @@ function TalentCommandCenter() {
       badgeColor: urgentData?.credentials?.length ? 'yellow' : 'green',
       content: <CredentialsTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.MANAGE_TRAINING) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.MANAGE_TRAINING)) && {
       id: 'training',
       label: 'Training',
       icon: <GraduationCap className="w-4 h-4" />,
@@ -153,7 +156,7 @@ function TalentCommandCenter() {
       badgeColor: urgentData?.training?.length ? 'red' : 'green',
       content: <TrainingTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.MANAGE_DISCIPLINE) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.MANAGE_DISCIPLINE)) && {
       id: 'discipline',
       label: 'Discipline',
       icon: <AlertTriangle className="w-4 h-4" />,
@@ -237,7 +240,7 @@ function PipelineTab() {
   const roleAccess = useRoleAccess();
   const { data: pipelineData, isLoading } = useQuery({
     queryKey: ['hr', 'pipeline'],
-    queryFn: () => api.get('/hr/pipeline').then((res) => res.data),
+    queryFn: () => api.get('/hr/pipeline').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -345,7 +348,7 @@ function CredentialsTab() {
   const roleAccess = useRoleAccess();
   const { data: credentialsData, isLoading } = useQuery({
     queryKey: ['hr', 'credentials'],
-    queryFn: () => api.get('/hr/credentials').then((res) => res.data),
+    queryFn: () => api.get('/hr/credentials').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -460,7 +463,10 @@ function CredentialsTable({ credentials }: { credentials: any[] }) {
                   </span>
                 </td>
                 <td className="px-4 py-2 text-right">
-                  <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                  <button
+                    onClick={() => window.location.href = `/hr/credentials/${credential.id}/remind`}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  >
                     Send Reminder
                   </button>
                 </td>
@@ -481,7 +487,7 @@ function TrainingTab() {
   const roleAccess = useRoleAccess();
   const { data: trainingData, isLoading } = useQuery({
     queryKey: ['hr', 'training'],
-    queryFn: () => api.get('/hr/training').then((res) => res.data),
+    queryFn: () => api.get('/hr/training').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -552,7 +558,7 @@ function DisciplineTab() {
   const roleAccess = useRoleAccess();
   const { data: disciplineData, isLoading } = useQuery({
     queryKey: ['hr', 'discipline'],
-    queryFn: () => api.get('/discipline/dashboard').then((res) => res.data),
+    queryFn: () => api.get('/discipline/dashboard').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -627,7 +633,7 @@ function DisciplineTab() {
 function PerformanceTab() {
   const { data: performanceData, isLoading } = useQuery({
     queryKey: ['hr', 'performance'],
-    queryFn: () => api.get('/hr/performance').then((res) => res.data),
+    queryFn: () => api.get('/hr/performance').then((res: any) => res.data || res),
   });
 
   if (isLoading) {

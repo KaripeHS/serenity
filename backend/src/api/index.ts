@@ -1,20 +1,8 @@
-/**
- * API Entry Point
- * Express application with domain-separated routes
- *
- * Domains:
- * - /api/public  - Public-facing endpoints (careers, applications)
- * - /api/console - Console/ERP endpoints (authenticated staff)
- * - /api/admin   - Admin configuration endpoints (admin role only)
- * - /api/mobile  - Mobile app endpoints (EVV clock-in/out)
- *
- * @module api
- */
 
 import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
 import { createLogger } from '../utils/logger';
+import { securityHeaders, corsOptions } from '../middleware/security';
 import { authRouter } from './routes/auth';
 import { publicRouter } from './routes/public';
 import { consoleRouter } from './routes/console';
@@ -30,10 +18,6 @@ import { rateLimiter } from './middleware/rate-limiter';
 import operationsRouter from './routes/operations.routes';
 import complianceRouter from './routes/compliance.routes';
 import { clinicalRouter } from './routes/clinical';
-// Temporarily excluded from build - type errors being fixed
-// import { clinicalSupervisionRouter } from './routes/clinical-supervision.routes';
-// import { incidentManagementRouter } from './routes/incident-management.routes';
-// import { emergencyPreparednessRouter } from './routes/emergency-preparedness.routes';
 import patientPortalRouter from './routes/patient/portal.routes';
 import familyPortalRouter from './routes/family/portal.routes';
 import { familyRouter } from './routes/family';
@@ -46,27 +30,21 @@ export interface ApiConfig {
   nodeEnv: 'development' | 'production' | 'test';
 }
 
-/**
- * Create Express application with all routes and middleware
- */
 export function createApp(config: ApiConfig): Application {
   const app = express();
 
-  // Security middleware
-  app.use(helmet());
-  app.use(cors({
-    origin: config.corsOrigins,
-    credentials: true,
-  }));
+  // Trust proxy for Cloud Run (required for rate limiting and IP detection)
+  app.set('trust proxy', true);
 
-  // Request parsing
+  // Security and CORS middleware
+  app.use(securityHeaders);
+  app.use(cors(corsOptions));
+  // CORS middleware already handles OPTIONS requests (preflight)
+
+  // Body parsing middleware
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true }));
-
-  // Request logging
   app.use(requestLogger);
-
-  // Health check (no auth required)
   app.get('/health', (_req: Request, res: Response) => {
     res.json({
       status: 'ok',
@@ -75,34 +53,28 @@ export function createApp(config: ApiConfig): Application {
     });
   });
 
-  // Webhooks (no rate limiting or auth - external services)
+  // Webhooks (before rate limiting)
   app.use('/api/webhooks', webhooksRouter);
 
-  // Rate limiting (applied to all routes except webhooks)
+  // Rate limiting
   app.use(rateLimiter);
 
-  // Domain-separated routes
+  // API routes
   app.use('/api/auth', authRouter);
   app.use('/api/public', publicRouter);
   app.use('/api/console', consoleRouter);
   app.use('/api/admin', adminRouter);
   app.use('/api/mobile', mobileRouter);
   app.use('/api/partners', partnersRouter);
-  app.use('/api/partners', partnersRouter);
   app.use('/api/caregiver', caregiverPortalRouter);
   app.use('/api/console/ai', aiRouter);
   app.use('/api/operations', operationsRouter);
   app.use('/api/compliance', complianceRouter);
   app.use('/api/clinical', clinicalRouter);
-  // Temporarily excluded from build - type errors being fixed
-  // app.use('/api/clinical-supervision', clinicalSupervisionRouter);
-  // app.use('/api/incidents', incidentManagementRouter);
-  // app.use('/api/emergency', emergencyPreparednessRouter);
   app.use('/api/patient', patientPortalRouter);
   app.use('/api/family', familyPortalRouter);
-  app.use('/api/family', familyRouter); // New family portal with separate auth
+  app.use('/api/family', familyRouter);
 
-  // 404 handler
   app.use((_req: Request, res: Response) => {
     res.status(404).json({
       error: 'Not Found',
@@ -110,45 +82,46 @@ export function createApp(config: ApiConfig): Application {
     });
   });
 
-  // Global error handler (must be last)
   app.use(errorHandler);
 
   logger.info('Express application configured', {
-    domains: ['auth', 'public', 'console', 'admin', 'mobile', 'webhooks'],
     environment: config.nodeEnv,
   });
 
   return app;
 }
 
-/**
- * Start the API server
- */
-export async function startServer(config: ApiConfig): Promise<void> {
+export async function startServer(config: ApiConfig): Promise<never> {
   const app = createApp(config);
 
-  const server = app.listen(config.port, () => {
-    logger.info(`API server started`, {
-      port: config.port,
-      environment: config.nodeEnv,
-      corsOrigins: config.corsOrigins,
+  return new Promise<never>((_resolve, reject) => {
+    const server = app.listen(config.port, () => {
+      logger.info(`API server started`, {
+        port: config.port,
+        environment: config.nodeEnv,
+        corsOrigins: config.corsOrigins,
+      });
     });
-  });
 
-  // Graceful shutdown
-  process.on('SIGTERM', () => {
-    logger.info('SIGTERM received, shutting down gracefully');
-    server.close(() => {
-      logger.info('Server closed');
-      process.exit(0);
+    server.on('error', (error) => {
+      logger.error('Failed to start server', { error });
+      reject(error);
     });
-  });
 
-  process.on('SIGINT', () => {
-    logger.info('SIGINT received, shutting down gracefully');
-    server.close(() => {
-      logger.info('Server closed');
-      process.exit(0);
+    process.on('SIGTERM', () => {
+      logger.info('SIGTERM received, shutting down gracefully');
+      server.close(() => {
+        logger.info('Server closed');
+        process.exit(0);
+      });
+    });
+
+    process.on('SIGINT', () => {
+      logger.info('SIGINT received, shutting down gracefully');
+      server.close(() => {
+        logger.info('Server closed');
+        process.exit(0);
+      });
     });
   });
 }

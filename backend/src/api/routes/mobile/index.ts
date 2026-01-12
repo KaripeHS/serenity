@@ -935,4 +935,245 @@ router.use('/settings', settingsRouter);
 import { notificationsRouter } from './notifications.routes';
 router.use('/notifications', notificationsRouter);
 
+// ========================================
+// ONBOARDING SELF-SERVICE (Auth required)
+// ========================================
+
+/**
+ * GET /api/mobile/onboarding/my-tasks
+ * Get onboarding tasks for the logged-in new hire
+ */
+router.get('/onboarding/my-tasks', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.userId;
+    const organizationId = req.user?.organizationId;
+    const db = getDbClient();
+
+    // Get the user's info
+    const userResult = await db.query<{
+      id: string;
+      first_name: string;
+      last_name: string;
+      email: string;
+      role: string;
+    }>(
+      `SELECT id, first_name, last_name, email, role FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      throw ApiErrors.notFound('User');
+    }
+
+    const user = userResult.rows[0];
+
+    // Find onboarding instance for this user
+    const onboardingResult = await db.query<{
+      id: string;
+      employee_id: string;
+      status: string;
+      progress: number;
+      start_date: Date | null;
+      target_completion_date: Date | null;
+      created_at: Date;
+    }>(
+      `SELECT id, employee_id, status, progress, start_date, target_completion_date, created_at
+       FROM onboarding_instances
+       WHERE employee_id = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [userId]
+    );
+
+    if (onboardingResult.rows.length === 0) {
+      // No onboarding found for this user
+      res.json({
+        employee: {
+          id: user.id,
+          name: `${user.first_name} ${user.last_name}`,
+          email: user.email,
+          position: user.role
+        },
+        onboarding: null,
+        tasks: [],
+        tasksByCategory: {},
+        categories: []
+      });
+      return;
+    }
+
+    const onboarding = onboardingResult.rows[0];
+
+    // Get all onboarding items
+    const itemsResult = await db.query<{
+      id: string;
+      task_order: number;
+      task_name: string;
+      description: string | null;
+      category: string;
+      is_required: boolean;
+      due_date: Date | null;
+      assigned_role: string;
+      status: string;
+      completed_at: Date | null;
+      item_type: string | null;
+      form_types: string[] | null;
+      requires_upload: boolean | null;
+      requires_signature: boolean | null;
+      training_modules: any;
+      upload_categories: string[] | null;
+      form_data: any;
+      uploaded_files: any;
+    }>(
+      `SELECT
+        id, task_order, task_name, description, category, is_required,
+        due_date, assigned_role, status, completed_at, item_type,
+        form_types, requires_upload, requires_signature, training_modules,
+        upload_categories, form_data, uploaded_files
+       FROM onboarding_items
+       WHERE onboarding_instance_id = $1
+       ORDER BY task_order`,
+      [onboarding.id]
+    );
+
+    // Organize tasks
+    const tasks = itemsResult.rows.map(item => ({
+      id: item.id,
+      order: item.task_order,
+      taskName: item.task_name,
+      description: item.description,
+      category: item.category,
+      isRequired: item.is_required,
+      dueDate: item.due_date?.toISOString() || null,
+      assignedRole: item.assigned_role,
+      status: item.status,
+      completedAt: item.completed_at?.toISOString() || null,
+      itemType: item.item_type || 'task',
+      formTypes: item.form_types || [],
+      requiresUpload: item.requires_upload,
+      requiresSignature: item.requires_signature,
+      trainingModules: item.training_modules,
+      uploadCategories: item.upload_categories || [],
+      formData: item.form_data,
+      uploadedFiles: item.uploaded_files || []
+    }));
+
+    // Group by category
+    const tasksByCategory: Record<string, typeof tasks> = {};
+    const categories: string[] = [];
+
+    for (const task of tasks) {
+      if (!tasksByCategory[task.category]) {
+        tasksByCategory[task.category] = [];
+        categories.push(task.category);
+      }
+      tasksByCategory[task.category].push(task);
+    }
+
+    // Calculate stats
+    const totalItems = tasks.length;
+    const completedItems = tasks.filter(t => t.status === 'completed').length;
+    const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+    res.json({
+      employee: {
+        id: user.id,
+        name: `${user.first_name} ${user.last_name}`,
+        email: user.email,
+        position: user.role
+      },
+      onboarding: {
+        id: onboarding.id,
+        status: onboarding.status,
+        progress,
+        totalItems,
+        completedItems,
+        startDate: onboarding.start_date?.toISOString() || null,
+        targetCompletionDate: onboarding.target_completion_date?.toISOString() || null
+      },
+      tasks,
+      tasksByCategory,
+      categories
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/mobile/onboarding/tasks/:taskId/submit-form
+ * Submit a form for an onboarding task
+ */
+router.post('/onboarding/tasks/:taskId/submit-form', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { taskId } = req.params;
+    const userId = req.user?.userId;
+    const { formType, formData } = req.body;
+
+    if (!formType || !formData) {
+      throw ApiErrors.badRequest('formType and formData are required');
+    }
+
+    const db = getDbClient();
+
+    // Get the task and verify ownership
+    const taskResult = await db.query<{
+      id: string;
+      onboarding_instance_id: string;
+      assigned_role: string;
+      status: string;
+    }>(
+      `SELECT oi.id, oi.onboarding_instance_id, oi.assigned_role, oi.status
+       FROM onboarding_items oi
+       JOIN onboarding_instances inst ON inst.id = oi.onboarding_instance_id
+       WHERE oi.id = $1 AND inst.employee_id = $2`,
+      [taskId, userId]
+    );
+
+    if (taskResult.rows.length === 0) {
+      throw ApiErrors.notFound('Onboarding task');
+    }
+
+    const task = taskResult.rows[0];
+
+    // Only new_hire assigned tasks can be completed by the user
+    if (task.assigned_role !== 'new_hire') {
+      throw ApiErrors.forbidden('This task is not assigned to you');
+    }
+
+    // Update the task with form data
+    await db.query(
+      `UPDATE onboarding_items SET
+        form_data = COALESCE(form_data, '{}'::jsonb) || $1::jsonb,
+        status = 'completed',
+        completed_at = NOW(),
+        completed_by = $2,
+        updated_at = NOW()
+       WHERE id = $3`,
+      [JSON.stringify({ [formType]: formData }), userId, taskId]
+    );
+
+    // Recalculate progress
+    await db.query(
+      `UPDATE onboarding_instances SET
+        progress = (
+          SELECT ROUND(COUNT(*) FILTER (WHERE status = 'completed')::numeric / COUNT(*)::numeric * 100)
+          FROM onboarding_items WHERE onboarding_instance_id = $1
+        ),
+        updated_at = NOW()
+       WHERE id = $1`,
+      [task.onboarding_instance_id]
+    );
+
+    console.log(`[ONBOARDING] User ${userId} submitted ${formType} form for task ${taskId}`);
+
+    res.json({
+      success: true,
+      message: 'Form submitted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export { router as mobileRouter };

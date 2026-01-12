@@ -41,7 +41,7 @@ function ClinicalCommandCenter() {
   const { data: urgentData, isLoading: urgentLoading } = useQuery({
     queryKey: ['clinical', 'urgent'],
     queryFn: async () => {
-      const [supervision, incidents, assessments] = await Promise.all([
+      const [supervision, incidents, assessments]: any[] = await Promise.all([
         api.get('/clinical-supervision/visits/overdue'),
         api.get('/incidents?status=active&deadline=urgent'),
         api.get('/assessments/overdue'),
@@ -58,7 +58,7 @@ function ClinicalCommandCenter() {
   // Fetch compliance score
   const { data: complianceData } = useQuery({
     queryKey: ['compliance', 'score'],
-    queryFn: () => api.get('/compliance/score').then((res) => res.data),
+    queryFn: () => api.get('/compliance/score').then((res: any) => res.data || res),
   });
 
   // Build urgent items array
@@ -98,8 +98,11 @@ function ClinicalCommandCenter() {
   ];
 
   // Define tabs (filter based on role permissions)
+  // Executives (Founder, CEO, COO) get full access to all tabs for oversight
+  const isExecutive = roleAccess.isFounder || roleAccess.isExecutive;
+
   const tabs: Tab[] = [
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_SUPERVISORY_VISITS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_SUPERVISORY_VISITS)) && {
       id: 'supervision',
       label: 'Supervision',
       icon: <Users className="w-4 h-4" />,
@@ -107,7 +110,7 @@ function ClinicalCommandCenter() {
       badgeColor: urgentData?.supervision?.length ? 'red' : 'green',
       content: <SupervisionTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_INCIDENTS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_INCIDENTS)) && {
       id: 'incidents',
       label: 'Incidents',
       icon: <AlertCircle className="w-4 h-4" />,
@@ -115,7 +118,7 @@ function ClinicalCommandCenter() {
       badgeColor: urgentData?.incidents?.length ? 'red' : 'green',
       content: <IncidentsTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_ASSESSMENTS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_ASSESSMENTS)) && {
       id: 'assessments',
       label: 'Assessments',
       icon: <ClipboardCheck className="w-4 h-4" />,
@@ -123,7 +126,7 @@ function ClinicalCommandCenter() {
       badgeColor: urgentData?.assessments?.length ? 'yellow' : 'green',
       content: <AssessmentsTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_QAPI) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_QAPI)) && {
       id: 'qapi',
       label: 'QAPI',
       icon: <TrendingUp className="w-4 h-4" />,
@@ -188,7 +191,7 @@ function ClinicalCommandCenter() {
 function SupervisionTab() {
   const { data: supervisionData, isLoading } = useQuery({
     queryKey: ['clinical-supervision', 'overview'],
-    queryFn: () => api.get('/clinical-supervision/overview').then((res) => res.data),
+    queryFn: () => api.get('/clinical-supervision/overview').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -267,7 +270,7 @@ function SupervisionTab() {
 function IncidentsTab() {
   const { data: incidentsData, isLoading } = useQuery({
     queryKey: ['incidents', 'dashboard'],
-    queryFn: () => api.get('/incidents/dashboard').then((res) => res.data),
+    queryFn: () => api.get('/incidents/dashboard').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -334,7 +337,7 @@ function IncidentsTab() {
 function AssessmentsTab() {
   const { data: assessmentsData, isLoading } = useQuery({
     queryKey: ['assessments', 'dashboard'],
-    queryFn: () => api.get('/assessments/dashboard').then((res) => res.data),
+    queryFn: () => api.get('/assessments/dashboard').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -390,7 +393,7 @@ function AssessmentsTab() {
 function QAPITab() {
   const { data: qapiData, isLoading } = useQuery({
     queryKey: ['qapi', 'dashboard'],
-    queryFn: () => api.get('/qapi/dashboard').then((res) => res.data),
+    queryFn: () => api.get('/qapi/dashboard').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -493,7 +496,12 @@ function SupervisoryVisitsTable({ visits }: { visits: any[] }) {
               <td className="px-4 py-2 text-sm text-gray-500">{new Date(visit.lastVisitDate).toLocaleDateString()}</td>
               <td className="px-4 py-2 text-sm font-medium text-red-600">{visit.daysOverdue} days</td>
               <td className="px-4 py-2 text-right">
-                <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">Schedule Visit</button>
+                <button
+                  onClick={() => window.location.href = `/clinical/supervisory-visits/schedule/${visit.id}`}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Schedule Visit
+                </button>
               </td>
             </tr>
           ))}
@@ -515,7 +523,10 @@ function CriticalIncidentsTable({ incidents }: { incidents: any[] }) {
             <p className="text-sm font-medium text-red-900">{incident.incidentNumber}: {incident.incidentType}</p>
             <p className="text-xs text-red-700">Deadline: {new Date(incident.reportingDeadline).toLocaleString()}</p>
           </div>
-          <button className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700">
+          <button
+            onClick={() => window.location.href = `/clinical/incidents/${incident.id}/report-oda`}
+            className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700"
+          >
             Report to ODA
           </button>
         </div>

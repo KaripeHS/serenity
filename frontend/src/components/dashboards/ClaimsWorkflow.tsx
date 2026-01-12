@@ -445,12 +445,12 @@ export function ClaimsWorkflow() {
   );
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 min-h-screen" data-testid="claims-dashboard">
       <div className="max-w-7xl mx-auto p-4 md:p-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
           <div className="animate-fade-in">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2" data-testid="claims-title">
               Claims Submission
             </h1>
             <p className="text-gray-600">
@@ -466,48 +466,67 @@ export function ClaimsWorkflow() {
           </Link>
         </div>
 
-        {/* KPI Summary */}
+        {/* KPI Summary - Clickable Tiles */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <Card className="p-4">
+            <Card
+              className="p-4 cursor-pointer hover:shadow-md hover:border-info-300 transition-all group"
+              onClick={() => setActiveTab('ready')}
+            >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600">Ready to Submit</h3>
-                <div className="p-2 bg-info-100 rounded-lg">
+                <h3 className="text-sm font-medium text-gray-600 group-hover:text-info-700">Ready to Submit</h3>
+                <div className="p-2 bg-info-100 rounded-lg group-hover:bg-info-200 transition-colors">
                   <DocumentTextIcon className="h-5 w-5 text-info-600" />
                 </div>
               </div>
               <p className="text-3xl font-bold text-info-600">{stats.byStatus.ready_to_submit.count}</p>
               <p className="text-sm text-gray-500">{formatCurrency(stats.byStatus.ready_to_submit.amount)}</p>
+              <p className="text-xs text-info-600 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to view claims →</p>
             </Card>
-            <Card className="p-4">
+            <Card
+              className="p-4 cursor-pointer hover:shadow-md hover:border-warning-300 transition-all group"
+              onClick={() => setActiveTab('submitted')}
+            >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600">In Process</h3>
-                <div className="p-2 bg-warning-100 rounded-lg">
+                <h3 className="text-sm font-medium text-gray-600 group-hover:text-warning-700">In Process</h3>
+                <div className="p-2 bg-warning-100 rounded-lg group-hover:bg-warning-200 transition-colors">
                   <ClockIcon className="h-5 w-5 text-warning-600" />
                 </div>
               </div>
               <p className="text-3xl font-bold text-warning-600">{stats.byStatus.submitted.count + stats.byStatus.accepted.count}</p>
               <p className="text-sm text-gray-500">{formatCurrency(stats.byStatus.submitted.amount + stats.byStatus.accepted.amount)}</p>
+              <p className="text-xs text-warning-600 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to view claims →</p>
             </Card>
-            <Card className="p-4">
+            <Card
+              className="p-4 cursor-pointer hover:shadow-md hover:border-success-300 transition-all group"
+              onClick={() => {
+                setActiveTab('all');
+                setFilterStatus('paid');
+              }}
+            >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600">Paid This Month</h3>
-                <div className="p-2 bg-success-100 rounded-lg">
+                <h3 className="text-sm font-medium text-gray-600 group-hover:text-success-700">Paid This Month</h3>
+                <div className="p-2 bg-success-100 rounded-lg group-hover:bg-success-200 transition-colors">
                   <BanknotesIcon className="h-5 w-5 text-success-600" />
                 </div>
               </div>
               <p className="text-3xl font-bold text-success-600">{stats.byStatus.paid.count}</p>
               <p className="text-sm text-gray-500">{formatCurrency(stats.byStatus.paid.amount)} <span className="text-success-600">+8%</span></p>
+              <p className="text-xs text-success-600 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to view paid claims →</p>
             </Card>
-            <Card className="p-4">
+            <Card
+              className="p-4 cursor-pointer hover:shadow-md hover:border-gray-300 transition-all group"
+              onClick={() => setActiveTab('action')}
+            >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600">Clean Claim Rate</h3>
-                <div className={`p-2 rounded-lg ${stats.cleanClaimRate >= 90 ? 'bg-success-100' : stats.cleanClaimRate >= 80 ? 'bg-warning-100' : 'bg-danger-100'}`}>
+                <h3 className="text-sm font-medium text-gray-600 group-hover:text-gray-800">Clean Claim Rate</h3>
+                <div className={`p-2 rounded-lg transition-colors ${stats.cleanClaimRate >= 90 ? 'bg-success-100 group-hover:bg-success-200' : stats.cleanClaimRate >= 80 ? 'bg-warning-100 group-hover:bg-warning-200' : 'bg-danger-100 group-hover:bg-danger-200'}`}>
                   <CheckCircleIcon className={`h-5 w-5 ${stats.cleanClaimRate >= 90 ? 'text-success-600' : stats.cleanClaimRate >= 80 ? 'text-warning-600' : 'text-danger-600'}`} />
                 </div>
               </div>
               <p className={`text-3xl font-bold ${stats.cleanClaimRate >= 90 ? 'text-success-600' : stats.cleanClaimRate >= 80 ? 'text-warning-600' : 'text-danger-600'}`}>{stats.cleanClaimRate}%</p>
               <p className="text-sm text-gray-500">{stats.denialRate}% denial rate</p>
+              <p className={`text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity ${stats.cleanClaimRate >= 90 ? 'text-success-600' : stats.cleanClaimRate >= 80 ? 'text-warning-600' : 'text-danger-600'}`}>Click to view issues →</p>
             </Card>
           </div>
         )}

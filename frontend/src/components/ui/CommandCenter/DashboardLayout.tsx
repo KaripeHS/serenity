@@ -9,6 +9,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
   actions?: React.ReactNode;
   className?: string;
+  'data-testid'?: string;
 }
 
 /**
@@ -23,14 +24,15 @@ export function DashboardLayout({
   children,
   actions,
   className,
+  'data-testid': dataTestId,
 }: DashboardLayoutProps) {
   return (
-    <div className={cn('flex flex-col h-full bg-gray-50', className)}>
+    <div className={cn('flex flex-col h-full bg-gray-50', className)} data-testid={dataTestId}>
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+            <h1 className="text-2xl font-bold text-gray-900" data-testid={dataTestId ? `${dataTestId.replace('-dashboard', '')}-title` : undefined}>{title}</h1>
             {subtitle && (
               <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
             )}

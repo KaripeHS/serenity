@@ -21,8 +21,9 @@ const router = Router();
 const repository = getSandataRepository(getDbClient());
 
 // All Admin routes require authentication + admin role
+// CEO and founder have same access level
 router.use(requireAuth);
-router.use(requireRole('admin', 'super_admin', 'founder'));
+router.use(requireRole('admin', 'super_admin', 'founder', 'ceo'));
 
 // ============================================================================
 // ORGANIZATIONS

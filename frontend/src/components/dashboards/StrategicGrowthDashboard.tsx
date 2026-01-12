@@ -31,11 +31,14 @@ function StrategicGrowthDashboard() {
   const roleAccess = useRoleAccess();
   const [selectedTab, setSelectedTab] = useState('overview');
 
+  // Executives (Founder, CEO, COO) get full access to all tabs for oversight
+  const isExecutive = roleAccess.isFounder || roleAccess.isExecutive;
+
   // Fetch urgent items
   const { data: urgentData, isLoading } = useQuery({
     queryKey: ['strategic-growth', 'urgent'],
     queryFn: async () => {
-      const [churnRisks, hiringNeeds] = await Promise.all([
+      const [churnRisks, hiringNeeds]: any[] = await Promise.all([
         api.get('/analytics/churn-predictions'),
         api.get('/analytics/hiring-forecast'),
       ]);
@@ -79,13 +82,13 @@ function StrategicGrowthDashboard() {
       icon: <TrendingUp className="w-4 h-4" />,
       content: <OverviewTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_PREDICTIVE_ANALYTICS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_PREDICTIVE_ANALYTICS)) && {
       id: 'hiring-forecast',
       label: 'Hiring Forecast',
       icon: <Users className="w-4 h-4" />,
       content: <HiringForecastTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_PREDICTIVE_ANALYTICS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_PREDICTIVE_ANALYTICS)) && {
       id: 'churn-prediction',
       label: 'Churn Prediction',
       icon: <AlertTriangle className="w-4 h-4" />,
@@ -93,7 +96,7 @@ function StrategicGrowthDashboard() {
       badgeColor: 'red',
       content: <ChurnPredictionTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_PREDICTIVE_ANALYTICS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_PREDICTIVE_ANALYTICS)) && {
       id: 'lead-scoring',
       label: 'Lead Scoring',
       icon: <Target className="w-4 h-4" />,
@@ -148,7 +151,7 @@ function OverviewTab() {
   const { data: overviewData, isLoading } = useQuery({
     queryKey: ['strategic-growth', 'overview'],
     queryFn: async () => {
-      const response = await api.get('/analytics/growth-overview');
+      const response: any = await api.get('/analytics/growth-overview');
       return response.data;
     },
   });
@@ -311,7 +314,7 @@ function HiringForecastTab() {
   const { data: hiringData, isLoading } = useQuery({
     queryKey: ['analytics', 'hiring-forecast'],
     queryFn: async () => {
-      const response = await api.get('/analytics/hiring-forecast');
+      const response: any = await api.get('/analytics/hiring-forecast');
       return response.data;
     },
   });
@@ -431,7 +434,7 @@ function ChurnPredictionTab() {
   const { data: churnData, isLoading } = useQuery({
     queryKey: ['analytics', 'churn-predictions'],
     queryFn: async () => {
-      const response = await api.get('/analytics/churn-predictions');
+      const response: any = await api.get('/analytics/churn-predictions');
       return response.data;
     },
   });
@@ -449,7 +452,9 @@ function ChurnPredictionTab() {
         icon={<AlertTriangle className="w-5 h-5" />}
         action={{
           label: 'Export List',
-          onClick: () => {},
+          onClick: () => {
+            alert('Exporting churn risk list to CSV...');
+          },
         }}
       >
         <div className="overflow-x-auto">
@@ -505,7 +510,10 @@ function ChurnPredictionTab() {
                     {caregiver.recommendedAction}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <button className="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700">
+                    <button
+                      onClick={() => window.location.href = `/hr/retention/${caregiver.id}`}
+                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700"
+                    >
                       Intervene
                     </button>
                   </td>
@@ -536,7 +544,7 @@ function LeadScoringTab() {
   const { data: leadData, isLoading } = useQuery({
     queryKey: ['analytics', 'lead-scoring'],
     queryFn: async () => {
-      const response = await api.get('/analytics/lead-scoring');
+      const response: any = await api.get('/analytics/lead-scoring');
       return response.data;
     },
   });
@@ -598,7 +606,10 @@ function LeadScoringTab() {
                   <td className="px-4 py-3 text-sm text-gray-600">{lead.serviceInterest}</td>
                   <td className="px-4 py-3 text-sm text-gray-900">{lead.nextAction}</td>
                   <td className="px-4 py-3 text-center">
-                    <button className="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700">
+                    <button
+                      onClick={() => window.location.href = `/sales/leads/${lead.id}/contact`}
+                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700"
+                    >
                       Contact
                     </button>
                   </td>

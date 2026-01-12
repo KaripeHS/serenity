@@ -75,14 +75,25 @@ export function AdminRoleManager() {
     const fetchUsers = async () => {
         try {
             setLoading(true);
+            setError(''); // Clear previous errors
             const data = await adminService.getUsers({
                 role: roleFilter || undefined,
                 search: search || undefined
             });
             setUsers(data);
-        } catch (err) {
-            console.error('Failed to fetch users', err);
-            setError('Failed to load users');
+        } catch (err: any) {
+            console.error('Failed to fetch users:', err);
+            // Extract detailed error message
+            const errorMessage = err?.data?.message || err?.message || 'Failed to load users';
+            const statusCode = err?.status;
+
+            if (statusCode === 401) {
+                setError('Authentication required. Please log in again.');
+            } else if (statusCode === 403) {
+                setError('Access denied. You do not have permission to view users.');
+            } else {
+                setError(errorMessage);
+            }
         } finally {
             setLoading(false);
         }
@@ -181,7 +192,28 @@ export function AdminRoleManager() {
                     {loading ? (
                         <div className="p-8 text-center text-gray-500">Loading users...</div>
                     ) : error ? (
-                        <div className="p-8 text-center text-red-500">{error}</div>
+                        <div className="p-8 text-center">
+                            <div className="max-w-md mx-auto">
+                                <div className="text-red-600 font-semibold mb-2">{error}</div>
+                                <p className="text-gray-600 text-sm mb-4">
+                                    There was a problem loading users. This might be due to an authentication issue.
+                                </p>
+                                <div className="flex gap-3 justify-center">
+                                    <button
+                                        onClick={fetchUsers}
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                    >
+                                        Try Again
+                                    </button>
+                                    <button
+                                        onClick={() => window.location.href = '/'}
+                                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                                    >
+                                        Back to Home
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     ) : (
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">

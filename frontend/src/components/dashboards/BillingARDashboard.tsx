@@ -3,6 +3,7 @@
  * Comprehensive billing management with AR aging breakdown, claims management, and payer analytics
  */
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -79,6 +80,7 @@ type TabType = 'overview' | 'claims' | 'ar_aging' | 'payers' | 'denials';
 
 export function BillingARDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<BillingMetrics | null>(null);
@@ -201,11 +203,11 @@ export function BillingARDashboard() {
   const totalAR = arAging.reduce((sum, bucket) => sum + bucket.totalAmount, 0);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen" data-testid="ar-aging-dashboard">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Billing & Revenue Cycle</h1>
+          <h1 className="text-3xl font-bold text-gray-900" data-testid="ar-title">Billing & Revenue Cycle</h1>
           <p className="text-gray-600 mt-1">
             Claims processing, AR aging analysis, and revenue optimization
           </p>
@@ -241,41 +243,65 @@ export function BillingARDashboard() {
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="space-y-6 animate-fade-in">
-            {/* KPIs */}
+            {/* KPIs - Clickable with drill-down */}
             <KPIGrid columns={4}>
-              <KPIWidget
-                title="Monthly Revenue"
-                value={formatCurrency(metrics.monthlyRevenue)}
-                subtitle="+8% vs last month"
-                trend="up"
-                icon={CurrencyDollarIcon}
-                iconColor="bg-success-600"
-                status="success"
-              />
-              <KPIWidget
-                title="MTD Collections"
-                value={formatCurrency(metrics.mtdCollections)}
-                subtitle={`${((metrics.mtdCollections / metrics.monthlyRevenue) * 100).toFixed(1)}% of billed`}
-                icon={BanknotesIcon}
-                iconColor="bg-green-600"
-              />
-              <KPIWidget
-                title="Days in A/R"
-                value={metrics.daysInAR.toFixed(1)}
-                subtitle="Industry avg: 35 days"
-                trend="down"
-                icon={ClockIcon}
-                iconColor="bg-primary-600"
-                status="success"
-              />
-              <KPIWidget
-                title="Clean Claim Rate"
-                value={`${metrics.cleanClaimRate}%`}
-                subtitle="Target: 95%"
-                icon={CheckCircleIcon}
-                iconColor="bg-success-600"
-                status="success"
-              />
+              <div
+                className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all rounded-lg"
+                onClick={() => setActiveTab('claims')}
+                title="Click to view claims"
+              >
+                <KPIWidget
+                  title="Monthly Revenue"
+                  value={formatCurrency(metrics.monthlyRevenue)}
+                  subtitle="Click to view claims →"
+                  trend="up"
+                  icon={CurrencyDollarIcon}
+                  iconColor="bg-success-600"
+                  status="success"
+                />
+              </div>
+              <div
+                className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all rounded-lg"
+                onClick={() => setActiveTab('payers')}
+                title="Click to view payers"
+              >
+                <KPIWidget
+                  title="MTD Collections"
+                  value={formatCurrency(metrics.mtdCollections)}
+                  subtitle="Click to view payers →"
+                  icon={BanknotesIcon}
+                  iconColor="bg-green-600"
+                />
+              </div>
+              <div
+                className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all rounded-lg"
+                onClick={() => setActiveTab('ar_aging')}
+                title="Click to view AR aging"
+              >
+                <KPIWidget
+                  title="Days in A/R"
+                  value={metrics.daysInAR.toFixed(1)}
+                  subtitle="Click to view aging →"
+                  trend="down"
+                  icon={ClockIcon}
+                  iconColor="bg-primary-600"
+                  status="success"
+                />
+              </div>
+              <div
+                className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all rounded-lg"
+                onClick={() => setActiveTab('denials')}
+                title="Click to view denials"
+              >
+                <KPIWidget
+                  title="Clean Claim Rate"
+                  value={`${metrics.cleanClaimRate}%`}
+                  subtitle="Click to view denials →"
+                  icon={CheckCircleIcon}
+                  iconColor="bg-success-600"
+                  status="success"
+                />
+              </div>
             </KPIGrid>
 
             {/* Alerts */}
@@ -368,50 +394,50 @@ export function BillingARDashboard() {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card hoverable clickable onClick={() => setActiveTab('claims')}>
+              <Card hoverable clickable onClick={() => navigate('/dashboard/claims-workflow')}>
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-primary-100 rounded-lg">
+                  <div className="p-3 bg-primary-100 rounded-lg group-hover:bg-primary-200 transition-colors">
                     <PlusIcon className="h-6 w-6 text-primary-600" />
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">New Claim</h4>
-                    <p className="text-sm text-gray-500">Create claim</p>
+                    <p className="text-sm text-gray-500">Create claim →</p>
                   </div>
                 </div>
               </Card>
 
-              <Card hoverable clickable>
+              <Card hoverable clickable onClick={() => navigate('/dashboard/claims-workflow')}>
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-success-100 rounded-lg">
+                  <div className="p-3 bg-success-100 rounded-lg group-hover:bg-success-200 transition-colors">
                     <ArrowPathIcon className="h-6 w-6 text-success-600" />
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">Batch Submit</h4>
-                    <p className="text-sm text-gray-500">{metrics.pendingClaims} ready</p>
+                    <p className="text-sm text-gray-500">{metrics.pendingClaims} ready →</p>
                   </div>
                 </div>
               </Card>
 
-              <Card hoverable clickable>
+              <Card hoverable clickable onClick={() => setActiveTab('claims')}>
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-info-100 rounded-lg">
+                  <div className="p-3 bg-info-100 rounded-lg group-hover:bg-info-200 transition-colors">
                     <BanknotesIcon className="h-6 w-6 text-info-600" />
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">Post ERA/835</h4>
-                    <p className="text-sm text-gray-500">Auto-posting</p>
+                    <p className="text-sm text-gray-500">View payments →</p>
                   </div>
                 </div>
               </Card>
 
-              <Card hoverable clickable onClick={() => setActiveTab('denials')}>
+              <Card hoverable clickable onClick={() => navigate('/dashboard/denials')}>
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-warning-100 rounded-lg">
+                  <div className="p-3 bg-warning-100 rounded-lg group-hover:bg-warning-200 transition-colors">
                     <ExclamationTriangleIcon className="h-6 w-6 text-warning-600" />
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">Work Denials</h4>
-                    <p className="text-sm text-gray-500">{metrics.deniedClaims} to review</p>
+                    <p className="text-sm text-gray-500">{metrics.deniedClaims} to review →</p>
                   </div>
                 </div>
               </Card>

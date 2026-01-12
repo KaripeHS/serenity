@@ -186,9 +186,20 @@ export function BackgroundCheckDashboard() {
     );
   }
 
-  if (!dashboard) return null;
-
-  const { stats, needingChecks, recentChecks } = dashboard;
+  // Default empty data if dashboard is null
+  const stats: ComplianceStats = dashboard?.stats || {
+    totalCaregivers: 0,
+    compliant: 0,
+    nonCompliant: 0,
+    expiringSoon: 0,
+    neverChecked: 0,
+    complianceRate: 100,
+    avgDaysToExpiration: 0,
+    checksByType: {} as Record<CheckType, number>,
+    checksByStatus: {} as Record<CheckStatus, number>
+  };
+  const needingChecks = dashboard?.needingChecks || { items: [], count: 0, byStatus: { neverChecked: 0, expired: 0, expiringSoon: 0 } };
+  const recentChecks = dashboard?.recentChecks || { items: [], count: 0 };
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -247,39 +258,63 @@ export function BackgroundCheckDashboard() {
               </Alert>
             )}
 
-            {/* KPIs */}
+            {/* KPIs - Clickable to navigate to relevant tabs */}
             <KPIGrid columns={4}>
-              <KPIWidget
-                title="Compliance Rate"
-                value={`${stats.complianceRate.toFixed(1)}%`}
-                subtitle={`${stats.compliant} of ${stats.totalCaregivers} compliant`}
-                icon={ShieldCheckIcon}
-                iconColor="bg-success-600"
-                status={stats.complianceRate >= 95 ? 'success' : stats.complianceRate >= 85 ? 'warning' : 'danger'}
-              />
-              <KPIWidget
-                title="Non-Compliant"
-                value={stats.nonCompliant.toString()}
-                subtitle="Need immediate action"
-                icon={ShieldExclamationIcon}
-                iconColor="bg-danger-600"
-                status={stats.nonCompliant === 0 ? 'success' : 'danger'}
-              />
-              <KPIWidget
-                title="Expiring Soon"
-                value={stats.expiringSoon.toString()}
-                subtitle="Within 60 days"
-                icon={ClockIcon}
-                iconColor="bg-warning-600"
-                status={stats.expiringSoon === 0 ? 'success' : 'warning'}
-              />
-              <KPIWidget
-                title="Never Checked"
-                value={stats.neverChecked.toString()}
-                subtitle="New hires pending"
-                icon={UserGroupIcon}
-                iconColor="bg-primary-600"
-              />
+              <div
+                className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all rounded-lg"
+                onClick={() => setActiveTab('all_checks')}
+                title="Click to view all checks"
+              >
+                <KPIWidget
+                  title="Compliance Rate"
+                  value={`${stats.complianceRate.toFixed(1)}%`}
+                  subtitle={`${stats.compliant} of ${stats.totalCaregivers} compliant`}
+                  icon={ShieldCheckIcon}
+                  iconColor="bg-success-600"
+                  status={stats.complianceRate >= 95 ? 'success' : stats.complianceRate >= 85 ? 'warning' : 'danger'}
+                />
+              </div>
+              <div
+                className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all rounded-lg"
+                onClick={() => setActiveTab('needing_checks')}
+                title="Click to view non-compliant caregivers"
+              >
+                <KPIWidget
+                  title="Non-Compliant"
+                  value={stats.nonCompliant.toString()}
+                  subtitle="Click to view details →"
+                  icon={ShieldExclamationIcon}
+                  iconColor="bg-danger-600"
+                  status={stats.nonCompliant === 0 ? 'success' : 'danger'}
+                />
+              </div>
+              <div
+                className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all rounded-lg"
+                onClick={() => setActiveTab('needing_checks')}
+                title="Click to view expiring soon"
+              >
+                <KPIWidget
+                  title="Expiring Soon"
+                  value={stats.expiringSoon.toString()}
+                  subtitle="Click to view details →"
+                  icon={ClockIcon}
+                  iconColor="bg-warning-600"
+                  status={stats.expiringSoon === 0 ? 'success' : 'warning'}
+                />
+              </div>
+              <div
+                className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all rounded-lg"
+                onClick={() => setActiveTab('needing_checks')}
+                title="Click to view never checked"
+              >
+                <KPIWidget
+                  title="Never Checked"
+                  value={stats.neverChecked.toString()}
+                  subtitle="Click to view details →"
+                  icon={UserGroupIcon}
+                  iconColor="bg-primary-600"
+                />
+              </div>
             </KPIGrid>
 
             {/* Compliance Ring and Quick Stats */}

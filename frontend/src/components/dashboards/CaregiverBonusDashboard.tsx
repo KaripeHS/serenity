@@ -51,45 +51,64 @@ export function CaregiverBonusDashboard() {
 
   const renderOverview = () => (
     <div className="space-y-6">
-      {/* Summary KPIs */}
+      {/* Summary KPIs - Clickable */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card
+          className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
+          onClick={() => setActiveTab('history')}
+        >
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-green-600">
               ${mockDashboardSummary.totalBonusesPaidYTD.toLocaleString()}
             </div>
             <div className="text-sm text-gray-500">Bonuses Paid YTD</div>
+            <div className="text-xs text-primary-600 mt-1">Click to view history →</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card
+          className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
+          onClick={() => setActiveTab('quality')}
+        >
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-yellow-600">
               ${mockDashboardSummary.totalBonusesPending.toLocaleString()}
             </div>
             <div className="text-sm text-gray-500">Pending Payout</div>
+            <div className="text-xs text-primary-600 mt-1">Click to review →</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card
+          className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
+          onClick={() => setActiveTab('quality')}
+        >
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-blue-600">
               {mockDashboardSummary.averageEVVCompliance}%
             </div>
             <div className="text-sm text-gray-500">Avg EVV Compliance</div>
+            <div className="text-xs text-primary-600 mt-1">View quality metrics →</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card
+          className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
+          onClick={() => setActiveTab('showup')}
+        >
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-purple-600">
               {mockDashboardSummary.averageShiftCompletion}%
             </div>
             <div className="text-sm text-gray-500">Avg Shift Completion</div>
+            <div className="text-xs text-primary-600 mt-1">View show-up bonus →</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Eligibility Summary Cards */}
+      {/* Eligibility Summary Cards - Clickable */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-l-4 border-l-green-500">
+        <Card
+          className="border-l-4 border-l-green-500 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
+          onClick={() => setActiveTab('quality')}
+        >
           <CardHeader>
             <CardTitle className="text-lg">90-Day Quality Bonus</CardTitle>
           </CardHeader>
@@ -109,10 +128,14 @@ export function CaregiverBonusDashboard() {
             <div className="mt-4 text-xs text-gray-600">
               <p>Requirements: 95% EVV + 95% shifts + 0 NCNS + 0 complaints</p>
             </div>
+            <div className="text-xs text-primary-600 mt-2">Click to view details →</div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-blue-500">
+        <Card
+          className="border-l-4 border-l-blue-500 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
+          onClick={() => setActiveTab('showup')}
+        >
           <CardHeader>
             <CardTitle className="text-lg">Show Up Bonus (Q4)</CardTitle>
           </CardHeader>
@@ -132,10 +155,14 @@ export function CaregiverBonusDashboard() {
             <div className="mt-4 text-xs text-gray-600">
               <p>Requirements: Complete all assigned shifts with zero misses</p>
             </div>
+            <div className="text-xs text-primary-600 mt-2">Click to view details →</div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-500">
+        <Card
+          className="border-l-4 border-l-purple-500 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
+          onClick={() => setActiveTab('hours')}
+        >
           <CardHeader>
             <CardTitle className="text-lg">Hours Bonus (2024)</CardTitle>
           </CardHeader>
@@ -155,6 +182,7 @@ export function CaregiverBonusDashboard() {
             <div className="mt-4 text-xs text-gray-600">
               <p>Bronze: 1,500 hrs | Silver: 1,750 hrs | Gold: 2,000+ hrs</p>
             </div>
+            <div className="text-xs text-primary-600 mt-2">Click to view details →</div>
           </CardContent>
         </Card>
       </div>
@@ -287,7 +315,14 @@ export function CaregiverBonusDashboard() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       {caregiver.qualityBonus.status === 'eligible' && (
-                        <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                        <button
+                          onClick={() => {
+                            if (confirm(`Process bonus of $${caregiver.qualityBonus.amount.toFixed(2)} for ${caregiver.name}?`)) {
+                              alert(`Quality bonus of $${caregiver.qualityBonus.amount.toFixed(2)} processed for ${caregiver.name}`);
+                            }
+                          }}
+                          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        >
                           Process Bonus
                         </button>
                       )}

@@ -1,0 +1,1 @@
+CORS_ORIGINS: "http://localhost:3001,http://localhost:3002,http://localhost:3003,https://console.serenitycarepartners.com,https://serenity-erp-prod.web.app,https://serenity-erp-prod.firebaseapp.com"

@@ -146,6 +146,8 @@ export default function CareersPage() {
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [submittedName, setSubmittedName] = useState('');
 
   const scrollToForm = () => {
     setShowForm(true);
@@ -193,8 +195,9 @@ export default function CareersPage() {
         throw new Error(result.message || 'Failed to submit application');
       }
 
-      // Success! Show confirmation
-      alert('Thank you! Your application has been submitted successfully. Our HR team will contact you within 48 hours.');
+      // Success! Show modern confirmation modal
+      setSubmittedName(formData.name.split(' ')[0]); // Get first name
+      setShowSuccessModal(true);
 
       // Reset form
       setFormData({
@@ -829,6 +832,104 @@ export default function CareersPage() {
         </svg>
         Apply Now
       </button>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fadeIn"
+            onClick={() => setShowSuccessModal(false)}
+          />
+
+          {/* Modal */}
+          <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 animate-scaleIn">
+            {/* Success Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 bg-serenity-green-100 rounded-full flex items-center justify-center animate-bounce-slow">
+                <svg className="w-10 h-10 text-serenity-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-warm-gray-900 mb-2">
+                Application Submitted!
+              </h3>
+              <p className="text-lg text-warm-gray-600 mb-6">
+                Thank you{submittedName ? `, ${submittedName}` : ''}! Your application has been received successfully.
+              </p>
+
+              {/* What's Next */}
+              <div className="bg-sage-50 rounded-xl p-5 mb-6 text-left">
+                <h4 className="font-semibold text-warm-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-serenity-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  What happens next?
+                </h4>
+                <ul className="space-y-2 text-warm-gray-600">
+                  <li className="flex items-start gap-2">
+                    <span className="text-serenity-green-500 font-bold">1.</span>
+                    Our HR team will review your application
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-serenity-green-500 font-bold">2.</span>
+                    Expect a call or email within 48 hours
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-serenity-green-500 font-bold">3.</span>
+                    We'll schedule a quick phone interview
+                  </li>
+                </ul>
+              </div>
+
+              {/* Close Button */}
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full px-6 py-3 bg-serenity-green-500 text-white font-semibold rounded-xl hover:bg-serenity-green-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+              >
+                Got it!
+              </button>
+
+              {/* Contact Info */}
+              <p className="mt-4 text-sm text-warm-gray-500">
+                Questions? Email us at{' '}
+                <a href="mailto:Hello@serenitycarepartners.com" className="text-serenity-green-600 hover:underline">
+                  Hello@serenitycarepartners.com
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Animation Styles */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.9); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.2s ease-out;
+        }
+        .animate-scaleIn {
+          animation: scaleIn 0.3s ease-out;
+        }
+        .animate-bounce-slow {
+          animation: bounce-slow 2s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,0 +1,182 @@
+
+Running 17 tests using 1 worker
+
+[1A[2K[1/17] [setup] › e2e\auth.setup.ts:8:6 › authenticate
+[1A[2K[setup] › e2e\auth.setup.ts:8:6 › authenticate
+Navigating to login page...
+
+[1A[2KPerforming client-side navigation to /erp...
+
+[1A[2KURL after nav: http://127.0.0.1:3000/erp
+
+[1A[2KWaiting for email input...
+
+[1A[2KFilling credentials...
+
+[1A[2KClicking sign in...
+
+[1A[2KMOCK: Intercepting Login Request
+
+[1A[2KWaiting for dashboard...
+
+[1A[2KMOCK: Intercepting Me Request
+
+[1A[2KLogin successful, dashboard visible.
+
+[1A[2KAuth file created manually at c:\Users\bdegu\coding\Serenity01\e2e\.auth\manual_user.json, size: 14283 bytes
+
+[1A[2K[2/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:14:7 › User Management - Comprehensive Tests › COO can access user management page
+[1A[2K[e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:14:7 › User Management - Comprehensive Tests › COO can access user management page
+[UserManagement] User count element not found, may not have loaded yet
+
+[1A[2K[3/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:27:7 › User Management - Comprehensive Tests › HR Manager can access user management page
+[1A[2K[e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:27:7 › User Management - Comprehensive Tests › HR Manager can access user management page
+[UserManagement] User count element not found, may not have loaded yet
+
+[1A[2K[4/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:39:7 › User Management - Comprehensive Tests › Caregiver cannot access user management page
+[1A[2K[5/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:60:7 › User Management - Comprehensive Tests › Create new user with all required fields
+[1A[2K[e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:60:7 › User Management - Comprehensive Tests › Create new user with all required fields
+[UserManagement] User count element not found, may not have loaded yet
+
+[1A[2K  1) [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:60:7 › User Management - Comprehensive Tests › Create new user with all required fields 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByText('User created successfully')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByText('User created successfully')[22m
+
+
+       at pages\user-management.page.ts:218
+
+      216 |    */
+      217 |   async verifySuccessMessage(message: string) {
+    > 218 |     await expect(this.page.getByText(message, { exact: false })).toBeVisible({ timeout: 5000 });
+          |                                                                  ^
+      219 |   }
+      220 |
+      221 |   /**
+        at UserManagementPage.verifySuccessMessage (c:\Users\bdegu\coding\Serenity01\e2e\pages\user-management.page.ts:218:66)
+        at c:\Users\bdegu\coding\Serenity01\e2e\specs\01-auth\comprehensive-user-management.spec.ts:72:20
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\specs-01-auth-comprehensiv-42144-er-with-all-required-fields-e2e\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\specs-01-auth-comprehensiv-42144-er-with-all-required-fields-e2e\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\specs-01-auth-comprehensiv-42144-er-with-all-required-fields-e2e\error-context.md
+
+
+[1A[2K[6/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:80:7 › User Management - Comprehensive Tests › Create user with duplicate email shows error
+[1A[2K[e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:80:7 › User Management - Comprehensive Tests › Create user with duplicate email shows error
+[UserManagement] User count element not found, may not have loaded yet
+
+[1A[2K[7/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:101:7 › User Management - Comprehensive Tests › Create user with missing required field shows validation error
+[1A[2K[e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:101:7 › User Management - Comprehensive Tests › Create user with missing required field shows validation error
+[UserManagement] User count element not found, may not have loaded yet
+
+[1A[2K  2) [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:101:7 › User Management - Comprehensive Tests › Create user with missing required field shows validation error 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32mtrue[39m
+    Received: [31mfalse[39m
+
+      117 |     ]).catch(() => false);
+      118 |
+    > 119 |     expect(hasValidationError).toBe(true);
+          |                                ^
+      120 |   });
+      121 |
+      122 |   test('Search users filters list correctly', async ({ page }) => {
+        at c:\Users\bdegu\coding\Serenity01\e2e\specs\01-auth\comprehensive-user-management.spec.ts:119:32
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\specs-01-auth-comprehensiv-8db34-ield-shows-validation-error-e2e\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\specs-01-auth-comprehensiv-8db34-ield-shows-validation-error-e2e\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\specs-01-auth-comprehensiv-8db34-ield-shows-validation-error-e2e\error-context.md
+
+
+[1A[2K[8/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:122:7 › User Management - Comprehensive Tests › Search users filters list correctly
+[1A[2K[e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:122:7 › User Management - Comprehensive Tests › Search users filters list correctly
+[UserManagement] User count element not found, may not have loaded yet
+
+[1A[2K  3) [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:122:7 › User Management - Comprehensive Tests › Search users filters list correctly 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeGreaterThan[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected: > [32m0[39m
+    Received:   [31m0[39m
+
+      126 |     // Get initial count
+      127 |     const initialCount = await userMgmt.getUserCount();
+    > 128 |     expect(initialCount).toBeGreaterThan(0);
+          |                          ^
+      129 |
+      130 |     // Search for specific term
+      131 |     await userMgmt.searchUser('caregiver');
+        at c:\Users\bdegu\coding\Serenity01\e2e\specs\01-auth\comprehensive-user-management.spec.ts:128:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\specs-01-auth-comprehensiv-16388-sers-filters-list-correctly-e2e\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\specs-01-auth-comprehensiv-16388-sers-filters-list-correctly-e2e\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\specs-01-auth-comprehensiv-16388-sers-filters-list-correctly-e2e\error-context.md
+
+
+[1A[2K[9/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:144:7 › User Management - Comprehensive Tests › Filter by role shows only users with that role
+[1A[2K[e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:144:7 › User Management - Comprehensive Tests › Filter by role shows only users with that role
+[UserManagement] User count element not found, may not have loaded yet
+
+[1A[2K[10/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:159:7 › User Management - Comprehensive Tests › Export users downloads CSV file
+[1A[2K[e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:159:7 › User Management - Comprehensive Tests › Export users downloads CSV file
+[UserManagement] User count element not found, may not have loaded yet
+
+[1A[2K  4) [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:159:7 › User Management - Comprehensive Tests › Export users downloads CSV file 
+
+    [31mTest timeout of 60000ms exceeded.[39m
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\specs-01-auth-comprehensiv-847d3-rt-users-downloads-CSV-file-e2e\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\specs-01-auth-comprehensiv-847d3-rt-users-downloads-CSV-file-e2e\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\specs-01-auth-comprehensiv-847d3-rt-users-downloads-CSV-file-e2e\error-context.md
+
+
+[1A[2K[11/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:173:7 › User Management - Comprehensive Tests › View user statistics
+[1A[2K[e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:173:7 › User Management - Comprehensive Tests › View user statistics
+[UserManagement] User count element not found, may not have loaded yet
+
+[1A[2K[12/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:194:9 › User Management - RBAC Verification › founder CAN access /admin/users
+[1A[2K[13/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:194:9 › User Management - RBAC Verification › ceo CAN access /admin/users
+[1A[2K[14/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:194:9 › User Management - RBAC Verification › coo CAN access /admin/users
+[1A[2K[15/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:194:9 › User Management - RBAC Verification › hr_manager CAN access /admin/users
+[1A[2K[16/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:213:9 › User Management - RBAC Verification › caregiver CANNOT access /admin/users
+[1A[2K[17/17] [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:213:9 › User Management - RBAC Verification › pod_lead CANNOT access /admin/users
+[1A[2K  4 failed
+    [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:60:7 › User Management - Comprehensive Tests › Create new user with all required fields 
+    [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:101:7 › User Management - Comprehensive Tests › Create user with missing required field shows validation error 
+    [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:122:7 › User Management - Comprehensive Tests › Search users filters list correctly 
+    [e2e] › e2e\specs\01-auth\comprehensive-user-management.spec.ts:159:7 › User Management - Comprehensive Tests › Export users downloads CSV file 
+  13 passed (3.8m)

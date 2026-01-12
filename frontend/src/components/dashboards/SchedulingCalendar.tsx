@@ -22,6 +22,11 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   ArrowPathIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  XMarkIcon,
+  PhoneIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { schedulingService, CaregiverMatch } from '../../services/scheduling.service';
 import { loggerService } from '../../shared/services/logger.service';
@@ -71,8 +76,15 @@ export function SchedulingCalendar() {
   const [loading, setLoading] = useState(true);
   const [selectedVisit, setSelectedVisit] = useState<ScheduledVisit | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [caregiverMatches, setCaregiverMatches] = useState<CaregiverMatch[]>([]);
   const [matchesLoading, setMatchesLoading] = useState(false);
+
+  // Search and Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [priorityFilter, setPriorityFilter] = useState<string[]>([]);
 
   // Calculate week dates
   const weekDates = useMemo(() => {
@@ -280,7 +292,7 @@ export function SchedulingCalendar() {
   }
 
   const getVisitsForDate = (date: Date) =>
-    visits.filter(
+    filteredVisits.filter(
       (v) =>
         v.startTime.getFullYear() === date.getFullYear() &&
         v.startTime.getMonth() === date.getMonth() &&
@@ -315,7 +327,60 @@ export function SchedulingCalendar() {
     }
   };
 
-  const unassignedCount = visits.filter((v) => v.status === 'unassigned').length;
+  // Filter and search logic
+  const filteredVisits = useMemo(() => {
+    let filtered = [...visits];
+
+    // Apply search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (v) =>
+          v.clientName.toLowerCase().includes(query) ||
+          v.caregiverName?.toLowerCase().includes(query) ||
+          v.serviceType.toLowerCase().includes(query) ||
+          v.location.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter.length > 0) {
+      filtered = filtered.filter((v) => statusFilter.includes(v.status));
+    }
+
+    // Apply priority filter
+    if (priorityFilter.length > 0) {
+      filtered = filtered.filter((v) => priorityFilter.includes(v.priority));
+    }
+
+    return filtered;
+  }, [visits, searchQuery, statusFilter, priorityFilter]);
+
+  const unassignedCount = filteredVisits.filter((v) => v.status === 'unassigned').length;
+  const urgentCount = filteredVisits.filter((v) => v.priority === 'urgent').length;
+
+  function handleViewVisitDetails(visit: ScheduledVisit) {
+    setSelectedVisit(visit);
+    setShowDetailsModal(true);
+  }
+
+  function clearFilters() {
+    setSearchQuery('');
+    setStatusFilter([]);
+    setPriorityFilter([]);
+  }
+
+  function toggleStatusFilter(status: string) {
+    setStatusFilter((prev) =>
+      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
+    );
+  }
+
+  function togglePriorityFilter(priority: string) {
+    setPriorityFilter((prev) =>
+      prev.includes(priority) ? prev.filter((p) => p !== priority) : [...prev, priority]
+    );
+  }
 
   if (loading) {
     return (
@@ -327,36 +392,165 @@ export function SchedulingCalendar() {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen" data-testid="scheduling-calendar">
       <div className="max-w-full mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Scheduling Calendar</h1>
+            <h1 className="text-3xl font-bold text-gray-900" data-testid="scheduling-title">Scheduling Calendar</h1>
             <p className="text-gray-600">Manage visits, assignments, and caregiver schedules</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="primary">
-              <PlusIcon className="h-5 w-5 mr-2" />
-              New Visit
-            </Button>
-          </div>
+          <Button variant="primary" className="self-start md:self-auto">
+            <PlusIcon className="h-5 w-5 mr-2" />
+            New Visit
+          </Button>
         </div>
 
-        {/* Unassigned Alert */}
-        {unassignedCount > 0 && (
-          <Alert variant="warning" title={`${unassignedCount} Unassigned Visits`} className="mb-6">
-            <span>
-              You have visits that need caregiver assignment.{' '}
-              <button
-                className="text-warning-700 underline font-medium"
-                onClick={() => setViewMode('week')}
-              >
-                View in calendar
-              </button>
-            </span>
-          </Alert>
-        )}
+        {/* Alerts */}
+        <div className="space-y-3 mb-6">
+          {unassignedCount > 0 && (
+            <Alert variant="warning" title={`${unassignedCount} Unassigned Visits`}>
+              <span>
+                You have visits that need caregiver assignment.{' '}
+                <button
+                  className="text-warning-700 underline font-medium"
+                  onClick={() => {
+                    setStatusFilter(['unassigned']);
+                    setViewMode('week');
+                  }}
+                >
+                  View unassigned
+                </button>
+              </span>
+            </Alert>
+          )}
+          {urgentCount > 0 && (
+            <Alert variant="danger" title={`${urgentCount} Urgent Priority Visits`}>
+              <span>
+                You have urgent priority visits requiring attention.{' '}
+                <button
+                  className="text-danger-700 underline font-medium"
+                  onClick={() => setPriorityFilter(['urgent'])}
+                >
+                  View urgent
+                </button>
+              </span>
+            </Alert>
+          )}
+        </div>
+
+        {/* Search and Filter Bar */}
+        <Card className="mb-6">
+          <div className="space-y-4">
+            {/* Search and Filter Toggle Row */}
+            <div className="flex gap-3">
+              <div className="flex-1 relative">
+                <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search patients, caregivers, services, or locations..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-2 items-center shrink-0">
+                <Button
+                  variant={showFilters ? 'primary' : 'secondary'}
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="whitespace-nowrap"
+                >
+                  <FunnelIcon className="h-5 w-5 mr-2" />
+                  Filters
+                  {(statusFilter.length > 0 || priorityFilter.length > 0) && (
+                    <span className="ml-2 px-2 py-0.5 bg-primary-600 text-white rounded-full text-xs">
+                      {statusFilter.length + priorityFilter.length}
+                    </span>
+                  )}
+                </Button>
+                {(searchQuery || statusFilter.length > 0 || priorityFilter.length > 0) && (
+                  <Button variant="ghost" onClick={clearFilters} className="whitespace-nowrap">
+                    <XMarkIcon className="h-5 w-5 mr-2" />
+                    Clear All
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Filter Panel */}
+            {showFilters && (
+              <div className="pt-4 border-t border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Status Filter */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Status</h4>
+                    <div className="space-y-2">
+                      {['unassigned', 'scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled'].map(
+                        (status) => (
+                          <label key={status} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={statusFilter.includes(status)}
+                              onChange={() => toggleStatusFilter(status)}
+                              className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            />
+                            <span className="text-sm text-gray-700 capitalize">
+                              {status.replace('_', ' ')}
+                            </span>
+                          </label>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Priority Filter */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Priority</h4>
+                    <div className="space-y-2">
+                      {['urgent', 'high', 'medium', 'low'].map((priority) => (
+                        <label key={priority} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={priorityFilter.includes(priority)}
+                            onChange={() => togglePriorityFilter(priority)}
+                            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                          />
+                          <span className="text-sm text-gray-700 capitalize">{priority}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Active Filters Display */}
+            {(statusFilter.length > 0 || priorityFilter.length > 0) && (
+              <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200">
+                {statusFilter.map((status) => (
+                  <Badge key={status} variant="primary" className="cursor-pointer" onClick={() => toggleStatusFilter(status)}>
+                    Status: {status.replace('_', ' ')}
+                    <XMarkIcon className="h-3 w-3 ml-1 inline" />
+                  </Badge>
+                ))}
+                {priorityFilter.map((priority) => (
+                  <Badge key={priority} variant="warning" className="cursor-pointer" onClick={() => togglePriorityFilter(priority)}>
+                    Priority: {priority}
+                    <XMarkIcon className="h-3 w-3 ml-1 inline" />
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        </Card>
 
         {/* Calendar Controls */}
         <Card className="mb-6">
@@ -479,11 +673,11 @@ export function SchedulingCalendar() {
                               key={visit.id}
                               className={`p-1.5 rounded text-xs mb-1 cursor-pointer border ${getVisitColor(
                                 visit
-                              )} hover:opacity-80 transition-opacity`}
+                              )} hover:opacity-80 transition-opacity hover:shadow-md`}
                               onClick={() =>
                                 visit.status === 'unassigned'
                                   ? handleAssignCaregiver(visit)
-                                  : setSelectedVisit(visit)
+                                  : handleViewVisitDetails(visit)
                               }
                             >
                               <div className="font-medium truncate">{visit.clientName}</div>
@@ -536,7 +730,7 @@ export function SchedulingCalendar() {
                           onClick={() =>
                             visit.status === 'unassigned'
                               ? handleAssignCaregiver(visit)
-                              : setSelectedVisit(visit)
+                              : handleViewVisitDetails(visit)
                           }
                         >
                           <div className="flex justify-between items-start">
@@ -624,11 +818,11 @@ export function SchedulingCalendar() {
                           key={visit.id}
                           className={`text-xs p-1 rounded truncate cursor-pointer ${getVisitColor(
                             visit
-                          )}`}
+                          )} hover:shadow-sm`}
                           onClick={() =>
                             visit.status === 'unassigned'
                               ? handleAssignCaregiver(visit)
-                              : setSelectedVisit(visit)
+                              : handleViewVisitDetails(visit)
                           }
                         >
                           {visit.clientName}
@@ -645,6 +839,177 @@ export function SchedulingCalendar() {
               })}
             </div>
           </Card>
+        )}
+
+        {/* Visit Details Modal */}
+        {showDetailsModal && selectedVisit && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Visit Details</h2>
+                  <Badge
+                    variant={
+                      selectedVisit.status === 'unassigned'
+                        ? 'danger'
+                        : selectedVisit.status === 'completed'
+                          ? 'success'
+                          : 'primary'
+                    }
+                    className="mt-2"
+                  >
+                    {selectedVisit.status.replace('_', ' ').toUpperCase()}
+                  </Badge>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setShowDetailsModal(false)}>
+                  <XCircleIcon className="h-5 w-5" />
+                </Button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Patient Information */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                    Patient Information
+                  </h3>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <UserIcon className="h-5 w-5 text-gray-400" />
+                      <span className="font-semibold text-gray-900">{selectedVisit.clientName}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPinIcon className="h-5 w-5 text-gray-400" />
+                      <span className="text-gray-700">{selectedVisit.location}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Visit Information */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                    Visit Information
+                  </h3>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <CalendarDaysIcon className="h-5 w-5 text-gray-400" />
+                      <span className="text-gray-700">
+                        {selectedVisit.startTime.toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <ClockIcon className="h-5 w-5 text-gray-400" />
+                      <span className="text-gray-700">
+                        {formatTime(selectedVisit.startTime)} - {formatTime(selectedVisit.endTime)} (
+                        {selectedVisit.duration} min)
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <DocumentTextIcon className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <span className="text-gray-900 font-medium">{selectedVisit.serviceType}</span>
+                        <span className="text-gray-500 text-sm ml-2">({selectedVisit.serviceCode})</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <ExclamationTriangleIcon className="h-5 w-5 text-gray-400" />
+                      <span className="text-gray-700">
+                        Priority:{' '}
+                        <span
+                          className={`font-semibold ${
+                            selectedVisit.priority === 'urgent'
+                              ? 'text-red-600'
+                              : selectedVisit.priority === 'high'
+                                ? 'text-orange-600'
+                                : selectedVisit.priority === 'medium'
+                                  ? 'text-yellow-600'
+                                  : 'text-green-600'
+                          }`}
+                        >
+                          {selectedVisit.priority.toUpperCase()}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Caregiver Information */}
+                {selectedVisit.caregiverName ? (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                      Assigned Caregiver
+                    </h3>
+                    <div className="bg-primary-50 rounded-lg p-4 border border-primary-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-primary-200 rounded-full flex items-center justify-center">
+                          <UserIcon className="h-6 w-6 text-primary-700" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">{selectedVisit.caregiverName}</p>
+                          <p className="text-sm text-gray-600">ID: {selectedVisit.caregiverId}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                      Caregiver Assignment
+                    </h3>
+                    <Alert variant="warning" title="No Caregiver Assigned">
+                      This visit needs a caregiver assignment. Click the button below to find matching
+                      caregivers.
+                    </Alert>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {selectedVisit.notes && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                      Notes
+                    </h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-700">{selectedVisit.notes}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="mt-6 flex justify-end gap-3 pt-6 border-t border-gray-200">
+                <Button variant="secondary" onClick={() => setShowDetailsModal(false)}>
+                  Close
+                </Button>
+                {selectedVisit.status === 'unassigned' && (
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      handleAssignCaregiver(selectedVisit);
+                    }}
+                  >
+                    <UserIcon className="h-5 w-5 mr-2" />
+                    Assign Caregiver
+                  </Button>
+                )}
+                {selectedVisit.status === 'scheduled' && (
+                  <Button variant="primary">
+                    <PhoneIcon className="h-5 w-5 mr-2" />
+                    Contact Caregiver
+                  </Button>
+                )}
+                <Button variant="ghost">
+                  <DocumentTextIcon className="h-5 w-5 mr-2" />
+                  View Full Details
+                </Button>
+              </div>
+            </Card>
+          </div>
         )}
 
         {/* Assign Caregiver Modal */}

@@ -66,11 +66,14 @@ function ClientFamilyPortal() {
   const roleAccess = useRoleAccess();
   const [selectedTab, setSelectedTab] = useState('overview');
 
+  // Executives (Founder, CEO, COO) get full access to all tabs for oversight
+  const isExecutive = roleAccess.isFounder || roleAccess.isExecutive;
+
   // Fetch urgent items
   const { data: urgentData, isLoading } = useQuery({
     queryKey: ['client-portal', 'urgent'],
     queryFn: async () => {
-      const [upcomingVisits, pendingInvoices] = await Promise.all([
+      const [upcomingVisits, pendingInvoices]: any[] = await Promise.all([
         api.get('/client-portal/visits/upcoming'),
         api.get('/client-portal/invoices/pending'),
       ]);
@@ -119,25 +122,25 @@ function ClientFamilyPortal() {
       icon: <User className="w-4 h-4" />,
       content: <OverviewTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_CARE_PLAN) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_CARE_PLAN)) && {
       id: 'care-plan',
       label: 'Care Plan',
       icon: <Heart className="w-4 h-4" />,
       content: <CarePlanTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_VISIT_LOGS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_VISIT_LOGS)) && {
       id: 'visits',
       label: 'Visits',
       icon: <Calendar className="w-4 h-4" />,
       content: <VisitsTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_BILLING_STATEMENTS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_BILLING_STATEMENTS)) && {
       id: 'billing',
       label: 'Billing',
       icon: <DollarSign className="w-4 h-4" />,
       content: <BillingTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.SUBMIT_FEEDBACK) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.SUBMIT_FEEDBACK)) && {
       id: 'feedback',
       label: 'Feedback',
       icon: <MessageCircle className="w-4 h-4" />,
@@ -252,13 +255,22 @@ function OverviewTab() {
       {/* Quick Actions */}
       <WidgetContainer title="Quick Actions">
         <div className="grid grid-cols-3 gap-4">
-          <button className="px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          <button
+            onClick={() => window.location.href = '/client-portal/care-plan'}
+            className="px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
             View Care Plan
           </button>
-          <button className="px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700">
+          <button
+            onClick={() => window.location.href = '/client-portal/schedule-change'}
+            className="px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700"
+          >
             Schedule Change Request
           </button>
-          <button className="px-4 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+          <button
+            onClick={() => window.location.href = '/client-portal/feedback'}
+            className="px-4 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+          >
             Submit Feedback
           </button>
         </div>

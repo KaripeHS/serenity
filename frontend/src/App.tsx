@@ -1,6 +1,8 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import DashboardLayout from './components/layouts/DashboardLayout';
 import { ProtectedRoute } from './hooks/useRoleAccess';
 import { LeadPipeline } from './pages/admin/crm/LeadPipeline';
@@ -14,16 +16,21 @@ import HomePage from './pages/HomePage';
 import WorkingHomePage from './components/WorkingHomePage';
 
 // Dashboard Components
-import { WorkingExecutiveDashboard } from './components/dashboards/WorkingExecutiveDashboard';
+import ExecutiveDashboard from './components/dashboards/ExecutiveDashboard';
 import { AdminRoleManager } from './pages/admin/users/AdminRoleManager';
-import { WorkingHRDashboard } from './components/dashboards/WorkingHRDashboard';
+import { ComprehensiveUserManagement } from './pages/admin/users/ComprehensiveUserManagement';
+import { UserDetailPage } from './pages/admin/users/UserDetailPage';
+import { PodManagement } from './pages/admin/PodManagement';
+import { PodDetailPage } from './pages/admin/pods/PodDetailPage';
+import { CreatePodPage } from './pages/admin/pods/CreatePodPage';
 import { WorkingTaxDashboard } from './components/dashboards/WorkingTaxDashboard';
-import { WorkingOperationsDashboard } from './components/dashboards/WorkingOperationsDashboard';
-import { WorkingClinicalDashboard } from './components/dashboards/WorkingClinicalDashboard';
-import { WorkingBillingDashboard } from './components/dashboards/WorkingBillingDashboard';
-import { WorkingComplianceDashboard } from './components/dashboards/WorkingComplianceDashboard';
 import { WorkingTrainingDashboard } from './components/dashboards/WorkingTrainingDashboard';
-import { WorkingSchedulingDashboard } from './components/dashboards/WorkingSchedulingDashboard';
+
+// Command Center Dashboards (consolidated, modern implementations)
+import TalentCommandCenter from './components/dashboards/TalentCommandCenter';
+import ClinicalCommandCenter from './components/dashboards/ClinicalCommandCenter';
+import ComplianceCommandCenter from './components/dashboards/ComplianceCommandCenter';
+import OperationsCommandCenter from './components/dashboards/OperationsCommandCenter';
 
 // Year 2 Enhanced Dashboards
 import { ExecutiveOpportunityDashboard } from './components/dashboards/ExecutiveOpportunityDashboard';
@@ -41,13 +48,45 @@ import { CaregiverBonusDashboard } from './components/dashboards/CaregiverBonusD
 import { TrainingManagement } from './components/dashboards/TrainingManagement';
 import { CoverageDispatch } from './components/dashboards/CoverageDispatch';
 import { CarePlanEditor } from './components/dashboards/CarePlanEditor';
+import { OnboardingDashboard } from './components/dashboards/OnboardingDashboard';
+import SupervisoryVisitsDashboard from './components/dashboards/SupervisoryVisitsDashboard';
+import IncidentsDashboard from './components/dashboards/IncidentsDashboard';
+import AuthorizationDashboard from './components/dashboards/AuthorizationDashboard';
+import { DenialDashboard } from './components/dashboards/DenialDashboard';
+import LmsDashboard from './components/dashboards/LmsDashboard';
+import CaregiverPortal from './components/dashboards/CaregiverPortal';
+import SandataEVVDashboard from './components/dashboards/SandataEVVDashboard';
+import PodLeadDashboard from './components/dashboards/PodLeadDashboard';
+import { AIAssistantPage } from './pages/AIAssistantPage';
+import { SubscriptionsPage } from './pages/admin/SubscriptionsPage';
+import { SubscriptionDetailPage } from './pages/admin/SubscriptionDetailPage';
+import RolesPermissionsPage from './pages/admin/RolesPermissionsPage';
+import { IntakeInvitations } from './components/admin/IntakeInvitations';
+import SearchResultsPage from './pages/SearchResultsPage';
+import { NewHirePortal } from './components/onboarding';
+import { StaffProfile } from './pages/hr/StaffProfile';
+import { ProfilePage, EditProfilePage, ChangePasswordPage } from './pages/profile';
+import { PatientIntakeWorkflow } from './components/patients/PatientIntakeWorkflow';
+import {
+  DemographicsPage,
+  InsurancePage,
+  AssessmentPage,
+  PhysicianOrdersPage,
+  CarePlanPage,
+  CaregiverAssignmentPage,
+  ServiceAuthorizationPage,
+  FirstVisitPage,
+} from './pages/patients/intake';
+import { PatientBinder } from './components/patients/intake/PatientBinder';
 
 import BankAccounts from './pages/finance/BankAccounts';
 import FinancialReports from './pages/finance/FinancialReports';
 import { VendorCenter } from './pages/finance/VendorCenter';
 import { ExpensePortal } from './pages/finance/ExpensePortal';
 import { BankFeed } from './pages/finance/BankFeed';
+import AuditLogs from './pages/admin/AuditLogs';
 import { PayrollManager } from './pages/admin/PayrollManager';
+import { PayrollConnect } from './pages/payroll/PayrollConnect';
 import CommunicationSettings from './pages/admin/CommunicationSettings';
 import EmailAccountsManager from './pages/admin/EmailAccountsManager';
 
@@ -101,10 +140,47 @@ import TermsPage from './pages/public/TermsPage';
 import HIPAAPage from './pages/public/HIPAAPage';
 import NonDiscriminationPage from './pages/public/NonDiscriminationPage';
 import AccessibilityPage from './pages/public/AccessibilityPage';
+import ClientSelfIntake from './pages/public/ClientSelfIntake';
 
 const queryClient = new QueryClient();
 
 // Build timestamp: 2025-12-04T10:00:00Z - forces cache bust
+
+// Error Boundary to catch component errors
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode; fallback: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('[ErrorBoundary] Caught error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6 bg-red-50 border border-red-200 rounded-lg m-4">
+          <h2 className="text-xl font-bold text-red-800 mb-2">Component Error</h2>
+          <p className="text-red-700 mb-4">Something went wrong loading this component.</p>
+          <pre className="bg-red-100 p-4 rounded text-sm overflow-auto text-red-900">
+            {this.state.error?.message}
+            {'\n\n'}
+            {this.state.error?.stack}
+          </pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // Determine portal type once at app load
 const portalType = getPortalType();
@@ -113,6 +189,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <NotificationProvider>
         <Router>
           <div className="min-h-screen">
             <Routes>
@@ -134,6 +211,7 @@ function App() {
                   <Route path="/non-discrimination" element={<NonDiscriminationPage />} />
                   <Route path="/accessibility" element={<AccessibilityPage />} />
                   <Route path="/family" element={<FamilyPortal />} />
+                  <Route path="/client-intake" element={<ClientSelfIntake />} />
                 </Route>
               ) : (
                 // ERP PORTAL (console/staff/caregiver subdomains)
@@ -146,6 +224,9 @@ function App() {
               <Route path="/erp" element={<HomePage />} />
               <Route path="/login" element={<HomePage />} />
               <Route path="/staff" element={<HomePage />} />
+
+              {/* Global Search Results */}
+              <Route path="/search" element={<DashboardLayout><SearchResultsPage /></DashboardLayout>} />
 
               {/* Alerts Route */}
               <Route
@@ -168,15 +249,16 @@ function App() {
               />
 
               {/* Dashboard Routes - All protected by RBAC */}
-              <Route path="/dashboard/executive" element={<DashboardLayout><ProtectedRoute route="/dashboard/executive"><WorkingExecutiveDashboard /></ProtectedRoute></DashboardLayout>} />
-              <Route path="/dashboard/hr" element={<DashboardLayout><ProtectedRoute route="/dashboard/hr"><WorkingHRDashboard /></ProtectedRoute></DashboardLayout>} />
+              {/* Core Dashboard Routes - Using Command Centers for consolidated views */}
+              <Route path="/dashboard/executive" element={<DashboardLayout><ProtectedRoute route="/dashboard/executive"><ExecutiveDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/hr" element={<DashboardLayout><ProtectedRoute route="/dashboard/hr"><TalentCommandCenter /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/tax" element={<DashboardLayout><ProtectedRoute route="/dashboard/tax"><WorkingTaxDashboard /></ProtectedRoute></DashboardLayout>} />
-              <Route path="/dashboard/operations" element={<DashboardLayout><ProtectedRoute route="/dashboard/operations"><WorkingOperationsDashboard /></ProtectedRoute></DashboardLayout>} />
-              <Route path="/dashboard/clinical" element={<DashboardLayout><ProtectedRoute route="/dashboard/clinical"><WorkingClinicalDashboard /></ProtectedRoute></DashboardLayout>} />
-              <Route path="/dashboard/billing" element={<DashboardLayout><ProtectedRoute route="/dashboard/billing"><WorkingBillingDashboard /></ProtectedRoute></DashboardLayout>} />
-              <Route path="/dashboard/compliance" element={<DashboardLayout><ProtectedRoute route="/dashboard/compliance"><WorkingComplianceDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/operations" element={<DashboardLayout><ProtectedRoute route="/dashboard/operations"><OperationsCommandCenter /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/clinical" element={<DashboardLayout><ProtectedRoute route="/dashboard/clinical"><ClinicalCommandCenter /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/billing" element={<DashboardLayout><ProtectedRoute route="/dashboard/billing"><BillingARDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/compliance" element={<DashboardLayout><ProtectedRoute route="/dashboard/compliance"><ComplianceCommandCenter /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/training" element={<DashboardLayout><ProtectedRoute route="/dashboard/training"><WorkingTrainingDashboard /></ProtectedRoute></DashboardLayout>} />
-              <Route path="/dashboard/scheduling" element={<DashboardLayout><ProtectedRoute route="/dashboard/scheduling"><WorkingSchedulingDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/scheduling" element={<DashboardLayout><ProtectedRoute route="/dashboard/scheduling"><SchedulingCalendar /></ProtectedRoute></DashboardLayout>} />
 
               {/* Year 2 Enhanced Dashboard Routes - All protected by RBAC */}
               <Route path="/dashboard/executive-v2" element={<DashboardLayout><ProtectedRoute route="/dashboard/executive-v2"><ExecutiveOpportunityDashboard /></ProtectedRoute></DashboardLayout>} />
@@ -184,7 +266,8 @@ function App() {
               <Route path="/dashboard/payroll-v2" element={<DashboardLayout><ProtectedRoute route="/dashboard/payroll-v2"><PayrollDashboard /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/consumer-directed" element={<DashboardLayout><ProtectedRoute route="/dashboard/consumer-directed"><ConsumerDirectedDashboard /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/scheduling-calendar" element={<DashboardLayout><ProtectedRoute route="/dashboard/scheduling-calendar"><SchedulingCalendar /></ProtectedRoute></DashboardLayout>} />
-              <Route path="/dashboard/billing-ar" element={<DashboardLayout><ProtectedRoute route="/dashboard/billing-ar"><BillingARDashboard /></ProtectedRoute></DashboardLayout>} />
+              {/* /dashboard/billing-ar redirects to /dashboard/billing - consolidated */}
+              <Route path="/dashboard/billing-ar" element={<DashboardLayout><ProtectedRoute route="/dashboard/billing"><BillingARDashboard /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/background-checks" element={<DashboardLayout><ProtectedRoute route="/dashboard/background-checks"><BackgroundCheckDashboard /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/client-intake" element={<DashboardLayout><ProtectedRoute route="/dashboard/client-intake"><ClientIntakeWizard /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/claims-workflow" element={<DashboardLayout><ProtectedRoute route="/dashboard/claims-workflow"><ClaimsWorkflow /></ProtectedRoute></DashboardLayout>} />
@@ -193,6 +276,20 @@ function App() {
               <Route path="/dashboard/caregiver-bonuses" element={<DashboardLayout><ProtectedRoute route="/dashboard/caregiver-bonuses"><CaregiverBonusDashboard /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/dispatch" element={<DashboardLayout><ProtectedRoute route="/dashboard/dispatch"><CoverageDispatch /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/care-plans" element={<DashboardLayout><ProtectedRoute route="/dashboard/care-plans"><CarePlanEditor /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/sandata-evv" element={<DashboardLayout><ProtectedRoute route="/dashboard/sandata-evv"><SandataEVVDashboard /></ProtectedRoute></DashboardLayout>} />
+
+              {/* New Clinical & Compliance Routes */}
+              <Route path="/dashboard/supervisory-visits" element={<DashboardLayout><ProtectedRoute route="/dashboard/supervisory-visits"><SupervisoryVisitsDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/incidents" element={<DashboardLayout><ProtectedRoute route="/dashboard/incidents"><IncidentsDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/authorizations" element={<DashboardLayout><ProtectedRoute route="/dashboard/authorizations"><AuthorizationDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/denials" element={<DashboardLayout><ProtectedRoute route="/dashboard/denials"><DenialDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/lms" element={<DashboardLayout><ProtectedRoute route="/dashboard/lms"><LmsDashboard /></ProtectedRoute></DashboardLayout>} />
+
+              {/* Caregiver Portal - Simplified field-focused portal for caregivers */}
+              <Route path="/caregiver-portal" element={<DashboardLayout><ProtectedRoute route="/caregiver-portal"><CaregiverPortal /></ProtectedRoute></DashboardLayout>} />
+
+              {/* Pod Lead Dashboard - Mini-COO view for pod management */}
+              <Route path="/dashboard/pod-lead" element={<DashboardLayout><ProtectedRoute route="/dashboard/pod-lead"><PodLeadDashboard /></ProtectedRoute></DashboardLayout>} />
 
               {/* Admin Routes - Protected by RBAC */}
               <Route
@@ -216,13 +313,87 @@ function App() {
                 }
               />
 
+              {/* Profile Routes - Available to all authenticated users */}
+              <Route
+                path="/profile"
+                element={<ProfilePage />}
+              />
+              <Route
+                path="/profile/edit"
+                element={<EditProfilePage />}
+              />
+              <Route
+                path="/profile/password"
+                element={<ChangePasswordPage />}
+              />
+
               {/* Admin & Access Control Routes - Protected by RBAC */}
               <Route
                 path="/admin/users"
                 element={
                   <DashboardLayout>
                     <ProtectedRoute route="/admin/users">
-                      <AdminRoleManager />
+                      <ComprehensiveUserManagement />
+                    </ProtectedRoute>
+                  </DashboardLayout>
+                }
+              />
+              <Route
+                path="/admin/users/:userId"
+                element={
+                  <DashboardLayout>
+                    <ProtectedRoute route="/admin/users">
+                      <UserDetailPage />
+                    </ProtectedRoute>
+                  </DashboardLayout>
+                }
+              />
+              <Route
+                path="/admin/pods"
+                element={
+                  <DashboardLayout>
+                    <ProtectedRoute route="/admin/pods">
+                      <PodManagement />
+                    </ProtectedRoute>
+                  </DashboardLayout>
+                }
+              />
+              <Route
+                path="/admin/pods/new"
+                element={
+                  <DashboardLayout>
+                    <ProtectedRoute route="/admin/pods">
+                      <CreatePodPage />
+                    </ProtectedRoute>
+                  </DashboardLayout>
+                }
+              />
+              <Route
+                path="/admin/pods/:podId"
+                element={
+                  <DashboardLayout>
+                    <ProtectedRoute route="/admin/pods">
+                      <PodDetailPage />
+                    </ProtectedRoute>
+                  </DashboardLayout>
+                }
+              />
+              <Route
+                path="/admin/subscriptions"
+                element={
+                  <DashboardLayout>
+                    <ProtectedRoute route="/admin/subscriptions">
+                      <SubscriptionsPage />
+                    </ProtectedRoute>
+                  </DashboardLayout>
+                }
+              />
+              <Route
+                path="/admin/subscriptions/:serviceId"
+                element={
+                  <DashboardLayout>
+                    <ProtectedRoute route="/admin/subscriptions">
+                      <SubscriptionDetailPage />
                     </ProtectedRoute>
                   </DashboardLayout>
                 }
@@ -232,43 +403,17 @@ function App() {
                 element={
                   <DashboardLayout>
                     <ProtectedRoute route="/admin/roles">
-                      <div className="p-6">
-                        <h1 className="text-2xl font-bold mb-4">Roles & Permissions</h1>
-                        <div className="bg-white rounded-lg shadow p-6">
-                          <p className="text-gray-600 mb-4">Configure role-based access control</p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div className="border rounded-lg p-4">
-                              <h3 className="font-semibold text-purple-600 mb-2">Founder</h3>
-                              <p className="text-sm text-gray-500 mb-2">Full system access</p>
-                              <ul className="text-xs text-gray-600 space-y-1">
-                                <li>• All dashboards</li>
-                                <li>• User management</li>
-                                <li>• Financial data</li>
-                                <li>• System configuration</li>
-                              </ul>
-                            </div>
-                            <div className="border rounded-lg p-4">
-                              <h3 className="font-semibold text-blue-600 mb-2">Pod Lead</h3>
-                              <p className="text-sm text-gray-500 mb-2">Team management access</p>
-                              <ul className="text-xs text-gray-600 space-y-1">
-                                <li>• Operations dashboard</li>
-                                <li>• HR dashboard</li>
-                                <li>• Clinical dashboard</li>
-                                <li>• Scheduling</li>
-                              </ul>
-                            </div>
-                            <div className="border rounded-lg p-4">
-                              <h3 className="font-semibold text-green-600 mb-2">Caregiver</h3>
-                              <p className="text-sm text-gray-500 mb-2">Field staff access</p>
-                              <ul className="text-xs text-gray-600 space-y-1">
-                                <li>• EVV clock in/out</li>
-                                <li>• View schedule</li>
-                                <li>• Patient info (assigned)</li>
-                              </ul>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <RolesPermissionsPage />
+                    </ProtectedRoute>
+                  </DashboardLayout>
+                }
+              />
+              <Route
+                path="/admin/intake-invitations"
+                element={
+                  <DashboardLayout>
+                    <ProtectedRoute route="/admin/intake-invitations">
+                      <IntakeInvitations />
                     </ProtectedRoute>
                   </DashboardLayout>
                 }
@@ -316,30 +461,7 @@ function App() {
                 element={
                   <DashboardLayout>
                     <ProtectedRoute route="/admin/audit">
-                      <div className="p-6">
-                        <h1 className="text-2xl font-bold mb-4">Audit Logs</h1>
-                        <div className="bg-white rounded-lg shadow p-6">
-                          <p className="text-gray-600 mb-4">View system activity and access history</p>
-                          <div className="space-y-3">
-                            <div className="border-l-4 border-blue-500 pl-4 py-2">
-                              <p className="text-sm text-gray-900">User login: founder@serenitycarepartners.com</p>
-                              <p className="text-xs text-gray-500">Today at 9:45 AM • IP: 192.168.1.1</p>
-                            </div>
-                            <div className="border-l-4 border-green-500 pl-4 py-2">
-                              <p className="text-sm text-gray-900">Patient record viewed: John Smith</p>
-                              <p className="text-xs text-gray-500">Today at 9:32 AM • User: maria.garcia@serenitycarepartners.com</p>
-                            </div>
-                            <div className="border-l-4 border-yellow-500 pl-4 py-2">
-                              <p className="text-sm text-gray-900">Role modified: Pod Lead permissions updated</p>
-                              <p className="text-xs text-gray-500">Yesterday at 4:15 PM • User: founder@serenitycarepartners.com</p>
-                            </div>
-                            <div className="border-l-4 border-purple-500 pl-4 py-2">
-                              <p className="text-sm text-gray-900">New user created: james.wilson@serenitycarepartners.com</p>
-                              <p className="text-xs text-gray-500">Yesterday at 2:30 PM • User: founder@serenitycarepartners.com</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <AuditLogs />
                     </ProtectedRoute>
                   </DashboardLayout>
                 }
@@ -350,6 +472,9 @@ function App() {
 
               {/* Family Portal */}
               <Route path="/family-portal" element={<FamilyPortal />} />
+
+              {/* Client Self-Service Intake (public link for clients to fill out) */}
+              <Route path="/client-intake" element={<ClientSelfIntake />} />
 
               {/* EVV Routes */}
               <Route path="/evv-clock" element={<WebEVVClock />} />
@@ -383,7 +508,7 @@ function App() {
               />
 
               {/* Scheduling Routes */}
-              <Route path="/scheduling/*" element={<DashboardLayout><WorkingSchedulingDashboard /></DashboardLayout>} />
+              <Route path="/scheduling/*" element={<DashboardLayout><SchedulingCalendar /></DashboardLayout>} />
 
               {/* Patient Routes */}
               <Route
@@ -398,18 +523,38 @@ function App() {
                 path="/patients/new"
                 element={
                   <DashboardLayout>
-                    <div className="p-6">
-                      <h1 className="text-2xl font-bold mb-4">New Patient Intake</h1>
-                      <div className="bg-white rounded-lg shadow p-6">
-                        <p className="text-gray-600 mb-4">Start the patient intake process</p>
-                        <Link to="/dashboard/intake/new" className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                          Start Assessment Wizard
-                        </Link>
-                      </div>
-                    </div>
+                    <PatientIntakeWorkflow />
                   </DashboardLayout>
                 }
               />
+              <Route
+                path="/patients/intake/:patientId"
+                element={
+                  <DashboardLayout>
+                    <PatientIntakeWorkflow />
+                  </DashboardLayout>
+                }
+              />
+              {/* Patient Intake Step Pages */}
+              <Route path="/patients/intake/new/demographics" element={<DemographicsPage />} />
+              <Route path="/patients/intake/new/insurance" element={<InsurancePage />} />
+              <Route path="/patients/intake/new/assessment" element={<AssessmentPage />} />
+              <Route path="/patients/intake/new/physician-orders" element={<PhysicianOrdersPage />} />
+              <Route path="/patients/intake/new/care-plan" element={<CarePlanPage />} />
+              <Route path="/patients/intake/new/caregiver-assignment" element={<CaregiverAssignmentPage />} />
+              <Route path="/patients/intake/new/service-authorization" element={<ServiceAuthorizationPage />} />
+              <Route path="/patients/intake/new/first-visit" element={<FirstVisitPage />} />
+              <Route path="/patients/intake/:patientId/demographics" element={<DemographicsPage />} />
+              <Route path="/patients/intake/:patientId/insurance" element={<InsurancePage />} />
+              <Route path="/patients/intake/:patientId/assessment" element={<AssessmentPage />} />
+              <Route path="/patients/intake/:patientId/physician-orders" element={<PhysicianOrdersPage />} />
+              <Route path="/patients/intake/:patientId/care-plan" element={<CarePlanPage />} />
+              <Route path="/patients/intake/:patientId/caregiver-assignment" element={<CaregiverAssignmentPage />} />
+              <Route path="/patients/intake/:patientId/service-authorization" element={<ServiceAuthorizationPage />} />
+              <Route path="/patients/intake/:patientId/first-visit" element={<FirstVisitPage />} />
+              {/* Patient Binder Print View */}
+              <Route path="/patients/intake/new/binder" element={<PatientBinder />} />
+              <Route path="/patients/intake/:patientId/binder" element={<PatientBinder />} />
               <Route
                 path="/patients/:patientId"
                 element={
@@ -419,31 +564,14 @@ function App() {
                 }
               />
 
-              {/* Billing Routes */}
-              <Route
-                path="/billing/process"
-                element={
-                  <DashboardLayout>
-                    <div className="p-6">
-                      <h1 className="text-2xl font-bold mb-4">Process Claims</h1>
-                      <div className="bg-white rounded-lg shadow p-6">
-                        <div className="mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-                          <p className="text-emerald-800 font-medium">12 claims ready for submission</p>
-                        </div>
-                        <p className="text-gray-600 mb-4">Review and submit pending claims to payers</p>
-                        <Link to="/dashboard/billing" className="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-                          Go to Billing Dashboard
-                        </Link>
-                      </div>
-                    </div>
-                  </DashboardLayout>
-                }
-              />
+              {/* Billing Routes - Redirects to consolidated billing dashboard */}
               <Route
                 path="/billing/*"
                 element={
                   <DashboardLayout>
-                    <WorkingBillingDashboard />
+                    <ProtectedRoute route="/dashboard/billing">
+                      <BillingARDashboard />
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
@@ -510,6 +638,17 @@ function App() {
                   </DashboardLayout>
                 }
               />
+              {/* Payroll Provider Connection Routes */}
+              <Route
+                path="/payroll/connect/:provider"
+                element={
+                  <DashboardLayout>
+                    <ProtectedRoute route="/payroll/connect">
+                      <PayrollConnect />
+                    </ProtectedRoute>
+                  </DashboardLayout>
+                }
+              />
               <Route
                 path="/admin/settings/communications"
                 element={
@@ -531,31 +670,57 @@ function App() {
                 }
               />
 
-              {/* HR Routes */}
+              {/* HR Routes - redirect /hr/applications to the HR Dashboard */}
               <Route
                 path="/hr/applications"
+                element={<Navigate to="/dashboard/hr" replace />}
+              />
+              {/* Dashboard Onboarding redirect - search index links here */}
+              <Route
+                path="/dashboard/onboarding"
+                element={<Navigate to="/dashboard/hr" replace />}
+              />
+              {/* Onboarding Route - must be before /hr/* wildcard */}
+              <Route
+                path="/hr/onboarding/:applicantId"
                 element={
                   <DashboardLayout>
-                    <div className="p-6">
-                      <h1 className="text-2xl font-bold mb-4">Review Applications</h1>
-                      <div className="bg-white rounded-lg shadow p-6">
-                        <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                          <p className="text-orange-800 font-medium">8 applications pending review</p>
-                        </div>
-                        <p className="text-gray-600 mb-4">Review caregiver applications in the recruiting pipeline</p>
-                        <Link to="/dashboard/hr" className="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
-                          Go to HR Dashboard
-                        </Link>
-                      </div>
-                    </div>
+                    <ProtectedRoute route="/dashboard/hr">
+                      <ErrorBoundary fallback={<div>Error loading onboarding</div>}>
+                        <OnboardingDashboard />
+                      </ErrorBoundary>
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
+
+              {/* Staff Profile Route - must be before /hr/* wildcard */}
+              <Route
+                path="/hr/staff/:staffId"
+                element={
+                  <DashboardLayout>
+                    <ProtectedRoute route="/hr/staff">
+                      <ErrorBoundary fallback={<div>Error loading staff profile</div>}>
+                        <StaffProfile />
+                      </ErrorBoundary>
+                    </ProtectedRoute>
+                  </DashboardLayout>
+                }
+              />
+
+              {/* New Hire Self-Service Portal */}
+              <Route
+                path="/onboarding/my-tasks"
+                element={
+                  <NewHirePortal />
+                }
+              />
+
               <Route
                 path="/hr/*"
                 element={
                   <DashboardLayout>
-                    <WorkingHRDashboard />
+                    <TalentCommandCenter />
                   </DashboardLayout>
                 }
               />
@@ -564,24 +729,7 @@ function App() {
                 path="/ai-assistant"
                 element={
                   <DashboardLayout>
-                    <div className="p-6">
-                      <h1 className="text-2xl font-bold mb-4">AI Assistant</h1>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h2 className="text-lg font-semibold text-blue-900 mb-2">Serenity AI Companion</h2>
-                        <p className="text-blue-800">Your intelligent assistant powered by GPT-5 is ready to help with:</p>
-                        <ul className="mt-2 text-blue-700 list-disc list-inside">
-                          <li>Scheduling questions and optimization</li>
-                          <li>Policy clarification and compliance guidance</li>
-                          <li>Patient care recommendations</li>
-                          <li>System navigation and support</li>
-                        </ul>
-                        <div className="mt-4 p-3 bg-white rounded border">
-                          <p className="text-sm text-gray-600 italic">
-                            "Ask me anything about Serenity ERP - I'm here to help you work more efficiently!"
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                    <AIAssistantPage />
                   </DashboardLayout>
                 }
               />
@@ -607,6 +755,7 @@ function App() {
             </Routes>
           </div>
         </Router>
+        </NotificationProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

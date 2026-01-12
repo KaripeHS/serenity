@@ -39,26 +39,38 @@ router.get('/metrics', async (req: AuthenticatedRequest, res: Response, next) =>
         AND role IN ('caregiver', 'dsp_basic', 'dsp_med', 'hha', 'cna', 'rn_case_manager', 'lpn_lvn', 'therapist', 'qidp')
     `, [organizationId]);
 
-    // Get today's scheduled visits
+    // Get today's scheduled visits (if shifts table exists)
     const today = new Date().toISOString().split('T')[0];
-    const visitsResult = await pool.query(`
-      SELECT
-        COUNT(*) as total,
-        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed
-      FROM shifts
-      WHERE organization_id = $1 AND shift_date = $2
-    `, [organizationId, today]);
+    let visitsResult;
+    try {
+      visitsResult = await pool.query(`
+        SELECT
+          COUNT(*) as total,
+          COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed
+        FROM shifts
+        WHERE organization_id = $1 AND DATE(scheduled_start) = $2
+      `, [organizationId, today]);
+    } catch {
+      // Shifts table doesn't exist yet
+      visitsResult = { rows: [{ total: 0, completed: 0 }] };
+    }
 
-    // Get EVV compliance for current month
+    // Get EVV compliance for current month (if evv_records table exists)
     const monthStart = new Date();
     monthStart.setDate(1);
-    const evvResult = await pool.query(`
-      SELECT
-        COUNT(*) as total,
-        COUNT(CASE WHEN sandata_status = 'accepted' THEN 1 END) as compliant
-      FROM evv_records
-      WHERE organization_id = $1 AND service_date >= $2
-    `, [organizationId, monthStart.toISOString().split('T')[0]]);
+    let evvResult;
+    try {
+      evvResult = await pool.query(`
+        SELECT
+          COUNT(*) as total,
+          COUNT(CASE WHEN sandata_status = 'accepted' THEN 1 END) as compliant
+        FROM evv_records
+        WHERE organization_id = $1 AND service_date >= $2
+      `, [organizationId, monthStart.toISOString().split('T')[0]]);
+    } catch {
+      // EVV records table doesn't exist yet
+      evvResult = { rows: [{ total: 0, compliant: 0 }] };
+    }
 
     const totalEvv = parseInt(evvResult.rows[0]?.total || '0', 10);
     const compliantEvv = parseInt(evvResult.rows[0]?.compliant || '0', 10);
@@ -83,8 +95,10 @@ router.get('/metrics', async (req: AuthenticatedRequest, res: Response, next) =>
     res.json({
       activePatients: parseInt(patientsResult.rows[0]?.count || '0', 10),
       activeStaff: parseInt(staffResult.rows[0]?.count || '0', 10),
+      totalVisitsToday: parseInt(visitsResult.rows[0]?.total || '0', 10),
       scheduledVisitsToday: parseInt(visitsResult.rows[0]?.total || '0', 10),
       completedVisitsToday: parseInt(visitsResult.rows[0]?.completed || '0', 10),
+      evvCompliance: Math.round(evvComplianceRate * 100),
       evvComplianceRate,
       monthlyRevenue,
       systemHealth: 'good'

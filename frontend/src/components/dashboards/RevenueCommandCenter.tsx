@@ -43,7 +43,7 @@ function RevenueCommandCenter() {
   const { data: urgentData, isLoading: urgentLoading } = useQuery({
     queryKey: ['billing', 'urgent'],
     queryFn: async () => {
-      const [arAging, denials, claims] = await Promise.all([
+      const [arAging, denials, claims]: any[] = await Promise.all([
         api.get('/billing/ar/aging-90plus'),
         api.get('/billing/denials/pending'),
         api.get('/billing/claims/rejected'),
@@ -60,7 +60,7 @@ function RevenueCommandCenter() {
   // Fetch revenue summary
   const { data: revenueSummary } = useQuery({
     queryKey: ['billing', 'summary'],
-    queryFn: () => api.get('/billing/summary').then((res) => res.data),
+    queryFn: () => api.get('/billing/summary').then((res: any) => res.data || res),
   });
 
   // Build urgent items array
@@ -106,8 +106,11 @@ function RevenueCommandCenter() {
   ];
 
   // Define tabs (filter based on role permissions)
+  // Executives (Founder, CEO, CFO, COO) get full access to all tabs for oversight
+  const isExecutive = roleAccess.isFounder || roleAccess.isExecutive;
+
   const tabs: Tab[] = [
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_AR_AGING) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_AR_AGING)) && {
       id: 'ar-aging',
       label: 'AR Aging',
       icon: <Clock className="w-4 h-4" />,
@@ -115,7 +118,7 @@ function RevenueCommandCenter() {
       badgeColor: urgentData?.arAging?.length ? 'red' : 'green',
       content: <ARAgingTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.MANAGE_CLAIMS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.MANAGE_CLAIMS)) && {
       id: 'claims',
       label: 'Claims',
       icon: <FileText className="w-4 h-4" />,
@@ -123,7 +126,7 @@ function RevenueCommandCenter() {
       badgeColor: urgentData?.claims?.length ? 'red' : 'green',
       content: <ClaimsTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.MANAGE_DENIALS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.MANAGE_DENIALS)) && {
       id: 'denials',
       label: 'Denials',
       icon: <AlertCircle className="w-4 h-4" />,
@@ -137,7 +140,7 @@ function RevenueCommandCenter() {
       icon: <Users className="w-4 h-4" />,
       content: <PayerMixTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_REVENUE_ANALYTICS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_REVENUE_ANALYTICS)) && {
       id: 'analytics',
       label: 'Analytics',
       icon: <BarChart3 className="w-4 h-4" />,
@@ -225,7 +228,7 @@ function ARAgingTab() {
   const roleAccess = useRoleAccess();
   const { data: arData, isLoading } = useQuery({
     queryKey: ['billing', 'ar-aging'],
-    queryFn: () => api.get('/billing/ar/aging').then((res) => res.data),
+    queryFn: () => api.get('/billing/ar/aging').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -331,7 +334,7 @@ function ClaimsTab() {
   const roleAccess = useRoleAccess();
   const { data: claimsData, isLoading } = useQuery({
     queryKey: ['billing', 'claims'],
-    queryFn: () => api.get('/billing/claims').then((res) => res.data),
+    queryFn: () => api.get('/billing/claims').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -434,7 +437,7 @@ function DenialsTab() {
   const roleAccess = useRoleAccess();
   const { data: denialsData, isLoading } = useQuery({
     queryKey: ['billing', 'denials'],
-    queryFn: () => api.get('/billing/denials').then((res) => res.data),
+    queryFn: () => api.get('/billing/denials').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -530,7 +533,7 @@ function DenialReasonRow({ reason, count, percentage }: any) {
 function PayerMixTab() {
   const { data: payerData, isLoading } = useQuery({
     queryKey: ['billing', 'payer-mix'],
-    queryFn: () => api.get('/billing/payer-mix').then((res) => res.data),
+    queryFn: () => api.get('/billing/payer-mix').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -600,7 +603,7 @@ function PayerRow({ name, revenue, percentage, avgReimbursement }: any) {
 function AnalyticsTab() {
   const { data: analyticsData, isLoading } = useQuery({
     queryKey: ['billing', 'analytics'],
-    queryFn: () => api.get('/billing/analytics').then((res) => res.data),
+    queryFn: () => api.get('/billing/analytics').then((res: any) => res.data || res),
   });
 
   if (isLoading) {

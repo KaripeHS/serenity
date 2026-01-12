@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import api from '../../../lib/api';
 
 interface Lead {
     id: string;
@@ -37,55 +39,46 @@ export const LeadPipeline: React.FC = () => {
     const queryClient = useQueryClient();
     const [view, setView] = useState<'leads' | 'proposals'>('leads');
     const [filterStatus, setFilterStatus] = useState<string>('');
+    const [searchQuery, setSearchQuery] = useState<string>('');
 
-    // Fetch Leads
-    const { data: leads, isLoading: isLoadingLeads } = useQuery({
+    // Fetch Leads with proper auth
+    const { data: leads, isLoading: isLoadingLeads, error: leadsError } = useQuery({
         queryKey: ['leads', filterStatus],
         queryFn: async () => {
-            const params = new URLSearchParams();
-            if (filterStatus) params.append('status', filterStatus);
-
-            const res = await fetch(`/api/admin/leads?${params.toString()}`);
-            if (!res.ok) throw new Error('Failed to fetch leads');
-            const json = await res.json();
-            return json.data as Lead[];
+            const params = filterStatus ? `?status=${filterStatus}` : '';
+            const response = await api.get<{ success: boolean; data: Lead[] }>(`/admin/leads${params}`);
+            return response.data || [];
         },
-        enabled: view === 'leads'
+        enabled: view === 'leads',
+        retry: 1,
+        staleTime: 30000, // 30 seconds
     });
 
-    // Fetch Proposals
-    const { data: proposals, isLoading: isLoadingProposals } = useQuery({
+    // Fetch Proposals with proper auth
+    const { data: proposals, isLoading: isLoadingProposals, error: proposalsError } = useQuery({
         queryKey: ['proposals'],
         queryFn: async () => {
-            const res = await fetch('/api/admin/proposals');
-            if (!res.ok) throw new Error('Failed to fetch proposals');
-            const json = await res.json();
-            return json.data;
+            const response = await api.get<{ success: boolean; data: any[] }>('/admin/proposals');
+            return response.data || [];
         },
-        enabled: view === 'proposals'
+        enabled: view === 'proposals',
+        retry: 1,
     });
 
-    // Fetch Stats
-    const { data: stats } = useQuery({
+    // Fetch Stats with proper auth
+    const { data: stats, error: statsError } = useQuery({
         queryKey: ['lead-stats'],
         queryFn: async () => {
-            const res = await fetch('/api/admin/leads/stats');
-            if (!res.ok) throw new Error('Failed to fetch stats');
-            const json = await res.json();
-            return json.data;
-        }
+            const response = await api.get<{ success: boolean; data: any }>('/admin/leads/stats');
+            return response.data;
+        },
+        retry: 1,
     });
 
     // Update Lead Status Mutation
     const updateStatusMutation = useMutation({
         mutationFn: async ({ id, status }: { id: string; status: string }) => {
-            const res = await fetch(`/api/admin/leads/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status })
-            });
-            if (!res.ok) throw new Error('Failed to update status');
-            return res.json();
+            return api.patch(`/admin/leads/${id}`, { status });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['leads'] });
@@ -96,13 +89,7 @@ export const LeadPipeline: React.FC = () => {
     // Approve Proposal Mutation
     const approveProposalMutation = useMutation({
         mutationFn: async (id: string) => {
-            const res = await fetch(`/api/admin/proposals/${id}/status`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'approved' })
-            });
-            if (!res.ok) throw new Error('Failed to approve proposal');
-            return res.json();
+            return api.patch(`/admin/proposals/${id}/status`, { status: 'approved' });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['proposals'] });
@@ -110,7 +97,47 @@ export const LeadPipeline: React.FC = () => {
         }
     });
 
-    if (isLoadingLeads && view === 'leads') return <div className="p-8">Loading pipeline...</div>;
+    // Filter leads by search query
+    const filteredLeads = useMemo(() => {
+        if (!leads || !searchQuery.trim()) return leads;
+        const query = searchQuery.toLowerCase().trim();
+        return leads.filter((lead: Lead) =>
+            lead.firstName.toLowerCase().includes(query) ||
+            lead.lastName.toLowerCase().includes(query) ||
+            `${lead.firstName} ${lead.lastName}`.toLowerCase().includes(query) ||
+            lead.email.toLowerCase().includes(query) ||
+            lead.phone.includes(query) ||
+            lead.serviceInterest.toLowerCase().includes(query)
+        );
+    }, [leads, searchQuery]);
+
+    // Loading state with timeout protection
+    if (isLoadingLeads && view === 'leads') {
+        return (
+            <div className="p-8 flex flex-col items-center justify-center min-h-[400px]">
+                <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p className="text-gray-600">Loading pipeline...</p>
+            </div>
+        );
+    }
+
+    // Error state
+    if (leadsError && view === 'leads') {
+        return (
+            <div className="p-8">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                    <h3 className="text-red-800 font-semibold mb-2">Unable to load leads</h3>
+                    <p className="text-red-600 text-sm mb-4">{(leadsError as Error).message}</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 max-w-7xl mx-auto">
@@ -157,25 +184,53 @@ export const LeadPipeline: React.FC = () => {
 
             {view === 'leads' ? (
                 <>
-                    {/* Filters */}
-                    <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
-                        <button
-                            onClick={() => setFilterStatus('')}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition ${filterStatus === '' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}
-                        >
-                            All Leads
-                        </button>
-                        {Object.keys(STATUS_LABELS).map((status) => (
+                    {/* Search and Filters */}
+                    <div className="mb-6 space-y-4">
+                        {/* Search Input */}
+                        <div className="relative max-w-md">
+                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search by name, email, phone, or service..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    <XMarkIcon className="h-5 w-5" />
+                                </button>
+                            )}
+                        </div>
+                        {searchQuery && (
+                            <p className="text-sm text-gray-500">
+                                Found {filteredLeads?.length || 0} result{filteredLeads?.length !== 1 ? 's' : ''} for "{searchQuery}"
+                            </p>
+                        )}
+
+                        {/* Status Filters */}
+                        <div className="flex gap-2 overflow-x-auto pb-2">
                             <button
-                                key={status}
-                                onClick={() => setFilterStatus(status)}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap ${filterStatus === status ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                onClick={() => setFilterStatus('')}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition ${filterStatus === '' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}
                             >
-                                {STATUS_LABELS[status as keyof typeof STATUS_LABELS]}
+                                All Leads
                             </button>
-                        ))}
+                            {Object.keys(STATUS_LABELS).map((status) => (
+                                <button
+                                    key={status}
+                                    onClick={() => setFilterStatus(status)}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap ${filterStatus === status ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                        }`}
+                                >
+                                    {STATUS_LABELS[status as keyof typeof STATUS_LABELS]}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Leads List */}
@@ -191,7 +246,7 @@ export const LeadPipeline: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {leads?.map((lead: Lead) => (
+                                {filteredLeads?.map((lead: Lead) => (
                                     <tr key={lead.id} className="hover:bg-gray-50 transition">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
@@ -236,7 +291,20 @@ export const LeadPipeline: React.FC = () => {
                                         </td>
                                     </tr>
                                 ))}
-                                {leads?.length === 0 && (
+                                {filteredLeads?.length === 0 && searchQuery && (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                                            <p className="font-medium">No leads match "{searchQuery}"</p>
+                                            <button
+                                                onClick={() => setSearchQuery('')}
+                                                className="mt-2 text-indigo-600 hover:text-indigo-800 text-sm"
+                                            >
+                                                Clear search
+                                            </button>
+                                        </td>
+                                    </tr>
+                                )}
+                                {filteredLeads?.length === 0 && !searchQuery && (
                                     <tr>
                                         <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                                             No leads found. Waiting for new inquiries...

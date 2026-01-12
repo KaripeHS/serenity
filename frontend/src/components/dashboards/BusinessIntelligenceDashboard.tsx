@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tantml:query';
+import { useQuery } from '@tanstack/react-query';
 import {
   DashboardLayout,
   TabContainer,
@@ -29,6 +29,9 @@ function BusinessIntelligenceDashboard() {
   const roleAccess = useRoleAccess();
   const [selectedTab, setSelectedTab] = useState('reports');
 
+  // Executives (Founder, CEO, COO) get full access to all tabs for oversight
+  const isExecutive = roleAccess.isFounder || roleAccess.isExecutive;
+
   // Define tabs
   const tabs: Tab[] = [
     {
@@ -43,7 +46,7 @@ function BusinessIntelligenceDashboard() {
       icon: <TrendingUp className="w-4 h-4" />,
       content: <AdvancedAnalyticsTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.CREATE_CUSTOM_REPORTS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.CREATE_CUSTOM_REPORTS)) && {
       id: 'builder',
       label: 'Report Builder',
       icon: <Database className="w-4 h-4" />,

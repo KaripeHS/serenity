@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from '../components/ui/Alert';
 import { useAuth } from '../contexts/AuthContext';
 import { getPortalType, PortalType } from '../App';
 import WorkingHomePage from '../components/WorkingHomePage';
+import DashboardLayout from '../components/layouts/DashboardLayout';
 
 // Portal configuration for different subdomains
 const portalConfig: Record<PortalType, { label: string; color: string; description: string }> = {
@@ -191,6 +192,10 @@ export default function HomePage() {
     return <LoginForm />;
   }
 
-  // When authenticated, render the role-based WorkingHomePage
-  return <WorkingHomePage />;
+  // When authenticated, render the role-based WorkingHomePage with DashboardLayout
+  return (
+    <DashboardLayout>
+      <WorkingHomePage />
+    </DashboardLayout>
+  );
 }

@@ -176,7 +176,12 @@ export function DoddHpcDashboard() {
                   To provide HPC services, you need DODD Provider Certification. This unlocks access to
                   DD waiver rates of $7.15-$11.17 per 15-minute unit.
                   <div className="mt-4">
-                    <Button size="sm">Start Certification Process</Button>
+                    <Button
+                      size="sm"
+                      onClick={() => window.location.href = '/dodd/certification/start'}
+                    >
+                      Start Certification Process
+                    </Button>
                   </div>
                 </Alert>
               )}
@@ -341,7 +346,9 @@ export function DoddHpcDashboard() {
             <Card>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">DODD Provider Certification</h2>
-                <Button>Add Certification</Button>
+                <Button onClick={() => window.location.href = '/dodd/certification/add'}>
+                  Add Certification
+                </Button>
               </div>
               {doddData?.hasCertification ? (
                 <div className="space-y-6">

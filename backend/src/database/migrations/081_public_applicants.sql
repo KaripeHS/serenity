@@ -1,11 +1,8 @@
 -- Public Applicants Table for Career Applications
 -- Simplified version that works for public website submissions
 
--- Drop existing table if it exists and recreate
-DROP TABLE IF EXISTS applicants CASCADE;
-
--- Create applicants table without foreign key constraints that may not exist
-CREATE TABLE applicants (
+-- Create applicants table if not exists (safe migration - no DROP)
+CREATE TABLE IF NOT EXISTS applicants (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL,
 

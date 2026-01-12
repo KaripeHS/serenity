@@ -26,6 +26,7 @@ import {
   PieChart,
   Activity,
   Briefcase,
+  CheckCircle,
 } from 'lucide-react';
 
 function ExecutiveCommandCenter() {
@@ -36,7 +37,7 @@ function ExecutiveCommandCenter() {
   const { data: urgentData, isLoading } = useQuery({
     queryKey: ['executive', 'urgent'],
     queryFn: async () => {
-      const [strategicRisks, financialAlerts] = await Promise.all([
+      const [strategicRisks, financialAlerts]: any[] = await Promise.all([
         api.get('/executive/risks'),
         api.get('/executive/financial-alerts'),
       ]);
@@ -68,6 +69,9 @@ function ExecutiveCommandCenter() {
   ];
 
   // Define tabs
+  // Executives (Founder, CEO, CFO, COO) get full access to all tabs
+  const isExecutive = roleAccess.isFounder || roleAccess.isExecutive;
+
   const tabs: Tab[] = [
     {
       id: 'overview',
@@ -75,19 +79,19 @@ function ExecutiveCommandCenter() {
       icon: <Briefcase className="w-4 h-4" />,
       content: <OverviewTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_REVENUE_ANALYTICS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_REVENUE_ANALYTICS)) && {
       id: 'revenue',
       label: 'Revenue Analytics',
       icon: <DollarSign className="w-4 h-4" />,
       content: <RevenueAnalyticsTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_GROWTH_FORECAST) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_GROWTH_FORECAST)) && {
       id: 'growth',
       label: 'Growth Forecast',
       icon: <TrendingUp className="w-4 h-4" />,
       content: <GrowthForecastTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_RISK_DASHBOARD) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_RISK_DASHBOARD)) && {
       id: 'risk',
       label: 'Risk Dashboard',
       icon: <AlertTriangle className="w-4 h-4" />,
@@ -294,7 +298,7 @@ function RevenueAnalyticsTab() {
   const { data: revenueData, isLoading } = useQuery({
     queryKey: ['executive', 'revenue'],
     queryFn: async () => {
-      const response = await api.get('/executive/revenue');
+      const response: any = await api.get('/executive/revenue');
       return response.data;
     },
   });

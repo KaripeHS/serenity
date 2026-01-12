@@ -42,7 +42,7 @@ function ComplianceCommandCenter() {
   const { data: urgentData, isLoading: urgentLoading } = useQuery({
     queryKey: ['compliance', 'urgent'],
     queryFn: async () => {
-      const [breaches, baas, drTests, incidents] = await Promise.all([
+      const [breaches, baas, drTests, incidents]: any[] = await Promise.all([
         api.get('/compliance/breaches?status=active'),
         api.get('/compliance/baas/expiring?days=45'),
         api.get('/emergency/drp/overdue-tests'),
@@ -61,7 +61,7 @@ function ComplianceCommandCenter() {
   // Fetch compliance score
   const { data: complianceScore } = useQuery({
     queryKey: ['compliance', 'score'],
-    queryFn: () => api.get('/compliance/score').then((res) => res.data),
+    queryFn: () => api.get('/compliance/score').then((res: any) => res.data || res),
   });
 
   // Build urgent items array
@@ -124,6 +124,9 @@ function ComplianceCommandCenter() {
   ];
 
   // Define tabs (filter based on role permissions)
+  // Executives (Founder, CEO, COO) get full access to all tabs for oversight
+  const isExecutive = roleAccess.isFounder || roleAccess.isExecutive;
+
   const tabs: Tab[] = [
     {
       id: 'overview',
@@ -139,7 +142,7 @@ function ComplianceCommandCenter() {
       badgeColor: urgentData?.incidents?.length ? 'red' : 'green',
       content: <IncidentsTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.MANAGE_BREACHES) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.MANAGE_BREACHES)) && {
       id: 'hipaa',
       label: 'HIPAA',
       icon: <AlertTriangle className="w-4 h-4" />,
@@ -147,7 +150,7 @@ function ComplianceCommandCenter() {
       badgeColor: urgentData?.breaches?.length ? 'red' : 'green',
       content: <HIPAATab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.MANAGE_BAAS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.MANAGE_BAAS)) && {
       id: 'baas',
       label: 'BAAs',
       icon: <Users className="w-4 h-4" />,
@@ -155,7 +158,7 @@ function ComplianceCommandCenter() {
       badgeColor: urgentData?.baas?.length ? 'yellow' : 'green',
       content: <BAAsTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.MANAGE_EMERGENCY_PREP) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.MANAGE_EMERGENCY_PREP)) && {
       id: 'emergency',
       label: 'Emergency Prep',
       icon: <FileText className="w-4 h-4" />,
@@ -163,7 +166,7 @@ function ComplianceCommandCenter() {
       badgeColor: urgentData?.drTests?.length ? 'yellow' : 'green',
       content: <EmergencyTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_AUDIT_LOGS) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_AUDIT_LOGS)) && {
       id: 'audit',
       label: 'Audit Logs',
       icon: <Search className="w-4 h-4" />,
@@ -230,6 +233,7 @@ function ComplianceCommandCenter() {
       title="Compliance Command Center"
       subtitle="Comprehensive regulatory compliance and risk management"
       actions={headerActions}
+      data-testid="baa-dashboard"
       urgentSection={
         urgentLoading ? (
           <div className="flex items-center justify-center py-4">
@@ -260,7 +264,7 @@ function ComplianceCommandCenter() {
 function OverviewTab() {
   const { data: complianceData, isLoading } = useQuery({
     queryKey: ['compliance', 'overview'],
-    queryFn: () => api.get('/compliance/overview').then((res) => res.data),
+    queryFn: () => api.get('/compliance/overview').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -385,7 +389,10 @@ function ComplianceCategoryRow({ name, score, status, details }: any) {
       </div>
 
       {/* Action Button */}
-      <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+      <button
+        onClick={() => window.location.href = `/compliance/category/${name.toLowerCase().replace(/\s+/g, '-')}`}
+        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+      >
         View Details
       </button>
     </div>
@@ -399,7 +406,7 @@ function ComplianceCategoryRow({ name, score, status, details }: any) {
 function IncidentsTab() {
   const { data: incidentsData, isLoading } = useQuery({
     queryKey: ['incidents', 'compliance-view'],
-    queryFn: () => api.get('/incidents/compliance-dashboard').then((res) => res.data),
+    queryFn: () => api.get('/incidents/compliance-dashboard').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -453,7 +460,7 @@ function HIPAATab() {
   const roleAccess = useRoleAccess();
   const { data: hipaaData, isLoading } = useQuery({
     queryKey: ['compliance', 'hipaa'],
-    queryFn: () => api.get('/compliance/breaches').then((res) => res.data),
+    queryFn: () => api.get('/compliance/breaches').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -505,7 +512,7 @@ function BAAsTab() {
   const roleAccess = useRoleAccess();
   const { data: baasData, isLoading } = useQuery({
     queryKey: ['compliance', 'baas'],
-    queryFn: () => api.get('/compliance/baas').then((res) => res.data),
+    queryFn: () => api.get('/compliance/baas').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -574,7 +581,7 @@ function EmergencyTab() {
   const roleAccess = useRoleAccess();
   const { data: emergencyData, isLoading } = useQuery({
     queryKey: ['compliance', 'emergency'],
-    queryFn: () => api.get('/emergency/overview').then((res) => res.data),
+    queryFn: () => api.get('/emergency/overview').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -627,7 +634,7 @@ function EmergencyTab() {
 function AuditTab() {
   const { data: auditData, isLoading } = useQuery({
     queryKey: ['compliance', 'audit'],
-    queryFn: () => api.get('/audit/summary').then((res) => res.data),
+    queryFn: () => api.get('/audit/summary').then((res: any) => res.data || res),
   });
 
   if (isLoading) {
@@ -673,7 +680,17 @@ function AuditTab() {
               placeholder="Search audit logs (user, action, resource...)"
               className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <button className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            <button
+              onClick={() => {
+                const searchInput = document.querySelector('input[placeholder*="Search audit logs"]') as HTMLInputElement;
+                if (searchInput && searchInput.value) {
+                  window.location.href = `/compliance/audit-logs?search=${encodeURIComponent(searchInput.value)}`;
+                } else {
+                  alert('Please enter a search term');
+                }
+              }}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
               <Search className="w-4 h-4 inline mr-2" />
               Search
             </button>

@@ -85,7 +85,7 @@ function OperationsCommandCenter() {
   const { data: urgentData, isLoading } = useQuery({
     queryKey: ['operations', 'urgent'],
     queryFn: async () => {
-      const [scheduleIssues, geofenceViolations] = await Promise.all([
+      const [scheduleIssues, geofenceViolations]: any[] = await Promise.all([
         api.get('/operations/schedule/issues'),
         api.get('/operations/geofence/violations'),
       ]);
@@ -123,6 +123,9 @@ function OperationsCommandCenter() {
   ];
 
   // Define tabs with RBAC filtering
+  // Executives (Founder, CEO, COO) get full access to all tabs for oversight
+  const isExecutive = roleAccess.isFounder || roleAccess.isExecutive;
+
   const tabs: Tab[] = [
     {
       id: 'overview',
@@ -130,7 +133,7 @@ function OperationsCommandCenter() {
       icon: <MapPin className="w-4 h-4" />,
       content: <OverviewTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_SCHEDULE) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_SCHEDULE)) && {
       id: 'scheduling',
       label: 'Scheduling',
       icon: <Calendar className="w-4 h-4" />,
@@ -138,7 +141,7 @@ function OperationsCommandCenter() {
       badgeColor: (urgentData?.scheduleIssues?.length || 0) > 0 ? 'red' : 'green',
       content: <SchedulingTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_GPS_TRACKING) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_GPS_TRACKING)) && {
       id: 'gps',
       label: 'GPS Tracking',
       icon: <Navigation className="w-4 h-4" />,
@@ -146,7 +149,7 @@ function OperationsCommandCenter() {
       badgeColor: (urgentData?.geofenceViolations?.length || 0) > 0 ? 'yellow' : 'green',
       content: <GPSTrackingTab />,
     },
-    roleAccess.canAccessFeature(FeaturePermission.VIEW_MILEAGE) && {
+    (isExecutive || roleAccess.canAccessFeature(FeaturePermission.VIEW_MILEAGE)) && {
       id: 'mileage',
       label: 'Mileage',
       icon: <DollarSign className="w-4 h-4" />,
@@ -197,7 +200,7 @@ function OverviewTab() {
   const { data: overviewData, isLoading } = useQuery({
     queryKey: ['operations', 'overview'],
     queryFn: async () => {
-      const response = await api.get('/operations/overview');
+      const response: any = await api.get('/operations/overview');
       return response.data;
     },
   });
@@ -325,16 +328,28 @@ function OverviewTab() {
           icon={<AlertTriangle className="w-5 h-5" />}
         >
           <div className="grid grid-cols-4 gap-4">
-            <button className="px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            <button
+              onClick={() => window.location.href = '/dashboard/scheduling'}
+              className="px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
               Create Schedule
             </button>
-            <button className="px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700">
+            <button
+              onClick={() => window.location.href = '/dashboard/scheduling?view=open-slots'}
+              className="px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
               Fill Open Slots
             </button>
-            <button className="px-4 py-3 bg-yellow-600 text-white rounded-md hover:bg-yellow-700">
+            <button
+              onClick={() => window.location.href = '/dashboard/scheduling?view=conflicts'}
+              className="px-4 py-3 bg-yellow-600 text-white rounded-md hover:bg-yellow-700"
+            >
               Resolve Conflicts
             </button>
-            <button className="px-4 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+            <button
+              onClick={() => window.location.href = '/dashboard/scheduling?view=optimize'}
+              className="px-4 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+            >
               Optimize Routes
             </button>
           </div>
@@ -353,7 +368,7 @@ function SchedulingTab() {
   const { data: scheduleData, isLoading } = useQuery({
     queryKey: ['operations', 'schedule'],
     queryFn: async () => {
-      const response = await api.get('/operations/schedule');
+      const response: any = await api.get('/operations/schedule');
       return response.data;
     },
   });
@@ -408,7 +423,10 @@ function SchedulingTab() {
                   </p>
                 </div>
                 {roleAccess.canAccessFeature(FeaturePermission.MANAGE_SCHEDULE) && (
-                  <button className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                  <button
+                    onClick={() => alert(`Resolving ${issue.issueType} for ${issue.caregiverName} - ${issue.clientName}`)}
+                    className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
                     Resolve
                   </button>
                 )}
@@ -443,7 +461,10 @@ function SchedulingTab() {
                     Reassign Jane Smith's 2pm visit to nearby caregiver John Doe (currently
                     has open slot)
                   </p>
-                  <button className="mt-2 text-sm text-blue-600 hover:underline">
+                  <button
+                    onClick={() => alert('Applying optimization: Reassign Jane Smith\'s 2pm visit to John Doe')}
+                    className="mt-2 text-sm text-blue-600 hover:underline"
+                  >
                     Apply Suggestion →
                   </button>
                 </div>
@@ -460,7 +481,10 @@ function SchedulingTab() {
                   <p className="text-sm text-gray-600 mt-1">
                     Add new clients in zip codes 43215, 43214 to maximize utilization
                   </p>
-                  <button className="mt-2 text-sm text-green-600 hover:underline">
+                  <button
+                    onClick={() => window.location.href = '/patients?status=available&zip=43215,43214'}
+                    className="mt-2 text-sm text-green-600 hover:underline"
+                  >
                     View Available Clients →
                   </button>
                 </div>
@@ -492,7 +516,7 @@ function GPSTrackingTab() {
   const { data: gpsData, isLoading } = useQuery({
     queryKey: ['operations', 'gps'],
     queryFn: async () => {
-      const response = await api.get('/operations/gps');
+      const response: any = await api.get('/operations/gps');
       return response.data;
     },
   });
@@ -537,7 +561,10 @@ function GPSTrackingTab() {
                     {new Date(violation.timestamp).toLocaleString()}
                   </p>
                 </div>
-                <button className="ml-4 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700">
+                <button
+                  onClick={() => window.location.href = `/operations/geofence/${violation.id}`}
+                  className="ml-4 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700"
+                >
                   Review
                 </button>
               </div>
@@ -596,7 +623,7 @@ function MileageTab() {
   const { data: mileageData, isLoading } = useQuery({
     queryKey: ['operations', 'mileage'],
     queryFn: async () => {
-      const response = await api.get('/operations/mileage');
+      const response: any = await api.get('/operations/mileage');
       return response.data;
     },
   });
@@ -704,7 +731,10 @@ function MileageTab() {
                     </td>
                     {roleAccess.canAccessFeature(FeaturePermission.APPROVE_MILEAGE) && (
                       <td className="px-4 py-3 text-center">
-                        <button className="px-3 py-1 bg-green-600 text-white text-xs rounded-md hover:bg-green-700">
+                        <button
+                          onClick={() => alert(`Approving mileage reimbursement for ${reimbursement.caregiverName}: $${reimbursement.amount.toFixed(2)}`)}
+                          className="px-3 py-1 bg-green-600 text-white text-xs rounded-md hover:bg-green-700"
+                        >
                           Approve
                         </button>
                       </td>

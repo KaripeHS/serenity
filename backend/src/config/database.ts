@@ -10,6 +10,7 @@ import { environmentService } from './environment';
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('database');
+
 // Create pool instance
 const dbConfig = environmentService.getDatabaseConfig();
 

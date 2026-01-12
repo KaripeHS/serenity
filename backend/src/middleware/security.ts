@@ -49,7 +49,7 @@ export const securityHeaders = helmet({
       baseUri: ["'self'"]
     }
   },
-  crossOriginEmbedderPolicy: { policy: "require-corp" },
+  crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: { policy: "same-origin" },
   crossOriginResourcePolicy: { policy: "cross-origin" },
   dnsPrefetchControl: { allow: false },
@@ -132,7 +132,10 @@ export const corsOptions = {
       ...configuredOrigins,
       'http://localhost:3000',
       'http://localhost:3001',
-      'http://localhost:5173'
+      'http://localhost:5173',
+      'https://console.serenitycarepartners.com',
+      'https://serenity-erp-prod.web.app',
+      'https://serenity-erp-prod.firebaseapp.com'
     ];
 
     // Allow requests with no origin (mobile apps, Postman, etc.)

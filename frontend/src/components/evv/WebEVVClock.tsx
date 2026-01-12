@@ -7,6 +7,8 @@ import {
   MapPinIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
+import { useAuth } from '@/contexts/AuthContext';
+import { getAccessToken } from '@/services/api';
 
 // API base URL - use environment variable or default to localhost:3001
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -71,6 +73,10 @@ function ShiftStatusBadge({ status }: { status: Shift['status'] }) {
 }
 
 export const WebEVVClock: React.FC = () => {
+  // Get main app auth context - if user is already logged into the main app, use that
+  const { user } = useAuth();
+  const mainAppToken = getAccessToken();
+
   const [caregiverId, setCaregiverId] = useState<string>('');
   const [pin, setPin] = useState<string>('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -84,6 +90,18 @@ export const WebEVVClock: React.FC = () => {
   const [tasksCompleted, setTasksCompleted] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
   const [showClockOutForm, setShowClockOutForm] = useState(false);
+
+  // If user is logged in via main app, auto-authenticate for EVV
+  useEffect(() => {
+    if (user && mainAppToken && !isAuthenticated) {
+      setIsAuthenticated(true);
+      setCaregiverName(`${user.firstName} ${user.lastName}`);
+      // Store token for EVV API calls
+      localStorage.setItem('auth_token', mainAppToken);
+      // Fetch shifts for the logged-in user
+      fetchTodaysShifts();
+    }
+  }, [user, mainAppToken]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -562,6 +580,7 @@ export const WebEVVClock: React.FC = () => {
                 <div className="flex gap-3">
                   {shift.status === 'scheduled' && (
                     <button
+                      data-testid="clock-in-button"
                       onClick={() => handleClockIn(shift)}
                       disabled={loading}
                       className="flex-1 bg-success-600 text-white py-3 rounded-lg font-medium hover:bg-success-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"

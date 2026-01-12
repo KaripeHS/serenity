@@ -496,7 +496,12 @@ export default function LmsDashboard() {
           <div className="bg-white rounded-lg border p-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold">Popular Courses</h3>
-              <button className="text-sm text-blue-600 hover:underline">View All</button>
+              <button
+                onClick={() => window.location.href = '/training/courses'}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                View All
+              </button>
             </div>
             <div className="space-y-3">
               {courses.slice(0, 5).map((course, idx) => (
@@ -519,7 +524,12 @@ export default function LmsDashboard() {
           <div className="bg-white rounded-lg border p-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold">Recent Certificates</h3>
-              <button className="text-sm text-blue-600 hover:underline">View All</button>
+              <button
+                onClick={() => window.location.href = '/training/certificates'}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                View All
+              </button>
             </div>
             <div className="space-y-3">
               {certificates.slice(0, 5).map((cert) => (
@@ -541,7 +551,12 @@ export default function LmsDashboard() {
           <div className="bg-white rounded-lg border p-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold">Quiz Performance</h3>
-              <button className="text-sm text-blue-600 hover:underline">View All</button>
+              <button
+                onClick={() => window.location.href = '/training/quizzes'}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                View All
+              </button>
             </div>
             <div className="space-y-3">
               {quizzes.map((quiz) => (
@@ -572,7 +587,12 @@ export default function LmsDashboard() {
           <div className="bg-white rounded-lg border p-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold">Learning Paths</h3>
-              <button className="text-sm text-blue-600 hover:underline">View All</button>
+              <button
+                onClick={() => window.location.href = '/training/paths'}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                View All
+              </button>
             </div>
             <div className="space-y-3">
               {learningPaths.map((path) => {
@@ -695,13 +715,25 @@ export default function LmsDashboard() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button className="p-1.5 hover:bg-gray-100 rounded">
+                    <button
+                      onClick={() => window.location.href = `/training/courses/${course.id}`}
+                      className="p-1.5 hover:bg-gray-100 rounded"
+                      title="View course"
+                    >
                       <Eye className="w-4 h-4 text-gray-500" />
                     </button>
-                    <button className="p-1.5 hover:bg-gray-100 rounded">
+                    <button
+                      onClick={() => window.location.href = `/training/courses/${course.id}/edit`}
+                      className="p-1.5 hover:bg-gray-100 rounded"
+                      title="Edit course"
+                    >
                       <Edit2 className="w-4 h-4 text-gray-500" />
                     </button>
-                    <button className="p-1.5 hover:bg-gray-100 rounded">
+                    <button
+                      onClick={() => window.location.href = `/training/courses/${course.id}/settings`}
+                      className="p-1.5 hover:bg-gray-100 rounded"
+                      title="Course settings"
+                    >
                       <Settings className="w-4 h-4 text-gray-500" />
                     </button>
                   </div>
@@ -773,10 +805,18 @@ export default function LmsDashboard() {
                       {path.isSequential ? 'Sequential' : 'Flexible'}
                     </span>
                     <div className="flex gap-2">
-                      <button className="p-1.5 hover:bg-gray-100 rounded">
+                      <button
+                        onClick={() => window.location.href = `/training/paths/${path.id}`}
+                        className="p-1.5 hover:bg-gray-100 rounded"
+                        title="View learning path"
+                      >
                         <Eye className="w-4 h-4 text-gray-500" />
                       </button>
-                      <button className="p-1.5 hover:bg-gray-100 rounded">
+                      <button
+                        onClick={() => window.location.href = `/training/paths/${path.id}/edit`}
+                        className="p-1.5 hover:bg-gray-100 rounded"
+                        title="Edit learning path"
+                      >
                         <Edit2 className="w-4 h-4 text-gray-500" />
                       </button>
                     </div>
@@ -912,14 +952,30 @@ export default function LmsDashboard() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
-                        <button className="p-1.5 hover:bg-gray-100 rounded" title="View">
+                        <button
+                          onClick={() => window.location.href = `/training/certificates/${cert.id}`}
+                          className="p-1.5 hover:bg-gray-100 rounded"
+                          title="View"
+                        >
                           <Eye className="w-4 h-4 text-gray-500" />
                         </button>
-                        <button className="p-1.5 hover:bg-gray-100 rounded" title="Download">
+                        <button
+                          onClick={() => window.location.href = `/training/certificates/${cert.id}/download`}
+                          className="p-1.5 hover:bg-gray-100 rounded"
+                          title="Download"
+                        >
                           <FileText className="w-4 h-4 text-gray-500" />
                         </button>
                         {cert.status === 'active' && (
-                          <button className="p-1.5 hover:bg-gray-100 rounded" title="Revoke">
+                          <button
+                            onClick={() => {
+                              if (confirm(`Are you sure you want to revoke the certificate for ${cert.employeeName}?`)) {
+                                alert(`Certificate revoked for ${cert.employeeName}`);
+                              }
+                            }}
+                            className="p-1.5 hover:bg-gray-100 rounded"
+                            title="Revoke"
+                          >
                             <Trash2 className="w-4 h-4 text-red-500" />
                           </button>
                         )}

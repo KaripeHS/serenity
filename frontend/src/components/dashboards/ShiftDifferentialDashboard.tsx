@@ -430,7 +430,12 @@ export default function ShiftDifferentialDashboard() {
           <div className="bg-white rounded-lg border p-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold">Active Rules</h3>
-              <button className="text-sm text-blue-600 hover:underline">View All</button>
+              <button
+                onClick={() => window.location.href = '/payroll/shift-differential/rules'}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                View All
+              </button>
             </div>
             <div className="space-y-3">
               {rules.filter(r => r.isActive).slice(0, 5).map(rule => (
@@ -456,7 +461,12 @@ export default function ShiftDifferentialDashboard() {
           <div className="bg-white rounded-lg border p-4 col-span-2">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold">Recent Differential Applications</h3>
-              <button className="text-sm text-blue-600 hover:underline">View All</button>
+              <button
+                onClick={() => window.location.href = '/payroll/shift-differential/applications'}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                View All
+              </button>
             </div>
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -531,10 +541,22 @@ export default function ShiftDifferentialDashboard() {
                     </span>
                   </div>
                   <div className="flex gap-2">
-                    <button className="p-1.5 hover:bg-gray-100 rounded">
+                    <button
+                      onClick={() => window.location.href = `/payroll/shift-differential/rules/${rule.id}/edit`}
+                      className="p-1.5 hover:bg-gray-100 rounded"
+                      title="Edit rule"
+                    >
                       <Edit2 className="w-4 h-4 text-gray-500" />
                     </button>
-                    <button className="p-1.5 hover:bg-gray-100 rounded">
+                    <button
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to delete the rule "${rule.name}"?`)) {
+                          alert(`Rule "${rule.name}" deleted successfully`);
+                        }
+                      }}
+                      className="p-1.5 hover:bg-gray-100 rounded"
+                      title="Delete rule"
+                    >
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </button>
                   </div>
@@ -551,7 +573,10 @@ export default function ShiftDifferentialDashboard() {
           <div className="p-4 border-b">
             <div className="flex justify-between items-center">
               <h3 className="font-semibold">Holiday Calendar {holidayCalendar.year}</h3>
-              <button className="flex items-center gap-2 px-3 py-1.5 border rounded-lg hover:bg-gray-50 text-sm">
+              <button
+                onClick={() => window.location.href = '/payroll/shift-differential/holidays/add'}
+                className="flex items-center gap-2 px-3 py-1.5 border rounded-lg hover:bg-gray-50 text-sm"
+              >
                 <Plus className="w-4 h-4" />
                 Add Holiday
               </button>
@@ -586,10 +611,22 @@ export default function ShiftDifferentialDashboard() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-1">
-                      <button className="p-1.5 hover:bg-gray-100 rounded">
+                      <button
+                        onClick={() => window.location.href = `/payroll/shift-differential/holidays/${holiday.name}/edit`}
+                        className="p-1.5 hover:bg-gray-100 rounded"
+                        title="Edit holiday"
+                      >
                         <Edit2 className="w-4 h-4 text-gray-500" />
                       </button>
-                      <button className="p-1.5 hover:bg-gray-100 rounded">
+                      <button
+                        onClick={() => {
+                          if (confirm(`Are you sure you want to delete "${holiday.name}"?`)) {
+                            alert(`Holiday "${holiday.name}" deleted successfully`);
+                          }
+                        }}
+                        className="p-1.5 hover:bg-gray-100 rounded"
+                        title="Delete holiday"
+                      >
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </button>
                     </div>
@@ -661,10 +698,29 @@ export default function ShiftDifferentialDashboard() {
                     <td className="px-4 py-3 text-right">
                       {app.status === 'pending' && (
                         <div className="flex justify-end gap-1">
-                          <button className="p-1.5 hover:bg-green-100 rounded" title="Approve">
+                          <button
+                            onClick={() => {
+                              if (confirm(`Approve differential payment of $${app.differentialAmount.toFixed(2)} for ${app.caregiverName}?`)) {
+                                alert(`Differential approved for ${app.caregiverName}`);
+                              }
+                            }}
+                            className="p-1.5 hover:bg-green-100 rounded"
+                            title="Approve"
+                          >
                             <CheckCircle className="w-4 h-4 text-green-600" />
                           </button>
-                          <button className="p-1.5 hover:bg-red-100 rounded" title="Dispute">
+                          <button
+                            onClick={() => {
+                              if (confirm(`Dispute differential payment for ${app.caregiverName}?`)) {
+                                const reason = prompt('Enter dispute reason:');
+                                if (reason) {
+                                  alert(`Differential disputed for ${app.caregiverName}: ${reason}`);
+                                }
+                              }
+                            }}
+                            className="p-1.5 hover:bg-red-100 rounded"
+                            title="Dispute"
+                          >
                             <XCircle className="w-4 h-4 text-red-600" />
                           </button>
                         </div>

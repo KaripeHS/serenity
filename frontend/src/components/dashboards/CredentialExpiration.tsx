@@ -175,34 +175,32 @@ export function CredentialExpiration() {
     }
   };
 
-  const getFilteredCredentials = (): Credential[] => {
-    if (!dashboard) return [];
-
+  const getFilteredCredentials = (data: DashboardData): Credential[] => {
     let credentials: Credential[] = [];
 
     switch (activeTab) {
       case 'expired':
-        credentials = dashboard.alerts.EXPIRED.credentials;
+        credentials = data.alerts.EXPIRED.credentials;
         break;
       case 'expiring_30':
         credentials = [
-          ...dashboard.alerts.CRITICAL.credentials,
-          ...dashboard.alerts.WARNING.credentials,
+          ...data.alerts.CRITICAL.credentials,
+          ...data.alerts.WARNING.credentials,
         ];
         break;
       case 'expiring_60':
         credentials = [
-          ...dashboard.alerts.CRITICAL.credentials,
-          ...dashboard.alerts.WARNING.credentials,
-          ...dashboard.alerts.NOTICE.credentials,
+          ...data.alerts.CRITICAL.credentials,
+          ...data.alerts.WARNING.credentials,
+          ...data.alerts.NOTICE.credentials,
         ];
         break;
       case 'expiring_90':
         credentials = [
-          ...dashboard.alerts.CRITICAL.credentials,
-          ...dashboard.alerts.WARNING.credentials,
-          ...dashboard.alerts.NOTICE.credentials,
-          ...dashboard.alerts.INFO.credentials,
+          ...data.alerts.CRITICAL.credentials,
+          ...data.alerts.WARNING.credentials,
+          ...data.alerts.NOTICE.credentials,
+          ...data.alerts.INFO.credentials,
         ];
         break;
       case 'all':
@@ -229,8 +227,34 @@ export function CredentialExpiration() {
     return credentials;
   };
 
-  const credentialTypes = dashboard
-    ? [...new Set(dashboard.byCredentialType.map((t) => t.credentialType))]
+  // Default empty data if dashboard is null
+  const defaultDashboard: DashboardData = {
+    alerts: {
+      EXPIRED: { count: 0, credentials: [] },
+      CRITICAL: { count: 0, credentials: [] },
+      WARNING: { count: 0, credentials: [] },
+      NOTICE: { count: 0, credentials: [] },
+      INFO: { count: 0, credentials: [] },
+    },
+    complianceRate: 100,
+    totalCredentials: 0,
+    validCredentials: 0,
+    byCredentialType: [],
+    caregiversWithIssues: [],
+    thresholds: {
+      CRITICAL: 7,
+      WARNING: 30,
+      NOTICE: 60,
+      INFO: 90,
+    },
+  };
+
+  // Use dashboard data or defaults
+  const dashboardData = dashboard || defaultDashboard;
+  const { alerts, complianceRate, totalCredentials, byCredentialType, caregiversWithIssues } = dashboardData;
+
+  const credentialTypes = byCredentialType.length > 0
+    ? [...new Set(byCredentialType.map((t) => t.credentialType))]
     : [];
 
   if (loading) {
@@ -254,11 +278,6 @@ export function CredentialExpiration() {
     );
   }
 
-  if (!dashboard) return null;
-
-  const { alerts, complianceRate, totalCredentials, byCredentialType, caregiversWithIssues } =
-    dashboard;
-
   const tabItems = [
     { id: 'overview' as TabType, label: 'Overview', icon: ShieldCheckIcon },
     { id: 'expired' as TabType, label: 'Expired', count: alerts.EXPIRED.count },
@@ -268,7 +287,7 @@ export function CredentialExpiration() {
     { id: 'all' as TabType, label: 'All Credentials' },
   ];
 
-  const filteredCredentials = getFilteredCredentials();
+  const filteredCredentials = getFilteredCredentials(dashboardData);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -366,7 +385,7 @@ export function CredentialExpiration() {
               <KPIWidget
                 title="Compliance Rate"
                 value={`${complianceRate}%`}
-                subtitle={`${dashboard.validCredentials} of ${totalCredentials} valid`}
+                subtitle={`${dashboardData.validCredentials} of ${totalCredentials} valid`}
                 icon={ShieldCheckIcon}
                 iconColor="bg-success-600"
                 status={complianceRate >= 95 ? 'success' : complianceRate >= 85 ? 'warning' : 'danger'}
@@ -414,7 +433,7 @@ export function CredentialExpiration() {
                   label="Target: 100%"
                 />
                 <p className="mt-4 text-sm text-gray-500">
-                  {dashboard.validCredentials} valid credentials
+                  {dashboardData.validCredentials} valid credentials
                 </p>
               </Card>
 

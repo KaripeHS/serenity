@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Skeleton } from '../ui/Skeleton';
@@ -16,7 +16,9 @@ import {
   HeartIcon,
   ClipboardDocumentListIcon,
   DocumentCheckIcon,
-  BuildingOffice2Icon
+  BuildingOffice2Icon,
+  UserPlusIcon,
+  ArrowTopRightOnSquareIcon
 } from '@heroicons/react/24/outline';
 import { clientIntakeService, ClientIntakeData, IntakeSummary } from '../../services/clientIntake.service';
 
@@ -1193,21 +1195,6 @@ function ConsentsStep({ data, onChange }: { data: Partial<ClientIntakeData['cons
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
-              checked={data?.backgroundCheckAuthorization || false}
-              onChange={(e) => onChange({ ...data, backgroundCheckAuthorization: e.target.checked })}
-              className="w-5 h-5 mt-0.5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-            />
-            <div>
-              <p className="font-medium text-gray-900">Caregiver Background Check Authorization</p>
-              <p className="text-sm text-gray-500">Client acknowledges caregivers have undergone required background checks per Ohio law.</p>
-            </div>
-          </label>
-        </div>
-
-        <div className="p-4 border border-gray-200 rounded-lg">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
               checked={data?.emergencyProtocol || false}
               onChange={(e) => onChange({ ...data, emergencyProtocol: e.target.checked })}
               className="w-5 h-5 mt-0.5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
@@ -1528,6 +1515,7 @@ export function ClientIntakeWizard() {
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Hours</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Status</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Progress</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1571,6 +1559,25 @@ export function ClientIntakeWizard() {
                           </div>
                           <span className="text-sm text-gray-500">{intake.completedSteps}/{intake.totalSteps}</span>
                         </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        {intake.status === 'approved' ? (
+                          <Link
+                            to={`/patients/intake/new?fromClientIntake=${intake.id}`}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-success-600 text-white text-xs font-medium rounded-lg hover:bg-success-700 transition-colors"
+                          >
+                            <UserPlusIcon className="h-4 w-4" />
+                            Create Patient
+                          </Link>
+                        ) : intake.status === 'pending_review' ? (
+                          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-warning-100 text-warning-700 text-xs font-medium rounded-lg hover:bg-warning-200 transition-colors">
+                            Review
+                          </button>
+                        ) : (
+                          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                            Continue
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

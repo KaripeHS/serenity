@@ -34,11 +34,27 @@ import {
 
 type TabType = 'overview' | 'provider' | 'mappings' | 'runs';
 
+// Default empty dashboard data
+const defaultDashboard: PayrollDashboardData = {
+  provider: null,
+  summary: {
+    draftRuns: 0,
+    approvedRuns: 0,
+    submittedRuns: 0,
+    processedRuns: 0,
+    mtdGrossPay: 0,
+    ytdGrossPay: 0,
+  },
+  unmappedEmployees: 0,
+  recentRuns: [],
+};
+
 export function PayrollDashboard() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [loading, setLoading] = useState(true);
-  const [dashboard, setDashboard] = useState<PayrollDashboardData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [dashboard, setDashboard] = useState<PayrollDashboardData>(defaultDashboard);
   const [provider, setProvider] = useState<PayrollProvider | null>(null);
   const [mappings, setMappings] = useState<EmployeeMapping[]>([]);
   const [runs, setRuns] = useState<PayrollRun[]>([]);
@@ -52,18 +68,21 @@ export function PayrollDashboard() {
   async function loadDashboardData() {
     try {
       setLoading(true);
+      setError(null);
       const [dashData, providerData, mappingData, runData] = await Promise.all([
-        year2Service.getPayrollDashboard(),
-        year2Service.getActivePayrollProvider(),
-        year2Service.getEmployeeMappings(),
-        year2Service.getPayrollRuns(),
+        year2Service.getPayrollDashboard().catch(() => defaultDashboard),
+        year2Service.getActivePayrollProvider().catch(() => null),
+        year2Service.getEmployeeMappings().catch(() => []),
+        year2Service.getPayrollRuns().catch(() => []),
       ]);
-      setDashboard(dashData);
+      setDashboard(dashData || defaultDashboard);
       setProvider(providerData);
       setMappings(mappingData);
       setRuns(runData);
     } catch (error) {
       console.error('Failed to load payroll dashboard:', error);
+      setError('Failed to load payroll data. Please try again.');
+      setDashboard(defaultDashboard);
     } finally {
       setLoading(false);
     }
@@ -152,6 +171,16 @@ export function PayrollDashboard() {
             <span>Back to Home</span>
           </Link>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="warning" title="Connection Issue" className="mb-6">
+            {error}
+            <Button variant="ghost" size="sm" className="ml-2" onClick={loadDashboardData}>
+              Retry
+            </Button>
+          </Alert>
+        )}
 
         {/* Tabs */}
         <div className="border-b border-gray-200 mb-8">
@@ -389,6 +418,7 @@ export function PayrollDashboard() {
                     {['adp', 'gusto', 'paychex', 'quickbooks'].map((providerName) => (
                       <button
                         key={providerName}
+                        onClick={() => window.location.href = `/payroll/connect/${providerName}`}
                         className="p-6 border-2 border-gray-200 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-all text-center"
                       >
                         <div className="text-4xl mb-2">{providerLogos[providerName]}</div>

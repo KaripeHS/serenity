@@ -74,12 +74,14 @@ interface StatWidgetProps {
   };
   icon?: React.ReactNode;
   variant?: 'default' | 'success' | 'warning' | 'danger';
+  onClick?: () => void;
 }
 
 /**
  * Stat widget for displaying key metrics
+ * Supports click navigation for drill-down functionality
  */
-export function StatWidget({ label, value, change, icon, variant = 'default' }: StatWidgetProps) {
+export function StatWidget({ label, value, change, icon, variant = 'default', onClick }: StatWidgetProps) {
   const getVariantStyles = () => {
     switch (variant) {
       case 'success':
@@ -93,35 +95,50 @@ export function StatWidget({ label, value, change, icon, variant = 'default' }: 
     }
   };
 
-  return (
-    <div className={cn('rounded-lg border p-4', getVariantStyles())}>
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600">{label}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-          {change && (
-            <div className="flex items-center gap-1 mt-2">
-              <span className={cn('text-xs font-medium', change.isPositive ? 'text-green-600' : 'text-red-600')}>
-                {change.isPositive ? '↑' : '↓'} {Math.abs(change.value)}%
-              </span>
-              {change.label && (
-                <span className="text-xs text-gray-500">{change.label}</span>
-              )}
-            </div>
-          )}
-        </div>
-        {icon && (
-          <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
-            {icon}
+  const baseClasses = cn('rounded-lg border p-4', getVariantStyles());
+  const clickableClasses = onClick ? 'cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all duration-200' : '';
+
+  const content = (
+    <div className="flex items-center justify-between">
+      <div className="flex-1">
+        <p className="text-sm font-medium text-gray-600">{label}</p>
+        <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+        {change && (
+          <div className="flex items-center gap-1 mt-2">
+            <span className={cn('text-xs font-medium', change.isPositive ? 'text-green-600' : 'text-red-600')}>
+              {change.isPositive ? '↑' : '↓'} {Math.abs(change.value)}%
+            </span>
+            {change.label && (
+              <span className="text-xs text-gray-500">{change.label}</span>
+            )}
           </div>
         )}
       </div>
+      {icon && (
+        <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
+          {icon}
+        </div>
+      )}
+    </div>
+  );
+
+  if (onClick) {
+    return (
+      <button onClick={onClick} className={cn(baseClasses, clickableClasses, 'w-full text-left')}>
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className={baseClasses}>
+      {content}
     </div>
   );
 }
 
 interface GridProps {
-  columns?: 1 | 2 | 3 | 4;
+  columns?: 1 | 2 | 3 | 4 | 5;
   gap?: number;
   children: React.ReactNode;
   className?: string;
@@ -141,6 +158,8 @@ export function WidgetGrid({ columns = 3, gap = 6, children, className }: GridPr
         return 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3';
       case 4:
         return 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-4';
+      case 5:
+        return 'grid-cols-1 lg:grid-cols-3 xl:grid-cols-5';
       default:
         return 'grid-cols-1 lg:grid-cols-3';
     }

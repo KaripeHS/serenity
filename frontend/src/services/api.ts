@@ -3,7 +3,7 @@
  * Handles all HTTP communication with the backend
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'serenity_access_token';
@@ -94,9 +94,9 @@ export async function request<T>(
 
       return retryResponse.json();
     } else {
-      // Refresh failed - clear tokens and redirect to login
-      clearTokens();
-      window.location.href = '/';
+      // Refresh failed - throw error and let the calling code/auth context handle it
+      // DON'T clear tokens or redirect here - let DashboardLayout handle auth state
+      console.warn('[API] Token refresh failed for:', endpoint);
       throw new ApiError(401, 'Session expired');
     }
   }
