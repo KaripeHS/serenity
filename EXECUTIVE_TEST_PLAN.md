@@ -20,8 +20,8 @@ This test plan is designed for executive leadership (CEO, COO, CFO, Clinical Dir
 | Clinical Director | clinical.director@test.serenitycare.com | (provided separately) |
 
 ### Access URL
-- **Production:** https://app.serenitycare.com/erp
-- **Staging:** https://staging.serenitycare.com/erp
+- **Production Console:** https://console.serenitycarepartners.com
+- **Firebase Hosted App:** https://serenity-erp-prod.web.app
 
 ---
 
