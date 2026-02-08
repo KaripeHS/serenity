@@ -17,7 +17,7 @@ import { useContentAssets } from '../../hooks/useContentAssets';
 
 const HOME_IMAGE_DEFAULTS: Record<string, { url: string; alt_text: string }> = {
   'home.hero.background': { url: 'https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?q=80&w=2400&auto=format&fit=crop', alt_text: 'Compassionate elderly care' },
-  'home.caregivers.image': { url: 'https://images.unsplash.com/photo-1516733968668-dbdce39c0571?q=80&w=1200&auto=format&fit=crop', alt_text: 'Caregiver walking with senior outdoors' },
+  'home.caregivers.image': { url: 'https://plus.unsplash.com/premium_photo-1661311814560-8270b2427088?q=80&w=1200&auto=format&fit=crop', alt_text: 'Caregiver walking with senior outdoors' },
   'home.testimonial.jennifer': { url: 'https://ui-avatars.com/api/?name=Jennifer+M&background=7c9a72&color=fff&size=200&rounded=true', alt_text: 'Jennifer M.' },
   'home.testimonial.michael': { url: 'https://ui-avatars.com/api/?name=Michael+R&background=5b7a52&color=fff&size=200&rounded=true', alt_text: 'Michael R.' },
   'home.testimonial.sarah': { url: 'https://ui-avatars.com/api/?name=Sarah+K&background=8fae85&color=fff&size=200&rounded=true', alt_text: 'Sarah K.' },

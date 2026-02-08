@@ -3,7 +3,7 @@ import { MarketingButton } from '../../components/marketing';
 import { useContentAssets } from '../../hooks/useContentAssets';
 
 const ABOUT_IMAGE_DEFAULTS: Record<string, { url: string; alt_text: string }> = {
-  'about.hero.image': { url: 'https://images.unsplash.com/photo-1516733968668-dbdce39c0571?q=80&w=1200&auto=format&fit=crop', alt_text: 'Caregiver walking with senior in a park' },
+  'about.hero.image': { url: 'https://plus.unsplash.com/premium_photo-1661311814560-8270b2427088?q=80&w=1200&auto=format&fit=crop', alt_text: 'Caregiver walking with senior in a park' },
   'about.team.gloria': { url: 'https://ui-avatars.com/api/?name=Gloria&background=7c9a72&color=fff&size=400&rounded=true&bold=true&font-size=0.4', alt_text: 'Gloria, CEO of Serenity Care Partners' },
   'about.team.bignon': { url: 'https://ui-avatars.com/api/?name=Bignon&background=5b7a52&color=fff&size=400&rounded=true&bold=true&font-size=0.4', alt_text: 'Bignon, COO and CFO of Serenity Care Partners' },
   'about.podmodel.image': { url: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?q=80&w=1400&auto=format&fit=crop', alt_text: 'Healthcare team collaborating in pod-based care model' },

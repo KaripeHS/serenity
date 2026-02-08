@@ -19,7 +19,7 @@ ON CONFLICT (key) DO UPDATE SET url = EXCLUDED.url, page = EXCLUDED.page, sectio
 INSERT INTO content_assets (key, url, description, section, page, alt_text, image_type, is_external, sort_order)
 VALUES
   ('home.caregivers.image',
-   'https://images.unsplash.com/photo-1516733968668-dbdce39c0571?q=80&w=1200&auto=format&fit=crop',
+   'https://plus.unsplash.com/premium_photo-1661311814560-8270b2427088?q=80&w=1200&auto=format&fit=crop',
    'Caregiver section main image',
    'caregivers', 'home', 'Caregiver walking with senior outdoors', 'feature', true, 2)
 ON CONFLICT (key) DO UPDATE SET url = EXCLUDED.url, page = EXCLUDED.page, section = EXCLUDED.section, alt_text = EXCLUDED.alt_text, image_type = EXCLUDED.image_type, is_external = EXCLUDED.is_external;
@@ -79,7 +79,7 @@ ON CONFLICT (key) DO UPDATE SET url = EXCLUDED.url, page = EXCLUDED.page, sectio
 INSERT INTO content_assets (key, url, description, section, page, alt_text, image_type, is_external, sort_order)
 VALUES
   ('about.hero.image',
-   'https://images.unsplash.com/photo-1516733968668-dbdce39c0571?q=80&w=1200&auto=format&fit=crop',
+   'https://plus.unsplash.com/premium_photo-1661311814560-8270b2427088?q=80&w=1200&auto=format&fit=crop',
    'About page hero image',
    'hero', 'about', 'Caregiver walking with senior in a park', 'hero', true, 1)
 ON CONFLICT (key) DO UPDATE SET url = EXCLUDED.url, page = EXCLUDED.page, section = EXCLUDED.section, alt_text = EXCLUDED.alt_text, image_type = EXCLUDED.image_type, is_external = EXCLUDED.is_external;
