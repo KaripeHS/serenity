@@ -4,9 +4,6 @@ import { useContentAssets } from '../../hooks/useContentAssets';
 
 const SERVICES_IMAGE_DEFAULTS: Record<string, { url: string; alt_text: string }> = {
   'services.hero.image': { url: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?q=80&w=1200&auto=format&fit=crop', alt_text: 'Caregiver helping with meal preparation' },
-  'services.grid.companionship': { url: 'https://images.unsplash.com/photo-1542884748-2b87b36c6b90?q=80&w=800&auto=format&fit=crop', alt_text: 'Caregiver and senior enjoying conversation' },
-  'services.grid.personal-care': { url: 'https://images.unsplash.com/photo-1511688878353-3a2f5be94cd7?q=80&w=800&auto=format&fit=crop', alt_text: 'Senior woman smiling warmly at home' },
-  'services.grid.respite': { url: 'https://images.unsplash.com/photo-1573497019236-17f8177b81e8?q=80&w=800&auto=format&fit=crop', alt_text: 'Happy senior couple at home' },
 };
 
 export default function ServicesPage() {
@@ -404,37 +401,6 @@ export default function ServicesPage() {
                     </li>
                   </ul>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Service Images Grid */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="rounded-2xl overflow-hidden shadow-lg hover-lift h-80 fade-in">
-                <img
-                  src={getUrl('services.grid.companionship')}
-                  alt={getAlt('services.grid.companionship')}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="rounded-2xl overflow-hidden shadow-lg hover-lift h-80 fade-in" style={{ animationDelay: '100ms' }}>
-                <img
-                  src={getUrl('services.grid.personal-care')}
-                  alt={getAlt('services.grid.personal-care')}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="rounded-2xl overflow-hidden shadow-lg hover-lift h-80 fade-in" style={{ animationDelay: '200ms' }}>
-                <img
-                  src={getUrl('services.grid.respite')}
-                  alt={getAlt('services.grid.respite')}
-                  className="w-full h-full object-cover"
-                />
               </div>
             </div>
           </div>
