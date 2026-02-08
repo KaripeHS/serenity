@@ -5,7 +5,6 @@
  */
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import {
   Hero,
   ThreeUpFeatures,
@@ -21,9 +20,6 @@ const HOME_IMAGE_DEFAULTS: Record<string, { url: string; alt_text: string }> = {
   'home.testimonial.jennifer': { url: 'https://ui-avatars.com/api/?name=Jennifer+M&background=7c9a72&color=fff&size=200&rounded=true', alt_text: 'Jennifer M.' },
   'home.testimonial.michael': { url: 'https://ui-avatars.com/api/?name=Michael+R&background=5b7a52&color=fff&size=200&rounded=true', alt_text: 'Michael R.' },
   'home.testimonial.sarah': { url: 'https://ui-avatars.com/api/?name=Sarah+K&background=8fae85&color=fff&size=200&rounded=true', alt_text: 'Sarah K.' },
-  'home.location.cincinnati': { url: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=800&auto=format&fit=crop', alt_text: 'Greater Cincinnati area care setting' },
-  'home.location.dayton': { url: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=800&auto=format&fit=crop', alt_text: 'Dayton area care setting' },
-  'home.location.surrounding': { url: 'https://images.unsplash.com/photo-1523217582562-09d0def993a6?q=80&w=800&auto=format&fit=crop', alt_text: 'Surrounding areas care setting' },
 };
 
 export default function HomePage() {
@@ -170,75 +166,6 @@ export default function HomePage() {
           }
         ]}
       />
-
-      {/* Serving Communities */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-8 max-w-7xl">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <p className="font-medium text-xs tracking-widest uppercase mb-6 text-warm-gray-400" style={{ letterSpacing: '0.15em' }}>Where We Serve</p>
-            <h2
-              className="mb-6 text-warm-gray-900 font-serif"
-              style={{
-                fontSize: 'clamp(32px, 4vw, 44px)',
-                lineHeight: '1.2',
-                letterSpacing: '-0.01em',
-                fontWeight: '400'
-              }}
-            >
-              Serving Southwest Ohio
-            </h2>
-            <p className="text-warm-gray-600" style={{ fontSize: '1.0625rem', lineHeight: '1.7', maxWidth: '65ch', margin: '0 auto' }}>
-              Seven counties across Southwest Ohio from our headquarters in Blue Ash.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-10">
-            {[
-              {
-                region: 'Greater Cincinnati',
-                counties: 'Hamilton, Butler, Warren, Clermont',
-                image: getUrl('home.location.cincinnati')
-              },
-              {
-                region: 'Dayton Area',
-                counties: 'Montgomery, Preble',
-                image: getUrl('home.location.dayton')
-              },
-              {
-                region: 'Surrounding Areas',
-                counties: 'Clinton County & more',
-                image: getUrl('home.location.surrounding')
-              }
-            ].map((location, i) => (
-              <Link key={i} to="/contact">
-                <div className="group relative rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-xl" style={{ border: '1px solid rgba(0, 0, 0, 0.06)' }}>
-                  <div className="relative h-80 overflow-hidden">
-                    <img
-                      src={location.image}
-                      alt={`${location.region} care setting`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-
-                    <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-                      <h3 className="text-2xl font-semibold mb-2">
-                        {location.region}
-                      </h3>
-                      <p className="text-white/90 mb-4 text-sm">
-                        {location.counties}
-                      </p>
-                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-serenity-green-500/90">
-                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                        <span className="text-sm font-semibold">Now Serving</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA Footer */}
       <CTASection
