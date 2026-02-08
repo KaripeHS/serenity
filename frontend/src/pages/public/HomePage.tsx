@@ -13,8 +13,21 @@ import {
   TestimonialRow,
   CTASection
 } from '../../components/marketing';
+import { useContentAssets } from '../../hooks/useContentAssets';
+
+const HOME_IMAGE_DEFAULTS: Record<string, { url: string; alt_text: string }> = {
+  'home.hero.background': { url: 'https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?q=80&w=2400&auto=format&fit=crop', alt_text: 'Compassionate elderly care' },
+  'home.caregivers.image': { url: 'https://images.unsplash.com/photo-1516733968668-dbdce39c0571?q=80&w=1200&auto=format&fit=crop', alt_text: 'Caregiver walking with senior outdoors' },
+  'home.testimonial.jennifer': { url: 'https://ui-avatars.com/api/?name=Jennifer+M&background=7c9a72&color=fff&size=200&rounded=true', alt_text: 'Jennifer M.' },
+  'home.testimonial.michael': { url: 'https://ui-avatars.com/api/?name=Michael+R&background=5b7a52&color=fff&size=200&rounded=true', alt_text: 'Michael R.' },
+  'home.testimonial.sarah': { url: 'https://ui-avatars.com/api/?name=Sarah+K&background=8fae85&color=fff&size=200&rounded=true', alt_text: 'Sarah K.' },
+  'home.location.cincinnati': { url: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=800&auto=format&fit=crop', alt_text: 'Greater Cincinnati area care setting' },
+  'home.location.dayton': { url: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=800&auto=format&fit=crop', alt_text: 'Dayton area care setting' },
+  'home.location.surrounding': { url: 'https://images.unsplash.com/photo-1523217582562-09d0def993a6?q=80&w=800&auto=format&fit=crop', alt_text: 'Surrounding areas care setting' },
+};
 
 export default function HomePage() {
+  const { getUrl, getAlt } = useContentAssets('home', HOME_IMAGE_DEFAULTS);
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -40,7 +53,7 @@ export default function HomePage() {
             </svg>
           )
         }}
-        backgroundImage="https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?q=80&w=2400&auto=format&fit=crop"
+        backgroundImage={getUrl('home.hero.background')}
         trustIndicators={[
           {
             icon: (
@@ -111,8 +124,8 @@ export default function HomePage() {
         eyebrow="Our Caregivers"
         headline="Caregivers Who Truly Care"
         description="Every caregiver on our team is carefully selected, thoroughly trained, and deeply committed to providing compassionate, person-centered care. They're not just professionals—they become trusted companions."
-        image="https://images.unsplash.com/photo-1576765608622-067973a79f53?q=80&w=1200&auto=format&fit=crop"
-        imageAlt="Caregiver walking with senior outdoors"
+        image={getUrl('home.caregivers.image')}
+        imageAlt={getAlt('home.caregivers.image')}
         imagePosition="left"
         backgroundColor="white"
         stats={[
@@ -141,19 +154,19 @@ export default function HomePage() {
             quote: "The consistency is incredible. Mom knows her caregivers by name and genuinely looks forward to their visits. It's like having extended family.",
             author: "Jennifer M.",
             role: "Daughter",
-            image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop"
+            image: getUrl('home.testimonial.jennifer')
           },
           {
             quote: "I was skeptical about the pod model, but it works beautifully. Dad's caregivers understand his needs without us having to constantly explain things.",
             author: "Michael R.",
             role: "Son",
-            image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop"
+            image: getUrl('home.testimonial.michael')
           },
           {
             quote: "As a caregiver, I've worked for several agencies. Serenity's support, competitive pay, and pod model make this the best environment I've experienced.",
             author: "Sarah K.",
             role: "Caregiver",
-            image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop"
+            image: getUrl('home.testimonial.sarah')
           }
         ]}
       />
@@ -184,17 +197,17 @@ export default function HomePage() {
               {
                 region: 'Greater Cincinnati',
                 counties: 'Hamilton, Butler, Warren, Clermont',
-                image: 'https://images.unsplash.com/photo-1447005497901-b3e9ee359928?q=80&w=800&auto=format&fit=crop'
+                image: getUrl('home.location.cincinnati')
               },
               {
                 region: 'Dayton Area',
                 counties: 'Montgomery, Preble',
-                image: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?q=80&w=800&auto=format&fit=crop'
+                image: getUrl('home.location.dayton')
               },
               {
                 region: 'Surrounding Areas',
                 counties: 'Clinton County & more',
-                image: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?q=80&w=800&auto=format&fit=crop'
+                image: getUrl('home.location.surrounding')
               }
             ].map((location, i) => (
               <Link key={i} to="/contact">

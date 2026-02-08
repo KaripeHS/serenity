@@ -27,6 +27,50 @@ router.use('/leads', leadsRouter);
 router.use('/referrals', referralsRouter);
 router.use('/intake', intakeRouter);
 
+// Public content assets endpoint (no auth required, for dynamic images)
+import { ContentAssetService } from '../../../services/content-asset.service';
+const contentAssetService = new ContentAssetService();
+
+/**
+ * GET /api/public/content-assets/:key
+ * Fetch a single asset by key (for public pages to load dynamic images)
+ */
+router.get('/content-assets/:key', async (req: Request, res: Response) => {
+  try {
+    const asset = await contentAssetService.getAssetByKey(req.params.key);
+    if (!asset) {
+      return res.status(404).json({ error: 'Asset not found' });
+    }
+    // Cache for 1 hour
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.json({ url: asset.url, alt_text: asset.alt_text, key: asset.key });
+  } catch (error) {
+    logger.error('Failed to fetch public content asset', { error });
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+/**
+ * GET /api/public/content-assets
+ * Fetch all assets for a page (batch load for public pages)
+ * Query: ?page=home
+ */
+router.get('/content-assets', async (req: Request, res: Response) => {
+  try {
+    const { page } = req.query;
+    if (!page) {
+      return res.status(400).json({ error: 'Page parameter is required' });
+    }
+    const assets = await contentAssetService.getAssetsByPage(page as string);
+    // Cache for 1 hour
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.json(assets.map(a => ({ key: a.key, url: a.url, alt_text: a.alt_text, section: a.section })));
+  } catch (error) {
+    logger.error('Failed to fetch public content assets', { error });
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // Default organization ID (first org in system - Serenity Care Partners)
 const DEFAULT_ORG_ID = 'acdf0560-4c26-47ad-a38d-2b2153fcb039'; // Serenity Care Partners
 

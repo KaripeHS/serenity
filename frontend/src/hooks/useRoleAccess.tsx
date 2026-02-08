@@ -999,6 +999,12 @@ export const ROUTE_ACCESS: Record<string, UserRole[]> = {
     UserRole.SECURITY_OFFICER,
     UserRole.IT_ADMIN,
   ],
+  '/admin/images': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.IT_ADMIN,
+  ],
   '/admin/settings/communications': [
     UserRole.FOUNDER,
     UserRole.CEO,

@@ -1,7 +1,18 @@
 import { Link } from 'react-router-dom';
 import { MarketingButton } from '../../components/marketing';
+import { useContentAssets } from '../../hooks/useContentAssets';
+
+const ABOUT_IMAGE_DEFAULTS: Record<string, { url: string; alt_text: string }> = {
+  'about.hero.image': { url: 'https://images.unsplash.com/photo-1516733968668-dbdce39c0571?q=80&w=1200&auto=format&fit=crop', alt_text: 'Caregiver walking with senior in a park' },
+  'about.team.gloria': { url: 'https://ui-avatars.com/api/?name=Gloria&background=7c9a72&color=fff&size=400&rounded=true&bold=true&font-size=0.4', alt_text: 'Gloria, CEO of Serenity Care Partners' },
+  'about.team.bignon': { url: 'https://ui-avatars.com/api/?name=Bignon&background=5b7a52&color=fff&size=400&rounded=true&bold=true&font-size=0.4', alt_text: 'Bignon, COO and CFO of Serenity Care Partners' },
+  'about.podmodel.image': { url: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?q=80&w=1400&auto=format&fit=crop', alt_text: 'Healthcare team collaborating in pod-based care model' },
+  'about.action.image1': { url: 'https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?q=80&w=1000&auto=format&fit=crop', alt_text: 'Caregiver assisting elderly patient' },
+  'about.action.image2': { url: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=1000&auto=format&fit=crop', alt_text: 'Care coordination team in a planning meeting' },
+};
 
 export default function AboutPage() {
+  const { getUrl, getAlt } = useContentAssets('about', ABOUT_IMAGE_DEFAULTS);
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -31,8 +42,8 @@ export default function AboutPage() {
             <div className="relative h-[500px] lg:h-[600px] fade-in" style={{ animationDelay: '200ms' }}>
               <div className="absolute inset-0 rounded-xl shadow-lg hover-lift overflow-hidden">
                 <img
-                  src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=1200&auto=format&fit=crop"
-                  alt="Professional healthcare team collaborating together"
+                  src={getUrl('about.hero.image')}
+                  alt={getAlt('about.hero.image')}
                   className="w-full h-full object-cover ken-burns"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -91,8 +102,8 @@ export default function AboutPage() {
             <div className="bg-white rounded-xl shadow-sm hover-lift border border-warm-gray-100 p-8 text-center fade-in-up">
               <div className="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden shadow-lg">
                 <img
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop"
-                  alt="Professional healthcare executive Gloria"
+                  src={getUrl('about.team.gloria')}
+                  alt={getAlt('about.team.gloria')}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -106,8 +117,8 @@ export default function AboutPage() {
             <div className="bg-white rounded-xl shadow-sm hover-lift border border-warm-gray-100 p-8 text-center fade-in-up" style={{ animationDelay: '100ms' }}>
               <div className="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden shadow-lg">
                 <img
-                  src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=800&auto=format&fit=crop"
-                  alt="Professional healthcare executive Bignon"
+                  src={getUrl('about.team.bignon')}
+                  alt={getAlt('about.team.bignon')}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -138,8 +149,8 @@ export default function AboutPage() {
             {/* Pod Model Image */}
             <div className="mb-16 rounded-xl overflow-hidden shadow-lg hover-lift fade-in">
               <img
-                src="https://images.unsplash.com/photo-1582750433449-648ed127bb54?q=80&w=1400&auto=format&fit=crop"
-                alt="Healthcare team collaborating in pod-based care model"
+                src={getUrl('about.podmodel.image')}
+                alt={getAlt('about.podmodel.image')}
                 className="w-full h-[500px] object-cover"
               />
             </div>
@@ -240,15 +251,15 @@ export default function AboutPage() {
             <div className="grid md:grid-cols-2 gap-6">
               <div className="rounded-xl overflow-hidden shadow-lg hover-lift h-80 fade-in">
                 <img
-                  src="https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?q=80&w=1000&auto=format&fit=crop"
-                  alt="Caregiver assisting elderly patient with warmth and care"
+                  src={getUrl('about.action.image1')}
+                  alt={getAlt('about.action.image1')}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="rounded-xl overflow-hidden shadow-lg hover-lift h-80 fade-in" style={{ animationDelay: '100ms' }}>
                 <img
-                  src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1000&auto=format&fit=crop"
-                  alt="Healthcare team meeting discussing patient care"
+                  src={getUrl('about.action.image2')}
+                  alt={getAlt('about.action.image2')}
                   className="w-full h-full object-cover"
                 />
               </div>

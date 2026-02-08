@@ -9,6 +9,15 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Hero, SectionHeading } from '../../components/marketing';
 import { loggerService } from '../../shared/services/logger.service';
+import { useContentAssets } from '../../hooks/useContentAssets';
+
+const CAREERS_IMAGE_DEFAULTS: Record<string, { url: string; alt_text: string }> = {
+  'careers.hero.background': { url: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=2400&auto=format&fit=crop', alt_text: 'Team of professionals collaborating' },
+  'careers.life.image1': { url: 'https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?q=80&w=800&auto=format&fit=crop', alt_text: 'Caregiver providing compassionate home care' },
+  'careers.life.image2': { url: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?q=80&w=800&auto=format&fit=crop', alt_text: 'Home health aide assisting client at home' },
+  'careers.life.image3': { url: 'https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?q=80&w=800&auto=format&fit=crop', alt_text: 'Professional caregiver at work' },
+  'careers.life.image4': { url: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?q=80&w=800&auto=format&fit=crop', alt_text: 'Dedicated team member smiling' },
+};
 
 // Always-open positions for continuous pipeline
 const CORE_POSITIONS = [
@@ -128,6 +137,8 @@ const BENEFITS = [
 ];
 
 export default function CareersPage() {
+  const { getUrl, getAlt } = useContentAssets('careers', CAREERS_IMAGE_DEFAULTS);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -246,7 +257,7 @@ export default function CareersPage() {
           text: "Why Work at Serenity",
           href: "#benefits"
         }}
-        backgroundImage="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=2400&auto=format&fit=crop"
+        backgroundImage={getUrl('careers.hero.background')}
       />
 
       {/* Always-Open Positions */}
@@ -402,23 +413,23 @@ export default function CareersPage() {
             {/* Photo Grid */}
             <div className="grid grid-cols-2 gap-4">
               <img
-                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop"
-                alt="Serenity team member smiling"
+                src={getUrl('careers.life.image1')}
+                alt={getAlt('careers.life.image1')}
                 className="rounded-2xl shadow-lg h-64 object-cover"
               />
               <img
-                src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=800&auto=format&fit=crop"
-                alt="Caring team member"
+                src={getUrl('careers.life.image2')}
+                alt={getAlt('careers.life.image2')}
                 className="rounded-2xl shadow-lg h-64 object-cover mt-8"
               />
               <img
-                src="https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?q=80&w=800&auto=format&fit=crop"
-                alt="Professional caregiver"
+                src={getUrl('careers.life.image3')}
+                alt={getAlt('careers.life.image3')}
                 className="rounded-2xl shadow-lg h-64 object-cover"
               />
               <img
-                src="https://images.unsplash.com/photo-1594824476967-48c8b964273f?q=80&w=800&auto=format&fit=crop"
-                alt="Dedicated team member"
+                src={getUrl('careers.life.image4')}
+                alt={getAlt('careers.life.image4')}
                 className="rounded-2xl shadow-lg h-64 object-cover mt-8"
               />
             </div>

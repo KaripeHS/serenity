@@ -61,6 +61,7 @@ import {
   ChevronRightIcon,
   UserCircleIcon,
   PencilSquareIcon,
+  PhotoIcon,
   LockClosedIcon
 } from '@heroicons/react/24/outline';
 import { Badge } from '../ui/Badge';
@@ -199,6 +200,7 @@ const navigationSections: NavigationSection[] = [
       { name: 'Users', href: '/admin/users', icon: UsersIcon, description: 'User management' },
       { name: 'Pods', href: '/admin/pods', icon: UserGroupIcon, description: 'Pod management' },
       { name: 'Roles', href: '/admin/roles', icon: KeyIcon, description: 'Roles & permissions' },
+      { name: 'Website Images', href: '/admin/images', icon: PhotoIcon, description: 'Manage public site images' },
       { name: 'Communications', href: '/admin/settings/communications', icon: CogIcon, description: 'Email & alerts config' },
       { name: 'Subscriptions', href: '/admin/subscriptions', icon: CreditCardIcon, description: 'API integrations' },
     ]

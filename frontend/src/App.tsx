@@ -85,6 +85,7 @@ import { VendorCenter } from './pages/finance/VendorCenter';
 import { ExpensePortal } from './pages/finance/ExpensePortal';
 import { BankFeed } from './pages/finance/BankFeed';
 import AuditLogs from './pages/admin/AuditLogs';
+import ImageManagement from './pages/admin/ImageManagement';
 import { PayrollManager } from './pages/admin/PayrollManager';
 import { PayrollConnect } from './pages/payroll/PayrollConnect';
 import CommunicationSettings from './pages/admin/CommunicationSettings';
@@ -462,6 +463,17 @@ function App() {
                   <DashboardLayout>
                     <ProtectedRoute route="/admin/audit">
                       <AuditLogs />
+                    </ProtectedRoute>
+                  </DashboardLayout>
+                }
+              />
+
+              <Route
+                path="/admin/images"
+                element={
+                  <DashboardLayout>
+                    <ProtectedRoute route="/admin/images">
+                      <ImageManagement />
                     </ProtectedRoute>
                   </DashboardLayout>
                 }
