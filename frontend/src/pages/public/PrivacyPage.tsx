@@ -40,7 +40,7 @@ export default function PrivacyPage() {
                         </p>
                         <ul className="list-disc pl-6 space-y-2 mb-6 text-warm-gray-700">
                             <li>Submit a contact form or request information about our services</li>
-                            <li>Submit a patient referral form</li>
+                            <li>Submit a client referral form</li>
                             <li>Apply for employment or submit a job application</li>
                             <li>Sign up for newsletters or email communications</li>
                             <li>Communicate with us via email, phone, or other means</li>
@@ -90,7 +90,7 @@ export default function PrivacyPage() {
                         </p>
                         <ul className="list-disc pl-6 space-y-2 mb-6 text-warm-gray-700">
                             <li>To respond to your inquiries and provide requested information</li>
-                            <li>To process and evaluate patient referrals</li>
+                            <li>To process and evaluate client referrals</li>
                             <li>To process employment applications</li>
                             <li>To provide, maintain, and improve our services</li>
                             <li>To send you communications about our services (with your consent)</li>
@@ -129,7 +129,7 @@ export default function PrivacyPage() {
                         <ul className="list-disc pl-6 space-y-2 mb-6 text-warm-gray-700">
                             <li><strong>Contact inquiries:</strong> Up to 3 years after last interaction</li>
                             <li><strong>Job applications:</strong> Up to 2 years after application (unless hired)</li>
-                            <li><strong>Patient referrals:</strong> Subject to HIPAA retention requirements</li>
+                            <li><strong>Client referrals:</strong> Subject to HIPAA retention requirements</li>
                             <li><strong>Website analytics data:</strong> Up to 26 months</li>
                         </ul>
                         <p>

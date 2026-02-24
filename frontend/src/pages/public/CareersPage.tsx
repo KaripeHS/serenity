@@ -30,20 +30,20 @@ const CORE_POSITIONS = [
     benefits: ['$15-$20/hour', 'Pod-based care', 'Weekly direct deposit', 'Paid training']
   },
   {
-    id: 'lpn',
-    role: 'LPN (Licensed Practical Nurse)',
+    id: 'companion-caregiver',
+    role: 'Companion Caregiver',
     badge: 'Ongoing Hiring',
-    description: 'Deliver skilled nursing care including medication administration, wound care, and health monitoring. Work alongside our clinical team to ensure quality patient outcomes.',
-    requirements: ['Active Ohio LPN license', 'Home health experience preferred', 'Reliable transportation'],
-    benefits: ['$25-$32/hour', 'Flexible scheduling', 'Weekly direct deposit', 'Clinical support team']
+    description: 'Provide meaningful companionship, socialization, and supervision for clients. Assist with recreational activities, accompany clients to appointments, and help maintain their quality of life.',
+    requirements: ['Compassionate and reliable', 'Strong communication skills', 'Reliable transportation'],
+    benefits: ['$14-$18/hour', 'Flexible scheduling', 'Weekly direct deposit', 'Paid training']
   },
   {
-    id: 'rn',
-    role: 'RN (Registered Nurse)',
+    id: 'homemaker',
+    role: 'Homemaker',
     badge: 'Ongoing Hiring',
-    description: 'Lead patient assessments, develop care plans, and supervise clinical staff. Play a key role in ensuring compliance and delivering exceptional home health care.',
-    requirements: ['Active Ohio RN license', 'Home health or clinical experience', 'Strong assessment skills'],
-    benefits: ['$35-$45/hour', 'Leadership opportunities', 'Flexible schedule', 'Professional development']
+    description: 'Help clients maintain a clean, safe, and comfortable home environment. Assist with light housekeeping, laundry, meal preparation, and essential errands.',
+    requirements: ['Reliable and detail-oriented', 'Ability to perform light housekeeping tasks', 'Reliable transportation'],
+    benefits: ['$14-$18/hour', 'Flexible scheduling', 'Weekly direct deposit', 'Supportive team environment']
   }
 ];
 
@@ -52,7 +52,7 @@ const OTHER_ROLES = [
   {
     id: 'pod-lead',
     role: 'Pod Lead',
-    location: 'Southwest Ohio',
+    location: 'Greater Cincinnati',
     description: 'Oversee pod operations, mentor caregivers, and ensure quality care delivery across your assigned team. Lead daily coordination and provide frontline support.',
     status: 'Currently Filled'
   },
@@ -60,7 +60,7 @@ const OTHER_ROLES = [
     id: 'director-operations',
     role: 'Director of Operations',
     location: 'Blue Ash Office',
-    description: 'Oversee all operational activities across Southwest Ohio, manage pod performance, drive continuous improvement, and ensure compliance with state regulations.',
+    description: 'Oversee all operational activities across Greater Cincinnati, manage pod performance, drive continuous improvement, and ensure compliance with state regulations.',
     status: 'Currently Filled'
   },
   {
@@ -247,7 +247,7 @@ export default function CareersPage() {
             That Feels Like Family
           </>
         }
-        subheadline="We're always hiring compassionate caregivers and home health aides who want to make a real difference in the lives of Southwest Ohio families."
+        subheadline="We're always hiring compassionate caregivers and home health aides who want to make a real difference in the lives of Greater Cincinnati families."
         primaryCTA={{
           text: "Apply Now",
           href: "#application-form",
@@ -611,9 +611,10 @@ export default function CareersPage() {
                   >
                     <option value="">Select a position...</option>
                     <option value="HHA / STNA">HHA / STNA (Home Health Aide / State Tested Nursing Assistant)</option>
-                    <option value="LPN">LPN (Licensed Practical Nurse)</option>
-                    <option value="RN">RN (Registered Nurse)</option>
-                    <option value="Other">Other (PT, OT, SLP, MSW, etc.)</option>
+                    <option value="Personal Care Aide">Personal Care Aide</option>
+                    <option value="Companion Caregiver">Companion Caregiver</option>
+                    <option value="Homemaker">Homemaker</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
 
@@ -623,7 +624,7 @@ export default function CareersPage() {
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g., RN, LPN, STNA/CNA, HHA, or N/A"
+                    placeholder="e.g., STNA/CNA, HHA, or N/A"
                     className="w-full px-4 py-3 rounded-xl border border-warm-gray-300 focus:border-serenity-green-500 focus:ring-2 focus:ring-serenity-green-200 outline-none transition-all"
                     value={formData.licenseType}
                     onChange={(e) => setFormData({ ...formData, licenseType: e.target.value })}
@@ -661,8 +662,6 @@ export default function CareersPage() {
                     <option value="Greater Cincinnati (Hamilton County)">Greater Cincinnati (Hamilton County)</option>
                     <option value="Northern Cincinnati (Butler/Warren)">Northern Cincinnati (Butler/Warren)</option>
                     <option value="Eastern Cincinnati (Clermont)">Eastern Cincinnati (Clermont)</option>
-                    <option value="Dayton Area (Montgomery)">Dayton Area (Montgomery)</option>
-                    <option value="Western Ohio (Preble/Clinton)">Western Ohio (Preble/Clinton)</option>
                     <option value="Flexible - Any Area">Flexible - Any Area</option>
                   </select>
                 </div>
@@ -794,6 +793,9 @@ export default function CareersPage() {
                 <p className="mt-4 text-sm text-warm-gray-600">
                   Our HR team will contact you within 48 hours
                 </p>
+                <p className="mt-3 text-xs text-warm-gray-500">
+                  All positions require BCI and FBI fingerprint-based background checks. Serenity Care Partners is an equal opportunity employer and does not discriminate on the basis of race, color, religion, sex, national origin, age, disability, genetic information, veteran status, sexual orientation, gender identity, or any other protected characteristic.
+                </p>
               </div>
             </form>
           </div>
@@ -814,7 +816,7 @@ export default function CareersPage() {
             Ready to Make a Difference?
           </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-white/95">
-            Whether you're an experienced nurse or just beginning your healthcare journey, we'd love to hear from you.
+            Whether you're an experienced caregiver or just beginning your home care journey, we'd love to hear from you.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button

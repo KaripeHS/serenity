@@ -1,7 +1,7 @@
 /**
- * Patient Referral Page
- * Dedicated form for healthcare providers and family members to refer patients.
- * Form submits to /api/public/referrals to feed into the ERP patient intake pipeline.
+ * Client Referral Page
+ * Dedicated form for healthcare providers and family members to refer clients.
+ * Form submits to /api/public/referrals to feed into the ERP client intake pipeline.
  */
 
 import React, { useState } from 'react';
@@ -11,10 +11,10 @@ import { MarketingButton } from '../../components/marketing';
 export default function ReferralPage() {
   const [formData, setFormData] = useState({
     referralType: 'family',
-    patientFirstName: '',
-    patientLastName: '',
-    patientPhone: '',
-    patientAddress: '',
+    clientFirstName: '',
+    clientLastName: '',
+    clientPhone: '',
+    clientAddress: '',
     contactFirstName: '',
     contactLastName: '',
     contactPhone: '',
@@ -36,7 +36,7 @@ export default function ReferralPage() {
     setSubmitError('');
 
     try {
-      // Submit to ERP patient referral API
+      // Submit to ERP client referral API
       const response = await fetch('/api/public/referrals', {
         method: 'POST',
         headers: {
@@ -79,7 +79,7 @@ export default function ReferralPage() {
           </div>
           <h1 className="text-4xl font-bold mb-4 text-warm-gray-900">Referral Received!</h1>
           <p className="text-xl text-warm-gray-600 mb-8 leading-relaxed">
-            Thank you for your referral. A member of our intake team will contact you within 24 hours to discuss the patient's care needs.
+            Thank you for your referral. A member of our intake team will contact you within 24 hours to discuss the client's care needs.
           </p>
           <div className="bg-gradient-to-br from-serenity-green-50 to-white border border-serenity-green-200 rounded-xl p-6 mb-8 text-left">
             <p className="text-serenity-green-900 font-semibold mb-4 text-lg">What happens next?</p>
@@ -98,7 +98,7 @@ export default function ReferralPage() {
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <span>A care coordinator will call to discuss the patient's needs in detail</span>
+                <span>A care coordinator will call to discuss the client's needs in detail</span>
               </li>
               <li className="flex items-start gap-3">
                 <div className="w-6 h-6 rounded-full bg-serenity-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -114,7 +114,7 @@ export default function ReferralPage() {
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <span>The patient will meet their dedicated pod team before care begins</span>
+                <span>The client will meet their dedicated pod team before care begins</span>
               </li>
             </ul>
           </div>
@@ -150,11 +150,11 @@ export default function ReferralPage() {
               className="text-4xl lg:text-5xl leading-tight font-serif mb-6"
               style={{ letterSpacing: '-0.02em' }}
             >
-              <span className="text-warm-gray-900">Refer a Patient</span>
+              <span className="text-warm-gray-900">Refer a Client</span>
             </h1>
 
             <p className="text-lg lg:text-xl text-warm-gray-600 leading-relaxed max-w-2xl mx-auto mb-8">
-              Submit a patient referral for home care services. Our intake team will follow up within 24 hours to coordinate care.
+              Submit a client referral for home care services. Our intake team will follow up within 24 hours to coordinate care.
             </p>
 
             {/* Quick Contact */}
@@ -181,7 +181,7 @@ export default function ReferralPage() {
         <div className="container mx-auto px-6">
           <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-8 lg:p-12 border border-warm-gray-100">
             <div className="mb-8">
-              <h2 className="text-3xl font-bold mb-3 text-warm-gray-900">Patient Referral Form</h2>
+              <h2 className="text-3xl font-bold mb-3 text-warm-gray-900">Client Referral Form</h2>
               <p className="text-warm-gray-600">All fields marked with * are required</p>
             </div>
 
@@ -246,9 +246,9 @@ export default function ReferralPage() {
                 </div>
               </div>
 
-              {/* Patient Information */}
+              {/* Client Information */}
               <div className="border-t border-warm-gray-200 pt-8">
-                <h3 className="font-bold text-xl mb-6 text-warm-gray-900">Patient Information</h3>
+                <h3 className="font-bold text-xl mb-6 text-warm-gray-900">Client Information</h3>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-warm-gray-700 mb-2">
@@ -256,9 +256,9 @@ export default function ReferralPage() {
                     </label>
                     <input
                       type="text"
-                      name="patientFirstName"
+                      name="clientFirstName"
                       required
-                      value={formData.patientFirstName}
+                      value={formData.clientFirstName}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-warm-gray-300 rounded-lg focus:ring-2 focus:ring-serenity-green-500 focus:border-transparent transition-all"
                     />
@@ -269,9 +269,9 @@ export default function ReferralPage() {
                     </label>
                     <input
                       type="text"
-                      name="patientLastName"
+                      name="clientLastName"
                       required
-                      value={formData.patientLastName}
+                      value={formData.clientLastName}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-warm-gray-300 rounded-lg focus:ring-2 focus:ring-serenity-green-500 focus:border-transparent transition-all"
                     />
@@ -282,9 +282,9 @@ export default function ReferralPage() {
                     </label>
                     <input
                       type="tel"
-                      name="patientPhone"
+                      name="clientPhone"
                       required
-                      value={formData.patientPhone}
+                      value={formData.clientPhone}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-warm-gray-300 rounded-lg focus:ring-2 focus:ring-serenity-green-500 focus:border-transparent transition-all"
                     />
@@ -301,9 +301,9 @@ export default function ReferralPage() {
                       className="w-full px-4 py-3 border border-warm-gray-300 rounded-lg focus:ring-2 focus:ring-serenity-green-500 focus:border-transparent transition-all"
                     >
                       <option value="medicaid">Medicaid</option>
-                      <option value="medicare">Medicare</option>
                       <option value="private">Private Insurance</option>
                       <option value="private-pay">Private Pay</option>
+                      <option value="other">Other / Not Sure</option>
                     </select>
                   </div>
                 </div>
@@ -313,9 +313,9 @@ export default function ReferralPage() {
                   </label>
                   <input
                     type="text"
-                    name="patientAddress"
+                    name="clientAddress"
                     required
-                    value={formData.patientAddress}
+                    value={formData.clientAddress}
                     onChange={handleChange}
                     placeholder="Street, City, State, ZIP"
                     className="w-full px-4 py-3 border border-warm-gray-300 rounded-lg focus:ring-2 focus:ring-serenity-green-500 focus:border-transparent transition-all"
@@ -382,7 +382,7 @@ export default function ReferralPage() {
                 </div>
                 <div className="mt-6">
                   <label className="block text-sm font-semibold text-warm-gray-700 mb-2">
-                    Relationship to Patient / Organization *
+                    Relationship to Client / Organization *
                   </label>
                   <input
                     type="text"
@@ -410,7 +410,7 @@ export default function ReferralPage() {
                       value={formData.careNeeds}
                       onChange={handleChange}
                       rows={5}
-                      placeholder="Describe the type of care needed, medical conditions, mobility limitations, ADL assistance required, etc."
+                      placeholder="Describe the type of care needed, mobility limitations, ADL assistance required, daily routine, etc."
                       className="w-full px-4 py-3 border border-warm-gray-300 rounded-lg focus:ring-2 focus:ring-serenity-green-500 focus:border-transparent transition-all"
                     />
                   </div>
@@ -462,14 +462,14 @@ export default function ReferralPage() {
                   disabled={isSubmitting}
                   className="text-lg"
                 >
-                  {isSubmitting ? 'Submitting Referral...' : 'Submit Patient Referral'}
+                  {isSubmitting ? 'Submitting Referral...' : 'Submit Client Referral'}
                 </MarketingButton>
                 <p className="text-sm text-warm-gray-500 text-center mt-4">
                   By submitting this form, you consent to be contacted by Serenity Care Partners regarding this referral.
                 </p>
                 <div className="mt-4 p-4 bg-serenity-green-50 border border-serenity-green-200 rounded-lg">
                   <p className="text-xs text-warm-gray-700 leading-relaxed">
-                    <strong className="text-serenity-green-700">HIPAA Privacy Notice:</strong> Serenity Care Partners is committed to protecting patient health information. All information submitted through this form is encrypted and handled in accordance with HIPAA regulations. We will never share personal health information without proper authorization.
+                    <strong className="text-serenity-green-700">HIPAA Privacy Notice:</strong> Serenity Care Partners is committed to protecting client health information. All information submitted through this form is encrypted and handled in accordance with HIPAA regulations. We will never share personal health information without proper authorization. Please do not include detailed medical information in this form. For care-related inquiries, call us at (513) 400-5113.
                   </p>
                 </div>
               </div>
@@ -484,10 +484,10 @@ export default function ReferralPage() {
           <div className="max-w-3xl mx-auto text-center">
             <h3 className="text-xl font-bold text-warm-gray-900 mb-3">Service Area</h3>
             <p className="text-warm-gray-600 mb-4">
-              We provide non-medical home care services across seven Southwest Ohio counties:
+              We provide non-medical home care services across Greater Cincinnati, Ohio:
             </p>
             <p className="text-serenity-green-700 font-semibold">
-              Hamilton, Butler, Warren, Clermont, Clinton, Preble, and Montgomery Counties
+              Hamilton, Butler, Warren, and Clermont Counties
             </p>
             <p className="text-warm-gray-500 text-sm mt-2">
               Headquartered in Blue Ash, Ohio

@@ -77,7 +77,7 @@ export const PrivateCareLanding: React.FC = () => {
                         </span>
                     </h1>
                     <p className="mt-6 max-w-2xl mx-auto text-xl text-gray-600 leading-relaxed">
-                        Experience the peace of mind that comes with elite, private-duty nursing and companionship.
+                        Experience the peace of mind that comes with elite, private-duty home care and companionship.
                         Tailored exclusively for families who demand the exceptional.
                     </p>
                     <div className="mt-10 flex justify-center gap-4">
@@ -134,7 +134,7 @@ export const PrivateCareLanding: React.FC = () => {
                             <div className="text-center mb-10">
                                 <h2 className="text-3xl font-serif font-bold text-gray-900 mb-4">Request a Private Consultation</h2>
                                 <p className="text-gray-600">
-                                    Tell us about your needs. We will contact you within 2 hours to schedule a confidential assessment.
+                                    Tell us about your needs. We will contact you within 2 hours to schedule a confidential consultation.
                                 </p>
                             </div>
 
@@ -198,7 +198,7 @@ export const PrivateCareLanding: React.FC = () => {
                                         >
                                             <option value="">Select a service...</option>
                                             <option value="24/7 Care">24/7 Concierge Care</option>
-                                            <option value="Post-Op">Post-Operative Recovery</option>
+                                            <option value="Post-Op">Post-Operative Companion Support</option>
                                             <option value="Dementia Care">Memory & Dementia Care</option>
                                             <option value="Companionship">Companionship & Travel</option>
                                             <option value="Other">Other / Custom Request</option>

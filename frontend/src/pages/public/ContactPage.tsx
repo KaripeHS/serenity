@@ -1,7 +1,7 @@
 /**
  * Contact Page
  * Simple contact form for general inquiries.
- * For patient referrals, users are directed to /referral
+ * For client referrals, users are directed to /referral
  */
 
 import React, { useState } from 'react';
@@ -139,7 +139,7 @@ export default function ContactPage() {
                     </svg>
                   </div>
                   <h3 className="font-bold text-sm mb-1 text-warm-gray-900">Office Hours</h3>
-                  <span className="text-warm-gray-600 text-xs text-center">Mon-Fri 8AM - 6PM</span>
+                  <span className="text-warm-gray-600 text-xs text-center">Mon-Fri 8AM - 5PM ET</span>
                 </div>
               </div>
 
@@ -152,12 +152,12 @@ export default function ContactPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-bold text-warm-gray-900 mb-1">Need to Refer a Patient?</h3>
+                    <h3 className="font-bold text-warm-gray-900 mb-1">Need to Refer a Client?</h3>
                     <p className="text-warm-gray-600 text-sm mb-3">
-                      Healthcare providers and family members can submit patient referrals through our dedicated form.
+                      Healthcare providers and family members can submit client referrals through our dedicated form.
                     </p>
                     <Link to="/referral" className="text-serenity-green-600 font-semibold hover:text-serenity-green-700 transition-colors text-sm">
-                      Submit a Patient Referral →
+                      Submit a Client Referral →
                     </Link>
                   </div>
                 </div>
@@ -234,7 +234,7 @@ export default function ContactPage() {
                   >
                     <option value="general">General Inquiry</option>
                     <option value="care-inquiry">I Need Care for a Loved One</option>
-                    <option value="patient-referral">I Want to Refer a Patient</option>
+                    <option value="client-referral">I Want to Refer a Client</option>
                     <option value="services">Questions About Services</option>
                     <option value="pricing">Pricing & Payment Options</option>
                     <option value="employment">Employment Opportunities</option>
@@ -271,6 +271,9 @@ export default function ContactPage() {
                 <p className="text-xs text-warm-gray-500 text-center">
                   We typically respond within 1 business day.
                 </p>
+                <p className="text-xs text-warm-gray-400 text-center mt-2">
+                  Please do not include personal health information in this form. For care-related inquiries, call us at (513) 400-5113.
+                </p>
               </form>
             </div>
           </div>
@@ -283,10 +286,10 @@ export default function ContactPage() {
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-warm-gray-900 mb-4 font-serif">Service Area</h2>
             <p className="text-warm-gray-600 mb-8">
-              We provide non-medical home care services across seven Southwest Ohio counties from our headquarters in Blue Ash.
+              We provide non-medical home care services across Greater Cincinnati, Ohio from our headquarters in Blue Ash.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              {['Hamilton', 'Butler', 'Warren', 'Clermont', 'Clinton', 'Preble', 'Montgomery'].map((county) => (
+              {['Hamilton', 'Butler', 'Warren', 'Clermont'].map((county) => (
                 <span
                   key={county}
                   className="px-4 py-2 bg-sage-50 text-warm-gray-700 rounded-full text-sm font-medium border border-sage-200"

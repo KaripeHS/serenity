@@ -420,7 +420,7 @@ export default function ClientSelfIntake() {
         flags.push({
           field: 'dateOfBirth',
           type: 'warning',
-          message: 'Patient is under 18 - please ensure a guardian is designated for medical decisions',
+          message: 'Client is under 18 - please ensure a guardian is designated for care decisions',
         });
       }
       if (age > 100) {
@@ -710,12 +710,12 @@ export default function ClientSelfIntake() {
               Welcome to Serenity Care Partners
             </h2>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">
-              Thank you for choosing us for your home health care needs. This form helps us understand how we can best serve you or your loved one.
+              Thank you for choosing us for your home care needs. This form helps us understand how we can best serve you or your loved one.
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8 max-w-md mx-auto text-left">
               <h3 className="font-medium text-blue-900 mb-2">What you'll need:</h3>
               <ul className="text-sm text-blue-800 space-y-1">
-                <li>- Patient's personal information</li>
+                <li>- Client's personal information</li>
                 <li>- Emergency contact details</li>
                 <li>- Medical history & current medications</li>
                 <li>- Insurance information (optional)</li>
@@ -758,8 +758,8 @@ export default function ClientSelfIntake() {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-1">Patient Information</h2>
-              <p className="text-gray-600">Please provide the patient's contact details.</p>
+              <h2 className="text-xl font-semibold text-gray-900 mb-1">Client Information</h2>
+              <p className="text-gray-600">Please provide the client's contact details.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1179,7 +1179,7 @@ export default function ClientSelfIntake() {
                       className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-700">
-                      This person is authorized to receive information about the patient's care
+                      This person is authorized to receive information about the client's care
                     </span>
                   </label>
                   <label className="flex items-center gap-2">
@@ -1204,7 +1204,7 @@ export default function ClientSelfIntake() {
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-1">Medical Information</h2>
-              <p className="text-gray-600">Help us understand the patient's health needs.</p>
+              <p className="text-gray-600">Help us understand the client's care needs.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1236,7 +1236,7 @@ export default function ClientSelfIntake() {
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Primary Diagnosis / Reason for Care
+                  Primary Reason for Care
                 </label>
                 <textarea
                   value={formData.medical.primaryDiagnosis}
@@ -1572,7 +1572,7 @@ export default function ClientSelfIntake() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Relationship to Patient
+                      Relationship to Client
                     </label>
                     <select
                       value={formData.consent.relationshipToPatient}
@@ -1580,7 +1580,7 @@ export default function ClientSelfIntake() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="">Select...</option>
-                      <option value="self">Self (I am the patient)</option>
+                      <option value="self">Self (I am the client)</option>
                       <option value="spouse">Spouse</option>
                       <option value="child">Adult Child</option>
                       <option value="parent">Parent</option>
@@ -1619,7 +1619,7 @@ export default function ClientSelfIntake() {
             <div className="space-y-4">
               {/* Contact Summary */}
               <div className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium text-gray-900 mb-2">Patient Information</h3>
+                <h3 className="font-medium text-gray-900 mb-2">Client Information</h3>
                 <div className="text-sm text-gray-600 space-y-1">
                   <p><span className="font-medium">Name:</span> {formData.contact.firstName} {formData.contact.lastName}</p>
                   <p><span className="font-medium">DOB:</span> {formData.contact.dateOfBirth}</p>

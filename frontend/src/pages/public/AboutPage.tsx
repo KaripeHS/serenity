@@ -6,8 +6,8 @@ const ABOUT_IMAGE_DEFAULTS: Record<string, { url: string; alt_text: string }> = 
   'about.hero.image': { url: 'https://plus.unsplash.com/premium_photo-1661311814560-8270b2427088?q=80&w=1200&auto=format&fit=crop', alt_text: 'Caregiver walking with senior in a park' },
   'about.team.gloria': { url: 'https://ui-avatars.com/api/?name=Gloria&background=7c9a72&color=fff&size=400&rounded=true&bold=true&font-size=0.4', alt_text: 'Gloria, CEO of Serenity Care Partners' },
   'about.team.bignon': { url: 'https://ui-avatars.com/api/?name=Bignon&background=5b7a52&color=fff&size=400&rounded=true&bold=true&font-size=0.4', alt_text: 'Bignon, COO and CFO of Serenity Care Partners' },
-  'about.podmodel.image': { url: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?q=80&w=1400&auto=format&fit=crop', alt_text: 'Healthcare team collaborating in pod-based care model' },
-  'about.action.image1': { url: 'https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?q=80&w=1000&auto=format&fit=crop', alt_text: 'Caregiver assisting elderly patient' },
+  'about.podmodel.image': { url: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?q=80&w=1400&auto=format&fit=crop', alt_text: 'Care team collaborating in pod-based care model' },
+  'about.action.image1': { url: 'https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?q=80&w=1000&auto=format&fit=crop', alt_text: 'Caregiver assisting elderly client at home' },
   'about.action.image2': { url: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=1000&auto=format&fit=crop', alt_text: 'Care coordination team in a planning meeting' },
 };
 
@@ -26,7 +26,7 @@ export default function AboutPage() {
               </div>
 
               <h1 className="text-5xl lg:text-6xl leading-tight font-serif tracking-tighter">
-                <span className="text-warm-gray-900">Redefining Home Health Care</span>
+                <span className="text-warm-gray-900">Redefining Home Care</span>
                 <br />
                 <span className="bg-gradient-to-r from-serenity-green-600 to-serenity-green-700 bg-clip-text text-transparent">
                   One Pod at a Time
@@ -34,7 +34,7 @@ export default function AboutPage() {
               </h1>
 
               <p className="text-xl lg:text-2xl text-warm-gray-600 leading-relaxed">
-                We believe exceptional care starts with exceptional caregivers. Our innovative pod-based model transforms how home health care is delivered across Ohio.
+                We believe exceptional care starts with exceptional caregivers. Our innovative pod-based model transforms how home care is delivered in Greater Cincinnati, Ohio.
               </p>
             </div>
 
@@ -65,7 +65,7 @@ export default function AboutPage() {
               </div>
               <h2 className="text-3xl mb-4 text-warm-gray-900 font-serif tracking-tight">Our Mission</h2>
               <p className="text-warm-gray-700 leading-relaxed text-lg">
-                To deliver exceptional, compassionate home health care that enables our patients to live with dignity and independence in the comfort of their own homes. We achieve this through our innovative pod-based care model, investment in our caregivers, and relentless focus on quality outcomes.
+                To provide all clients with professional, compassionate care while demonstrating caring through love, gentleness, patience, and kindness. We achieve this through our innovative pod-based care model, investment in our caregivers, and relentless focus on quality outcomes.
               </p>
             </div>
 
@@ -78,7 +78,7 @@ export default function AboutPage() {
               </div>
               <h2 className="text-3xl mb-4 text-warm-gray-900 font-serif tracking-tight">Our Vision</h2>
               <p className="text-warm-gray-700 leading-relaxed text-lg">
-                To be Ohio's most trusted home health care provider, setting the standard for quality, reliability, and caregiver satisfaction. We envision a future where every patient receives consistent, personalized care from dedicated professionals who know them and their needs.
+                To be Greater Cincinnati's most trusted home care provider, setting the standard for quality, reliability, and caregiver satisfaction. We envision a future where every client receives consistent, personalized care from dedicated professionals who know them and their needs.
               </p>
             </div>
           </div>
@@ -94,7 +94,7 @@ export default function AboutPage() {
             </div>
             <h2 className="text-4xl lg:text-5xl text-warm-gray-900 mb-4 font-serif tracking-tighter">Leadership Team</h2>
             <p className="text-xl text-warm-gray-600 max-w-3xl mx-auto">
-              Experienced healthcare professionals dedicated to transforming home health care
+              Experienced professionals dedicated to transforming home care
             </p>
           </div>
 
@@ -110,7 +110,7 @@ export default function AboutPage() {
               <h3 className="text-2xl mb-2 text-warm-gray-900 font-heading">Gloria</h3>
               <p className="text-serenity-green-600 font-semibold mb-6 text-lg">Chief Executive Officer</p>
               <p className="text-warm-gray-600 leading-relaxed">
-                With decades of experience in home health care, Gloria founded Serenity Care Partners with a vision to transform the industry through innovation and compassion. Her leadership has established our reputation for excellence across Ohio.
+                With decades of experience in home care, Gloria founded Serenity Care Partners with a vision to transform the industry through innovation and compassion. Her leadership has established our reputation for excellence in Greater Cincinnati.
               </p>
             </div>
 
@@ -125,7 +125,7 @@ export default function AboutPage() {
               <h3 className="text-2xl mb-2 text-warm-gray-900 font-heading">Bignon</h3>
               <p className="text-serenity-green-600 font-semibold mb-6 text-lg">Chief Operating Officer & CFO</p>
               <p className="text-warm-gray-600 leading-relaxed">
-                Bignon brings expertise in healthcare operations and financial management, ensuring operational excellence and sustainable growth. His strategic vision drives our expansion and continuous improvement initiatives.
+                Bignon brings expertise in home care operations and financial management, ensuring operational excellence and sustainable growth. His strategic vision drives our expansion and continuous improvement initiatives.
               </p>
             </div>
           </div>
@@ -164,7 +164,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl mb-3 text-warm-gray-900 font-heading">Small Teams</h3>
                 <p className="text-warm-gray-600 leading-relaxed">
-                  Intentionally small pods mean caregivers have time to truly know each patient
+                  Intentionally small pods mean caregivers have time to truly know each client
                 </p>
               </div>
 
@@ -176,7 +176,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl mb-3 text-warm-gray-900 font-heading">Familiar Faces</h3>
                 <p className="text-warm-gray-600 leading-relaxed">
-                  Patients see the same caregivers consistently, building trust and comfort
+                  Clients see the same caregivers consistently, building trust and comfort
                 </p>
               </div>
 
@@ -220,7 +220,7 @@ export default function AboutPage() {
                   </div>
                   <div>
                     <strong className="text-warm-gray-900 text-lg">Geographic Focus:</strong>
-                    <p className="mt-1">Pods serve patients within a 10-mile radius, reducing travel time and improving efficiency</p>
+                    <p className="mt-1">Pods serve clients within a 10-mile radius, reducing travel time and improving efficiency</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-4">
@@ -275,9 +275,9 @@ export default function AboutPage() {
             <div className="inline-flex items-center gap-2 bg-serenity-green-50 px-4 py-2.5 rounded-full border border-serenity-green-200 mb-4">
               <span className="text-serenity-green-700 font-semibold text-sm">Where We Serve</span>
             </div>
-            <h2 className="text-4xl lg:text-5xl text-warm-gray-900 mb-4 font-serif tracking-tighter">Southwest Ohio Service Area</h2>
+            <h2 className="text-4xl lg:text-5xl text-warm-gray-900 mb-4 font-serif tracking-tighter">Greater Cincinnati Service Area</h2>
             <p className="text-xl text-warm-gray-600 max-w-3xl mx-auto">
-              Proudly serving families across seven counties in Southwest Ohio from our headquarters in Blue Ash
+              Proudly serving families across four counties in Greater Cincinnati, Ohio from our headquarters in Blue Ash
             </p>
           </div>
 
@@ -289,9 +289,6 @@ export default function AboutPage() {
                 { name: 'Butler County', city: 'Hamilton area' },
                 { name: 'Warren County', city: 'Lebanon area' },
                 { name: 'Clermont County', city: 'Batavia area' },
-                { name: 'Clinton County', city: 'Wilmington area' },
-                { name: 'Preble County', city: 'Eaton area' },
-                { name: 'Montgomery County', city: 'Dayton area' },
               ].map((county, index) => (
                 <div
                   key={county.name}
@@ -317,7 +314,7 @@ export default function AboutPage() {
               </div>
               <h3 className="text-2xl text-warm-gray-900 font-heading mb-2">Blue Ash, Ohio</h3>
               <p className="text-warm-gray-600 mb-6">
-                Centrally located to serve all of Southwest Ohio
+                Centrally located to serve all of Greater Cincinnati
               </p>
               <Link to="/contact" className="text-serenity-green-600 font-semibold hover:text-serenity-green-700 transition-colors">
                 Contact us to learn more about our services in your area →
@@ -337,7 +334,7 @@ export default function AboutPage() {
             </div>
             <div className="text-center p-8 bg-white rounded-xl shadow-sm hover-lift border border-warm-gray-100 fade-in-up" style={{ animationDelay: '100ms' }}>
               <div className="text-5xl bg-gradient-to-r from-serenity-green-600 to-serenity-green-700 bg-clip-text text-transparent mb-3 count-up font-heading">100+</div>
-              <div className="text-warm-gray-600 font-semibold">Patients Served</div>
+              <div className="text-warm-gray-600 font-semibold">Clients Served</div>
             </div>
             <div className="text-center p-8 bg-white rounded-xl shadow-sm hover-lift border border-warm-gray-100 fade-in-up" style={{ animationDelay: '200ms' }}>
               <div className="text-5xl bg-gradient-to-r from-serenity-green-600 to-serenity-green-700 bg-clip-text text-transparent mb-3 count-up font-heading">30+</div>
@@ -345,7 +342,7 @@ export default function AboutPage() {
             </div>
             <div className="text-center p-8 bg-white rounded-xl shadow-sm hover-lift border border-warm-gray-100 fade-in-up" style={{ animationDelay: '300ms' }}>
               <div className="text-5xl bg-gradient-to-r from-serenity-green-600 to-serenity-green-700 bg-clip-text text-transparent mb-3 count-up font-heading">95%</div>
-              <div className="text-warm-gray-600 font-semibold">Patient Satisfaction</div>
+              <div className="text-warm-gray-600 font-semibold">Client Satisfaction</div>
             </div>
           </div>
         </div>
@@ -356,7 +353,7 @@ export default function AboutPage() {
         <div className="container mx-auto px-6 text-center fade-in-up">
           <h2 className="text-4xl lg:text-5xl mb-6 text-white font-serif tracking-tighter">Join Our Team or Request Care</h2>
           <p className="text-xl mb-10 max-w-2xl mx-auto leading-relaxed opacity-95 text-sage-50">
-            Experience the Serenity difference. We're hiring compassionate caregivers and accepting new patients.
+            Experience the Serenity difference. We're hiring compassionate caregivers and accepting new clients.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/careers">

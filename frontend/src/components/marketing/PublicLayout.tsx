@@ -74,7 +74,7 @@ function Header() {
               to="/referral"
               className="text-warm-gray-700 hover:text-serenity-green-600 font-medium transition-colors relative group"
             >
-              Refer a Patient
+              Refer a Client
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-serenity-green-600 group-hover:w-full transition-all duration-300"></span>
             </Link>
             <Link
@@ -160,7 +160,7 @@ function Header() {
                 className="text-warm-gray-700 hover:text-serenity-green-600 font-medium py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Refer a Patient
+                Refer a Client
               </Link>
               <Link
                 to="/contact"
@@ -222,7 +222,7 @@ function Footer() {
               </div>
             </Link>
             <p className="leading-relaxed mb-6" style={{ color: 'rgba(255, 255, 255, 0.85)', lineHeight: '1.7' }}>
-              Compassionate home health care across Ohio. Our innovative pod-based model ensures personalized attention and exceptional outcomes.
+              Compassionate home care in Greater Cincinnati, Ohio. Our innovative pod-based model ensures personalized attention and exceptional outcomes.
             </p>
             {/* Social Media Links - Hidden until valid URLs are available
             <div className="flex gap-4">
@@ -286,7 +286,7 @@ function Footer() {
                 <div>
                   <p className="font-medium text-white">Hours</p>
                   <p className="text-sm">Monday-Friday</p>
-                  <p className="text-sm">8:00 AM - 6:00 PM EST</p>
+                  <p className="text-sm">8:00 AM - 5:00 PM ET</p>
                 </div>
               </li>
             </ul>
@@ -297,7 +297,7 @@ function Footer() {
         <div className="pt-8 mt-8" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.15)' }}>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-              &copy; 2025 Serenity Care Partners. All rights reserved.
+              &copy; {new Date().getFullYear()} Serenity Care Partners LLC. All rights reserved. Licensed by the Ohio Department of Health.
             </p>
             <div className="flex flex-wrap justify-center md:justify-end gap-4 md:gap-6 text-sm">
               <Link to="/privacy" className="transition-colors hover:text-champagne-gold-200" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Privacy Policy</Link>

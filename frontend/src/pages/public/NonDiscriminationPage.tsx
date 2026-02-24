@@ -31,7 +31,7 @@ export default function NonDiscriminationPage() {
 
                         <h2 className="text-2xl font-serif text-warm-gray-900 mt-12 mb-6">Our Commitment</h2>
                         <p>
-                            Serenity Care Partners is committed to providing equal access to quality home health care services to all individuals. We do not exclude people or treat them differently because of:
+                            Serenity Care Partners is committed to providing equal access to quality home care services to all individuals. We do not exclude people or treat them differently because of:
                         </p>
                         <ul className="list-disc pl-6 space-y-2 mb-6 text-warm-gray-700">
                             <li>Race</li>
