@@ -853,6 +853,32 @@ export const ROUTE_ACCESS: Record<string, UserRole[]> = {
     UserRole.CLINICAL_DIRECTOR,
   ],
 
+  // PASSPORT Pre-Certification (Compliance & Executive)
+  '/dashboard/passport-certification': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.COMPLIANCE_OFFICER,
+    UserRole.SECURITY_OFFICER,
+    UserRole.QA_MANAGER,
+    UserRole.HR_DIRECTOR,
+    UserRole.HR_MANAGER,
+    UserRole.DIRECTOR_OF_NURSING,
+    UserRole.CLINICAL_DIRECTOR,
+  ],
+  '/dashboard/operating-forms': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.COMPLIANCE_OFFICER,
+    UserRole.SECURITY_OFFICER,
+    UserRole.QA_MANAGER,
+    UserRole.HR_DIRECTOR,
+    UserRole.HR_MANAGER,
+    UserRole.DIRECTOR_OF_NURSING,
+    UserRole.CLINICAL_DIRECTOR,
+  ],
+
   // Training (HR + Clinical leadership)
   '/dashboard/training': [
     UserRole.FOUNDER,

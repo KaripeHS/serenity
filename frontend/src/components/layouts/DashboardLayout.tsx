@@ -172,6 +172,8 @@ const navigationSections: NavigationSection[] = [
     title: 'Compliance',
     items: [
       { name: 'Compliance Command Center', href: '/dashboard/compliance', icon: ShieldCheckIcon, description: 'HIPAA, BAAs, emergency prep, audits' },
+      { name: 'PASSPORT Certification', href: '/dashboard/passport-certification', icon: ClipboardDocumentCheckIcon, description: 'Pre-certification checklist & package' },
+      { name: 'Operating Forms', href: '/dashboard/operating-forms', icon: DocumentTextIcon, description: '20 compliance forms — fill, print, upload' },
       { name: 'Licenses', href: '/dashboard/licenses', icon: ScaleIcon, description: 'Business licenses' },
       { name: 'Tax Compliance', href: '/dashboard/tax', icon: BuildingLibraryIcon, description: 'Tax management' },
       { name: 'Audit Logs', href: '/admin/audit', icon: DocumentTextIcon, description: 'System audit trail' },

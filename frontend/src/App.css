@@ -154,3 +154,64 @@
 .glow-on-hover:hover {
   box-shadow: 0 0 20px rgba(12, 90, 61, 0.3);
 }
+
+/* ============================================= */
+/* PRINT STYLES - PASSPORT Certification         */
+/* ============================================= */
+@media print {
+  /* Hide sidebar, header, nav, and non-print elements */
+  nav,
+  header,
+  aside,
+  .print\\:hidden,
+  [data-sidebar],
+  [data-testid="sidebar"] {
+    display: none !important;
+  }
+
+  /* Show print-only elements */
+  .print\\:block {
+    display: block !important;
+  }
+
+  /* Reset page layout */
+  body {
+    background: white !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Optimize for print */
+  .print\\:mb-8 {
+    margin-bottom: 2rem;
+  }
+
+  /* Page break control */
+  .break-inside-avoid-page {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Clean table printing */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  th, td {
+    border: 1px solid #d1d5db;
+    padding: 4px 8px;
+  }
+
+  /* Ensure good contrast */
+  * {
+    color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @page {
+    margin: 0.5in;
+    size: letter;
+  }
+}

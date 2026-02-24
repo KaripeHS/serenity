@@ -4,9 +4,17 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:debug": "playwright test --debug"
+    "test:e2e:debug": "playwright test --debug",
+    "test:crawl": "playwright test --project=layer1-crawl",
+    "test:interact": "playwright test --project=layer2-interaction",
+    "test:visual": "playwright test --project=layer3-visual",
+    "test:visual:update": "playwright test --project=layer3-visual --update-snapshots",
+    "test:a11y": "playwright test --project=layer4-accessibility",
+    "test:responsive": "playwright test --project=layer5-responsive",
+    "test:full-audit": "playwright test --project=layer1-crawl --project=layer2-interaction --project=layer3-visual --project=layer4-accessibility --project=layer5-responsive"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
     "@playwright/test": "^1.57.0",
     "@types/node": "^25.0.3",
     "typescript": "^5.9.2"

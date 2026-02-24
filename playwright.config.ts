@@ -87,6 +87,54 @@ export default defineConfig({
             },
             dependencies: ['setup'],
         },
+
+        // ── 5-Layer Audit Suite ──────────────────────────────────────
+
+        // Layer 1: Route crawling — every route loads, no 404s, RBAC works
+        {
+            name: 'layer1-crawl',
+            testMatch: /layer1-crawl\/.*.spec\.ts/,
+            use: {
+                ...devices['Desktop Chrome'],
+            },
+            dependencies: ['setup'],
+        },
+        // Layer 2: Interactive element audit — buttons, forms, modals
+        {
+            name: 'layer2-interaction',
+            testMatch: /layer2-interaction\/.*.spec\.ts/,
+            use: {
+                ...devices['Desktop Chrome'],
+            },
+            dependencies: ['setup'],
+        },
+        // Layer 3: Visual regression — screenshot comparison
+        {
+            name: 'layer3-visual',
+            testMatch: /layer3-visual\/.*.spec\.ts/,
+            use: {
+                ...devices['Desktop Chrome'],
+            },
+            dependencies: ['setup'],
+        },
+        // Layer 4: Accessibility — axe-core WCAG audit
+        {
+            name: 'layer4-accessibility',
+            testMatch: /layer4-accessibility\/.*.spec\.ts/,
+            use: {
+                ...devices['Desktop Chrome'],
+            },
+            dependencies: ['setup'],
+        },
+        // Layer 5: Responsive — multi-viewport testing
+        {
+            name: 'layer5-responsive',
+            testMatch: /layer5-responsive\/.*.spec\.ts/,
+            use: {
+                ...devices['Desktop Chrome'],
+            },
+            dependencies: ['setup'],
+        },
     ],
 
     /* Run your local dev server before starting the tests */

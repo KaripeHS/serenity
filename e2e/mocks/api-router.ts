@@ -107,6 +107,18 @@ export class ApiRouter {
       });
     });
 
+    // POST /api/auth/refresh
+    await this.page.route('**/api/auth/refresh', (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          accessToken: authFixtures.generateToken(),
+          refreshToken: authFixtures.generateRefreshToken()
+        })
+      });
+    });
+
     // POST /api/auth/password-reset
     await this.page.route('**/api/auth/password-reset', (route) => {
       route.fulfill({

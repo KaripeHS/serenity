@@ -85,6 +85,8 @@ import { VendorCenter } from './pages/finance/VendorCenter';
 import { ExpensePortal } from './pages/finance/ExpensePortal';
 import { BankFeed } from './pages/finance/BankFeed';
 import AuditLogs from './pages/admin/AuditLogs';
+import PASSPORTCertification from './pages/compliance/PASSPORTCertification';
+import OperatingFormsHub from './pages/compliance/OperatingFormsHub';
 import ImageManagement from './pages/admin/ImageManagement';
 import { PayrollManager } from './pages/admin/PayrollManager';
 import { PayrollConnect } from './pages/payroll/PayrollConnect';
@@ -258,6 +260,9 @@ function App() {
               <Route path="/dashboard/clinical" element={<DashboardLayout><ProtectedRoute route="/dashboard/clinical"><ClinicalCommandCenter /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/billing" element={<DashboardLayout><ProtectedRoute route="/dashboard/billing"><BillingARDashboard /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/compliance" element={<DashboardLayout><ProtectedRoute route="/dashboard/compliance"><ComplianceCommandCenter /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/passport-certification" element={<DashboardLayout><ProtectedRoute route="/dashboard/passport-certification"><PASSPORTCertification /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/operating-forms" element={<DashboardLayout><ProtectedRoute route="/dashboard/operating-forms"><OperatingFormsHub /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/operating-forms/:formSlug" element={<DashboardLayout><ProtectedRoute route="/dashboard/operating-forms"><OperatingFormsHub /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/training" element={<DashboardLayout><ProtectedRoute route="/dashboard/training"><WorkingTrainingDashboard /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/scheduling" element={<DashboardLayout><ProtectedRoute route="/dashboard/scheduling"><SchedulingCalendar /></ProtectedRoute></DashboardLayout>} />
 
