@@ -30,20 +30,20 @@ const CORE_POSITIONS = [
     benefits: ['$15-$20/hour', 'Pod-based care', 'Weekly direct deposit', 'Paid training']
   },
   {
-    id: 'companion-caregiver',
-    role: 'Companion Caregiver',
+    id: 'lpn',
+    role: 'LPN (Licensed Practical Nurse)',
     badge: 'Ongoing Hiring',
-    description: 'Provide meaningful companionship, socialization, and supervision for clients. Assist with recreational activities, accompany clients to appointments, and help maintain their quality of life.',
-    requirements: ['Compassionate and reliable', 'Strong communication skills', 'Reliable transportation'],
-    benefits: ['$14-$18/hour', 'Flexible scheduling', 'Weekly direct deposit', 'Paid training']
+    description: 'Provide clinical supervision under RN direction, assist with supervisory visits, support care plan implementation, and provide clinical guidance to caregivers in the field.',
+    requirements: ['Active Ohio LPN license', 'Home health care experience preferred', 'Reliable transportation'],
+    benefits: ['$25-$32/hour', 'Flexible scheduling', 'Weekly direct deposit', 'Clinical support team']
   },
   {
-    id: 'homemaker',
-    role: 'Homemaker',
+    id: 'rn',
+    role: 'RN Supervisor (Registered Nurse)',
     badge: 'Ongoing Hiring',
-    description: 'Help clients maintain a clean, safe, and comfortable home environment. Assist with light housekeeping, laundry, meal preparation, and essential errands.',
-    requirements: ['Reliable and detail-oriented', 'Ability to perform light housekeeping tasks', 'Reliable transportation'],
-    benefits: ['$14-$18/hour', 'Flexible scheduling', 'Weekly direct deposit', 'Supportive team environment']
+    description: 'Conduct initial client assessments, develop individualized care plans, provide clinical oversight and supervision of personal care aides, conduct supervisory visits every 60 days, coordinate with physicians and other healthcare providers, and provide clinical consultation to caregivers and Pod Team Leads.',
+    requirements: ['Active Ohio RN license', 'Home health care or clinical experience', 'Strong assessment skills'],
+    benefits: ['$35-$45/hour', 'Leadership opportunities', 'Flexible schedule', 'Professional development']
   }
 ];
 
@@ -611,9 +611,8 @@ export default function CareersPage() {
                   >
                     <option value="">Select a position...</option>
                     <option value="HHA / STNA">HHA / STNA (Home Health Aide / State Tested Nursing Assistant)</option>
-                    <option value="Personal Care Aide">Personal Care Aide</option>
-                    <option value="Companion Caregiver">Companion Caregiver</option>
-                    <option value="Homemaker">Homemaker</option>
+                    <option value="LPN">LPN (Licensed Practical Nurse)</option>
+                    <option value="RN Supervisor">RN Supervisor (Registered Nurse)</option>
                     <option value="Other">Other</option>
                   </select>
                 </div>
@@ -624,7 +623,7 @@ export default function CareersPage() {
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g., STNA/CNA, HHA, or N/A"
+                    placeholder="e.g., RN, LPN, STNA/CNA, HHA, or N/A"
                     className="w-full px-4 py-3 rounded-xl border border-warm-gray-300 focus:border-serenity-green-500 focus:ring-2 focus:ring-serenity-green-200 outline-none transition-all"
                     value={formData.licenseType}
                     onChange={(e) => setFormData({ ...formData, licenseType: e.target.value })}
@@ -816,7 +815,7 @@ export default function CareersPage() {
             Ready to Make a Difference?
           </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-white/95">
-            Whether you're an experienced caregiver or just beginning your home care journey, we'd love to hear from you.
+            Whether you're an experienced healthcare professional or just beginning your caregiving journey, we'd love to hear from you.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button

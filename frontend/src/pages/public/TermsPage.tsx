@@ -21,14 +21,14 @@ export default function TermsPage() {
                     <div className="prose prose-lg prose-warm-gray mx-auto">
 
                         <p className="lead text-xl text-warm-gray-700 mb-8">
-                            Welcome to Serenity Care Partners. These Terms of Service ("Terms") govern your use of our website serenitycarepartners.com (the "Site") and describe the terms under which Serenity Care Partners ("we," "us," or "our") provides information about our non-medical home care services.
+                            Welcome to Serenity Care Partners. These Terms of Service ("Terms") govern your use of our website serenitycarepartners.com (the "Site") and describe the terms under which Serenity Care Partners ("we," "us," or "our") provides information about our non-medical home health care services.
                         </p>
 
                         {/* Important Healthcare Disclaimer */}
                         <div className="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-r-xl mb-8">
                             <h3 className="text-lg font-bold text-amber-800 mb-2 mt-0">Important Healthcare Disclaimer</h3>
                             <p className="text-amber-900 mb-0">
-                                Serenity Care Partners provides <strong>non-medical home care services</strong> only. We do not provide medical care, nursing services, medical diagnoses, or medical treatment. Our services include personal care assistance, homemaker services, companionship, and respite care. For medical emergencies, call 911 immediately. For medical advice, consult a licensed healthcare provider.
+                                Serenity Care Partners provides <strong>non-medical home health care services</strong> only. We do not provide medical care, nursing services, medical diagnoses, or medical treatment. Our services include personal care assistance, homemaker services, companionship, and respite care. For medical emergencies, call 911 immediately. For medical advice, consult a licensed healthcare provider.
                             </p>
                         </div>
 
@@ -39,7 +39,7 @@ export default function TermsPage() {
 
                         <h2 className="text-2xl font-serif text-warm-gray-900 mt-12 mb-6">2. Description of Services</h2>
                         <p>
-                            Serenity Care Partners is a licensed non-medical home care agency providing services in Greater Cincinnati, Ohio. Through this Site, we provide:
+                            Serenity Care Partners is a licensed non-medical home health care agency providing services in Greater Cincinnati, Ohio. Through this Site, we provide:
                         </p>
                         <ul className="list-disc pl-6 space-y-2 mb-6 text-warm-gray-700">
                             <li>Information about our non-medical home care services</li>
@@ -156,7 +156,7 @@ export default function TermsPage() {
 
                         <h2 className="text-2xl font-serif text-warm-gray-900 mt-12 mb-6">11. Service Area Limitations</h2>
                         <p>
-                            Serenity Care Partners is licensed to provide non-medical home care services only within our designated service area in Greater Cincinnati, Ohio, which includes Hamilton, Butler, Warren, and Clermont counties. Information on this Site regarding our services is applicable only within this service area.
+                            Serenity Care Partners is licensed to provide non-medical home health care services only within our designated service area in Greater Cincinnati, Ohio, which includes Hamilton, Butler, Warren, and Clermont counties. Information on this Site regarding our services is applicable only within this service area.
                         </p>
 
                         <h2 className="text-2xl font-serif text-warm-gray-900 mt-12 mb-6">12. No Professional Relationship</h2>

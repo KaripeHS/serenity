@@ -26,7 +26,7 @@ export default function AboutPage() {
               </div>
 
               <h1 className="text-5xl lg:text-6xl leading-tight font-serif tracking-tighter">
-                <span className="text-warm-gray-900">Redefining Home Care</span>
+                <span className="text-warm-gray-900">Redefining Home Health Care</span>
                 <br />
                 <span className="bg-gradient-to-r from-serenity-green-600 to-serenity-green-700 bg-clip-text text-transparent">
                   One Pod at a Time
@@ -34,7 +34,7 @@ export default function AboutPage() {
               </h1>
 
               <p className="text-xl lg:text-2xl text-warm-gray-600 leading-relaxed">
-                We believe exceptional care starts with exceptional caregivers. Our innovative pod-based model transforms how home care is delivered in Greater Cincinnati, Ohio.
+                We believe exceptional care starts with exceptional caregivers. Our innovative pod-based model transforms how home health care is delivered in Greater Cincinnati, Ohio.
               </p>
             </div>
 
@@ -78,7 +78,7 @@ export default function AboutPage() {
               </div>
               <h2 className="text-3xl mb-4 text-warm-gray-900 font-serif tracking-tight">Our Vision</h2>
               <p className="text-warm-gray-700 leading-relaxed text-lg">
-                To be Greater Cincinnati's most trusted home care provider, setting the standard for quality, reliability, and caregiver satisfaction. We envision a future where every client receives consistent, personalized care from dedicated professionals who know them and their needs.
+                To be Greater Cincinnati's most trusted home health care provider, setting the standard for quality, reliability, and caregiver satisfaction. We envision a future where every client receives consistent, personalized care from dedicated professionals who know them and their needs.
               </p>
             </div>
           </div>
@@ -94,7 +94,7 @@ export default function AboutPage() {
             </div>
             <h2 className="text-4xl lg:text-5xl text-warm-gray-900 mb-4 font-serif tracking-tighter">Leadership Team</h2>
             <p className="text-xl text-warm-gray-600 max-w-3xl mx-auto">
-              Experienced professionals dedicated to transforming home care
+              Experienced healthcare professionals dedicated to transforming home health care
             </p>
           </div>
 
@@ -110,7 +110,7 @@ export default function AboutPage() {
               <h3 className="text-2xl mb-2 text-warm-gray-900 font-heading">Gloria</h3>
               <p className="text-serenity-green-600 font-semibold mb-6 text-lg">Chief Executive Officer</p>
               <p className="text-warm-gray-600 leading-relaxed">
-                With decades of experience in home care, Gloria founded Serenity Care Partners with a vision to transform the industry through innovation and compassion. Her leadership has established our reputation for excellence in Greater Cincinnati.
+                With decades of experience in home health care, Gloria founded Serenity Care Partners with a vision to transform the industry through innovation and compassion. Her leadership has established our reputation for excellence in Greater Cincinnati.
               </p>
             </div>
 
@@ -125,7 +125,7 @@ export default function AboutPage() {
               <h3 className="text-2xl mb-2 text-warm-gray-900 font-heading">Bignon</h3>
               <p className="text-serenity-green-600 font-semibold mb-6 text-lg">Chief Operating Officer & CFO</p>
               <p className="text-warm-gray-600 leading-relaxed">
-                Bignon brings expertise in home care operations and financial management, ensuring operational excellence and sustainable growth. His strategic vision drives our expansion and continuous improvement initiatives.
+                Bignon brings expertise in healthcare operations and financial management, ensuring operational excellence and sustainable growth. His strategic vision drives our expansion and continuous improvement initiatives.
               </p>
             </div>
           </div>

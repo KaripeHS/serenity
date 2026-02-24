@@ -420,7 +420,7 @@ export default function ClientSelfIntake() {
         flags.push({
           field: 'dateOfBirth',
           type: 'warning',
-          message: 'Client is under 18 - please ensure a guardian is designated for care decisions',
+          message: 'Client is under 18 - please ensure a guardian is designated for medical decisions',
         });
       }
       if (age > 100) {
@@ -710,7 +710,7 @@ export default function ClientSelfIntake() {
               Welcome to Serenity Care Partners
             </h2>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">
-              Thank you for choosing us for your home care needs. This form helps us understand how we can best serve you or your loved one.
+              Thank you for choosing us for your home health care needs. This form helps us understand how we can best serve you or your loved one.
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8 max-w-md mx-auto text-left">
               <h3 className="font-medium text-blue-900 mb-2">What you'll need:</h3>
@@ -1204,7 +1204,7 @@ export default function ClientSelfIntake() {
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-1">Medical Information</h2>
-              <p className="text-gray-600">Help us understand the client's care needs.</p>
+              <p className="text-gray-600">Help us understand the client's health needs.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1236,7 +1236,7 @@ export default function ClientSelfIntake() {
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Primary Reason for Care
+                  Primary Diagnosis / Reason for Care
                 </label>
                 <textarea
                   value={formData.medical.primaryDiagnosis}

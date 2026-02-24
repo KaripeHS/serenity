@@ -222,7 +222,7 @@ function Footer() {
               </div>
             </Link>
             <p className="leading-relaxed mb-6" style={{ color: 'rgba(255, 255, 255, 0.85)', lineHeight: '1.7' }}>
-              Compassionate home care in Greater Cincinnati, Ohio. Our innovative pod-based model ensures personalized attention and exceptional outcomes.
+              Compassionate home health care in Greater Cincinnati, Ohio. Our innovative pod-based model ensures personalized attention and exceptional outcomes.
             </p>
             {/* Social Media Links - Hidden until valid URLs are available
             <div className="flex gap-4">

@@ -410,7 +410,7 @@ export default function ReferralPage() {
                       value={formData.careNeeds}
                       onChange={handleChange}
                       rows={5}
-                      placeholder="Describe the type of care needed, mobility limitations, ADL assistance required, daily routine, etc."
+                      placeholder="Describe the type of care needed, medical conditions, mobility limitations, ADL assistance required, etc."
                       className="w-full px-4 py-3 border border-warm-gray-300 rounded-lg focus:ring-2 focus:ring-serenity-green-500 focus:border-transparent transition-all"
                     />
                   </div>
