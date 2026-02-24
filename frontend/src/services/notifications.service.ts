@@ -5,7 +5,7 @@
  * @module services/notifications
  */
 
-import api from './api';
+import { request } from './api';
 
 export interface SystemNotification {
   id: string;
@@ -36,8 +36,7 @@ export const notificationsService = {
    */
   async getNotifications(): Promise<NotificationsResponse> {
     try {
-      const response = await api.get('/console/notifications');
-      return response.data;
+      return await request<NotificationsResponse>('/api/console/notifications');
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
       // Return empty state on error
@@ -55,8 +54,8 @@ export const notificationsService = {
    */
   async markAsRead(notificationId: string): Promise<boolean> {
     try {
-      const response = await api.post(`/console/notifications/${notificationId}/read`);
-      return response.data.success;
+      const response = await request<any>(`/api/console/notifications/${notificationId}/read`, { method: 'POST' });
+      return response.success;
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
       return false;
@@ -68,8 +67,8 @@ export const notificationsService = {
    */
   async markAllAsRead(): Promise<boolean> {
     try {
-      const response = await api.post('/console/notifications/read-all');
-      return response.data.success;
+      const response = await request<any>('/api/console/notifications/read-all', { method: 'POST' });
+      return response.success;
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
       return false;

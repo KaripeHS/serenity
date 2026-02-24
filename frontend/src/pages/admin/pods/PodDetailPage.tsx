@@ -93,7 +93,7 @@ export function PodDetailPage() {
       // Load pod members from localStorage
       const storedMembers = localStorage.getItem(POD_MEMBERS_STORAGE_KEY);
       const allMembers: Record<string, PodMember[]> = storedMembers ? JSON.parse(storedMembers) : {};
-      const podMembers = allMembers[podId] || [];
+      const podMembers = allMembers[podId ?? ""] || [];
 
       // Load audit logs for this pod
       const storedLogs = localStorage.getItem(POD_AUDIT_LOG_KEY);
@@ -331,7 +331,7 @@ export function PodDetailPage() {
             <p className="text-gray-600 mt-1">{pod.description}</p>
           </div>
           <div className="flex items-center gap-3">
-            <Badge variant={pod.status === 'active' ? 'success' : 'error'}>
+            <Badge variant={pod.status === 'active' ? 'success' : 'danger'}>
               {pod.status.toUpperCase()}
             </Badge>
             {!isEditing && (
@@ -503,7 +503,7 @@ export function PodDetailPage() {
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
                       Status
                     </label>
-                    <Badge variant={pod.status === 'active' ? 'success' : 'error'}>
+                    <Badge variant={pod.status === 'active' ? 'success' : 'danger'}>
                       {pod.status.toUpperCase()}
                     </Badge>
                   </div>
@@ -606,7 +606,7 @@ export function PodDetailPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge variant={member.status === 'active' ? 'success' : 'error'}>
+                        <Badge variant={member.status === 'active' ? 'success' : 'danger'}>
                           {member.status.toUpperCase()}
                         </Badge>
                       </td>
@@ -689,7 +689,7 @@ export function PodDetailPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <Badge variant={member.status === 'active' ? 'success' : 'error'}>
+                            <Badge variant={member.status === 'active' ? 'success' : 'danger'}>
                               {member.status.toUpperCase()}
                             </Badge>
                           </td>
@@ -733,7 +733,7 @@ export function PodDetailPage() {
                           <Badge variant={
                             log.action === 'assigned' ? 'success' :
                             log.action === 'reassigned' ? 'warning' :
-                            'error'
+                            'danger'
                           }>
                             {log.action.toUpperCase()}
                           </Badge>

@@ -969,8 +969,8 @@ export default function LmsDashboard() {
                         {cert.status === 'active' && (
                           <button
                             onClick={() => {
-                              if (confirm(`Are you sure you want to revoke the certificate for ${cert.employeeName}?`)) {
-                                alert(`Certificate revoked for ${cert.employeeName}`);
+                              if (confirm(`Are you sure you want to revoke the certificate for ${cert.recipientName}?`)) {
+                                alert(`Certificate revoked for ${cert.recipientName}`);
                               }
                             }}
                             className="p-1.5 hover:bg-gray-100 rounded"

@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import api from '../../services/api';
+import { request } from '../../services/api';
 import {
   UserCircleIcon,
   ArrowLeftIcon,
@@ -44,7 +44,10 @@ export default function EditProfilePage() {
     setError(null);
 
     try {
-      await api.put('/console/users/me/profile', formData);
+      await request('/api/console/users/me/profile', {
+        method: 'PUT',
+        body: JSON.stringify(formData),
+      });
       setSuccess(true);
 
       // Refresh user data

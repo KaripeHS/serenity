@@ -317,8 +317,8 @@ export function CaregiverBonusDashboard() {
                       {caregiver.qualityBonus.status === 'eligible' && (
                         <button
                           onClick={() => {
-                            if (confirm(`Process bonus of $${caregiver.qualityBonus.amount.toFixed(2)} for ${caregiver.name}?`)) {
-                              alert(`Quality bonus of $${caregiver.qualityBonus.amount.toFixed(2)} processed for ${caregiver.name}`);
+                            if (confirm(`Process bonus of $${caregiver.qualityBonus.amount.toFixed(2)} for ${caregiver.caregiverName}?`)) {
+                              alert(`Quality bonus of $${caregiver.qualityBonus.amount.toFixed(2)} processed for ${caregiver.caregiverName}`);
                             }
                           }}
                           className="text-sm text-blue-600 hover:text-blue-800 font-medium"

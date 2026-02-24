@@ -171,7 +171,7 @@ function OverviewTab() {
     queryKey: ['client-portal', 'overview'],
     queryFn: async () => {
       const response = await api.get('/client-portal/overview');
-      return response.data;
+      return (response as any).data;
     },
   });
 
@@ -287,7 +287,7 @@ function CarePlanTab() {
     queryKey: ['client-portal', 'care-plan'],
     queryFn: async () => {
       const response = await api.get('/client-portal/care-plan');
-      return response.data;
+      return (response as any).data;
     },
   });
 
@@ -362,7 +362,7 @@ function VisitsTab() {
     queryKey: ['client-portal', 'visits', filter],
     queryFn: async () => {
       const response = await api.get(`/client-portal/visits?filter=${filter}`);
-      return response.data;
+      return (response as any).data;
     },
   });
 
@@ -444,7 +444,7 @@ function BillingTab() {
     queryKey: ['client-portal', 'invoices'],
     queryFn: async () => {
       const response = await api.get('/client-portal/invoices');
-      return response.data;
+      return (response as any).data;
     },
   });
 

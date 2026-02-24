@@ -170,7 +170,7 @@ export function ComprehensiveUserManagement() {
         }
 
         if (podFilter) {
-            filtered = filtered.filter(user => user.pod_id === podFilter);
+            filtered = filtered.filter(user => user.podId === podFilter);
         }
 
         setFilteredUsers(filtered);

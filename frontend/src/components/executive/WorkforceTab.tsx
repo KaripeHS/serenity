@@ -185,7 +185,7 @@ export function WorkforceTab() {
                   name={hire.name}
                   role={hire.role}
                   hireDate={hire.hireDate}
-                  onClick={() => navigate(`/hr/staff/${hire.id || idx}`)}
+                  onClick={() => navigate(`/hr/staff/${idx}`)}
                 />
               ))}
             </div>

@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import api from '../../services/api';
+import { request } from '../../services/api';
 import {
   ArrowLeftIcon,
   CheckIcon,
@@ -84,9 +84,12 @@ export default function ChangePasswordPage() {
     setIsSubmitting(true);
 
     try {
-      await api.put('/console/users/me/password', {
-        currentPassword: formData.currentPassword,
-        newPassword: formData.newPassword,
+      await request('/api/console/users/me/password', {
+        method: 'PUT',
+        body: JSON.stringify({
+          currentPassword: formData.currentPassword,
+          newPassword: formData.newPassword,
+        }),
       });
       setSuccess(true);
 

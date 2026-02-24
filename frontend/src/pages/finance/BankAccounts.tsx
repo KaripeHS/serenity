@@ -45,6 +45,8 @@ interface Transaction {
 const mockAccounts: BankAccountExtended[] = [
     {
         id: '1',
+        organizationId: 'org-1',
+        createdAt: new Date('2024-01-01'),
         name: 'Operating Account',
         institutionName: 'Chase Bank',
         accountNumberLast4: '4521',
@@ -58,6 +60,8 @@ const mockAccounts: BankAccountExtended[] = [
     },
     {
         id: '2',
+        organizationId: 'org-1',
+        createdAt: new Date('2024-01-01'),
         name: 'Payroll Account',
         institutionName: 'Chase Bank',
         accountNumberLast4: '7823',
@@ -71,6 +75,8 @@ const mockAccounts: BankAccountExtended[] = [
     },
     {
         id: '3',
+        organizationId: 'org-1',
+        createdAt: new Date('2024-01-01'),
         name: 'Reserve Account',
         institutionName: 'Fifth Third Bank',
         accountNumberLast4: '1234',
@@ -126,6 +132,8 @@ export default function BankAccounts() {
         e.preventDefault();
         const newAccount: BankAccountExtended = {
             id: Date.now().toString(),
+            organizationId: 'org-1',
+            createdAt: new Date(),
             ...newItem,
             isPrimary: accounts.length === 0,
             balance: 0,

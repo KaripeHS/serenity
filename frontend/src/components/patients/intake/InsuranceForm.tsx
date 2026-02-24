@@ -77,7 +77,7 @@ export function InsuranceForm({ data, onSave, onClose }: InsuranceFormProps) {
           completed.push(fieldName);
         }
       } else {
-        const allFilled = keys.every(key => formData[key as keyof typeof formData]?.toString().trim());
+        const allFilled = keys.every((key: string) => formData[key as keyof typeof formData]?.toString().trim());
         if (allFilled) {
           completed.push(fieldName);
         }

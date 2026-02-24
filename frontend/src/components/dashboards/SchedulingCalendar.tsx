@@ -536,16 +536,20 @@ export function SchedulingCalendar() {
             {(statusFilter.length > 0 || priorityFilter.length > 0) && (
               <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200">
                 {statusFilter.map((status) => (
-                  <Badge key={status} variant="primary" className="cursor-pointer" onClick={() => toggleStatusFilter(status)}>
-                    Status: {status.replace('_', ' ')}
-                    <XMarkIcon className="h-3 w-3 ml-1 inline" />
-                  </Badge>
+                  <button key={status} onClick={() => toggleStatusFilter(status)} className="inline-flex items-center">
+                    <Badge variant="primary" className="cursor-pointer">
+                      Status: {status.replace('_', ' ')}
+                      <XMarkIcon className="h-3 w-3 ml-1 inline" />
+                    </Badge>
+                  </button>
                 ))}
                 {priorityFilter.map((priority) => (
-                  <Badge key={priority} variant="warning" className="cursor-pointer" onClick={() => togglePriorityFilter(priority)}>
-                    Priority: {priority}
-                    <XMarkIcon className="h-3 w-3 ml-1 inline" />
-                  </Badge>
+                  <button key={priority} onClick={() => togglePriorityFilter(priority)} className="inline-flex items-center">
+                    <Badge variant="warning" className="cursor-pointer">
+                      Priority: {priority}
+                      <XMarkIcon className="h-3 w-3 ml-1 inline" />
+                    </Badge>
+                  </button>
                 ))}
               </div>
             )}

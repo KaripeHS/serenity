@@ -77,7 +77,7 @@ function CustomReportsTab() {
   const { data: reports, isLoading } = useQuery({
     queryKey: ['bi', 'reports'],
     queryFn: async () => {
-      const response = await api.get('/bi/reports');
+      const response = await api.get<any>('/bi/reports');
       return response.data;
     },
   });

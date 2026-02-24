@@ -35,6 +35,8 @@ interface VendorExtended extends Vendor {
 const mockVendors: VendorExtended[] = [
     {
         id: '1',
+        organizationId: 'org-1',
+        createdAt: new Date('2024-01-01'),
         name: 'Medical Supply Co.',
         email: 'accounts@medicalsupply.com',
         taxId: '12-3456789',
@@ -49,6 +51,8 @@ const mockVendors: VendorExtended[] = [
     },
     {
         id: '2',
+        organizationId: 'org-1',
+        createdAt: new Date('2024-01-01'),
         name: 'Office Depot Business',
         email: 'billing@officedepot.com',
         taxId: '98-7654321',
@@ -63,6 +67,8 @@ const mockVendors: VendorExtended[] = [
     },
     {
         id: '3',
+        organizationId: 'org-1',
+        createdAt: new Date('2024-01-01'),
         name: 'IT Solutions LLC',
         email: 'invoices@itsolutions.com',
         taxId: '45-6789012',
@@ -77,6 +83,8 @@ const mockVendors: VendorExtended[] = [
     },
     {
         id: '4',
+        organizationId: 'org-1',
+        createdAt: new Date('2024-01-01'),
         name: 'Uniform Express',
         email: 'ap@uniformexpress.com',
         taxId: '67-8901234',
@@ -137,6 +145,8 @@ export function VendorCenter() {
         e.preventDefault();
         const newVendor: VendorExtended = {
             id: Date.now().toString(),
+            organizationId: 'org-1',
+            createdAt: new Date(),
             ...newItem,
             status: 'pending',
             totalSpend: 0,

@@ -290,7 +290,7 @@ function IncidentsTab() {
         <StatWidget
           label="Pending Investigation"
           value={incidentsData?.pendingInvestigations || 0}
-          variant={incidentsData?.pendingInvestigations > 0 ? 'yellow' : 'success'}
+          variant={incidentsData?.pendingInvestigations > 0 ? 'warning' : 'success'}
           icon={<FileText className="w-6 h-6" />}
         />
         <StatWidget

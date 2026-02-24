@@ -732,7 +732,7 @@ function MileageTab() {
                     {roleAccess.canAccessFeature(FeaturePermission.APPROVE_MILEAGE) && (
                       <td className="px-4 py-3 text-center">
                         <button
-                          onClick={() => alert(`Approving mileage reimbursement for ${reimbursement.caregiverName}: $${reimbursement.amount.toFixed(2)}`)}
+                          onClick={() => alert(`Approving mileage reimbursement for ${reimbursement.caregiverName}: $${reimbursement.reimbursementAmount.toFixed(2)}`)}
                           className="px-3 py-1 bg-green-600 text-white text-xs rounded-md hover:bg-green-700"
                         >
                           Approve

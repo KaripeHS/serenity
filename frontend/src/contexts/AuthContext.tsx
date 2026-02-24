@@ -4,7 +4,7 @@
  * Now connected to real backend API
  */
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { authApi, getAccessToken, clearTokens, ApiError } from '../services/api';
 
 interface PodMembership {
@@ -24,6 +24,9 @@ interface User {
   lastName: string;
   role: string;
   organizationId: string;
+  organizationName?: string;
+  phone?: string;
+  createdAt?: string;
   permissions: string[];
   podMemberships: PodMembership[];
   currentPodId?: string;
@@ -37,6 +40,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
   hasPermission: (permission: string) => boolean;
@@ -111,6 +115,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  /** Fetch the current user from the API and update state */
+  const refreshUser = useCallback(async () => {
+    const token = getAccessToken();
+    if (!token) return;
+
+    try {
+      const response = await authApi.getCurrentUser();
+      const apiUser = response.user;
+
+      const fullUser: User = {
+        id: apiUser.id,
+        email: apiUser.email,
+        firstName: apiUser.firstName,
+        lastName: apiUser.lastName,
+        role: apiUser.role,
+        organizationId: apiUser.organizationId,
+        organizationName: (apiUser as any).organizationName,
+        phone: (apiUser as any).phone,
+        createdAt: (apiUser as any).createdAt,
+        permissions: apiUser.permissions || ROLE_PERMISSIONS[apiUser.role] || [],
+        podMemberships: apiUser.podMemberships || [],
+        currentPodId: apiUser.podMemberships?.[0]?.podId,
+        mfaEnabled: false,
+        lastLogin: new Date(),
+        sessionId: `session_${Date.now()}`
+      };
+
+      setUser(fullUser);
+    } catch (err: any) {
+      console.error("Failed to refresh user:", err);
+    }
+  }, []);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -264,6 +301,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     login,
     logout,
+    refreshUser,
     isLoading,
     error,
     hasPermission,

@@ -149,7 +149,7 @@ function OverviewTab() {
   const { data: overviewData, isLoading } = useQuery({
     queryKey: ['admin', 'overview'],
     queryFn: async () => {
-      const response = await api.get('/admin/overview');
+      const response = await api.get<any>('/admin/overview');
       return response.data;
     },
   });
@@ -244,7 +244,7 @@ function UserManagementTab() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin', 'users'],
     queryFn: async () => {
-      const response = await api.get('/admin/users');
+      const response = await api.get<any>('/admin/users');
       return response.data;
     },
   });
@@ -345,7 +345,7 @@ function SecurityTab() {
   const { data: securityData, isLoading } = useQuery({
     queryKey: ['admin', 'security'],
     queryFn: async () => {
-      const response = await api.get('/admin/security');
+      const response = await api.get<any>('/admin/security');
       return response.data;
     },
   });

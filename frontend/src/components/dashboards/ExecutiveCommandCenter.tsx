@@ -149,7 +149,7 @@ function OverviewTab() {
   const { data: overviewData, isLoading } = useQuery({
     queryKey: ['executive', 'overview'],
     queryFn: async () => {
-      const response = await api.get('/executive/overview');
+      const response = await api.get<any>('/executive/overview');
       return response.data;
     },
   });
@@ -299,7 +299,7 @@ function RevenueAnalyticsTab() {
     queryKey: ['executive', 'revenue'],
     queryFn: async () => {
       const response: any = await api.get('/executive/revenue');
-      return response.data;
+      return (response as Record<string, unknown>).data;
     },
   });
 

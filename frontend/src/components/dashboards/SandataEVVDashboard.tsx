@@ -18,7 +18,7 @@ import { Badge } from '../ui/Badge';
 import { Skeleton } from '../ui/Skeleton';
 import { Alert } from '../ui/Alert';
 import { Chart } from '../ui/Chart';
-import api from '../../services/api';
+import { request } from '../../services/api';
 import {
   ArrowPathIcon,
   CheckCircleIcon,
@@ -192,13 +192,13 @@ export default function SandataEVVDashboard() {
 
       // Load data in parallel
       const [pendingRes, rejectedRes, healthRes] = await Promise.all([
-        api.get(`/console/sandata/pending-visits/${organizationId}?limit=100`).catch(() => ({ data: { visits: [] } })),
-        api.get(`/console/sandata/rejected-visits/${organizationId}`).catch(() => ({ data: { visits: [] } })),
-        api.get(`/console/operations/evv-health?startDate=${startDateStr}&endDate=${endDate}`).catch(() => ({ data: null }))
+        request<any>(`/api/console/sandata/pending-visits/${organizationId}?limit=100`).catch(() => ({ visits: [] })),
+        request<any>(`/api/console/sandata/rejected-visits/${organizationId}`).catch(() => ({ visits: [] })),
+        request<any>(`/api/console/operations/evv-health?startDate=${startDateStr}&endDate=${endDate}`).catch(() => null)
       ]);
 
       // Process pending visits
-      const pending = (pendingRes.data?.visits || []).map((v: any) => ({
+      const pending = (pendingRes?.visits || []).map((v: any) => ({
         id: v.id,
         clientName: v.client_name || `Client ${v.client_id?.substring(0, 8)}`,
         caregiverName: v.caregiver_name || `Caregiver ${v.caregiver_id?.substring(0, 8)}`,
@@ -211,7 +211,7 @@ export default function SandataEVVDashboard() {
       setPendingVisits(pending);
 
       // Process rejected visits
-      const rejected = (rejectedRes.data?.visits || []).map((v: any) => ({
+      const rejected = (rejectedRes?.visits || []).map((v: any) => ({
         id: v.id,
         clientName: v.client_name || `Client ${v.client_id?.substring(0, 8)}`,
         caregiverName: v.caregiver_name || `Caregiver ${v.caregiver_id?.substring(0, 8)}`,
@@ -224,22 +224,22 @@ export default function SandataEVVDashboard() {
       setRejectedVisits(rejected);
 
       // Set health metrics
-      if (healthRes.data) {
+      if (healthRes) {
         setHealthMetrics({
-          clockInCompliance: healthRes.data.metrics?.clockInCompliance || 0,
-          clockOutCompliance: healthRes.data.metrics?.clockOutCompliance || 0,
-          geofenceCompliance: healthRes.data.metrics?.geofenceCompliance || 0,
-          signatureCompliance: healthRes.data.metrics?.signatureCompliance || 0,
-          sandataAcceptance: healthRes.data.metrics?.sandataAcceptance || 0,
-          totalVisits: healthRes.data.summary?.totalVisits || 0,
-          compliantVisits: healthRes.data.summary?.compliantVisits || 0,
-          issues: healthRes.data.issues || { geofenceViolations: 0, lateClockIns: 0, missingClockOuts: 0, missingSignatures: 0 }
+          clockInCompliance: healthRes.metrics?.clockInCompliance || 0,
+          clockOutCompliance: healthRes.metrics?.clockOutCompliance || 0,
+          geofenceCompliance: healthRes.metrics?.geofenceCompliance || 0,
+          signatureCompliance: healthRes.metrics?.signatureCompliance || 0,
+          sandataAcceptance: healthRes.metrics?.sandataAcceptance || 0,
+          totalVisits: healthRes.summary?.totalVisits || 0,
+          compliantVisits: healthRes.summary?.compliantVisits || 0,
+          issues: healthRes.issues || { geofenceViolations: 0, lateClockIns: 0, missingClockOuts: 0, missingSignatures: 0 }
         });
       }
 
       // Calculate summary metrics
-      const acceptedCount = healthRes.data?.summary?.compliantVisits || 0;
-      const totalSubmissions = healthRes.data?.summary?.totalVisits || 0;
+      const acceptedCount = healthRes?.summary?.compliantVisits || 0;
+      const totalSubmissions = healthRes?.summary?.totalVisits || 0;
       setMetrics({
         totalSubmissions,
         acceptedCount,
@@ -262,7 +262,10 @@ export default function SandataEVVDashboard() {
     setSyncing(true);
     try {
       // Trigger batch sync job
-      await api.post('/console/sandata/batch-sync', { organizationId });
+      await request('/api/console/sandata/batch-sync', {
+        method: 'POST',
+        body: JSON.stringify({ organizationId }),
+      });
       await loadDashboardData();
     } catch (err) {
       console.error('Sync failed:', err);
@@ -273,10 +276,13 @@ export default function SandataEVVDashboard() {
 
   async function handleSubmitVisit(visitId: string) {
     try {
-      await api.post('/console/sandata/visits/submit', { evvRecordId: visitId });
+      await request('/api/console/sandata/visits/submit', {
+        method: 'POST',
+        body: JSON.stringify({ evvRecordId: visitId }),
+      });
       await loadDashboardData();
     } catch (err: any) {
-      alert(`Submission failed: ${err.response?.data?.message || 'Unknown error'}`);
+      alert(`Submission failed: ${err.data?.message || err.message || 'Unknown error'}`);
     }
   }
 
@@ -285,14 +291,17 @@ export default function SandataEVVDashboard() {
     if (!reason) return;
 
     try {
-      await api.post('/console/sandata/visits/void', {
-        evvRecordId: visitId,
-        voidReason: 'OTHER',
-        voidReasonDescription: reason
+      await request('/api/console/sandata/visits/void', {
+        method: 'POST',
+        body: JSON.stringify({
+          evvRecordId: visitId,
+          voidReason: 'OTHER',
+          voidReasonDescription: reason,
+        }),
       });
       await loadDashboardData();
     } catch (err: any) {
-      alert(`Void failed: ${err.response?.data?.message || 'Unknown error'}`);
+      alert(`Void failed: ${err.data?.message || err.message || 'Unknown error'}`);
     }
   }
 
@@ -732,7 +741,7 @@ export default function SandataEVVDashboard() {
               <p className="text-lg font-medium">Transaction Log</p>
               <p className="text-sm">View detailed audit trail of all Sandata submissions.</p>
               <button
-                onClick={() => api.get(`/console/sandata/transactions?organizationId=${organizationId}`)}
+                onClick={() => request(`/api/console/sandata/transactions?organizationId=${organizationId}`)}
                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 Load Transaction History

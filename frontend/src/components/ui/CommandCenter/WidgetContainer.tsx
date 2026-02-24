@@ -1,8 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface WidgetContainerProps {
-  title: string;
+  title?: string;
   subtitle?: string;
   icon?: React.ReactNode;
   action?: {
@@ -30,6 +30,7 @@ export function WidgetContainer({
   return (
     <div className={cn('bg-white rounded-lg border border-gray-200 shadow-sm', className)}>
       {/* Widget Header */}
+      {(title || icon || action) && (
       <div className={cn('border-b border-gray-200', variant === 'compact' ? 'px-4 py-3' : 'px-6 py-4')}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -39,7 +40,7 @@ export function WidgetContainer({
               </div>
             )}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+              {title && <h3 className="text-sm font-semibold text-gray-900">{title}</h3>}
               {subtitle && (
                 <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
               )}
@@ -55,6 +56,7 @@ export function WidgetContainer({
           )}
         </div>
       </div>
+      )}
 
       {/* Widget Content */}
       <div className={cn(variant === 'compact' ? 'px-4 py-3' : 'px-6 py-4')}>
@@ -106,7 +108,7 @@ export function StatWidget({ label, value, change, icon, variant = 'default', on
         {change && (
           <div className="flex items-center gap-1 mt-2">
             <span className={cn('text-xs font-medium', change.isPositive ? 'text-green-600' : 'text-red-600')}>
-              {change.isPositive ? '↑' : '↓'} {Math.abs(change.value)}%
+              {change.isPositive ? 'â†‘' : 'â†“'} {Math.abs(change.value)}%
             </span>
             {change.label && (
               <span className="text-xs text-gray-500">{change.label}</span>

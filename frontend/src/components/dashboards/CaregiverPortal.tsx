@@ -187,7 +187,7 @@ function TodayScheduleTab() {
     queryKey: ['caregiver-portal', 'today'],
     queryFn: async () => {
       const response = await api.get('/caregiver-portal/visits/today');
-      return response.data;
+      return (response as any).data;
     },
   });
 
