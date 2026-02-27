@@ -495,16 +495,6 @@ const searchIndex: SearchItem[] = [
     keywords: ['dodd', 'hpc', 'developmental', 'disabilities', 'waiver', 'ohio'],
     priority: 6,
   },
-  {
-    id: 'shift-differential',
-    name: 'Shift Differentials',
-    description: 'Shift differential pay rules',
-    href: '/dashboard/shift-differential',
-    icon: ArrowTrendingUpIcon,
-    category: 'Operations',
-    keywords: ['shift', 'differential', 'premium', 'weekend', 'night', 'holiday'],
-    priority: 5,
-  },
 
   // ============================================
   // FINANCE

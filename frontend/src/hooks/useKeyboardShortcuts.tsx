@@ -164,7 +164,7 @@ export function useGlobalShortcuts() {
       keys: 'mod+d',
       description: 'Go to Dashboard',
       category: 'navigation',
-      handler: () => navigate('/dashboard')
+      handler: () => navigate('/dashboard/executive')
     },
     {
       id: 'nav-search',
@@ -200,14 +200,14 @@ export function useGlobalShortcuts() {
       keys: 'mod+s',
       description: 'Go to Scheduling',
       category: 'navigation',
-      handler: () => navigate('/scheduling')
+      handler: () => navigate('/dashboard/scheduling-calendar')
     },
     {
       id: 'nav-billing',
       keys: 'mod+b',
       description: 'Go to Billing',
       category: 'navigation',
-      handler: () => navigate('/billing')
+      handler: () => navigate('/dashboard/billing')
     },
     {
       id: 'nav-patients',
@@ -221,7 +221,7 @@ export function useGlobalShortcuts() {
       keys: 'mod+shift+c',
       description: 'Go to Caregivers',
       category: 'navigation',
-      handler: () => navigate('/caregivers')
+      handler: () => navigate('/caregiver-portal')
     },
     {
       id: 'nav-ai-assistant',

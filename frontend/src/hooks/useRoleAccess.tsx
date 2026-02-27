@@ -718,6 +718,23 @@ export function useRoleAccess() {
 }
 
 /**
+ * Public routes that are accessible without RBAC checks.
+ * These are intentionally open (marketing pages, auth pages, self-service).
+ * All other routes default to DENY unless listed in ROUTE_ACCESS.
+ */
+const PUBLIC_ROUTES = [
+  '/', '/login', '/erp', '/staff',
+  '/about', '/services', '/careers', '/contact', '/referral',
+  '/privacy', '/terms', '/hipaa', '/non-discrimination', '/accessibility',
+  '/client-intake', '/family',
+  '/search', '/alerts',
+  '/profile', '/profile/edit', '/profile/password',
+  '/onboarding/my-tasks',
+  '/partners',
+  '/family-portal',
+];
+
+/**
  * Route-based access control mapping
  * Maps routes to the roles that can access them
  */
@@ -827,13 +844,7 @@ export const ROUTE_ACCESS: Record<string, UserRole[]> = {
     UserRole.BILLING_CODER,
     UserRole.INSURANCE_MANAGER,
   ],
-  '/dashboard/billing-ar': [
-    UserRole.FOUNDER,
-    UserRole.CFO,
-    UserRole.FINANCE_DIRECTOR,
-    UserRole.BILLING_MANAGER,
-    UserRole.RCM_ANALYST,
-  ],
+  // Note: /dashboard/billing-ar redirects to /dashboard/billing — RBAC entry removed (consolidated)
   '/dashboard/claims-workflow': [
     UserRole.FOUNDER,
     UserRole.BILLING_MANAGER,
@@ -875,6 +886,20 @@ export const ROUTE_ACCESS: Record<string, UserRole[]> = {
     UserRole.QA_MANAGER,
     UserRole.HR_DIRECTOR,
     UserRole.HR_MANAGER,
+    UserRole.DIRECTOR_OF_NURSING,
+    UserRole.CLINICAL_DIRECTOR,
+  ],
+
+  // Application Package (HR hiring forms — 22 digitized forms with 7-gate pipeline)
+  '/hr/application-package': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.HR_DIRECTOR,
+    UserRole.HR_MANAGER,
+    UserRole.RECRUITER,
+    UserRole.CREDENTIALING_SPECIALIST,
+    UserRole.COMPLIANCE_OFFICER,
     UserRole.DIRECTOR_OF_NURSING,
     UserRole.CLINICAL_DIRECTOR,
   ],
@@ -1219,6 +1244,35 @@ export const ROUTE_ACCESS: Record<string, UserRole[]> = {
     UserRole.CLINICAL_DIRECTOR,
   ],
 
+  // LMS Dashboard (Training + Clinical leadership)
+  '/dashboard/lms': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.HR_DIRECTOR,
+    UserRole.HR_MANAGER,
+    UserRole.DIRECTOR_OF_NURSING,
+    UserRole.CLINICAL_DIRECTOR,
+    UserRole.COMPLIANCE_OFFICER,
+  ],
+
+  // Payroll provider connection (Finance)
+  '/payroll/connect': [
+    UserRole.FOUNDER,
+    UserRole.CFO,
+    UserRole.FINANCE_DIRECTOR,
+    UserRole.HR_DIRECTOR,
+  ],
+
+  // AI Assistant (Executives + IT)
+  '/ai-assistant': [
+    UserRole.FOUNDER,
+    UserRole.CEO,
+    UserRole.COO,
+    UserRole.CFO,
+    UserRole.IT_ADMIN,
+  ],
+
   // Sandata EVV Dashboard (Operations + Compliance + Billing)
   '/dashboard/sandata-evv': [
     UserRole.FOUNDER,
@@ -1241,7 +1295,7 @@ export function canAccessRoute(route: string, userRole: string | undefined): boo
   if (!userRole) return false;
 
   // Founders and CEO always have access to all routes
-  if (userRole === UserRole.FOUNDER || userRole === UserRole.CEO || userRole === 'admin') return true;
+  if (userRole === UserRole.FOUNDER || userRole === UserRole.CEO) return true;
 
   // Check exact match first
   const allowedRoles = ROUTE_ACCESS[route];
@@ -1256,8 +1310,13 @@ export function canAccessRoute(route: string, userRole: string | undefined): boo
     }
   }
 
-  // Default: allow access to unprotected routes (home, login, etc.)
-  return true;
+  // Allow intentionally public/auth-only routes
+  if (PUBLIC_ROUTES.includes(route) || PUBLIC_ROUTES.some(pr => route.startsWith(pr + '/'))) {
+    return true;
+  }
+
+  // Default: DENY access to routes not in ROUTE_ACCESS (HIPAA least-privilege)
+  return false;
 }
 
 /**
@@ -1268,7 +1327,7 @@ export function getNavigationForRole(userRole: string | undefined): string[] {
 
   return Object.entries(ROUTE_ACCESS)
     .filter(([_, roles]) => {
-      if (userRole === UserRole.FOUNDER || userRole === UserRole.CEO || userRole === 'admin') return true;
+      if (userRole === UserRole.FOUNDER || userRole === UserRole.CEO) return true;
       return roles.includes(userRole as UserRole);
     })
     .map(([route]) => route);

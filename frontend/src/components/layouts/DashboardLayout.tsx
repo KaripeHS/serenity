@@ -161,9 +161,11 @@ const navigationSections: NavigationSection[] = [
     title: 'HR & Workforce',
     items: [
       { name: 'Talent Command Center', href: '/dashboard/hr', icon: UsersIcon, description: 'Recruiting, credentials, training, discipline' },
+      { name: 'Application Package', href: '/hr/application-package', icon: ClipboardDocumentCheckIcon, description: '22 hiring forms — 7-gate pipeline' },
       { name: 'Credentials', href: '/dashboard/credentials', icon: IdentificationIcon, description: 'Credential tracking' },
       { name: 'Background Checks', href: '/dashboard/background-checks', icon: DocumentMagnifyingGlassIcon, description: 'Background check status' },
       { name: 'Training', href: '/dashboard/training', icon: AcademicCapIcon, description: 'Staff training' },
+      { name: 'LMS', href: '/dashboard/lms', icon: BookOpenIcon, description: 'Learning management system' },
       { name: 'Payroll', href: '/dashboard/payroll-v2', icon: BanknotesIcon, description: 'Payroll management' },
       { name: 'Bonuses', href: '/dashboard/caregiver-bonuses', icon: GiftIcon, description: 'Caregiver bonuses' },
     ]
@@ -184,6 +186,7 @@ const navigationSections: NavigationSection[] = [
     items: [
       { name: 'Operations Command Center', href: '/dashboard/operations', icon: TruckIcon, description: 'Scheduling, geofencing, mileage, metrics' },
       { name: 'CRM', href: '/dashboard/crm', icon: BriefcaseIcon, description: 'Lead pipeline' },
+      { name: 'Consumer Directed', href: '/dashboard/consumer-directed', icon: UserGroupIcon, description: 'Consumer directed services' },
       { name: 'DODD HPC', href: '/dashboard/dodd-hpc', icon: BuildingOffice2Icon, description: 'DODD HPC programs' },
     ]
   },

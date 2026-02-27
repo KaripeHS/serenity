@@ -721,7 +721,7 @@ export function ExecutiveOpportunityDashboard() {
                           ${service.ratePerUnit}/{service.unitType}
                         </span>
                       )}
-                      <Link to={`/admin/licenses/apply?type=${service.requiredLicense}`}>
+                      <Link to={`/dashboard/licenses?apply=${service.requiredLicense}`}>
                         <Button variant="ghost" size="sm">
                           Unlock
                           <ArrowRightIcon className="h-4 w-4 ml-1" />

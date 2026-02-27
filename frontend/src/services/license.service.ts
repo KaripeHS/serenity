@@ -352,7 +352,7 @@ class LicenseService {
         ],
         cta: {
           text: 'Start ODA Application',
-          link: '/admin/licenses/apply?type=oda_passport'
+          link: '/dashboard/licenses?apply=oda_passport'
         }
       });
     }
@@ -382,7 +382,7 @@ class LicenseService {
         ],
         cta: {
           text: 'Learn About CDPC',
-          link: '/admin/licenses/apply?type=oda_cdpc'
+          link: '/dashboard/licenses?apply=oda_cdpc'
         }
       });
     }
@@ -413,7 +413,7 @@ class LicenseService {
         ],
         cta: {
           text: 'Explore DODD Certification',
-          link: '/admin/licenses/apply?type=dodd_hpc'
+          link: '/dashboard/licenses?apply=dodd_hpc'
         }
       });
     }
@@ -647,7 +647,7 @@ class LicenseService {
       authorized: false,
       reason: `This service requires ${LICENSE_REQUIREMENTS[requiredLicense].displayName}`,
       requiredLicense,
-      unlockUrl: `/admin/licenses/apply?type=${requiredLicense}`
+      unlockUrl: `/dashboard/licenses?apply=${requiredLicense}`
     };
   }
 }

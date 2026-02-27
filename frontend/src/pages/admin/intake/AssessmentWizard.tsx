@@ -69,7 +69,7 @@ export const AssessmentWizard: React.FC = () => {
         },
         onSuccess: () => {
             alert('Proposal saved as draft!');
-            navigate('/dashboard/crm/leads'); // Redirect to leads/proposals list
+            navigate('/dashboard/crm'); // Redirect to CRM pipeline
         }
     });
 

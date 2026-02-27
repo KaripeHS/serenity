@@ -343,7 +343,7 @@ export const LicenseBlockedAlert: React.FC<LicenseBlockedAlertProps> = ({
 
           <div className="flex gap-2">
             <a
-              href={`/admin/licenses/apply?type=${requiredLicense}`}
+              href={`/dashboard/licenses?apply=${requiredLicense}`}
               className="flex-1 text-center px-4 py-2 bg-emerald-600 text-white font-medium rounded-md hover:bg-emerald-700 transition-colors"
             >
               Start Application

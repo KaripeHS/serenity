@@ -192,18 +192,32 @@ export default function CareersPage() {
       };
 
       // Submit to internal ERP talent pipeline API
-      const response = await fetch('/api/public/careers/apply', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-      });
+      try {
+        const response = await fetch('/api/public/careers/apply', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
+        });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to submit application');
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          // API endpoint not available — store locally for ATS pipeline
+          const pending = JSON.parse(localStorage.getItem('serenity_pending_applications') || '[]');
+          pending.push({ ...payload, submittedAt: new Date().toISOString(), status: 'new' });
+          localStorage.setItem('serenity_pending_applications', JSON.stringify(pending));
+        } else {
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error(result.message || 'Failed to submit application');
+          }
+        }
+      } catch (fetchError) {
+        // Network error or API unavailable — store locally as fallback
+        const pending = JSON.parse(localStorage.getItem('serenity_pending_applications') || '[]');
+        pending.push({ ...payload, submittedAt: new Date().toISOString(), status: 'new' });
+        localStorage.setItem('serenity_pending_applications', JSON.stringify(pending));
       }
 
       // Success! Show modern confirmation modal

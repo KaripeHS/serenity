@@ -87,6 +87,7 @@ import { BankFeed } from './pages/finance/BankFeed';
 import AuditLogs from './pages/admin/AuditLogs';
 import PASSPORTCertification from './pages/compliance/PASSPORTCertification';
 import OperatingFormsHub from './pages/compliance/OperatingFormsHub';
+import ApplicationPackageHub from './pages/hr/application-forms/ApplicationPackageHub';
 import ImageManagement from './pages/admin/ImageManagement';
 import { PayrollManager } from './pages/admin/PayrollManager';
 import { PayrollConnect } from './pages/payroll/PayrollConnect';
@@ -263,8 +264,10 @@ function App() {
               <Route path="/dashboard/passport-certification" element={<DashboardLayout><ProtectedRoute route="/dashboard/passport-certification"><PASSPORTCertification /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/operating-forms" element={<DashboardLayout><ProtectedRoute route="/dashboard/operating-forms"><OperatingFormsHub /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/operating-forms/:formSlug" element={<DashboardLayout><ProtectedRoute route="/dashboard/operating-forms"><OperatingFormsHub /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/hr/application-package" element={<DashboardLayout><ProtectedRoute route="/hr/application-package"><ApplicationPackageHub /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/hr/application-package/:formSlug" element={<DashboardLayout><ProtectedRoute route="/hr/application-package"><ApplicationPackageHub /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/training" element={<DashboardLayout><ProtectedRoute route="/dashboard/training"><WorkingTrainingDashboard /></ProtectedRoute></DashboardLayout>} />
-              <Route path="/dashboard/scheduling" element={<DashboardLayout><ProtectedRoute route="/dashboard/scheduling"><SchedulingCalendar /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/scheduling" element={<Navigate to="/dashboard/scheduling-calendar" replace />} />
 
               {/* Year 2 Enhanced Dashboard Routes - All protected by RBAC */}
               <Route path="/dashboard/executive-v2" element={<DashboardLayout><ProtectedRoute route="/dashboard/executive-v2"><ExecutiveOpportunityDashboard /></ProtectedRoute></DashboardLayout>} />
@@ -273,7 +276,7 @@ function App() {
               <Route path="/dashboard/consumer-directed" element={<DashboardLayout><ProtectedRoute route="/dashboard/consumer-directed"><ConsumerDirectedDashboard /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/scheduling-calendar" element={<DashboardLayout><ProtectedRoute route="/dashboard/scheduling-calendar"><SchedulingCalendar /></ProtectedRoute></DashboardLayout>} />
               {/* /dashboard/billing-ar redirects to /dashboard/billing - consolidated */}
-              <Route path="/dashboard/billing-ar" element={<DashboardLayout><ProtectedRoute route="/dashboard/billing"><BillingARDashboard /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/dashboard/billing-ar" element={<Navigate to="/dashboard/billing" replace />} />
               <Route path="/dashboard/background-checks" element={<DashboardLayout><ProtectedRoute route="/dashboard/background-checks"><BackgroundCheckDashboard /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/client-intake" element={<DashboardLayout><ProtectedRoute route="/dashboard/client-intake"><ClientIntakeWizard /></ProtectedRoute></DashboardLayout>} />
               <Route path="/dashboard/claims-workflow" element={<DashboardLayout><ProtectedRoute route="/dashboard/claims-workflow"><ClaimsWorkflow /></ProtectedRoute></DashboardLayout>} />
@@ -425,44 +428,6 @@ function App() {
                 }
               />
               <Route
-                path="/admin/pods"
-                element={
-                  <DashboardLayout>
-                    <ProtectedRoute route="/admin/pods">
-                      <div className="p-6">
-                        <h1 className="text-2xl font-bold mb-4">Pod Management</h1>
-                        <div className="bg-white rounded-lg shadow p-6">
-                          <p className="text-gray-600 mb-4">Organize teams into care pods</p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
-                              <h3 className="font-semibold text-blue-800 mb-2">Columbus Central Pod</h3>
-                              <p className="text-sm text-gray-600 mb-2">Primary: Downtown Columbus</p>
-                              <div className="text-xs text-gray-500">
-                                <p>Lead: Pod Lead Test</p>
-                                <p>Caregivers: 12</p>
-                                <p>Active Patients: 45</p>
-                              </div>
-                            </div>
-                            <div className="border-2 border-green-200 rounded-lg p-4 bg-green-50">
-                              <h3 className="font-semibold text-green-800 mb-2">Cleveland East Pod</h3>
-                              <p className="text-sm text-gray-600 mb-2">Primary: East Cleveland</p>
-                              <div className="text-xs text-gray-500">
-                                <p>Lead: Sarah Davis</p>
-                                <p>Caregivers: 8</p>
-                                <p>Active Patients: 32</p>
-                              </div>
-                            </div>
-                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center">
-                              <button className="text-gray-500 hover:text-gray-700">+ Create New Pod</button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </ProtectedRoute>
-                  </DashboardLayout>
-                }
-              />
-              <Route
                 path="/admin/audit"
                 element={
                   <DashboardLayout>
@@ -493,105 +458,42 @@ function App() {
               {/* Client Self-Service Intake (public link for clients to fill out) */}
               <Route path="/client-intake" element={<ClientSelfIntake />} />
 
-              {/* EVV Routes */}
-              <Route path="/evv-clock" element={<WebEVVClock />} />
-              <Route path="/evv/clock" element={<DashboardLayout><WebEVVClock /></DashboardLayout>} />
-              <Route
-                path="/evv/*"
-                element={
-                  <DashboardLayout>
-                    <div className="p-6">
-                      <h1 className="text-2xl font-bold mb-4">EVV System</h1>
-                      <div className="bg-white rounded-lg shadow p-6">
-                        <p className="text-gray-600 mb-4">Electronic Visit Verification dashboard</p>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <Link to="/evv/clock" className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
-                            <h3 className="font-semibold text-blue-900">Clock In/Out</h3>
-                            <p className="text-sm text-blue-700">Start or end your shift</p>
-                          </Link>
-                          <Link to="/dashboard/scheduling" className="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition">
-                            <h3 className="font-semibold text-green-900">Today's Visits</h3>
-                            <p className="text-sm text-green-700">View scheduled visits</p>
-                          </Link>
-                          <Link to="/dashboard/operations" className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition">
-                            <h3 className="font-semibold text-purple-900">History</h3>
-                            <p className="text-sm text-purple-700">Past visit records</p>
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </DashboardLayout>
-                }
-              />
+              {/* EVV Routes — RBAC protected */}
+              <Route path="/evv-clock" element={<Navigate to="/evv/clock" replace />} />
+              <Route path="/evv/clock" element={<DashboardLayout><ProtectedRoute route="/evv/clock"><WebEVVClock /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/evv/*" element={<Navigate to="/evv/clock" replace />} />
 
-              {/* Scheduling Routes */}
-              <Route path="/scheduling/*" element={<DashboardLayout><SchedulingCalendar /></DashboardLayout>} />
+              {/* Scheduling Routes — redirect to primary calendar */}
+              <Route path="/scheduling/*" element={<Navigate to="/dashboard/scheduling-calendar" replace />} />
 
-              {/* Patient Routes */}
-              <Route
-                path="/patients"
-                element={
-                  <DashboardLayout>
-                    <PatientList />
-                  </DashboardLayout>
-                }
-              />
-              <Route
-                path="/patients/new"
-                element={
-                  <DashboardLayout>
-                    <PatientIntakeWorkflow />
-                  </DashboardLayout>
-                }
-              />
-              <Route
-                path="/patients/intake/:patientId"
-                element={
-                  <DashboardLayout>
-                    <PatientIntakeWorkflow />
-                  </DashboardLayout>
-                }
-              />
-              {/* Patient Intake Step Pages */}
-              <Route path="/patients/intake/new/demographics" element={<DemographicsPage />} />
-              <Route path="/patients/intake/new/insurance" element={<InsurancePage />} />
-              <Route path="/patients/intake/new/assessment" element={<AssessmentPage />} />
-              <Route path="/patients/intake/new/physician-orders" element={<PhysicianOrdersPage />} />
-              <Route path="/patients/intake/new/care-plan" element={<CarePlanPage />} />
-              <Route path="/patients/intake/new/caregiver-assignment" element={<CaregiverAssignmentPage />} />
-              <Route path="/patients/intake/new/service-authorization" element={<ServiceAuthorizationPage />} />
-              <Route path="/patients/intake/new/first-visit" element={<FirstVisitPage />} />
-              <Route path="/patients/intake/:patientId/demographics" element={<DemographicsPage />} />
-              <Route path="/patients/intake/:patientId/insurance" element={<InsurancePage />} />
-              <Route path="/patients/intake/:patientId/assessment" element={<AssessmentPage />} />
-              <Route path="/patients/intake/:patientId/physician-orders" element={<PhysicianOrdersPage />} />
-              <Route path="/patients/intake/:patientId/care-plan" element={<CarePlanPage />} />
-              <Route path="/patients/intake/:patientId/caregiver-assignment" element={<CaregiverAssignmentPage />} />
-              <Route path="/patients/intake/:patientId/service-authorization" element={<ServiceAuthorizationPage />} />
-              <Route path="/patients/intake/:patientId/first-visit" element={<FirstVisitPage />} />
-              {/* Patient Binder Print View */}
-              <Route path="/patients/intake/new/binder" element={<PatientBinder />} />
-              <Route path="/patients/intake/:patientId/binder" element={<PatientBinder />} />
-              <Route
-                path="/patients/:patientId"
-                element={
-                  <DashboardLayout>
-                    <PatientDetail />
-                  </DashboardLayout>
-                }
-              />
+              {/* Patient Routes — All RBAC-protected (PHI / HIPAA) */}
+              <Route path="/patients" element={<DashboardLayout><ProtectedRoute route="/patients"><PatientList /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/new" element={<DashboardLayout><ProtectedRoute route="/patients"><PatientIntakeWorkflow /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/:patientId" element={<DashboardLayout><ProtectedRoute route="/patients"><PatientIntakeWorkflow /></ProtectedRoute></DashboardLayout>} />
+              {/* Patient Intake Step Pages — HIPAA: all wrapped with DashboardLayout + ProtectedRoute */}
+              <Route path="/patients/intake/new/demographics" element={<DashboardLayout><ProtectedRoute route="/patients"><DemographicsPage /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/new/insurance" element={<DashboardLayout><ProtectedRoute route="/patients"><InsurancePage /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/new/assessment" element={<DashboardLayout><ProtectedRoute route="/patients"><AssessmentPage /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/new/physician-orders" element={<DashboardLayout><ProtectedRoute route="/patients"><PhysicianOrdersPage /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/new/care-plan" element={<DashboardLayout><ProtectedRoute route="/patients"><CarePlanPage /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/new/caregiver-assignment" element={<DashboardLayout><ProtectedRoute route="/patients"><CaregiverAssignmentPage /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/new/service-authorization" element={<DashboardLayout><ProtectedRoute route="/patients"><ServiceAuthorizationPage /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/new/first-visit" element={<DashboardLayout><ProtectedRoute route="/patients"><FirstVisitPage /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/:patientId/demographics" element={<DashboardLayout><ProtectedRoute route="/patients"><DemographicsPage /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/:patientId/insurance" element={<DashboardLayout><ProtectedRoute route="/patients"><InsurancePage /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/:patientId/assessment" element={<DashboardLayout><ProtectedRoute route="/patients"><AssessmentPage /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/:patientId/physician-orders" element={<DashboardLayout><ProtectedRoute route="/patients"><PhysicianOrdersPage /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/:patientId/care-plan" element={<DashboardLayout><ProtectedRoute route="/patients"><CarePlanPage /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/:patientId/caregiver-assignment" element={<DashboardLayout><ProtectedRoute route="/patients"><CaregiverAssignmentPage /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/:patientId/service-authorization" element={<DashboardLayout><ProtectedRoute route="/patients"><ServiceAuthorizationPage /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/:patientId/first-visit" element={<DashboardLayout><ProtectedRoute route="/patients"><FirstVisitPage /></ProtectedRoute></DashboardLayout>} />
+              {/* Patient Binder Print View — HIPAA protected */}
+              <Route path="/patients/intake/new/binder" element={<DashboardLayout><ProtectedRoute route="/patients"><PatientBinder /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/intake/:patientId/binder" element={<DashboardLayout><ProtectedRoute route="/patients"><PatientBinder /></ProtectedRoute></DashboardLayout>} />
+              <Route path="/patients/:patientId" element={<DashboardLayout><ProtectedRoute route="/patients"><PatientDetail /></ProtectedRoute></DashboardLayout>} />
 
-              {/* Billing Routes - Redirects to consolidated billing dashboard */}
-              <Route
-                path="/billing/*"
-                element={
-                  <DashboardLayout>
-                    <ProtectedRoute route="/dashboard/billing">
-                      <BillingARDashboard />
-                    </ProtectedRoute>
-                  </DashboardLayout>
-                }
-              />
+              {/* Billing Routes - Redirect to consolidated billing dashboard */}
+              <Route path="/billing/*" element={<Navigate to="/dashboard/billing" replace />} />
 
 
               {/* Finance Routes (Phase 11) - Protected by RBAC */}
@@ -737,7 +639,9 @@ function App() {
                 path="/hr/*"
                 element={
                   <DashboardLayout>
-                    <TalentCommandCenter />
+                    <ProtectedRoute route="/dashboard/hr">
+                      <TalentCommandCenter />
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
@@ -746,7 +650,9 @@ function App() {
                 path="/ai-assistant"
                 element={
                   <DashboardLayout>
-                    <AIAssistantPage />
+                    <ProtectedRoute route="/ai-assistant">
+                      <AIAssistantPage />
+                    </ProtectedRoute>
                   </DashboardLayout>
                 }
               />
